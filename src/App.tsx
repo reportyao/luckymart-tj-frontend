@@ -12,6 +12,11 @@ import MonitoringPage from './pages/MonitoringPage'
 import OrderPage from './pages/OrderPage'
 import NotificationPage from './pages/NotificationPage'
 import LotteryResultPage from './pages/LotteryResultPage'
+import InvitePage from './pages/InvitePage'
+import ShowoffPage from './pages/ShowoffPage'
+import ShowoffCreatePage from './pages/ShowoffCreatePage'
+import MarketPage from './pages/MarketPage'
+import MarketCreatePage from './pages/MarketCreatePage'
 import { BottomNavigation } from './components/navigation/BottomNavigation'
 import './App.css'
 
@@ -31,6 +36,11 @@ function App() {
               <Route path="/orders" element={<OrderPage />} />
               <Route path="/notifications" element={<NotificationPage />} />
               <Route path="/lottery/:id/result" element={<LotteryResultPage />} />
+              <Route path="/invite" element={<InvitePage />} />
+              <Route path="/showoff" element={<ShowoffPage />} />
+              <Route path="/showoff/create" element={<ShowoffCreatePage />} />
+              <Route path="/market" element={<MarketPage />} />
+              <Route path="/market/create" element={<MarketCreatePage />} />
             </Routes>
             
             <BottomNavigation />
