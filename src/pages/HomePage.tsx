@@ -1,0 +1,197 @@
+import React, { useState, useEffect } from 'react'
+import { motion } from 'framer-motion'
+import { useUser } from '../contexts/UserContext'
+import { lotteryService, Lottery } from '../lib/supabase'
+import { WalletCard } from '../components/wallet/WalletCard'
+import { LotteryCard } from '../components/lottery/LotteryCard'
+import { SafeMotion, SafeAnimationContainer, SafeAnimationItem } from '../components/SafeMotion'
+import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/react/24/outline'
+import toast from 'react-hot-toast'
+
+const HomePage: React.FC = () => {
+  const { user, wallets, isLoading: userLoading, refreshWallets } = useUser()
+  const [lotteries, setLotteries] = useState<Lottery[]>([])
+  const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
+
+  useEffect(() => {
+    loadLotteries()
+  }, [])
+
+  const loadLotteries = async () => {
+    try {
+      setIsLoadingLotteries(true)
+      const data = await lotteryService.getActiveLotteries()
+      setLotteries(data)
+    } catch (error: any) {
+      console.error('Failed to load lotteries:', error)
+      toast.error('加载彩票数据失败')
+    } finally {
+      setIsLoadingLotteries(false)
+    }
+  }
+
+  const handlePurchaseLottery = (lottery: Lottery) => {
+    // TODO: Navigate to purchase page or open purchase modal
+    toast.success(`即将购买 ${lottery.title}`)
+  }
+
+  const handleRefreshWallets = async () => {
+    await refreshWallets()
+    toast.success('钱包数据已更新')
+  }
+
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">正在加载...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <SafeMotion
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="text-center"
+        >
+          <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <StarIcon className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">欢迎来到 LuckyMart</h1>
+          <p className="text-gray-600 mb-6">塔吉克斯坦领先的社交夺宝平台</p>
+          <p className="text-sm text-gray-500">请通过 Telegram 访问此应用</p>
+        </SafeMotion>
+      </div>
+    )
+  }
+
+  return (
+    <div className="pb-20">
+      {/* 欢迎横幅 */}
+      <SafeMotion
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 mx-4 mt-4 rounded-2xl"
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-xl font-bold mb-1">
+              你好, {user.first_name}! 👋
+            </h2>
+            <p className="text-white/80 text-sm">
+              今天想试试运气吗？
+            </p>
+          </div>
+          <div className="text-right">
+            <p className="text-xs text-white/60">推荐码</p>
+            <p className="text-lg font-bold">{user.referral_code}</p>
+          </div>
+        </div>
+      </SafeMotion>
+
+      {/* 钱包卡片 */}
+      <div className="px-4 mt-6">
+        <WalletCard 
+          wallets={wallets} 
+          onRefresh={handleRefreshWallets}
+        />
+      </div>
+
+      {/* 快速统计 */}
+      <div className="px-4 mt-6">
+        <div className="grid grid-cols-3 gap-4">
+          <SafeMotion
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-xl p-4 text-center shadow-sm"
+          >
+            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <TrophyIcon className="w-5 h-5 text-blue-600" />
+            </div>
+            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-xs text-gray-500">中奖次数</p>
+          </SafeMotion>
+
+          <SafeMotion
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-xl p-4 text-center shadow-sm"
+          >
+            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <StarIcon className="w-5 h-5 text-green-600" />
+            </div>
+            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-xs text-gray-500">参与次数</p>
+          </SafeMotion>
+
+          <SafeMotion
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-xl p-4 text-center shadow-sm"
+          >
+            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
+              <UsersIcon className="w-5 h-5 text-purple-600" />
+            </div>
+            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-xs text-gray-500">邀请好友</p>
+          </SafeMotion>
+        </div>
+      </div>
+
+      {/* 热门夺宝 */}
+      <div className="px-4 mt-8">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-gray-900">热门夺宝</h3>
+          <button className="flex items-center text-blue-600 text-sm font-medium">
+            查看全部
+            <ArrowRightIcon className="w-4 h-4 ml-1" />
+          </button>
+        </div>
+
+        {isLoadingLotteries ? (
+          <div className="space-y-4">
+            {[1, 2].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
+                <div className="h-32 bg-gray-200 rounded-xl mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {lotteries.slice(0, 3).map((lottery) => (
+              <LotteryCard
+                key={lottery.id}
+                lottery={lottery}
+                onPurchase={handlePurchaseLottery}
+              />
+            ))}
+
+            {lotteries.length === 0 && (
+              <SafeMotion
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white rounded-2xl p-8 text-center"
+              >
+                <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-500">暂无进行中的夺宝活动</p>
+                <p className="text-sm text-gray-400 mt-1">敬请期待更多精彩活动</p>
+              </SafeMotion>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+export default HomePage
