@@ -108,7 +108,7 @@ const MarketPage: React.FC = () => {
       ];
 
       // 排序
-      let sorted = [...mockListings];
+      const sorted = [...mockListings];
       switch (sortBy) {
         case 'price_low':
           sorted.sort((a, b) => a.selling_price - b.selling_price);

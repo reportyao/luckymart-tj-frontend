@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useUser } from '../contexts/UserContext'
 import { WalletCard } from '../components/wallet/WalletCard'
@@ -16,6 +17,7 @@ import { DepositModal } from '../components/wallet/DepositModal'
 import { WithdrawModal } from '../components/wallet/WithdrawModal'
 
 const WalletPage: React.FC = () => {
+  const navigate = useNavigate()
   const { user, wallets, refreshWallets } = useUser()
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -116,7 +118,7 @@ const WalletPage: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowDepositModal(true)}
+            onClick={() => navigate('/deposit')}
             className="bg-white rounded-xl p-4 shadow-sm text-center"
           >
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
@@ -128,7 +130,7 @@ const WalletPage: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={() => setShowWithdrawModal(true)}
+            onClick={() => navigate('/withdraw')}
             className="bg-white rounded-xl p-4 shadow-sm text-center"
           >
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
@@ -140,6 +142,7 @@ const WalletPage: React.FC = () => {
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
+            onClick={() => navigate('/exchange')}
             className="bg-white rounded-xl p-4 shadow-sm text-center"
           >
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">

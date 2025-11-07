@@ -110,6 +110,56 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       } catch (error) {
         console.log('Telegram WebApp initialization failed:', error)
         // 开发/测试环境或非 Telegram 环境
+        // 使用 mock 数据便于开发测试
+        const mockUser: User = {
+          id: 'b8156440-3bd2-4dfe-9edc-6ab2bffb6d19',
+          telegram_id: '12345678',
+          telegram_username: 'testuser',
+          first_name: 'Test',
+          last_name: 'User',
+          language_code: 'zh',
+          referral_code: 'LMBBBHMV',
+          status: 'ACTIVE',
+          is_verified: true,
+          kyc_level: 'BASIC',
+          created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString()
+        }
+        
+        const mockWallets: Wallet[] = [
+          {
+            id: 'wallet1',
+            user_id: mockUser.id,
+            type: 'BALANCE',
+            currency: 'TJS',
+            balance: 1000,
+            frozen_balance: 0,
+            total_deposits: 2000,
+            total_withdrawals: 1000,
+            version: 1
+          },
+          {
+            id: 'wallet2',
+            user_id: mockUser.id,
+            type: 'LUCKY_COIN',
+            currency: 'TJS',
+            balance: 500,
+            frozen_balance: 0,
+            total_deposits: 800,
+            total_withdrawals: 300,
+            version: 1
+          }
+        ]
+        
+        setUser(mockUser)
+        setWallets(mockWallets)
+        setTelegramUser({
+          id: 12345678,
+          first_name: 'Test',
+          last_name: 'User',
+          username: 'testuser',
+          photo_url: ''
+        })
         setIsLoading(false)
       }
     }

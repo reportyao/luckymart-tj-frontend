@@ -41,13 +41,13 @@ export class MonitoringService {
 
   // 获取指标数据
   getMetrics(name?: string, limit = 100): PerformanceMetric[] {
-    let filtered = name ? this.metrics.filter(m => m.name === name) : this.metrics
+    const filtered = name ? this.metrics.filter(m => m.name === name) : this.metrics
     return filtered.slice(-limit)
   }
 
   // 获取错误日志
   getErrors(level?: ErrorLog['level'], limit = 100): ErrorLog[] {
-    let filtered = level ? this.errors.filter(e => e.level === level) : this.errors
+    const filtered = level ? this.errors.filter(e => e.level === level) : this.errors
     return filtered.slice(-limit)
   }
 

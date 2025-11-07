@@ -77,7 +77,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
                 {getWalletTypeText('BALANCE')}
               </p>
               <p className="text-2xl font-bold">
-                {balanceWallet ? formatDisplayAmount(balanceWallet.balance) : '$0.00'}
+                {balanceWallet ? formatDisplayAmount(balanceWallet.balance) : 'TJS0.00'}
               </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -101,7 +101,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
                 {getWalletTypeText('LUCKY_COIN')}
               </p>
               <p className="text-2xl font-bold">
-                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.balance) : '$0.00'}
+                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.balance) : 'TJS0.00'}
               </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
@@ -118,30 +118,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         </div>
       </div>
 
-      {/* 快捷操作 */}
-      <div className="flex space-x-2 mt-4">
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex-1 bg-white/20 rounded-lg py-2 px-4 text-sm font-medium hover:bg-white/30 transition-colors"
-        >
-          充值
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex-1 bg-white/20 rounded-lg py-2 px-4 text-sm font-medium hover:bg-white/30 transition-colors"
-        >
-          提现
-        </motion.button>
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex-1 bg-white/20 rounded-lg py-2 px-4 text-sm font-medium hover:bg-white/30 transition-colors"
-        >
-          兑换
-        </motion.button>
-      </div>
+
     </motion.div>
   )
 }

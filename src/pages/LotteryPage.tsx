@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useUser } from '../contexts/UserContext'
 import { lotteryService, Lottery } from '../lib/supabase'
 import { LotteryCard } from '../components/lottery/LotteryCard'
+import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
@@ -12,6 +13,8 @@ const LotteryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all')
+  const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
 
   useEffect(() => {
     loadLotteries()
@@ -39,7 +42,19 @@ const LotteryPage: React.FC = () => {
   })
 
   const handlePurchaseLottery = (lottery: Lottery) => {
-    toast.success(`即将购买 ${lottery.title}`)
+    setSelectedLottery(lottery)
+    setIsPurchaseModalOpen(true)
+  }
+
+  const handleConfirmPurchase = async (lotteryId: string, quantity: number) => {
+    try {
+      // TODO: 调用购买API
+      // await lotteryService.purchaseLottery(lotteryId, quantity)
+      toast.success(`成功购买 ${quantity} 张彩票!`)
+      await loadLotteries() // 刷新列表
+    } catch (error: any) {
+      throw new Error(error.message || '购买失败')
+    }
   }
 
   return (
@@ -122,6 +137,14 @@ const LotteryPage: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* 购买对话框 */}
+      <PurchaseModal
+        lottery={selectedLottery}
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+        onConfirm={handleConfirmPurchase}
+      />
     </div>
   )
 }

@@ -18,9 +18,9 @@ export function formatDateTime(dateString: string | Date): string {
 }
 
 // 货币格式化
-export function formatCurrency(amount: number | string, currency = '₽'): string {
+export function formatCurrency(amount: number | string, currency = 'TJS'): string {
   const num = typeof amount === 'string' ? parseFloat(amount) : amount
-  return `${currency}${num.toLocaleString('ru-RU', { minimumFractionDigits: 2 })}`
+  return `${currency}${num.toFixed(2)}`
 }
 
 // 钱包类型文本

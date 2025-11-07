@@ -17,6 +17,13 @@ import ShowoffPage from './pages/ShowoffPage'
 import ShowoffCreatePage from './pages/ShowoffCreatePage'
 import MarketPage from './pages/MarketPage'
 import MarketCreatePage from './pages/MarketCreatePage'
+import MyTicketsPage from './pages/MyTicketsPage'
+import MyPrizesPage from './pages/MyPrizesPage'
+import SettingsPage from './pages/SettingsPage'
+import ProfileEditPage from './pages/ProfileEditPage'
+import DepositPage from './pages/DepositPage'
+import WithdrawPage from './pages/WithdrawPage'
+import ExchangePage from './pages/ExchangePage'
 import { BottomNavigation } from './components/navigation/BottomNavigation'
 import './App.css'
 
@@ -41,6 +48,13 @@ function App() {
               <Route path="/showoff/create" element={<ShowoffCreatePage />} />
               <Route path="/market" element={<MarketPage />} />
               <Route path="/market/create" element={<MarketCreatePage />} />
+              <Route path="/lottery/:id/my-tickets" element={<MyTicketsPage />} />
+              <Route path="/prizes" element={<MyPrizesPage />} />
+              <Route path="/deposit" element={<DepositPage />} />
+              <Route path="/withdraw" element={<WithdrawPage />} />
+              <Route path="/exchange" element={<ExchangePage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />
             </Routes>
             
             <BottomNavigation />

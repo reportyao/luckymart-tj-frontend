@@ -46,7 +46,7 @@ const ProfilePage: React.FC = () => {
       icon: UserCircleIcon,
       title: '个人信息',
       subtitle: '编辑个人资料',
-      action: () => toast('功能开发中'),
+      action: () => navigate('/profile/edit'),
     },
     {
       icon: ChatBubbleLeftRightIcon,
@@ -71,7 +71,7 @@ const ProfilePage: React.FC = () => {
       icon: CogIcon,
       title: '系统设置',
       subtitle: '通知、语言等',
-      action: () => toast('功能开发中'),
+      action: () => navigate('/settings'),
     },
     {
       icon: QuestionMarkCircleIcon,
