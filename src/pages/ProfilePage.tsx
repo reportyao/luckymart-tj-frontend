@@ -1,6 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
 import { 
   UserCircleIcon,
@@ -19,6 +20,7 @@ import { formatDateTime, copyToClipboard, shareToTelegram } from '../lib/utils'
 import toast from 'react-hot-toast'
 
 const ProfilePage: React.FC = () => {
+  const { t } = useTranslation()
   const { user, telegramUser, logout } = useUser()
   const navigate = useNavigate()
 
@@ -26,16 +28,16 @@ const ProfilePage: React.FC = () => {
     if (user?.referral_code) {
       const success = await copyToClipboard(user.referral_code)
       if (success) {
-        toast.success('推荐码已复制到剪贴板')
+        toast.success(t('profile.copyReferralCode'))
       } else {
-        toast.error('复制失败，请手动复制')
+        toast.error(t('error.unknownError'))
       }
     }
   }
 
   const handleShareReferral = () => {
     if (user?.referral_code) {
-      const shareText = `🎉 加入LuckyMart社交夺宝平台！使用我的推荐码 ${user.referral_code} 即可开始夺宝之旅！`
+      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.referral_code}`
       const shareUrl = `https://t.me/your_bot_username?start=ref_${user.referral_code}`
       shareToTelegram(shareText, shareUrl)
     }
@@ -44,49 +46,49 @@ const ProfilePage: React.FC = () => {
   const menuItems = [
     {
       icon: UserCircleIcon,
-      title: '个人信息',
-      subtitle: '编辑个人资料',
+      title: t('profile.accountInfo'),
+      subtitle: t('common.edit'),
       action: () => navigate('/profile/edit'),
     },
     {
       icon: ChatBubbleLeftRightIcon,
-      title: 'Bot管理',
-      subtitle: 'Telegram机器人设置',
+      title: t('nav.bot'),
+      subtitle: 'Telegram Bot',
       action: () => navigate('/bot'),
     },
     // 系统监控入口（所有用户可见）
     {
       icon: ChartBarIcon,
-      title: '系统监控',
-      subtitle: '性能指标和错误追踪',
+      title: t('nav.monitoring'),
+      subtitle: 'System Status',
       action: () => navigate('/monitoring'),
     },
     {
       icon: ShieldCheckIcon,
-      title: '安全设置',
-      subtitle: '密码、验证等',
-      action: () => toast('功能开发中'),
+      title: t('wallet.security'),
+      subtitle: t('wallet.paymentPassword'),
+      action: () => toast(t('common.loading')),
     },
     {
       icon: CogIcon,
-      title: '系统设置',
-      subtitle: '通知、语言等',
+      title: t('profile.settings'),
+      subtitle: t('profile.language'),
       action: () => navigate('/settings'),
     },
     {
       icon: QuestionMarkCircleIcon,
-      title: '帮助中心',
-      subtitle: '常见问题',
-      action: () => toast('功能开发中'),
+      title: t('common.help') || 'Help',
+      subtitle: 'FAQ',
+      action: () => toast(t('common.loading')),
     },
   ]
 
   const getKycLevelText = (level: string) => {
     switch (level) {
-      case 'BASIC': return '基础认证'
-      case 'INTERMEDIATE': return '中级认证'
-      case 'ADVANCED': return '高级认证'
-      default: return '未认证'
+      case 'BASIC': return t('wallet.basicVerification')
+      case 'INTERMEDIATE': return t('wallet.authentication')
+      case 'ADVANCED': return t('wallet.authentication')
+      default: return t('wallet.notSet')
     }
   }
 
@@ -143,10 +145,10 @@ const ProfilePage: React.FC = () => {
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                 user ? getStatusColor(user.status) : 'text-gray-600 bg-gray-50'
               }`}>
-                {user?.status === 'ACTIVE' ? '正常' : user?.status}
+                {user?.status === 'ACTIVE' ? t('invite.active') : user?.status}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
-                {user ? getKycLevelText(user.kyc_level) : '未认证'}
+                {user ? getKycLevelText(user.kyc_level) : t('wallet.notSet')}
               </span>
             </div>
           </div>
@@ -156,11 +158,11 @@ const ProfilePage: React.FC = () => {
         <div className="mt-4 pt-4 border-t border-white/20">
           <div className="flex justify-between text-sm">
             <div>
-              <p className="text-white/60">用户ID</p>
+              <p className="text-white/60">{t('invite.username')}</p>
               <p className="font-medium">{user?.referral_code}</p>
             </div>
             <div className="text-right">
-              <p className="text-white/60">加入时间</p>
+              <p className="text-white/60">{t('invite.joinTime')}</p>
               <p className="font-medium">
                 {user?.created_at ? formatDateTime(user.created_at) : '--'}
               </p>
@@ -177,7 +179,7 @@ const ProfilePage: React.FC = () => {
         className="bg-white rounded-2xl mx-4 mt-4 p-6 shadow-sm"
       >
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">我的推荐码</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('invite.myInviteCode')}</h3>
           <ShareIcon className="w-5 h-5 text-gray-400" />
         </div>
         
@@ -195,7 +197,7 @@ const ProfilePage: React.FC = () => {
             className="flex-1 bg-blue-50 text-blue-600 py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-1"
           >
             <ClipboardDocumentIcon className="w-4 h-4" />
-            <span>复制</span>
+            <span>{t('common.copy') || t('invite.copyCode')}</span>
           </motion.button>
           
           <motion.button
@@ -205,7 +207,7 @@ const ProfilePage: React.FC = () => {
             className="flex-1 bg-green-50 text-green-600 py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-1"
           >
             <ShareIcon className="w-4 h-4" />
-            <span>分享</span>
+            <span>{t('common.share') || t('invite.shareInvite')}</span>
           </motion.button>
         </div>
       </motion.div>
@@ -246,7 +248,7 @@ const ProfilePage: React.FC = () => {
           className="w-full bg-white border border-red-200 text-red-600 py-4 rounded-2xl font-semibold flex items-center justify-center space-x-2 hover:bg-red-50 transition-colors"
         >
           <XMarkIcon className="w-5 h-5" />
-          <span>退出登录</span>
+          <span>{t('profile.logout')}</span>
         </motion.button>
       </div>
 

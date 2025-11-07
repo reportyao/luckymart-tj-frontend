@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
 import { 
   ArrowLeftIcon,
@@ -10,6 +11,7 @@ import {
 import toast from 'react-hot-toast'
 
 const ProfileEditPage: React.FC = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user, telegramUser } = useUser()
   
@@ -39,11 +41,11 @@ const ProfileEditPage: React.FC = () => {
       // 模拟API调用
       await new Promise(resolve => setTimeout(resolve, 1000))
       
-      toast.success('个人资料已更新')
+      toast.success(t('success.updateSuccess'))
       navigate(-1)
     } catch (error) {
       console.error('保存失败:', error)
-      toast.error('保存失败，请重试')
+      toast.error(t('error.validationError'))
     } finally {
       setIsSaving(false)
     }
@@ -61,14 +63,14 @@ const ProfileEditPage: React.FC = () => {
             >
               <ArrowLeftIcon className="w-6 h-6 text-gray-600" />
             </button>
-            <h1 className="text-xl font-bold text-gray-900">编辑个人资料</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('common.edit')}</h1>
           </div>
           <button
             onClick={handleSave}
             disabled={isSaving}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSaving ? '保存中...' : '保存'}
+            {isSaving ? t('common.submitting') : t('common.save')}
           </button>
         </div>
       </div>
@@ -94,7 +96,7 @@ const ProfileEditPage: React.FC = () => {
             </button>
           </div>
           
-          <p className="text-sm text-gray-500 mt-3">点击更换头像</p>
+          <p className="text-sm text-gray-500 mt-3">{t('common.upload') || 'Upload'}</p>
         </div>
       </div>
 
@@ -104,14 +106,14 @@ const ProfileEditPage: React.FC = () => {
           {/* 名字 */}
           <div className="p-4 border-b border-gray-100">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              名字
+              {t('common.firstName') || 'First Name'}
             </label>
             <input
               type="text"
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              placeholder="请输入名字"
+              placeholder={t('common.firstName') || 'First Name'}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -119,14 +121,14 @@ const ProfileEditPage: React.FC = () => {
           {/* 姓氏 */}
           <div className="p-4 border-b border-gray-100">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              姓氏
+              {t('common.lastName') || 'Last Name'}
             </label>
             <input
               type="text"
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              placeholder="请输入姓氏"
+              placeholder={t('common.lastName') || 'Last Name'}
               className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -134,7 +136,7 @@ const ProfileEditPage: React.FC = () => {
           {/* 用户名 */}
           <div className="p-4 border-b border-gray-100">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telegram用户名
+              {t('invite.username')}
             </label>
             <div className="flex items-center">
               <span className="text-gray-500 mr-1">@</span>
@@ -143,7 +145,7 @@ const ProfileEditPage: React.FC = () => {
                 name="telegram_username"
                 value={formData.telegram_username}
                 onChange={handleChange}
-                placeholder="请输入用户名"
+                placeholder={t('invite.username')}
                 className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -160,13 +162,13 @@ const ProfileEditPage: React.FC = () => {
               disabled
               className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
             />
-            <p className="text-xs text-gray-500 mt-1">Telegram ID无法修改</p>
+            <p className="text-xs text-gray-500 mt-1">Telegram ID</p>
           </div>
 
           {/* 推荐码 (只读) */}
           <div className="p-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              我的推荐码
+              {t('invite.myInviteCode')}
             </label>
             <input
               type="text"
@@ -174,7 +176,7 @@ const ProfileEditPage: React.FC = () => {
               disabled
               className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed font-mono text-center text-lg"
             />
-            <p className="text-xs text-gray-500 mt-1">推荐码无法修改</p>
+            <p className="text-xs text-gray-500 mt-1">{t('home.referralCode')}</p>
           </div>
         </div>
       </div>
@@ -183,7 +185,7 @@ const ProfileEditPage: React.FC = () => {
       <div className="mx-4 mt-4">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-800">
-            💡 <strong>提示：</strong>修改个人资料不会影响您的Telegram账号信息。
+            💡 <strong>{t('common.note') || 'Note'}:</strong> Telegram account info will not be affected.
           </p>
         </div>
       </div>

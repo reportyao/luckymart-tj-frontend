@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
 import { lotteryService, Lottery } from '../lib/supabase'
 import { LotteryCard } from '../components/lottery/LotteryCard'
@@ -8,6 +9,7 @@ import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react
 import toast from 'react-hot-toast'
 
 const LotteryPage: React.FC = () => {
+  const { t } = useTranslation()
   const { user } = useUser()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -27,7 +29,7 @@ const LotteryPage: React.FC = () => {
       setLotteries(data)
     } catch (error: any) {
       console.error('Failed to load lotteries:', error)
-      toast.error('加载彩票数据失败')
+      toast.error(t('error.networkError'))
     } finally {
       setIsLoading(false)
     }
@@ -50,10 +52,10 @@ const LotteryPage: React.FC = () => {
     try {
       // TODO: 调用购买API
       // await lotteryService.purchaseLottery(lotteryId, quantity)
-      toast.success(`成功购买 ${quantity} 张彩票!`)
+      toast.success(t('lottery.participate'))
       await loadLotteries() // 刷新列表
     } catch (error: any) {
-      throw new Error(error.message || '购买失败')
+      throw new Error(error.message || t('error.validationError'))
     }
   }
 
@@ -61,14 +63,14 @@ const LotteryPage: React.FC = () => {
     <div className="pb-20">
       {/* 页面标题 */}
       <div className="bg-white border-b border-gray-100 px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">夺宝大厅</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('lottery.hall')}</h1>
         
         {/* 搜索框 */}
         <div className="relative">
           <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="搜索夺宝活动..."
+            placeholder={t('lottery.searchPlaceholder')}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
@@ -80,10 +82,10 @@ const LotteryPage: React.FC = () => {
       <div className="px-4 py-4 bg-white border-b border-gray-100">
         <div className="flex space-x-2 overflow-x-auto">
           {[
-            { key: 'all', label: '全部' },
-            { key: 'active', label: '进行中' },
-            { key: 'upcoming', label: '即将开始' },
-            { key: 'completed', label: '已完成' },
+            { key: 'all', label: t('common.all') },
+            { key: 'active', label: t('lottery.active') },
+            { key: 'upcoming', label: t('lottery.upcoming') },
+            { key: 'completed', label: t('lottery.completed') },
           ].map((tab) => (
             <button
               key={tab.key}
@@ -130,8 +132,8 @@ const LotteryPage: React.FC = () => {
                 className="bg-white rounded-2xl p-8 text-center"
               >
                 <AdjustmentsHorizontalIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">没有找到相关的夺宝活动</p>
-                <p className="text-sm text-gray-400 mt-1">试试调整搜索条件</p>
+                <p className="text-gray-500">{t('home.noLotteries')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('home.stayTuned')}</p>
               </motion.div>
             )}
           </div>

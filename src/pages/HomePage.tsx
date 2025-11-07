@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
 import { lotteryService, Lottery } from '../lib/supabase'
 import { WalletCard } from '../components/wallet/WalletCard'
@@ -9,6 +10,7 @@ import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/reac
 import toast from 'react-hot-toast'
 
 const HomePage: React.FC = () => {
+  const { t } = useTranslation()
   const { user, wallets, isLoading: userLoading, refreshWallets } = useUser()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
@@ -24,7 +26,7 @@ const HomePage: React.FC = () => {
       setLotteries(data)
     } catch (error: any) {
       console.error('Failed to load lotteries:', error)
-      toast.error('加载彩票数据失败')
+      toast.error(t('error.networkError'))
     } finally {
       setIsLoadingLotteries(false)
     }
@@ -32,12 +34,12 @@ const HomePage: React.FC = () => {
 
   const handlePurchaseLottery = (lottery: Lottery) => {
     // TODO: Navigate to purchase page or open purchase modal
-    toast.success(`即将购买 ${lottery.title}`)
+    toast.success(t('lottery.participate') + ': ' + lottery.title)
   }
 
   const handleRefreshWallets = async () => {
     await refreshWallets()
-    toast.success('钱包数据已更新')
+    toast.success(t('wallet.balanceUpdated'))
   }
 
   if (userLoading) {
@@ -45,7 +47,7 @@ const HomePage: React.FC = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">正在加载...</p>
+          <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -62,9 +64,9 @@ const HomePage: React.FC = () => {
           <div className="w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
             <StarIcon className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">欢迎来到 LuckyMart</h1>
-          <p className="text-gray-600 mb-6">塔吉克斯坦领先的社交夺宝平台</p>
-          <p className="text-sm text-gray-500">请通过 Telegram 访问此应用</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('auth.welcome')}</h1>
+          <p className="text-gray-600 mb-6">{t('auth.description')}</p>
+          <p className="text-sm text-gray-500">{t('auth.pleaseLogin')}</p>
         </SafeMotion>
       </div>
     )
@@ -81,14 +83,14 @@ const HomePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold mb-1">
-              你好, {user.first_name}! 👋
+              {t('home.welcome')}, {user.first_name}! 👋
             </h2>
             <p className="text-white/80 text-sm">
-              今天想试试运气吗？
+              {t('home.tryLuck')}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-white/60">推荐码</p>
+            <p className="text-xs text-white/60">{t('home.referralCode')}</p>
             <p className="text-lg font-bold">{user.referral_code}</p>
           </div>
         </div>
@@ -115,7 +117,7 @@ const HomePage: React.FC = () => {
               <TrophyIcon className="w-5 h-5 text-blue-600" />
             </div>
             <p className="text-lg font-bold text-gray-900">0</p>
-            <p className="text-xs text-gray-500">中奖次数</p>
+            <p className="text-xs text-gray-500">{t('home.winCount')}</p>
           </SafeMotion>
 
           <SafeMotion
@@ -128,7 +130,7 @@ const HomePage: React.FC = () => {
               <StarIcon className="w-5 h-5 text-green-600" />
             </div>
             <p className="text-lg font-bold text-gray-900">0</p>
-            <p className="text-xs text-gray-500">参与次数</p>
+            <p className="text-xs text-gray-500">{t('home.participationCount')}</p>
           </SafeMotion>
 
           <SafeMotion
@@ -141,7 +143,7 @@ const HomePage: React.FC = () => {
               <UsersIcon className="w-5 h-5 text-purple-600" />
             </div>
             <p className="text-lg font-bold text-gray-900">0</p>
-            <p className="text-xs text-gray-500">邀请好友</p>
+            <p className="text-xs text-gray-500">{t('home.inviteFriends')}</p>
           </SafeMotion>
         </div>
       </div>
@@ -149,9 +151,9 @@ const HomePage: React.FC = () => {
       {/* 热门夺宝 */}
       <div className="px-4 mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-bold text-gray-900">热门夺宝</h3>
+          <h3 className="text-lg font-bold text-gray-900">{t('home.hotLotteries')}</h3>
           <button className="flex items-center text-blue-600 text-sm font-medium">
-            查看全部
+            {t('home.viewAll')}
             <ArrowRightIcon className="w-4 h-4 ml-1" />
           </button>
         </div>
@@ -183,8 +185,8 @@ const HomePage: React.FC = () => {
                 className="bg-white rounded-2xl p-8 text-center"
               >
                 <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">暂无进行中的夺宝活动</p>
-                <p className="text-sm text-gray-400 mt-1">敬请期待更多精彩活动</p>
+                <p className="text-gray-500">{t('home.noLotteries')}</p>
+                <p className="text-sm text-gray-400 mt-1">{t('home.stayTuned')}</p>
               </SafeMotion>
             )}
           </div>

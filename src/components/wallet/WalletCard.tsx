@@ -1,5 +1,6 @@
 import React from 'react'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Wallet } from '../../lib/supabase'
 import { formatCurrency, getWalletTypeText, cn } from '../../lib/utils'
@@ -17,6 +18,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   onRefresh,
   className
 }) => {
+  const { t } = useTranslation()
   const [showBalance, setShowBalance] = React.useState(true)
   
   const balanceWallet = wallets.find(w => w.type === 'BALANCE')
@@ -40,7 +42,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
       )}
     >
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">我的钱包</h3>
+        <h3 className="text-lg font-semibold">{t('wallet.myWallet')}</h3>
         <div className="flex items-center space-x-2">
           <button
             onClick={toggleShowBalance}
@@ -87,8 +89,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {balanceWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>累计充值: {formatCurrency(balanceWallet.total_deposits)}</span>
-              <span>累计提现: {formatCurrency(balanceWallet.total_withdrawals)}</span>
+              <span>{t('wallet.totalDeposits')}: {formatCurrency(balanceWallet.total_deposits)}</span>
+              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(balanceWallet.total_withdrawals)}</span>
             </div>
           )}
         </div>
@@ -111,8 +113,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {luckyCoinWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>累计充值: {formatCurrency(luckyCoinWallet.total_deposits)}</span>
-              <span>累计提现: {formatCurrency(luckyCoinWallet.total_withdrawals)}</span>
+              <span>{t('wallet.totalDeposits')}: {formatCurrency(luckyCoinWallet.total_deposits)}</span>
+              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(luckyCoinWallet.total_withdrawals)}</span>
             </div>
           )}
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
 import { WalletCard } from '../components/wallet/WalletCard'
 import { 
@@ -17,6 +18,7 @@ import { DepositModal } from '../components/wallet/DepositModal'
 import { WithdrawModal } from '../components/wallet/WithdrawModal'
 
 const WalletPage: React.FC = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { user, wallets, refreshWallets } = useUser()
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('overview')
@@ -28,7 +30,7 @@ const WalletPage: React.FC = () => {
     setIsRefreshing(true)
     await refreshWallets()
     setIsRefreshing(false)
-    toast.success('钱包数据已更新')
+    toast.success(t('wallet.balanceUpdated'))
   }
 
   // Mock transaction data - in real app, this would come from API
@@ -38,7 +40,7 @@ const WalletPage: React.FC = () => {
       type: 'LOTTERY_PURCHASE',
       amount: -10.00,
       status: 'COMPLETED',
-      description: '购买彩票 - TEST2025001',
+      description: t('order.lotteryPurchase') + ' - TEST2025001',
       created_at: new Date().toISOString(),
     },
     {
@@ -46,7 +48,7 @@ const WalletPage: React.FC = () => {
       type: 'LOTTERY_PRIZE',
       amount: 14.40,
       status: 'COMPLETED',
-      description: '彩票中奖奖金 - 1等奖',
+      description: t('lottery.prizeAmount') + ' - 1' + t('lottery.prizeAmount'),
       created_at: new Date(Date.now() - 60000).toISOString(),
     },
     {
@@ -54,7 +56,7 @@ const WalletPage: React.FC = () => {
       type: 'DEPOSIT',
       amount: 100.00,
       status: 'COMPLETED',
-      description: '钱包充值',
+      description: t('wallet.deposit'),
       created_at: new Date(Date.now() - 120000).toISOString(),
     },
   ]
@@ -92,7 +94,7 @@ const WalletPage: React.FC = () => {
       {/* 页面标题 */}
       <div className="bg-white border-b border-gray-100 px-4 py-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900">我的钱包</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('wallet.myWallet')}</h1>
           <button
             onClick={handleRefresh}
             disabled={isRefreshing}
@@ -124,7 +126,7 @@ const WalletPage: React.FC = () => {
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <ArrowDownIcon className="w-6 h-6 text-green-600" />
             </div>
-            <p className="text-sm font-medium text-gray-900">充值</p>
+            <p className="text-sm font-medium text-gray-900">{t('wallet.deposit')}</p>
           </motion.button>
 
           <motion.button
@@ -136,7 +138,7 @@ const WalletPage: React.FC = () => {
             <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <ArrowUpIcon className="w-6 h-6 text-red-600" />
             </div>
-            <p className="text-sm font-medium text-gray-900">提现</p>
+            <p className="text-sm font-medium text-gray-900">{t('wallet.withdraw')}</p>
           </motion.button>
 
           <motion.button
@@ -148,7 +150,7 @@ const WalletPage: React.FC = () => {
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <ArrowPathIcon className="w-6 h-6 text-blue-600" />
             </div>
-            <p className="text-sm font-medium text-gray-900">兑换</p>
+            <p className="text-sm font-medium text-gray-900">{t('wallet.exchange')}</p>
           </motion.button>
         </div>
       </div>
@@ -164,7 +166,7 @@ const WalletPage: React.FC = () => {
                 : 'text-gray-600'
             }`}
           >
-            钱包概览
+            {t('wallet.overview')}
           </button>
           <button
             onClick={() => setActiveTab('transactions')}
@@ -174,7 +176,7 @@ const WalletPage: React.FC = () => {
                 : 'text-gray-600'
             }`}
           >
-            交易记录
+            {t('wallet.transactions')}
           </button>
         </div>
       </div>
@@ -185,10 +187,10 @@ const WalletPage: React.FC = () => {
           <div className="space-y-4">
             {/* 钱包统计 */}
             <div className="bg-white rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">钱包统计</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('wallet.overview')}</h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-500">总充值</p>
+                  <p className="text-sm text-gray-500">{t('wallet.totalDeposits')}</p>
                   <p className="text-xl font-bold text-green-600">
                     {formatCurrency(
                       wallets.reduce((sum, w) => sum + w.total_deposits, 0)
@@ -196,7 +198,7 @@ const WalletPage: React.FC = () => {
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">总提现</p>
+                  <p className="text-sm text-gray-500">{t('wallet.totalWithdrawals')}</p>
                   <p className="text-xl font-bold text-red-600">
                     {formatCurrency(
                       wallets.reduce((sum, w) => sum + w.total_withdrawals, 0)
@@ -208,15 +210,15 @@ const WalletPage: React.FC = () => {
 
             {/* 安全设置 */}
             <div className="bg-white rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">安全设置</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('wallet.security')}</h3>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">支付密码</span>
-                  <span className="text-sm text-gray-500">未设置</span>
+                  <span className="text-gray-700">{t('wallet.paymentPassword')}</span>
+                  <span className="text-sm text-gray-500">{t('wallet.notSet')}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-700">身份验证</span>
-                  <span className="text-sm text-gray-500">基础验证</span>
+                  <span className="text-gray-700">{t('wallet.authentication')}</span>
+                  <span className="text-sm text-gray-500">{t('wallet.basicVerification')}</span>
                 </div>
               </div>
             </div>
@@ -224,7 +226,7 @@ const WalletPage: React.FC = () => {
         ) : (
           <div className="bg-white rounded-xl overflow-hidden">
             <div className="p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">交易记录</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t('wallet.transactions')}</h3>
             </div>
             
             <div className="divide-y divide-gray-100">

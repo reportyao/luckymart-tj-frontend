@@ -17,7 +17,14 @@
     "refresh": "刷新",
     "optional": "可选",
     "submitting": "提交中...",
-    "exchanging": "兑换中..."
+    "exchanging": "兑换中...",
+    "copy": "复制",
+    "share": "分享",
+    "help": "帮助",
+    "note": "提示",
+    "upload": "上传",
+    "firstName": "名字",
+    "lastName": "姓氏"
   },
   "nav": {
     "home": "首页",
@@ -204,7 +211,8 @@
     "commissionEarned": "赚取佣金",
     "joinTime": "加入时间",
     "active": "活跃",
-    "inactive": "不活跃"
+    "inactive": "不活跃",
+    "userId": "用户ID"
   },
   "profile": {
     "myProfile": "个人中心",

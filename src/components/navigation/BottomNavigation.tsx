@@ -1,6 +1,7 @@
 import React from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { 
   HomeIcon, 
   SparklesIcon, 
@@ -15,36 +16,37 @@ import {
 } from '@heroicons/react/24/solid'
 import { cn } from '../../lib/utils'
 
-const navigation = [
-  {
-    name: '首页',
-    path: '/',
-    icon: HomeIcon,
-    activeIcon: HomeIconSolid,
-  },
-  {
-    name: '夺宝',
-    path: '/lottery',
-    icon: SparklesIcon,
-    activeIcon: SparklesIconSolid,
-  },
-  {
-    name: '钱包',
-    path: '/wallet',
-    icon: CreditCardIcon,
-    activeIcon: CreditCardIconSolid,
-  },
-  {
-    name: '我的',
-    path: '/profile',
-    icon: UserIcon,
-    activeIcon: UserIconSolid,
-  },
-]
-
 export const BottomNavigation: React.FC = () => {
+  const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
+
+  const navigation = [
+    {
+      name: t('nav.home'),
+      path: '/',
+      icon: HomeIcon,
+      activeIcon: HomeIconSolid,
+    },
+    {
+      name: t('nav.lottery'),
+      path: '/lottery',
+      icon: SparklesIcon,
+      activeIcon: SparklesIconSolid,
+    },
+    {
+      name: t('nav.wallet'),
+      path: '/wallet',
+      icon: CreditCardIcon,
+      activeIcon: CreditCardIconSolid,
+    },
+    {
+      name: t('nav.profile'),
+      path: '/profile',
+      icon: UserIcon,
+      activeIcon: UserIconSolid,
+    },
+  ]
 
   return (
     <motion.nav
