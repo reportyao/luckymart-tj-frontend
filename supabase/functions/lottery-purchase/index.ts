@@ -365,6 +365,22 @@ Deno.serve(async (req) => {
             });
         }
 
+        // 检查是否售罄，如果售罄则触发自动开奖
+        const newSoldTickets = lottery.sold_tickets + quantity;
+        if (newSoldTickets >= lottery.total_tickets) {
+            // 异步调用售罄检测函数，不等待结果
+            fetch(`${supabaseUrl}/functions/v1/check-lottery-sold-out`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${serviceRoleKey}`
+                },
+                body: JSON.stringify({ lotteryId: lotteryId })
+            }).catch(err => {
+                console.error('Failed to trigger sold-out check:', err);
+            });
+        }
+
         // 返回购买结果
         const result = {
             success: true,
@@ -375,7 +391,8 @@ Deno.serve(async (req) => {
                 status: 'PAID'
             },
             lottery_entries: entries,
-            remaining_balance: newBalance
+            remaining_balance: newBalance,
+            is_sold_out: newSoldTickets >= lottery.total_tickets
         };
 
         return new Response(JSON.stringify({ data: result }), {

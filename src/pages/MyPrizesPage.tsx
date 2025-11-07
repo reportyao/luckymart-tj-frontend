@@ -39,38 +39,39 @@ const MyPrizesPage: React.FC = () => {
   const loadPrizes = async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用实际API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // 模拟数据
-      const mockPrizes: Prize[] = [
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
         {
-          id: '1',
-          lottery_id: '20250107001',
-          lottery_period: '20250107001',
-          lottery_title: 'iPhone 15 Pro Max 256GB',
-          lottery_image: 'https://images.unsplash.com/photo-1696446702183-cbd0674e0c99?w=400',
-          winning_code: 'LM-20250107001-00045',
-          prize_value: 1200,
-          status: 'PENDING',
-          won_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          lottery_id: '20250106001',
-          lottery_period: '20250106001',
-          lottery_title: 'AirPods Pro 2代',
-          lottery_image: 'https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=400',
-          winning_code: 'LM-20250106001-00023',
-          prize_value: 300,
-          status: 'SHIPPED',
-          won_at: new Date(Date.now() - 86400000 * 3).toISOString()
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          }
         }
-      ];
+      );
 
-      setPrizes(mockPrizes);
+      const result = await response.json();
+
+      if (result.success && result.data) {
+        // 转换数据格式
+        const formattedPrizes: Prize[] = result.data.map((prize: any) => ({
+          id: prize.id,
+          lottery_id: prize.lottery_id,
+          lottery_period: prize.lottery?.id || '',
+          lottery_title: prize.prize_name,
+          lottery_image: prize.prize_image,
+          winning_code: prize.winning_code,
+          prize_value: prize.prize_value,
+          status: prize.status,
+          won_at: prize.won_at
+        }));
+        setPrizes(formattedPrizes);
+      } else {
+        throw new Error(result.error || 'Failed to load prizes');
+      }
     } catch (error) {
-      toast.error('加载失败');
+      console.error('Load prizes error:', error);
+      toast.error(t('myPrizes.loadError'));
     } finally {
       setIsLoading(false);
     }
