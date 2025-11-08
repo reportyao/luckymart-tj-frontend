@@ -87,7 +87,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl z-50 max-w-md mx-auto"
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl z-50 max-w-md mx-auto max-h-[85vh] flex flex-col"
           >
             {/* 头部 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -101,7 +101,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             </div>
 
             {/* 内容 */}
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 overflow-y-auto flex-1">
               {showSuccess && purchasedCodes.length > 0 ? (
                 /* 购买成功显示 */
                 <div className="text-center space-y-4">
@@ -138,11 +138,29 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 <>
               {/* 商品信息 */}
               <div className="flex items-start space-x-4">
-                <img
-                  src={lottery.image_url || '/placeholder.png'}
-                  alt={lottery.title}
-                  className="w-20 h-20 rounded-xl object-cover"
-                />
+                {lottery.image_url ? (
+                  <img
+                    src={lottery.image_url}
+                    alt={lottery.title}
+                    className="w-20 h-20 rounded-xl object-cover"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none'
+                      const parent = e.currentTarget.parentElement
+                      if (parent && parent.firstChild === e.currentTarget) {
+                        const placeholder = document.createElement('div')
+                        placeholder.className = 'w-20 h-20 rounded-xl bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center'
+                        placeholder.innerHTML = '<svg class="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" /></svg>'
+                        parent.insertBefore(placeholder, parent.firstChild)
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-xl bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
+                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+                    </svg>
+                  </div>
+                )}
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900 mb-1">{lottery.title}</h4>
                   <p className="text-sm text-gray-500">期号: {lottery.period}</p>
@@ -193,7 +211,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             </div>
 
             {/* 底部按钮 */}
-            <div className="p-6 border-t border-gray-100 flex space-x-3">
+            <div className="p-6 pb-8 border-t border-gray-100 flex space-x-3 bg-white">
               {showSuccess ? (
                 <button
                   onClick={handleClose}
