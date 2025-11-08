@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
+import { uploadImages } from '../lib/uploadImage'
 import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react'
 
 interface PaymentConfig {
@@ -64,19 +65,18 @@ export default function DepositPage() {
     }
   }
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
     if (!files) return
 
-    // TODO: 实现图片上传到Supabase Storage
-    // 这里暂时使用base64编码
-    Array.from(files).forEach(file => {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setUploadedImages(prev => [...prev, reader.result as string])
-      }
-      reader.readAsDataURL(file)
-    })
+    try {
+      const fileArray = Array.from(files)
+      const urls = await uploadImages(fileArray, 'payment-proofs', 'deposits')
+      setUploadedImages(prev => [...prev, ...urls])
+    } catch (error) {
+      console.error('图片上传失败:', error)
+      alert(t('wallet.imageUploadFailed'))
+    }
   }
 
   const handleSubmit = async () => {
