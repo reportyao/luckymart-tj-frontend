@@ -41,8 +41,46 @@ const MarketCreatePage: React.FC = () => {
   const fetchMyTickets = async () => {
     setIsLoadingTickets(true);
     try {
-      // TODO: 调用实际API获取我的彩票
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 调用API获取我的奖品(可转售的)
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || '获取奖品列表失败');
+      }
+
+      // 过滤出可以转售的奖品(PENDING或REJECTED状态)
+      const resellablePrizes = result.data.filter((prize: any) => 
+        prize.status === 'PENDING' || prize.status === 'REJECTED'
+      );
+
+      // 转换数据格式
+      const formattedTickets: MyTicket[] = resellablePrizes.map((prize: any) => ({
+        id: prize.id,
+        lottery_id: prize.lottery_id,
+        lottery_title: prize.lotteries?.title || '未知商品',
+        lottery_image: prize.lotteries?.image_url || '',
+        ticket_numbers: prize.ticket_numbers || '',
+        purchase_price: prize.lotteries?.ticket_price || 0,
+        currency: 'TJS',
+        draw_time: prize.lotteries?.end_time || new Date().toISOString(),
+        status: 'ACTIVE',
+      }));
+
+      setMyTickets(formattedTickets);
+    } catch (error: any) {
+      console.error('获取奖品列表失败:', error);
+      toast.error(error.message || '获取奖品列表失败');
+      // 如果API失败，使用mock数据
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const mockTickets: MyTicket[] = [
         {
@@ -120,8 +158,28 @@ const MarketCreatePage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // TODO: 调用API创建转售
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 调用API创建转售
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-resale`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            prizeId: selectedTicket,
+            price: parseFloat(sellingPrice),
+            description: `转售 ${selectedTicketData?.lottery_title}`,
+          }),
+        }
+      );
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || '发布转售失败');
+      }
 
       toast.success('转售信息发布成功');
       navigate('/market');

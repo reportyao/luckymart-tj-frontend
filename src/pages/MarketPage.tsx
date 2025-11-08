@@ -50,8 +50,47 @@ const MarketPage: React.FC = () => {
   const fetchListings = async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取转售列表
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 调用API获取转售列表
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-resale-items?status=ACTIVE&limit=50`,
+        {
+          headers: {
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+      
+      if (!result.success) {
+        throw new Error(result.error || '获取转售列表失败');
+      }
+
+      // 转换数据格式
+      const formattedListings: MarketListing[] = result.data.map((item: any) => ({
+        id: item.id,
+        seller_id: item.seller_id,
+        seller_name: item.seller?.telegram_username || `User***${item.seller_id.slice(-3)}`,
+        lottery_entry_id: item.prize_id,
+        lottery_id: item.lottery_id,
+        lottery_title: item.lotteries?.title || '未知商品',
+        lottery_image: item.lotteries?.image_url || '',
+        ticket_numbers: item.prizes?.ticket_numbers || '',
+        original_price: item.original_price,
+        selling_price: item.resale_price,
+        currency: 'TJS',
+        discount_percentage: Math.round((1 - item.resale_price / item.original_price) * 100),
+        status: item.status === 'ACTIVE' ? 'AVAILABLE' : item.status === 'SOLD' ? 'SOLD' : 'CANCELLED',
+        draw_time: item.lotteries?.end_time || new Date().toISOString(),
+        created_at: item.created_at,
+      }));
+
+      setListings(formattedListings);
+    } catch (error: any) {
+      console.error('获取转售列表失败:', error);
+      toast.error(error.message || '获取转售列表失败');
+      // 如果API失败，使用mock数据
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       const mockListings: MarketListing[] = [
         {
