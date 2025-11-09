@@ -88,7 +88,7 @@ const MarketPage: React.FC = () => {
       setListings(formattedListings);
     } catch (error: any) {
       console.error('获取转售列表失败:', error);
-      toast.error(error.message || '获取转售列表失败');
+      toast.error(error.message || t('error.networkError'));
       // 如果API失败，使用mock数据
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -163,9 +163,6 @@ const MarketPage: React.FC = () => {
       }
 
       setListings(sorted);
-    } catch (error) {
-      console.error('Failed to fetch listings:', error);
-      toast.error(t('error.networkError'));
     } finally {
       setIsLoading(false);
     }

@@ -78,7 +78,7 @@ const MarketCreatePage: React.FC = () => {
       setMyTickets(formattedTickets);
     } catch (error: any) {
       console.error('获取奖品列表失败:', error);
-      toast.error(error.message || '获取奖品列表失败');
+      toast.error(error.message || t('error.networkError'));
       // 如果API失败，使用mock数据
       await new Promise(resolve => setTimeout(resolve, 500));
 
@@ -108,9 +108,6 @@ const MarketCreatePage: React.FC = () => {
       ];
 
       setMyTickets(mockTickets);
-    } catch (error) {
-      console.error('Failed to fetch tickets:', error);
-      toast.error(t('error.networkError'));
     } finally {
       setIsLoadingTickets(false);
     }
