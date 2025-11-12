@@ -27,20 +27,21 @@ import ExchangePage from './pages/ExchangePage'
 import { BottomNavigation } from './components/navigation/BottomNavigation'
 import './App.css'
 
-// Admin Dashboard Pages
-import Dashboard from './pages/Dashboard'
-import Users from './pages/Users'
-import Lotteries from './pages/Lotteries'
-import LotteryForm from './pages/LotteryForm'
-import DepositReview from './pages/DepositReview'
-import WithdrawalReview from './pages/WithdrawalReview'
-import PaymentConfig from './pages/PaymentConfig'
-import ShippingManagement from './pages/ShippingManagement'
-import UserDetail from './pages/UserDetail'
-import Orders from './pages/Orders'
-import ShowoffReview from './pages/ShowoffReview'
-import ResaleManagement from './pages/ResaleManagement'
-import AuditLogs from './pages/AuditLogs'
+// Admin Dashboard Pages - Moved to src/pages/admin/ for future separation
+// These pages will be part of a separate admin backend project
+// import Dashboard from './pages/admin/Dashboard'
+// import Users from './pages/admin/Users'
+// import Lotteries from './pages/admin/Lotteries'
+// import LotteryForm from './pages/admin/LotteryForm'
+// import DepositReview from './pages/admin/DepositReview'
+// import WithdrawalReview from './pages/admin/WithdrawalReview'
+// import PaymentConfig from './pages/admin/PaymentConfig'
+// import ShippingManagement from './pages/admin/ShippingManagement'
+// import UserDetail from './pages/admin/UserDetail'
+// import Orders from './pages/admin/Orders'
+// import ShowoffReview from './pages/admin/ShowoffReview'
+// import ResaleManagement from './pages/admin/ResaleManagement'
+// import AuditLogs from './pages/admin/AuditLogs'
 
 function App() {
   return (
@@ -71,22 +72,23 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />
               
-              {/* Admin Dashboard Routes */}
-              <Route path="/admin" element={<Dashboard />} />
-              <Route path="/admin/dashboard" element={<Dashboard />} />
-              <Route path="/admin/users" element={<Users />} />
-              <Route path="/admin/users/:id" element={<UserDetail />} />
-              <Route path="/admin/lotteries" element={<Lotteries />} />
-              <Route path="/admin/lotteries/new" element={<LotteryForm />} />
-              <Route path="/admin/lotteries/:id" element={<LotteryForm />} />
-              <Route path="/admin/deposit-review" element={<DepositReview />} />
-              <Route path="/admin/withdrawal-review" element={<WithdrawalReview />} />
-              <Route path="/admin/payment-config" element={<PaymentConfig />} />
-              <Route path="/admin/shipping-management" element={<ShippingManagement />} />
-              <Route path="/admin/orders" element={<Orders />} />
-              <Route path="/admin/showoff-review" element={<ShowoffReview />} />
-              <Route path="/admin/resale-management" element={<ResaleManagement />} />
-              <Route path="/admin/audit-logs" element={<AuditLogs />} />
+              {/* Admin Dashboard Routes - Disabled for user frontend */}
+              {/* These routes are moved to a separate admin backend project */}
+              {/* <Route path="/admin" element={<Dashboard />} /> */}
+              {/* <Route path="/admin/dashboard" element={<Dashboard />} /> */}
+              {/* <Route path="/admin/users" element={<Users />} /> */}
+              {/* <Route path="/admin/users/:id" element={<UserDetail />} /> */}
+              {/* <Route path="/admin/lotteries" element={<Lotteries />} /> */}
+              {/* <Route path="/admin/lotteries/new" element={<LotteryForm />} /> */}
+              {/* <Route path="/admin/lotteries/:id" element={<LotteryForm />} /> */}
+              {/* <Route path="/admin/deposit-review" element={<DepositReview />} /> */}
+              {/* <Route path="/admin/withdrawal-review" element={<WithdrawalReview />} /> */}
+              {/* <Route path="/admin/payment-config" element={<PaymentConfig />} /> */}
+              {/* <Route path="/admin/shipping-management" element={<ShippingManagement />} /> */}
+              {/* <Route path="/admin/orders" element={<Orders />} /> */}
+              {/* <Route path="/admin/showoff-review" element={<ShowoffReview />} /> */}
+              {/* <Route path="/admin/resale-management" element={<ResaleManagement />} /> */}
+              {/* <Route path="/admin/audit-logs" element={<AuditLogs />} /> */}
             </Routes>
             
             <BottomNavigation />

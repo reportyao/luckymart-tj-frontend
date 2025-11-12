@@ -48,17 +48,35 @@ export function getLotteryStatusColor(status: string): string {
 }
 
 // 获取剩余时间
-export function getTimeRemaining(endTime: string): string {
+// Get time remaining as object with detailed breakdown
+export function getTimeRemaining(endTime: string): {
+  total: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+} {
   const now = new Date().getTime();
   const end = new Date(endTime).getTime();
   const diff = end - now;
 
-  if (diff <= 0) return '已结束';
+  if (diff <= 0) {
+    return { total: 0, days: 0, hours: 0, minutes: 0, seconds: 0 };
+  }
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
   const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+  return { total: diff, days, hours, minutes, seconds };
+}
+
+// Get time remaining as formatted string
+export function getTimeRemainingText(endTime: string): string {
+  const { total, days, hours, minutes } = getTimeRemaining(endTime);
+  
+  if (total <= 0) return '已结束';
   if (days > 0) return `${days}天${hours}小时`;
   if (hours > 0) return `${hours}小时${minutes}分钟`;
   return `${minutes}分钟`;
