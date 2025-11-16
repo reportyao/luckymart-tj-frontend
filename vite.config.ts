@@ -24,6 +24,8 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: [
       '.manusvm.computer',
+      '.novita.ai',
+      '.sandbox.novita.ai',
       'localhost',
       '127.0.0.1',
     ],
