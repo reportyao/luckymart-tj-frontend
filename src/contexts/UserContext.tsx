@@ -46,23 +46,28 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const cleanupRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    // 防止重复初始化
-    if (initializeRef.current) {
-      return
-    }
-    initializeRef.current = true
+    let mounted = true
 
     // 安全地初始化 Telegram Mini App
-    const initializeTelegramApp = () => {
+    const initializeTelegramApp = async () => {
       try {
         // 检查是否在 Telegram 环境中
         if (typeof window === 'undefined' || !window.Telegram?.WebApp) {
           console.log('Not in Telegram environment, skipping WebApp initialization')
-          setIsLoading(false)
+          if (mounted) {
+            setIsLoading(false)
+          }
           return
         }
 
-        const webApp = window.Telegram.WebApp || WebApp
+        const webApp = window.Telegram.WebApp
+        if (!webApp) {
+          console.warn('Telegram WebApp is not available')
+          if (mounted) {
+            setIsLoading(false)
+          }
+          return
+        }
 
         // 安全地调用 WebApp 方法，添加错误处理
         const safeWebAppCall = (fn: () => void, operation: string) => {
@@ -73,102 +78,109 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           }
         }
 
-        // 延迟初始化，确保 DOM 稳定
-        setTimeout(() => {
-          safeWebAppCall(() => webApp.ready(), 'ready')
-          safeWebAppCall(() => webApp.expand(), 'expand')
-          
-          // 设置主题，但要防止 DOM 操作错误
-          safeWebAppCall(() => {
-            if (webApp.setBackgroundColor) {
-              webApp.setBackgroundColor('#f8fafc')
-            }
-          }, 'setBackgroundColor')
-          
-          safeWebAppCall(() => {
-            if (webApp.setHeaderColor) {
-              webApp.setHeaderColor('#ffffff')
-            }
-          }, 'setHeaderColor')
-
-          // 获取 Telegram 用户数据
-          if (webApp.initDataUnsafe?.user) {
-            setTelegramUser(webApp.initDataUnsafe.user)
+        // 初始化 WebApp
+        safeWebAppCall(() => webApp.ready(), 'ready')
+        safeWebAppCall(() => webApp.expand(), 'expand')
+        
+        // 设置主题
+        safeWebAppCall(() => {
+          if (webApp.setBackgroundColor) {
+            webApp.setBackgroundColor('#f8fafc')
           }
-          
-          // 尝试认证
-          if (webApp.initData) {
-            authenticate().catch(error => {
-              console.error('Authentication failed:', error)
-              setIsLoading(false)
-            })
-          } else {
-            setIsLoading(false)
+        }, 'setBackgroundColor')
+        
+        safeWebAppCall(() => {
+          if (webApp.setHeaderColor) {
+            webApp.setHeaderColor('#ffffff')
           }
-        }, 100) // 短暂延迟让 DOM 稳定
+        }, 'setHeaderColor')
 
-      } catch (error) {
-        console.log('Telegram WebApp initialization failed:', error)
-        // 开发/测试环境或非 Telegram 环境
-        // 使用 mock 数据便于开发测试
-        const mockUser: User = {
-          id: 'b8156440-3bd2-4dfe-9edc-6ab2bffb6d19',
-          telegram_id: '12345678',
-          telegram_username: 'testuser',
-          first_name: 'Test',
-          last_name: 'User',
-          language_code: 'zh',
-          referral_code: 'LMBBBHMV',
-          status: 'ACTIVE',
-          is_verified: true,
-          kyc_level: 'BASIC',
-          created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString()
+        // 获取 Telegram 用户数据
+        if (webApp.initDataUnsafe?.user && mounted) {
+          setTelegramUser(webApp.initDataUnsafe.user)
         }
         
-        const mockWallets: Wallet[] = [
-          {
-            id: 'wallet1',
-            user_id: mockUser.id,
-            type: 'BALANCE',
-            currency: 'TJS',
-            balance: 1000,
-            frozen_balance: 0,
-            total_deposits: 2000,
-            total_withdrawals: 1000,
-            version: 1
-          },
-          {
-            id: 'wallet2',
-            user_id: mockUser.id,
-            type: 'LUCKY_COIN',
-            currency: 'TJS',
-            balance: 500,
-            frozen_balance: 0,
-            total_deposits: 800,
-            total_withdrawals: 300,
-            version: 1
-          }
-        ]
+        // 尝试认证
+        if (webApp.initData && mounted) {
+          await authenticate()
+        } else if (mounted) {
+          setIsLoading(false)
+        }
+
+      } catch (error) {
+        console.error('Telegram WebApp initialization failed:', error)
         
-        setUser(mockUser)
-        setWallets(mockWallets)
-        setTelegramUser({
-          id: 12345678,
-          first_name: 'Test',
-          last_name: 'User',
-          username: 'testuser',
-          photo_url: ''
-        })
-        setIsLoading(false)
+        // 只在开发环境使用 mock 数据
+        if (import.meta.env.DEV) {
+          console.log('Using mock data for development')
+          const mockUser: User = {
+            id: 'b8156440-3bd2-4dfe-9edc-6ab2bffb6d19',
+            telegram_id: '12345678',
+            telegram_username: 'testuser',
+            first_name: 'Test',
+            last_name: 'User',
+            language_code: 'zh',
+            referral_code: 'LMBBBHMV',
+            status: 'ACTIVE',
+            is_verified: true,
+            kyc_level: 'BASIC',
+            created_at: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+            updated_at: new Date().toISOString()
+          }
+          
+          const mockWallets: Wallet[] = [
+            {
+              id: 'wallet1',
+              user_id: mockUser.id,
+              type: 'BALANCE',
+              currency: 'TJS',
+              balance: 1000,
+              frozen_balance: 0,
+              total_deposits: 2000,
+              total_withdrawals: 1000,
+              version: 1
+            },
+            {
+              id: 'wallet2',
+              user_id: mockUser.id,
+              type: 'LUCKY_COIN',
+              currency: 'TJS',
+              balance: 500,
+              frozen_balance: 0,
+              total_deposits: 800,
+              total_withdrawals: 300,
+              version: 1
+            }
+          ]
+          
+          if (mounted) {
+            setUser(mockUser)
+            setWallets(mockWallets)
+            setTelegramUser({
+              id: 12345678,
+              first_name: 'Test',
+              last_name: 'User',
+              username: 'testuser',
+              photo_url: ''
+            })
+          }
+        } else {
+          // 生产环境显示错误提示
+          console.error('Failed to initialize Telegram WebApp in production')
+          toast.error('无法连接到 Telegram，请在 Telegram 中打开应用')
+        }
+        
+        if (mounted) {
+          setIsLoading(false)
+        }
       }
     }
 
-    // 使用 requestAnimationFrame 确保在下一个渲染周期初始化
-    requestAnimationFrame(initializeTelegramApp)
+    initializeTelegramApp()
 
     // 清理函数
     return () => {
+      mounted = false
       if (cleanupRef.current) {
         cleanupRef.current()
       }

@@ -1,7 +1,14 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://owyitxwxmxwbkqgzffdw.supabase.co'
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93eWl0eHd4bXh3YmtxZ3pmZmR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI0MjM4NTMsImV4cCI6MjA3Nzk5OTg1M30.xsdiUmVfN9Cwa7jkusYubs4ZI34ZpYSdD_nsAB_X2w0'
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing required environment variables: VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. '
+    + 'Please check your .env file and ensure all required variables are set.'
+  )
+}
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
@@ -81,95 +88,151 @@ export interface Order {
 // API helper functions
 export const authService = {
   async authenticateWithTelegram(initData: string, startParam?: string) {
-    const { data, error } = await supabase.functions.invoke('auth-telegram', {
-      body: { initData, startParam }
-    })
-    
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-telegram', {
+        body: { initData, startParam }
+      })
+      
+      if (error) {
+        console.error('Telegram authentication failed:', error)
+        throw new Error(`Telegram 认证失败: ${error.message}`)
+      }
+      return data
+    } catch (error) {
+      console.error('authenticateWithTelegram error:', error)
+      throw error
+    }
   }
 }
 
 export const lotteryService = {
   async getActiveLotteries() {
-    const { data, error } = await supabase
-      .from('lotteries')
-      .select('*')
-      .in('status', ['UPCOMING', 'ACTIVE'])
-      .order('start_time', { ascending: true })
-    
-    if (error) throw error
-    return data as Lottery[]
+    try {
+      const { data, error } = await supabase
+        .from('lotteries')
+        .select('*')
+        .in('status', ['UPCOMING', 'ACTIVE'])
+        .order('start_time', { ascending: true })
+      
+      if (error) {
+        console.error('Failed to fetch lotteries:', error)
+        throw new Error(`获取夺宝列表失败: ${error.message}`)
+      }
+      return data as Lottery[]
+    } catch (error) {
+      console.error('getActiveLotteries error:', error)
+      throw error
+    }
   },
 
   async purchaseTickets(lotteryId: string, quantity: number, paymentMethod: string, userNumbers?: string[]) {
-    const { data, error } = await supabase.functions.invoke('lottery-purchase', {
-      body: { lotteryId, quantity, paymentMethod, userNumbers }
-    })
-    
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase.functions.invoke('lottery-purchase', {
+        body: { lotteryId, quantity, paymentMethod, userNumbers }
+      })
+      
+      if (error) {
+        console.error('Lottery purchase failed:', error)
+        throw new Error(`购买失败: ${error.message}`)
+      }
+      return data
+    } catch (error) {
+      console.error('purchaseTickets error:', error)
+      throw error
+    }
   },
 
   async getUserEntries(userId: string) {
-    const { data, error } = await supabase
-      .from('lottery_entries')
-      .select(`
-        *,
-        lotteries (
-          period,
-          title,
-          ticket_price,
-          currency,
-          status,
-          draw_time,
-          winning_numbers
-        ),
-        orders (
-          order_number,
-          created_at
-        )
-      `)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-    
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase
+        .from('lottery_entries')
+        .select(`
+          *,
+          lotteries (
+            period,
+            title,
+            ticket_price,
+            currency,
+            status,
+            draw_time,
+            winning_numbers
+          ),
+          orders (
+            order_number,
+            created_at
+          )
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+      
+      if (error) {
+        console.error('Failed to fetch user entries:', error)
+        throw new Error(`获取彩票记录失败: ${error.message}`)
+      }
+      return data
+    } catch (error) {
+      console.error('getUserEntries error:', error)
+      throw error
+    }
   }
 }
 
 export const walletService = {
   async getWallets(userId: string) {
-    const { data, error } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', userId)
-    
-    if (error) throw error
-    return data as Wallet[]
+    try {
+      const { data, error } = await supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', userId)
+      
+      if (error) {
+        console.error('Failed to fetch wallets:', error)
+        throw new Error(`获取钱包失败: ${error.message}`)
+      }
+      return data as Wallet[]
+    } catch (error) {
+      console.error('getWallets error:', error)
+      throw error
+    }
   },
 
   async getBalance() {
-    const { data, error } = await supabase.functions.invoke('wallet-transaction', {
-      body: { action: 'balance' }
-    })
-    
-    if (error) throw error
-    return data
+    try {
+      const { data, error } = await supabase.functions.invoke('wallet-transaction', {
+        body: { action: 'balance' }
+      })
+      
+      if (error) {
+        console.error('Failed to fetch balance:', error)
+        throw new Error(`获取余额失败: ${error.message}`)
+      }
+      return data
+    } catch (error) {
+      console.error('getBalance error:', error)
+      throw error
+    }
   },
 
   async exchangeCoins(sourceWalletType: string, targetWalletType: string, currency: string, amount: number) {
-    const { data, error } = await supabase.functions.invoke('wallet-transaction', {
-      body: { 
-        action: 'exchange',
-        walletType: sourceWalletType,
-        targetWalletType,
-        currency,
-        amount
+    try {
+      const { data, error } = await supabase.functions.invoke('wallet-transaction', {
+        body: { 
+          action: 'exchange',
+          walletType: sourceWalletType,
+          targetWalletType,
+          currency,
+          amount
+        }
+      })
+      
+      if (error) {
+        console.error('Coin exchange failed:', error)
+        throw new Error(`兑换失败: ${error.message}`)
       }
-    })
-    
-    if (error) throw error
-    return data
+      return data
+    } catch (error) {
+      console.error('exchangeCoins error:', error)
+      throw error
+    }
   }
 }

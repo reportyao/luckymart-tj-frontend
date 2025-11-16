@@ -1,7 +1,8 @@
 {
-  "name": "react_repo",
+  "name": "luckymart-tj-frontend",
+  "description": "LuckyMart TJ - Telegram Mini App 夺宝平台前端",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -19,7 +20,8 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
     "test:all": "npm test && npm run test:e2e",
-    "monitor:dev": "concurrently \"npm run dev\" \"npm run test:watch\""
+    "monitor:dev": "concurrently \"npm run dev\" \"npm run test:watch\"",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -90,6 +92,16 @@
     "zod": "^3.24.1",
     "zustand": "^5.0.8"
   },
+  "keywords": [
+    "telegram",
+    "mini-app",
+    "lottery",
+    "react",
+    "vite",
+    "supabase"
+  ],
+  "author": "LuckyMart Team",
+  "license": "MIT",
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@playwright/test": "^1.56.1",

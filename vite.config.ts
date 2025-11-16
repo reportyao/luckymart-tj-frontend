@@ -23,16 +23,28 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'vendor': [
+          'vendor-react': [
             'react',
             'react-dom',
             'react-router-dom',
           ],
+          'vendor-ui': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+          ],
+          'vendor-supabase': [
+            '@supabase/supabase-js',
+            '@supabase/auth-helpers-react',
+          ],
+          'vendor-telegram': ['@twa-dev/sdk'],
           'i18n': [
             'i18next',
             'react-i18next',
           ],
-        },
+        }
       },
     },
     target: 'esnext',
@@ -49,17 +61,13 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',
-    port: 5174,
+    port: parseInt(process.env.VITE_PORT || '5174'),
     strictPort: true,
-    allowedHosts: [
-      '.manusvm.computer',
-      '.novita.ai',
-      '.sandbox.novita.ai',
-      'localhost',
-      '127.0.0.1',
-    ],
+    allowedHosts: process.env.ALLOWED_HOSTS
+      ? process.env.ALLOWED_HOSTS.split(',')
+      : ['localhost', '127.0.0.1', '.manusvm.computer'],
     hmr: {
-      clientPort: 5174,
+      clientPort: parseInt(process.env.VITE_PORT || '5174'),
     },
   },
 })
