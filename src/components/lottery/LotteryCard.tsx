@@ -144,8 +144,9 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           <div>
             <div className="flex items-center justify-between mb-1">
 	              <div className="flex items-center text-xs text-gray-500">
-                <UserGroupIcon className="w-3 h-3 mr-1" 	                ${t('lottery.soldTickets')} ${lottery.sold_tickets}/${lottery.total_tickets}
-              </div>
+	                <UserGroupIcon className="w-3 h-3 mr-1" />
+	                {t('lottery.soldTickets')} {lottery.sold_tickets}/{lottery.total_tickets}
+	              </div>
               <span className="text-xs text-gray-500">
                 {progress.toFixed(1)}%
               </span>
@@ -162,8 +163,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           {isActive && timeRemaining.total > 0 && (
             <div className="flex items-center text-xs text-gray-500">
               <ClockIcon className="w-3 h-3 mr-1" />
-	              ${t('lottery.remainingTime')}: {' '}
-              {timeRemaining.days > 0 && `${timeRemaining.days}天 `}
+	              {t('lottery.remainingTime')}: {' '}
+	              {timeRemaining.days > 0 && `${timeRemaining.days}天 `}
               {timeRemaining.hours.toString().padStart(2, '0')}:
               {timeRemaining.minutes.toString().padStart(2, '0')}:
               {timeRemaining.seconds.toString().padStart(2, '0')}
@@ -172,18 +173,22 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 
           {isUpcoming && (
             <div className="flex items-center text-xs text-gray-500">
-              <ClockIcon className="w-3 h-3 mr-1" />	              ${t('lottery.startTime')}: ${formatDateTime(lottery.start_time)}            </div>
+	              <ClockIcon className="w-3 h-3 mr-1" />
+	              {t('lottery.startTime')}: {formatDateTime(lottery.start_time)}
+	            </div>
           )}
 
           {lottery.status === 'COMPLETED' && lottery.actual_draw_time && (
             <div className="flex items-center text-xs text-gray-500">
-              <ClockIcon className="w-3 h-3 mr-1" />	              ${t('lottery.drawTime')}: ${formatDateTime(lottery.actual_draw_time)}            </div>
+	              <ClockIcon className="w-3 h-3 mr-1" />
+	              {t('lottery.drawTime')}: {formatDateTime(lottery.actual_draw_time)}
+	            </div>
           )}
 
           {/* 中奖号码 */}
           {lottery.status === 'COMPLETED' && lottery.winning_numbers && (
 	            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-	              <p className="text-xs text-yellow-700 mb-1">${t('lottery.luckyNumber')}</p>
+		              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
               <div className="flex flex-wrap gap-2">
                 {lottery.winning_numbers.map((number, index) => (
                   <span
@@ -207,26 +212,26 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               onClick={handlePurchase}
               className="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
             >
-	              ${t('lottery.participate')}
-            </motion.button>
+	              {t('lottery.participate')}
+	            </motion.button>
           )}
 
           {isSoldOut && (
             <div className="w-full bg-gray-100 text-gray-500 py-3 rounded-xl font-semibold text-center">
-	              ${t('lottery.soldOut')}
-            </div>
+	              {t('lottery.soldOut')}
+	            </div>
           )}
 
           {isUpcoming && (
             <div className="w-full bg-blue-50 text-blue-600 py-3 rounded-xl font-semibold text-center">
-	              ${t('lottery.upcoming')}
-            </div>
+	              {t('lottery.upcoming')}
+	            </div>
           )}
 
           {lottery.status === 'COMPLETED' && (
             <div className="w-full bg-green-50 text-green-600 py-3 rounded-xl font-semibold text-center">
-	              ${t('lottery.completed')}
-            </div>
+	              {t('lottery.completed')}
+	            </div>
           )}
         </div>
       </div>

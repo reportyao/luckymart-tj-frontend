@@ -79,7 +79,7 @@
     "purchaseSuccess": "购买成功！",
     "purchaseFailed": "购买失败",
     "sharesNotEnough": "份额不足，请减少购买数量",
-    "maxQuantityHint": "最多可购买 {{max}} 份"
+    "maxQuantityHint": "最多可购买 {{max}} 份",
     "prizeAmount": "奖金",
     "congratulations": "恭喜中奖!",
     "notWinning": "未中奖",
