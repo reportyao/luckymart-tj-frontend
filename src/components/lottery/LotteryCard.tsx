@@ -2,13 +2,15 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { ClockIcon, UserGroupIcon, StarIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
+import { useTranslation } from 'react-i18next'
 import { 
   formatCurrency, 
   formatDateTime, 
   getLotteryStatusText, 
   getLotteryStatusColor,
   getTimeRemaining,
-  cn 
+  cn,
+  getLocalizedText
 } from '../../lib/utils'
 
 interface LotteryCardProps {
@@ -22,6 +24,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
   onPurchase,
   className
 }) => {
+  const { i18n } = useTranslation()
   const [timeRemaining, setTimeRemaining] = React.useState(
     getTimeRemaining(lottery.end_time)
   )
@@ -101,15 +104,15 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 
       <div className="p-4">
         {/* 彩票标题 */}
-        <h3 className="text-lg font-bold text-gray-900 mb-1">
-          {lottery.title}
-        </h3>
+	        <h3 className="text-lg font-bold text-gray-900 mb-1">
+	          {getLocalizedText(lottery.title, i18n.language)}
+	        </h3>
         
-        {lottery.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-            {lottery.description}
-          </p>
-        )}
+	        {lottery.description && (
+	          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+	            {getLocalizedText(lottery.description, i18n.language)}
+	          </p>
+	        )}
 
         {/* 彩票信息 */}
         <div className="space-y-3">

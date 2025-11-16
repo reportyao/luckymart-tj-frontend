@@ -63,16 +63,7 @@ const SafeMotion: React.FC<SafeMotionProps> = ({
 
 export { SafeMotion, SafeAnimationContainer, SafeAnimationItem }
 
-// 简化的动画变体，减少DOM操作
-export const safeAnimationVariants = {
-  initial: { opacity: 0, y: 10 },
-  animate: { opacity: 1, y: 0 },
-  exit: { opacity: 0 },
-  transition: { 
-    duration: 0.2, 
-    ease: 'easeOut' 
-  }
-}
+import { safeAnimationVariants } from './animation'
 
 // 列表动画容器
 const SafeAnimationContainer: React.FC<{ 

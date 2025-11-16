@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
-import { lotteryService } from '../lib/supabase'
+import { Lottery } from '../lib/supabase'
+import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
@@ -11,17 +12,24 @@ import toast from 'react-hot-toast'
 const LotteryPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const { user } = useUser()
-  const [lotteries, setLotteries] = useState<lotteryService.Lottery[]>([])
+  const { lotteryService } = useSupabase()
+  const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all')
-  const [selectedLottery, setSelectedLottery] = useState<lotteryService.Lottery | null>(null)
+  const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
 
   const loadLotteries = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await lotteryService.getActiveLotteries()
+      // 根据 filter 获取不同状态的夺宝
+      let data: Lottery[] = []
+      if (filter === 'all') {
+        data = await lotteryService.getAllLotteries()
+      } else {
+        data = await lotteryService.getLotteriesByStatus(filter.toUpperCase())
+      }
       setLotteries(data)
     } catch (error: any) {
       console.error('Failed to load lotteries:', error)
@@ -29,11 +37,11 @@ const LotteryPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }, [t])
+  }, [t, filter, lotteryService])
 
   useEffect(() => {
     loadLotteries()
-  }, [loadLotteries])
+  }, [loadLotteries, filter])
 
   const filteredLotteries = lotteries.filter(lottery => {
     // 假设 lottery.title 是一个对象 {zh: '...', en: '...'}
@@ -45,24 +53,22 @@ const LotteryPage: React.FC = () => {
     return matchesSearch && lottery.status === filter.toUpperCase()
   })
 
-  const handlePurchaseLottery = (lottery: lotteryService.Lottery) => {
+  const { refreshWallets } = useUser()
+
+  const handlePurchaseLottery = (lottery: Lottery) => {
     setSelectedLottery(lottery)
     setIsPurchaseModalOpen(true)
   }
 
-  const handleConfirmPurchase = async (lotteryId: string, quantity: number) => {
-    try {
-      // TODO: 调用购买API
-      // await lotteryService.purchaseLottery(lotteryId, quantity)
-      toast.success(t('lottery.participate'))
-      await loadLotteries() // 刷新列表
-    } catch (error: any) {
-      throw new Error(error.message || t('error.validationError'))
-    }
+  const handlePurchaseConfirm = async (lotteryId: string, quantity: number) => {
+    // 购买成功后刷新列表和钱包
+    await loadLotteries()
+    await refreshWallets()
+    setIsPurchaseModalOpen(false)
   }
 
   return (
-    <div className="pb-20">
+    <div className="p-4 pb-20">
       {/* 页面标题 */}
       <div className="bg-white border-b border-gray-100 px-4 py-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('lottery.hall')}</h1>
@@ -147,7 +153,7 @@ const LotteryPage: React.FC = () => {
         lottery={selectedLottery}
         isOpen={isPurchaseModalOpen}
         onClose={() => setIsPurchaseModalOpen(false)}
-        onConfirm={handleConfirmPurchase}
+        onConfirm={handlePurchaseConfirm}
       />
     </div>
   )

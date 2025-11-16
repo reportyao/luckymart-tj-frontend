@@ -2,6 +2,9 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { XMarkIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
+import { useSupabase } from '../../contexts/SupabaseContext'
+import { useUser } from '../../contexts/UserContext'
+import { useTranslation } from 'react-i18next'
 import toast from 'react-hot-toast'
 
 interface PurchaseModalProps {
@@ -22,6 +25,10 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
   const [purchasedCodes, setPurchasedCodes] = useState<string[]>([])
   const [showSuccess, setShowSuccess] = useState(false)
 
+  const { lotteryService } = useSupabase()
+  const { refreshWallets } = useUser() // 引入 refreshWallets
+  const { t } = useTranslation() // 引入 t
+
   if (!lottery) return null
 
   const maxPurchase = Math.min(lottery.max_per_user || 10, lottery.total_tickets - lottery.sold_tickets)
@@ -34,29 +41,29 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
     }
   }
 
-  const generateWinningCodes = (lotteryId: string, startIndex: number, count: number): string[] => {
-    const codes: string[] = []
-    for (let i = 0; i < count; i++) {
-      const sequence = (startIndex + i + 1).toString().padStart(5, '0')
-      codes.push(`LM-${lotteryId}-${sequence}`)
-    }
-    return codes
-  }
-
   const handleConfirm = async () => {
+    if (!lottery) return
+
     try {
       setIsLoading(true)
-      await onConfirm(lottery.id, quantity)
+      // 调用抽象后的购买服务
+      const order = await lotteryService.purchaseTickets(lottery.id, quantity)
       
-      // 生成中奖码(模拟)
-      const startIndex = lottery.sold_tickets
-      const codes = generateWinningCodes(lottery.period, startIndex, quantity)
+      // 购买成功后，使用订单中的 ticket_numbers
+      const codes = order.ticket_numbers.map(num => `#${num.toString().padStart(5, '0')}`)
       setPurchasedCodes(codes)
       setShowSuccess(true)
       
-      toast.success('购买成功!')
+      toast.success(t('lottery.purchaseSuccess'))
+      
+      // 刷新钱包余额
+      await refreshWallets()
+
+      // 触发外部刷新，例如刷新夺宝列表
+      onConfirm(lottery.id, quantity) 
     } catch (error: any) {
-      toast.error(error.message || '购买失败')
+      console.error('Purchase failed:', error)
+      toast.error(error.message || t('lottery.purchaseFailed'))
     } finally {
       setIsLoading(false)
     }

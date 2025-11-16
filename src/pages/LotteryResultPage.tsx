@@ -119,68 +119,7 @@ const LotteryResultPage: React.FC = () => {
     }
   }, [id, fetchLotteryResult]);
 
-  const fetchLotteryResult = async (lotteryId: string) => {
-    setIsLoading(true);
-    try {
-      // TODO: 调用实际API获取开奖结果
-      // 这里使用mock数据
-      await new Promise(resolve => setTimeout(resolve, 1000));
 
-      const mockResult: LotteryResult = {
-        id: lotteryId,
-        title: 'iPhone 15 Pro Max 夺宝',
-        period: 'TEST2025001',
-        status: 'COMPLETED',
-        ticket_price: 10,
-        total_tickets: 100,
-        sold_tickets: 100,
-        currency: 'TJS',
-        draw_time: new Date().toISOString(),
-        winning_numbers: '001,015,042',
-        vrf_seed: 'a7f3c9e2b8d4f1a6c5e9b2d8f4a1c7e3b9d5f2a8c4e1b7d3f9a5c2e8b4d1f6a3c9e5b2d8f4a1c7e3',
-        vrf_proof: 'b2d8f4a1c7e3b9d5f2a8c4e1b7d3f9a5c2e8b4d1f6a3c9e5b2d8f4a1c7e3a7f3c9e2b8d4f1a6c5e9',
-        winners: [
-          {
-            rank: 1,
-            user_name: 'User***123',
-            numbers: '001',
-            prize_amount: 500
-          },
-          {
-            rank: 2,
-            user_name: 'User***456',
-            numbers: '015',
-            prize_amount: 250
-          },
-          {
-            rank: 3,
-            user_name: 'User***789',
-            numbers: '042',
-            prize_amount: 150
-          }
-        ],
-        my_entries: [
-          {
-            numbers: '001',
-            is_winning: true,
-            prize_rank: 1,
-            prize_amount: 500
-          },
-          {
-            numbers: '023',
-            is_winning: false
-          }
-        ]
-      };
-
-      setResult(mockResult);
-    } catch (error) {
-      console.error('Failed to fetch lottery result:', error);
-      toast.error(t('error.networkError'));
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const getRankColor = (rank: number): string => {
     switch (rank) {

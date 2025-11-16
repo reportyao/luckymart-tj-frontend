@@ -3,6 +3,8 @@ import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
+import { useSupabase } from '../contexts/SupabaseContext';
+import { Showoff } from '../lib/supabase';
 import {
   PhotoIcon,
   HeartIcon,
@@ -16,28 +18,13 @@ import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
-interface Showoff {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_avatar?: string;
-  lottery_id: string;
-  lottery_title: string;
-  prize_name: string;
-  prize_image: string;
-  content: string;
-  images: string[];
-  likes_count: number;
-  comments_count: number;
-  is_liked: boolean;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  created_at: string;
-}
+
 
 const ShowoffPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
+  const { showoffService } = useSupabase();
   const [showoffs, setShowoffs] = useState<Showoff[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'following' | 'popular'>('all');
@@ -45,76 +32,15 @@ const ShowoffPage: React.FC = () => {
   const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取晒单, 传入 filter 参数
-      // 这里的mock数据没有根据 filter 过滤，但在实际应用中应该会根据 filter 过滤
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const mockShowoffs: Showoff[] = [
-        {
-          id: '1',
-          user_id: 'user1',
-          user_name: 'User***123',
-          lottery_id: 'lottery1',
-          lottery_title: 'iPhone 15 Pro Max 夺宝',
-          prize_name: 'iPhone 15 Pro Max 256GB',
-          prize_image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800',
-          content: '终于中奖了!感谢平台,iPhone 15 Pro Max到手,手感超棒!推荐大家来试试运气 🎉',
-          images: [
-            'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800',
-            'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=800'
-          ],
-          likes_count: 156,
-          comments_count: 23,
-          is_liked: false,
-          status: 'APPROVED',
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          user_id: 'user2',
-          user_name: 'User***456',
-          lottery_id: 'lottery2',
-          lottery_title: 'MacBook Pro 夺宝',
-          prize_name: 'MacBook Pro 14" M3',
-          prize_image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800',
-          content: '人生第一台MacBook!太开心了,性能强大,屏幕超美!',
-          images: [
-            'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=800'
-          ],
-          likes_count: 89,
-          comments_count: 12,
-          is_liked: true,
-          status: 'APPROVED',
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '3',
-          user_id: 'user3',
-          user_name: 'User***789',
-          lottery_id: 'lottery3',
-          lottery_title: 'AirPods Pro 夺宝',
-          prize_name: 'AirPods Pro 2代',
-          prize_image: 'https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=800',
-          content: '降噪效果一流,音质也很棒!值得拥有!',
-          images: [
-            'https://images.unsplash.com/photo-1606841837239-c5a1a4a07af7?w=800'
-          ],
-          likes_count: 45,
-          comments_count: 8,
-          is_liked: false,
-          status: 'APPROVED',
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        }
-      ];
-
-      setShowoffs(mockShowoffs);
+      const data = await showoffService.getApprovedShowoffs(filter);
+      setShowoffs(data);
     } catch (error) {
-      console.error('Failed to fetch showoffs:', error);
+      console.error('Error fetching showoffs:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoading(false);
     }
-  }, [filter, t]);
+  }, [t, filter, showoffService]);
 
   useEffect(() => {
     fetchShowoffs();
@@ -122,7 +48,13 @@ const ShowoffPage: React.FC = () => {
 
   const handleLike = async (showoffId: string) => {
     try {
-      // TODO: 调用API点赞
+      const isLiked = showoffs.find(s => s.id === showoffId)?.is_liked;
+      if (isLiked) {
+        await showoffService.unlikeShowoff(showoffId);
+      } else {
+        await showoffService.likeShowoff(showoffId);
+      }
+      // 乐观更新
       setShowoffs(prev =>
         prev.map(showoff =>
           showoff.id === showoffId
@@ -134,9 +66,8 @@ const ShowoffPage: React.FC = () => {
             : showoff
         )
       );
-    } catch (error) {
-      console.error('Failed to like showoff:', error);
-      toast.error(t('error.networkError'));
+    } catch (error: any) {
+      toast.error(error.message || t('error.networkError'));
     }
   };
 

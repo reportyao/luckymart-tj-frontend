@@ -127,3 +127,38 @@ export function shareToTelegram(text: string, url?: string): void {
   const telegramUrl = `https://t.me/share/url?url=${encodeURIComponent(url || window.location.href)}&text=${encodeURIComponent(text)}`;
   window.open(telegramUrl, '_blank');
 }
+
+// 处理多语言 JSONB 字段
+export function getLocalizedText(
+  jsonb: any,
+  language: string,
+  fallbackLanguage: string = 'zh'
+): string {
+  if (!jsonb || typeof jsonb !== 'object') {
+    return '';
+  }
+
+  // 尝试使用当前语言
+  if (jsonb[language]) {
+    return jsonb[language];
+  }
+
+  // 尝试使用主要语言（例如，没有 zh-CN 就用 zh）
+  const primaryLang = language.split('-')[0];
+  if (jsonb[primaryLang]) {
+    return jsonb[primaryLang];
+  }
+
+  // 尝试使用备用语言
+  if (jsonb[fallbackLanguage]) {
+    return jsonb[fallbackLanguage];
+  }
+
+  // 尝试返回第一个非空的值
+  const firstValue = Object.values(jsonb).find(value => typeof value === 'string' && value.trim() !== '');
+  if (firstValue) {
+    return firstValue as string;
+  }
+
+  return '';
+}

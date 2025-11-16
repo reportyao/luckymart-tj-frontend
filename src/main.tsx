@@ -5,6 +5,8 @@ import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHa
 import './i18n/config'
 import './index.css'
 import App from './App.tsx'
+import { UserProvider } from './contexts/UserContext.tsx'
+import { SupabaseProvider } from './contexts/SupabaseContext.tsx'
 
 // 设置全局错误处理
 setupGlobalErrorHandlers()
@@ -17,7 +19,11 @@ function AppWrapper() {
   if (isProduction) {
     return (
       <ErrorBoundary>
-        <App />
+        <SupabaseProvider>
+          <UserProvider>
+            <App />
+          </UserProvider>
+        </SupabaseProvider>
       </ErrorBoundary>
     )
   }
@@ -25,7 +31,11 @@ function AppWrapper() {
   return (
     <StrictMode>
       <ErrorBoundary>
-        <App />
+        <SupabaseProvider>
+          <UserProvider>
+            <App />
+          </UserProvider>
+        </SupabaseProvider>
       </ErrorBoundary>
     </StrictMode>
   )
