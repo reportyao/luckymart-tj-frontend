@@ -1,0 +1,96 @@
+import React, { useState, useEffect, useRef } from 'react'
+import { useIntersectionObserver } from '@/hooks/usePerformance'
+
+interface LazyImageProps {
+  src: string
+  alt: string
+  placeholder?: string
+  className?: string
+  width?: number
+  height?: number
+  onLoad?: () => void
+  onError?: () => void
+}
+
+/**
+ * 懒加载图片组件
+ * 使用 IntersectionObserver 实现高效的图片懒加载
+ */
+export const LazyImage: React.FC<LazyImageProps> = ({
+  src,
+  alt,
+  placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f0f0f0" width="400" height="300"/%3E%3C/svg%3E',
+  className = '',
+  width,
+  height,
+  onLoad,
+  onError,
+}) => {
+  const [imageSrc, setImageSrc] = useState(placeholder)
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const imgRef = useRef<HTMLImageElement | null>(null)
+  const containerRef = useIntersectionObserver(
+    (isVisible) => {
+      if (isVisible && imageSrc === placeholder) {
+        setImageSrc(src)
+      }
+    },
+    { threshold: 0.1 }
+  )
+
+  useEffect(() => {
+    const img = imgRef.current
+    if (!img) return
+
+    const handleLoad = () => {
+      setIsLoading(false)
+      onLoad?.()
+    }
+
+    const handleError = () => {
+      setIsLoading(false)
+      setHasError(true)
+      onError?.()
+    }
+
+    img.addEventListener('load', handleLoad)
+    img.addEventListener('error', handleError)
+
+    return () => {
+      img.removeEventListener('load', handleLoad)
+      img.removeEventListener('error', handleError)
+    }
+  }, [onLoad, onError])
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative overflow-hidden bg-gray-200 ${className}`}
+      style={{
+        width: width ? `${width}px` : '100%',
+        height: height ? `${height}px` : 'auto',
+        aspectRatio: width && height ? `${width}/${height}` : 'auto',
+      }}
+    >
+      <img
+        ref={imgRef}
+        src={imageSrc}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-300 ${
+          isLoading ? 'opacity-0' : 'opacity-100'
+        }`}
+      />
+      {isLoading && (
+        <div className="absolute inset-0 bg-gray-300 animate-pulse" />
+      )}
+      {hasError && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-300">
+          <span className="text-gray-500 text-sm">加载失败</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default LazyImage

@@ -4,6 +4,7 @@ import { defineConfig } from "vite"
 import sourceIdentifierPlugin from 'vite-plugin-source-identifier'
 
 const isProd = process.env.BUILD_MODE === 'prod'
+
 export default defineConfig({
   plugins: [
     react(), 
@@ -17,6 +18,34 @@ export default defineConfig({
     alias: {
       "@": path.resolve(__dirname, "./src"),
     },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor': [
+            'react',
+            'react-dom',
+            'react-router-dom',
+          ],
+          'i18n': [
+            'i18next',
+            'react-i18next',
+          ],
+        },
+      },
+    },
+    target: 'esnext',
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: isProd,
+        drop_debugger: isProd,
+      },
+    },
+    chunkSizeWarningLimit: 600,
+    cssCodeSplit: true,
+    sourcemap: !isProd,
   },
   server: {
     host: '0.0.0.0',
