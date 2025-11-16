@@ -15,22 +15,22 @@ import { formatCurrency, formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import FairnessExplanation from '@/components/lottery/FairnessExplanation';
-import { Database } from '@/types/supabase';
+import { Database, Lottery } from '@/types/supabase';
 
-type LotteryRound = Database['public']['Tables']['lottery_rounds']['Row'];
-type LotteryEntry = Database['public']['Tables']['lottery_entries']['Row'];
+type LotteryResultRow = Database['public']['Tables']['lottery_results']['Row'];
+type TicketRow = Database['public']['Tables']['tickets']['Row'];
 
-interface Winner extends LotteryEntry {
+interface Winner extends TicketRow {
   profiles: {
     username: string;
     avatar_url: string;
   } | null;
 }
 
-interface LotteryResult extends LotteryRound {
-  winners: Winner[];
-  my_entries: LotteryEntry[];
-  timestamp_sum: string;
+interface LotteryResult extends LotteryResultRow {
+  winner: Winner;
+  my_tickets: TicketRow[];
+  lottery: Lottery;
 }
 
 const LotteryResultPage: React.FC = () => {
@@ -65,7 +65,7 @@ const LotteryResultPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+	              </div>
     );
   }
 
@@ -85,7 +85,7 @@ const LotteryResultPage: React.FC = () => {
     );
   }
 
-  const myWinningEntry = result.my_entries?.find(e => e.id === result.winner_entry_id);
+  const myWinningTicket = result.my_tickets?.find(t => t.ticket_number === result.winning_number);
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -114,9 +114,9 @@ const LotteryResultPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`rounded-2xl p-6 ${
-              myWinningEntry
-                ? 'bg-gradient-to-r from-yellow-400 to-orange-500'
+            className={`rounded-2xl p-6 text-white ${
+              myWinningTicket
+                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 shadow-xl'
                 : 'bg-white border-2 border-gray-200'
             }`}
           >
@@ -130,11 +130,11 @@ const LotteryResultPage: React.FC = () => {
               <div className="text-center text-gray-700">
                 <h2 className="text-xl font-bold">{t('lottery.notWinning')}</h2>
                 <p className="mt-1 text-gray-500">{t('lottery.betterLuckNextTime')}</p>
-                <p className="mt-3 font-semibold">{t('lottery.myNumbers')}:</p>
-                <div className="flex flex-wrap justify-center gap-2 mt-2">
-                  {result.my_entries.flatMap(e => e.lottery_numbers).map((num, i) => (
-                    <span key={i} className="px-2 py-1 bg-gray-100 rounded-md text-sm">{num}</span>
-                  ))}
+                <p className="mt-3 font-semibold">{t('lottery.myTickets')}:</p>
+                <div className="flex flex-wrap justify-center gap-2 mt-2 max-h-24 overflow-y-auto">
+                  {result.my_tickets.map((ticket, i) => (
+                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm">{ticket.ticket_number}</span>
+	          )}
                 </div>
               </div>
             )}
@@ -146,14 +146,14 @@ const LotteryResultPage: React.FC = () => {
       <div className="px-4 mb-6">
         <div className="bg-white rounded-xl shadow-md p-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">{t('lottery.drawResult')}</h2>
-          {result.winners.map((winner, index) => (
-            <div key={index} className="text-center border-t pt-4 mt-4 first:mt-0 first:border-t-0">
-              <p className="text-sm text-gray-500">{t('lottery.luckyNumber')}</p>
-              <p className="text-4xl font-bold text-blue-600 my-2">{result.lucky_number}</p>
-              <p className="text-sm text-gray-500">{t('lottery.winner')}</p>
-              <div className="flex items-center justify-center space-x-2 mt-2">
-                <img src={winner.profiles?.avatar_url || '/avatar-placeholder.png'} alt="winner avatar" className="w-8 h-8 rounded-full" />
-                <span className="font-semibold text-gray-800">{winner.profiles?.username || 'Anonymous'}</span>
+	          {result.winner && (
+	            <div className="text-center border-t pt-4 mt-4 first:mt-0 first:border-t-0">
+	              <p className="text-sm text-gray-500">{t('lottery.winningNumber')}</p>
+	              <p className="text-4xl font-bold text-blue-600 my-2">{result.winning_number}</p>
+	              <p className="text-sm text-gray-500">{t('lottery.winner')}</p>
+	              <div className="flex items-center justify-center space-x-2 mt-2">
+	                <img src={result.winner.profiles?.avatar_url || '/avatar-placeholder.png'} alt="winner avatar" className="w-8 h-8 rounded-full" />
+	                <span className="font-semibold text-gray-800">{result.winner.profiles?.username || 'Anonymous'}</span>
               </div>
             </div>
           ))}
@@ -163,35 +163,35 @@ const LotteryResultPage: React.FC = () => {
       {/* Lottery Details */}
       <div className="px-4 mb-6">
         <div className="bg-white rounded-xl shadow-md p-6 grid grid-cols-2 gap-4 text-center">
-          <div className="flex flex-col items-center">
+	          <div className="flex flex-col items-center">
             <CalendarIcon className="w-6 h-6 text-gray-500 mb-1" />
             <p className="text-sm text-gray-500">{t('lottery.drawTime')}</p>
             <p className="font-semibold">{formatDateTime(result.draw_time || '')}</p>
           </div>
           <div className="flex flex-col items-center">
             <TicketIcon className="w-6 h-6 text-gray-500 mb-1" />
-            <p className="text-sm text-gray-500">{t('lottery.totalTickets')}</p>
-            <p className="font-semibold">{result.total_numbers}</p>
+	            <p className="text-sm text-gray-500">{t('lottery.totalTickets')}</p>
+	            <p className="font-semibold">{result.lottery.total_tickets}</p>
           </div>
           <div className="flex flex-col items-center">
             <UsersIcon className="w-6 h-6 text-gray-500 mb-1" />
-            <p className="text-sm text-gray-500">{t('lottery.participants')}</p>
-            <p className="font-semibold">{result.participant_count}</p>
+	            <p className="text-sm text-gray-500">{t('lottery.participants')}</p>
+	            <p className="font-semibold">{result.lottery.sold_tickets}</p>
           </div>
           <div className="flex flex-col items-center">
             <BanknotesIcon className="w-6 h-6 text-gray-500 mb-1" />
-            <p className="text-sm text-gray-500">{t('lottery.ticketPrice')}</p>
-            <p className="font-semibold">{formatCurrency(result.price_per_share || 0, result.currency)}</p>
+	            <p className="text-sm text-gray-500">{t('lottery.ticketPrice')}</p>
+	            <p className="font-semibold">{formatCurrency(result.lottery.ticket_price || 0, result.lottery.currency)}</p>
           </div>
         </div>
       </div>
 
       {/* Fairness Explanation */}
       <div className="px-4">
-        <FairnessExplanation 
-          timestampSum={result.timestamp_sum}
-          totalShares={result.total_numbers || 0}
-          drawTime={result.draw_time || ''}
+	        <FairnessExplanation 
+	          timestampSum={result.total_sum || '0'}
+	          totalShares={result.total_numbers || 0}
+	          drawTime={result.draw_time || ''}
         />
       </div>
     </div>

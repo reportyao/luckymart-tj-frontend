@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { Showoff } from '../lib/supabase';
+import { Showoff, Lottery } from '../types/supabase';
 import {
   PhotoIcon,
   HeartIcon,
@@ -25,14 +25,23 @@ const ShowoffPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { showoffService } = useSupabase();
-  const [showoffs, setShowoffs] = useState<Showoff[]>([]);
+  interface ShowoffWithDetails extends Showoff {
+  user_name: string;
+  prize_name: string;
+  lottery_title: string;
+  is_liked: boolean;
+  comments_count: number;
+  lottery: Lottery;
+}
+
+  const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'following' | 'popular'>('all');
 
   const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await showoffService.getApprovedShowoffs(filter);
+      const data = await showoffService.getApprovedShowoffs(filter) as ShowoffWithDetails[];
       setShowoffs(data);
     } catch (error) {
       console.error('Error fetching showoffs:', error);
@@ -47,6 +56,10 @@ const ShowoffPage: React.FC = () => {
   }, [fetchShowoffs]);
 
   const handleLike = async (showoffId: string) => {
+    if (!user) {
+      toast.error(t('error.loginRequired'));
+      return;
+    }
     try {
       const isLiked = showoffs.find(s => s.id === showoffId)?.is_liked;
       if (isLiked) {
@@ -71,7 +84,7 @@ const ShowoffPage: React.FC = () => {
     }
   };
 
-  const handleShare = (showoff: Showoff) => {
+  const handleShare = (showoff: ShowoffWithDetails) => {
     const text = `${showoff.user_name}在LuckyMart中奖了${showoff.prize_name}!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
@@ -160,10 +173,10 @@ const ShowoffPage: React.FC = () => {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                      {showoff.user_name.charAt(0)}
+	                    {showoff.user_name ? showoff.user_name.charAt(0) : 'U'}
                     </div>
                     <div>
-                      <p className="font-medium text-gray-900">{showoff.user_name}</p>
+	                    <p className="font-medium text-gray-900">{showoff.user_name || 'Anonymous'}</p>
                       <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
                     </div>
                   </div>
@@ -179,7 +192,7 @@ const ShowoffPage: React.FC = () => {
                     <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{showoff.prize_name}</p>
-                      <p className="text-xs text-gray-500 truncate">{showoff.lottery_title}</p>
+	                    <p className="text-xs text-gray-500 truncate">{showoff.lottery.title}</p>
                     </div>
                   </div>
                 </div>
@@ -190,11 +203,11 @@ const ShowoffPage: React.FC = () => {
                 </div>
 
                 {/* Images */}
-                {showoff.images.length > 0 && (
+	                {showoff.images && Array.isArray(showoff.images) && showoff.images.length > 0 && (
                   <div className={`px-4 pb-3 grid gap-2 ${
                     showoff.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
                   }`}>
-                    {showoff.images.map((image, idx) => (
+	                    {(showoff.images as string[]).map((image, idx) => (
                       <div
                         key={idx}
                         className={`relative rounded-lg overflow-hidden ${

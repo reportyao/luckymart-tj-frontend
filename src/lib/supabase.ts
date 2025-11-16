@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database, Tables, Enums, Functions } from '../types/supabase';
+import { Database, Tables, Enums, Functions, Lottery, Showoff } from '../types/supabase';
 
 // 检查环境变量，优先使用 NEXT_PUBLIC_ (Next.js 风格) 或 VITE_ (Vite 风格)
 const supabaseUrl = import.meta.env.NEXT_PUBLIC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
@@ -13,15 +13,17 @@ if (!supabaseUrl || !supabaseAnonKey) {
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // 导出常用的类型
-export type Lottery = Tables<'lotteries'>;
-export type UserProfile = Tables<'profiles'>;
+
+export type UserProfile = Tables<'user_profiles'>;
 export type Wallet = Tables<'wallets'>;
 export type Order = Tables<'orders'>;
 export type Commission = Tables<'commissions'>;
 export type DepositRequest = Tables<'deposit_requests'>;
+export type Showoff = Tables<'showoffs'>;
 export type WithdrawalRequest = Tables<'withdrawal_requests'>;
 export type Currency = Enums<'Currency'>;
 export type LotteryStatus = Enums<'LotteryStatus'>;
+export type ShowoffStatus = Enums<'ShowoffStatus'>;
 export type OrderStatus = Enums<'OrderStatus'>;
 
 // --- 数据服务层抽象 ---
@@ -63,7 +65,7 @@ export const authService = {
 
     // 获取用户 Profile
     const { data: profile, error } = await supabase
-      .from('profiles')
+	      .from('user_profiles')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -170,17 +172,27 @@ export const lotteryService = {
    */
   async getLotteryResult(lotteryId: string) {
     const { data, error } = await supabase
-      .from('lottery_rounds')
+	      .from('lottery_results')
       .select(
         `
-          *,
-          winners:lottery_entries!winner_entry_id (
-            *,
-            profiles (username, avatar_url)
-          ),
-          my_entries:lottery_entries!lottery_round_id (
-            *
-          )
+	          *,
+	          winner:tickets!lottery_results_winner_id_fkey (
+	            ticket_number,
+	            user_id,
+	            profiles:user_profiles (username, avatar_url)
+	          ),
+	          lottery:lotteries (
+	            title,
+	            image_url,
+	            ticket_price,
+	            currency,
+	            total_tickets,
+	            sold_tickets
+	          ),
+	          my_tickets:tickets!tickets_lottery_id_fkey (
+	            ticket_number,
+	            user_id
+	          )
         `
       )
       .eq('lottery_id', lotteryId) // 修正：应使用 lottery_id
@@ -190,14 +202,14 @@ export const lotteryService = {
       throw new Error(error.message)
     }
 
-    // 确保 winners 数组中只有 winner_entry_id 对应的条目
-    const result = {
-      ...data,
-      winners: data.winners.filter(w => w.id === data.winner_entry_id)
-    }
+	    // 确保 winner 字段是一个对象而不是数组
+	    const result = {
+	      ...data,
+	      winner: data.winner[0]
+	    }
 
     return result
-  }, // 修正：添加逗号
+	  },
 
   async getUserOrders(userId: string): Promise<Order[]> {
     const { data, error } = await supabase
@@ -314,38 +326,83 @@ export const commissionService = {
 };
 
 /**
- * 晒单服务 (Posts)
+	 * 晒单服务 (Showoffs)
  */
-export const postService = {
+	export const showoffService = {
   /**
-   * 获取晒单列表
+	   * 获取已审核的晒单列表
    */
-  async getPosts(): Promise<Tables<'posts'>[]> {
+	  async getApprovedShowoffs(filter: 'all' | 'following' | 'popular'): Promise<Showoff[]> {
+	    // 暂时忽略 filter 逻辑，直接获取所有已审核晒单
+	    // TODO: 实现 filter 逻辑
     const { data, error } = await supabase
-      .from('posts')
-      .select('*, profiles(full_name, avatar_url)')
-      .eq('status', 'APPROVED' as Enums<'PostStatus'>)
+	      .from('showoffs')
+	      .select(
+	        `
+	          *,
+	          lottery:lotteries (title, image_url, ticket_price, currency),
+	          user_profile:user_profiles (username, avatar_url)
+	        `
+	      )
+	      .eq('status', 'APPROVED' as ShowoffStatus)
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Failed to fetch posts:', error);
+	      console.error('Failed to fetch showoffs:', error);
       throw new Error(`获取晒单列表失败: ${error.message}`);
     }
     // 这里的类型需要手动处理一下，因为 select 包含了 join
-    return data as any as Tables<'posts'>[];
+	    return data as any as Showoff[];
   },
 
   /**
    * 点赞/取消点赞
-   * @param postId 晒单 ID
+	   * @param showoffId 晒单 ID
    * @param userId 用户 ID
    */
-  async toggleLike(postId: string, userId: string): Promise<boolean> {
+	  async likeShowoff(showoffId: string): Promise<void> {
+	    const user = await authService.getCurrentUser();
+	    if (!user) throw new Error('用户未登录');
+	    const userId = user.id;
+	
+	    const { error } = await supabase
+	      .from('likes')
+	      .insert({ post_id: showoffId, user_id: userId });
+	
+	    if (error) {
+	      console.error('Failed to like showoff:', error);
+	      throw new Error(`点赞失败: ${error.message}`);
+	    }
+	  },
+	
+	  async unlikeShowoff(showoffId: string): Promise<void> {
+	    const user = await authService.getCurrentUser();
+	    if (!user) throw new Error('用户未登录');
+	    const userId = user.id;
+	
+	    const { error } = await supabase
+	      .from('likes')
+	      .delete()
+	      .eq('post_id', showoffId)
+	      .eq('user_id', userId);
+	
+	    if (error) {
+	      console.error('Failed to unlike showoff:', error);
+	      throw new Error(`取消点赞失败: ${error.message}`);
+	    }
+	  },
+	
+	  // 原始的 toggleLike 逻辑被拆分为 likeShowoff 和 unlikeShowoff
+	  // 暂时保留 toggleLike 的签名，但实现为空，避免其他地方报错
+	  async toggleLike(showoffId: string, userId: string): Promise<boolean> {
+	    console.warn('toggleLike is deprecated. Use likeShowoff and unlikeShowoff instead.');
+	    return false;
+	  }
     // 检查是否已点赞
     const { data: existingLike, error: fetchError } = await supabase
       .from('likes')
       .select('id')
-      .eq('post_id', postId)
+	      .eq('post_id', showoffId)
       .eq('user_id', userId)
       .single();
 
@@ -362,7 +419,7 @@ export const postService = {
         .eq('id', existingLike.id);
 
       if (error) {
-        console.error('Failed to unlike post:', error);
+	        console.error('Failed to unlike showoff:', error);
         throw new Error(`取消点赞失败: ${error.message}`);
       }
       return false; // 已取消点赞
@@ -370,10 +427,10 @@ export const postService = {
       // 点赞
       const { error } = await supabase
         .from('likes')
-        .insert({ post_id: postId, user_id: userId });
+	        .insert({ post_id: showoffId, user_id: userId });
 
       if (error) {
-        console.error('Failed to like post:', error);
+	        console.error('Failed to like showoff:', error);
         throw new Error(`点赞失败: ${error.message}`);
       }
       return true; // 已点赞
