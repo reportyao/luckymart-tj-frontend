@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { supabase } from '../lib/supabase'
+import { supabase, walletService } from '../lib/supabase'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 
 export default function WithdrawPage() {
@@ -40,16 +40,12 @@ export default function WithdrawPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: wallets } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('type', 'BALANCE')
-        .eq('currency', 'TJS')
-        .single()
+      // 使用抽象服务层获取钱包信息
+      const wallets = await walletService.getWallets(user.id)
+      const balanceWallet = wallets.find(w => w.type === 'BALANCE')
 
-      if (wallets) {
-        setBalance(wallets.balance)
+      if (balanceWallet) {
+        setBalance(balanceWallet.balance)
       }
     } catch (error) {
       console.error('获取余额失败:', error)
@@ -91,6 +87,7 @@ export default function WithdrawPage() {
     try {
       setSubmitting(true)
 
+      // 假设 withdraw-request 是一个 Edge Function
       const { data, error } = await supabase.functions.invoke('withdraw-request', {
         body: {
           amount: amountNum,

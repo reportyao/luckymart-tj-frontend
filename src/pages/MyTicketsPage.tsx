@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -42,11 +42,7 @@ const MyTicketsPage: React.FC = () => {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadTickets();
-  }, [lotteryId]);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     setIsLoading(true);
     try {
       // TODO: 调用实际API
@@ -94,7 +90,11 @@ const MyTicketsPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [lotteryId]);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);

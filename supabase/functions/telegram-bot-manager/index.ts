@@ -215,7 +215,7 @@ serve(async (req) => {
     }
 
     switch (action) {
-      case 'setup':
+      case 'setup': {
         // 完整设置 Bot
         const webhookUrl = `${supabaseUrl}/functions/v1/telegram-bot-webhook`;
         
@@ -242,19 +242,19 @@ serve(async (req) => {
             }
           }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-
+             });
         } catch (error) {
           return new Response(JSON.stringify({
             success: false,
             error: error.message
-          }), {
+           }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
+          })        }
+        break;
+      }
 
-      case 'webhook-info':
+      case 'webhook-info': {
         // 获取 Webhook 信息
         try {
           const webhookInfo = await getWebhookInfo(botToken);
@@ -273,8 +273,10 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+        break;
+      }
 
-      case 'delete-webhook':
+      case 'delete-webhook': {
         // 删除 Webhook
         try {
           const result = await deleteWebhook(botToken);
@@ -293,8 +295,10 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+        break;
+      }
 
-      case 'test-message':
+      case 'test-message': {
         // 发送测试消息
         const { chatId } = requestData as { chatId: number };
         
@@ -325,8 +329,10 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+        break;
+      }
 
-      case 'create-notification':
+      case 'create-notification': {
         // 创建通知
         const {
           userId,
@@ -370,19 +376,23 @@ serve(async (req) => {
         return new Response(JSON.stringify(notificationResult), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
+        break;
+      }
 
-      case 'stats':
+      case 'stats': {
         // 获取 Bot 统计信息
         const stats = await getBotStats(supabase);
         
         return new Response(JSON.stringify({
           success: true,
           data: stats
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+          }), {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        break;
+      }
 
-      case 'bot-info':
+      case 'bot-info': {
         // 获取 Bot 基本信息
         try {
           const botInfo = await getBotInfo(botToken);
@@ -401,6 +411,8 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         }
+        break;
+      }
 
       default:
         // 默认返回可用操作列表

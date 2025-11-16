@@ -1,28 +1,24 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
-import { lotteryService, Lottery } from '../lib/supabase'
+import { lotteryService } from '../lib/supabase'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 
 const LotteryPage: React.FC = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { user } = useUser()
-  const [lotteries, setLotteries] = useState<Lottery[]>([])
+  const [lotteries, setLotteries] = useState<lotteryService.Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all')
-  const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
+  const [selectedLottery, setSelectedLottery] = useState<lotteryService.Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
 
-  useEffect(() => {
-    loadLotteries()
-  }, [])
-
-  const loadLotteries = async () => {
+  const loadLotteries = useCallback(async () => {
     try {
       setIsLoading(true)
       const data = await lotteryService.getActiveLotteries()
@@ -33,17 +29,23 @@ const LotteryPage: React.FC = () => {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    loadLotteries()
+  }, [loadLotteries])
 
   const filteredLotteries = lotteries.filter(lottery => {
-    const matchesSearch = lottery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    // 假设 lottery.title 是一个对象 {zh: '...', en: '...'}
+    const titleText = typeof lottery.title === 'string' ? lottery.title : lottery.title[i18n.language as keyof typeof lottery.title] || lottery.title['zh'] || ''
+    const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          lottery.period.toLowerCase().includes(searchQuery.toLowerCase())
     
     if (filter === 'all') return matchesSearch
     return matchesSearch && lottery.status === filter.toUpperCase()
   })
 
-  const handlePurchaseLottery = (lottery: Lottery) => {
+  const handlePurchaseLottery = (lottery: lotteryService.Lottery) => {
     setSelectedLottery(lottery)
     setIsPurchaseModalOpen(true)
   }

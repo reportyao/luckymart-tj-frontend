@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         const userIds = [...new Set(entries.map(entry => entry.user_id))];
         
         // 一次性获取所有用户的Bot设置（修复：将fetch调用移出循环）
-        let botSettingsMap = new Map();
+        const botSettingsMap = new Map();
         if (userIds.length > 0) {
             const userIdsQuery = userIds.map(id => `user_id.eq.${id}`).join(',');
             const allBotSettingsResponse = await fetch(`${supabaseUrl}/rest/v1/bot_user_settings?or=(${userIdsQuery})&select=user_id,telegram_chat_id`, {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -43,11 +43,7 @@ const MarketPage: React.FC = () => {
   const [sortBy, setSortBy] = useState<'latest' | 'price_low' | 'price_high' | 'discount'>('latest');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchListings();
-  }, [sortBy]);
-
-  const fetchListings = async () => {
+  const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
       // 调用API获取转售列表
@@ -85,7 +81,23 @@ const MarketPage: React.FC = () => {
         created_at: item.created_at,
       }));
 
-      setListings(formattedListings);
+      // 排序
+      const sorted = [...formattedListings];
+      switch (sortBy) {
+        case 'price_low':
+          sorted.sort((a, b) => a.selling_price - b.selling_price);
+          break;
+        case 'price_high':
+          sorted.sort((a, b) => b.selling_price - a.selling_price);
+          break;
+        case 'discount':
+          sorted.sort((a, b) => b.discount_percentage - a.discount_percentage);
+          break;
+        default:
+          sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      }
+
+      setListings(sorted);
     } catch (error: any) {
       console.error('获取转售列表失败:', error);
       toast.error(error.message || t('error.networkError'));
@@ -166,7 +178,11 @@ const MarketPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [sortBy, t]);
+
+  useEffect(() => {
+    fetchListings();
+  }, [fetchListings]);
 
   const filteredListings = listings.filter(listing =>
     listing.lottery_title.toLowerCase().includes(searchQuery.toLowerCase()) ||

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -42,14 +42,11 @@ const ShowoffPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'following' | 'popular'>('all');
 
-  useEffect(() => {
-    fetchShowoffs();
-  }, [filter]);
-
-  const fetchShowoffs = async () => {
+  const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取晒单
+      // TODO: 调用实际API获取晒单, 传入 filter 参数
+      // 这里的mock数据没有根据 filter 过滤，但在实际应用中应该会根据 filter 过滤
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       const mockShowoffs: Showoff[] = [
@@ -117,7 +114,11 @@ const ShowoffPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [filter, t]);
+
+  useEffect(() => {
+    fetchShowoffs();
+  }, [fetchShowoffs]);
 
   const handleLike = async (showoffId: string) => {
     try {

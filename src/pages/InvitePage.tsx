@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase, referralService } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -15,97 +16,44 @@ import {
 import { formatCurrency, formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
-interface InviteStats {
-  total_invites: number;
-  active_invites: number;
-  total_commission: number;
-  pending_commission: number;
-  level1_count: number;
-  level2_count: number;
-  level3_count: number;
-}
-
-interface InvitedUser {
-  id: string;
-  username: string;
-  avatar_url?: string;
-  level: number;
-  status: 'ACTIVE' | 'INACTIVE';
-  total_spent: number;
-  commission_earned: number;
-  created_at: string;
-}
-
+// 接口已在 src/lib/supabase.ts 中定义
 const InvitePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUser();
-  const [stats, setStats] = useState<InviteStats | null>(null);
-  const [invitedUsers, setInvitedUsers] = useState<InvitedUser[]>([]);
+  const [stats, setStats] = useState<referralService.InviteStats | null>(null);
+  const [invitedUsers, setInvitedUsers] = useState<referralService.InvitedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const inviteCode = user?.referral_code || 'LOADING...';
+  const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
   const inviteLink = `https://t.me/luckymart_bot?start=${inviteCode}`;
 
   useEffect(() => {
-    fetchInviteData();
-  }, []);
+    if (user) {
+      fetchInviteData();
+    }
+  }, [user, fetchInviteData]);
 
-  const fetchInviteData = async () => {
+  const fetchInviteData = useCallback(async () => {
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取邀请数据
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (!user) return;
 
-      const mockStats: InviteStats = {
-        total_invites: 15,
-        active_invites: 12,
-        total_commission: 450.50,
-        pending_commission: 85.20,
-        level1_count: 8,
-        level2_count: 5,
-        level3_count: 2
-      };
+      // 使用抽象服务层获取数据
+      const statsData = await referralService.getInviteStats(user.id);
+      const invitedUsersData = await referralService.getInvitedUsers(user.id);
 
-      const mockUsers: InvitedUser[] = [
-        {
-          id: '1',
-          username: 'User***123',
-          level: 1,
-          status: 'ACTIVE',
-          total_spent: 500,
-          commission_earned: 50,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          username: 'User***456',
-          level: 1,
-          status: 'ACTIVE',
-          total_spent: 300,
-          commission_earned: 30,
-          created_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '3',
-          username: 'User***789',
-          level: 2,
-          status: 'ACTIVE',
-          total_spent: 200,
-          commission_earned: 10,
-          created_at: new Date(Date.now() - 172800000).toISOString()
-        }
-      ];
-
-      setStats(mockStats);
-      setInvitedUsers(mockUsers);
+      setStats(statsData);
+      setInvitedUsers(invitedUsersData);
     } catch (error) {
       console.error('Failed to fetch invite data:', error);
       toast.error(t('error.networkError'));
+      setStats(null);
+      setInvitedUsers([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, t]);
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);

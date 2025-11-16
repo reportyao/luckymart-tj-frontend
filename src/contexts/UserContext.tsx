@@ -179,10 +179,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     initializeTelegramApp()
 
     // 清理函数
+    const cleanup = cleanupRef.current
     return () => {
       mounted = false
-      if (cleanupRef.current) {
-        cleanupRef.current()
+      if (cleanup) {
+        cleanup()
       }
     }
   }, [])

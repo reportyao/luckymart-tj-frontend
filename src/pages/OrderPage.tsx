@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -40,15 +40,7 @@ const OrderPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    filterOrders();
-  }, [orders, searchQuery, statusFilter, typeFilter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setIsLoading(true);
     try {
       // TODO: 调用实际API获取订单
@@ -126,9 +118,9 @@ const OrderPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
 
-  const filterOrders = () => {
+  const filterOrders = useCallback(() => {
     let filtered = [...orders];
 
     // Search filter
@@ -151,7 +143,15 @@ const OrderPage: React.FC = () => {
     }
 
     setFilteredOrders(filtered);
-  };
+  }, [orders, searchQuery, statusFilter, typeFilter]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  useEffect(() => {
+    filterOrders();
+  }, [filterOrders]);
 
   const getOrderTypeLabel = (type: string): string => {
     const labels: Record<string, string> = {

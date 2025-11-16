@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { supabase } from '../lib/supabase'
+import { supabase, walletService } from '../lib/supabase'
 import { ArrowLeft, ArrowRightLeft, CheckCircle2 } from 'lucide-react'
 
 export default function ExchangePage() {
@@ -25,11 +25,7 @@ export default function ExchangePage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      const { data: wallets } = await supabase
-        .from('wallets')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('currency', 'TJS')
+      const wallets = await walletService.getWallets(user.id)
 
       if (wallets) {
         const balanceWallet = wallets.find(w => w.type === 'BALANCE')
@@ -61,13 +57,10 @@ export default function ExchangePage() {
     try {
       setSubmitting(true)
 
-      const { data, error } = await supabase.functions.invoke('exchange-currency', {
-        body: {
-          exchangeType: exchangeType,
-          amount: amountNum,
-          currency: 'TJS',
-        }
-      })
+      const sourceWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'BALANCE' : 'LUCKY_COIN'
+      const targetWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'LUCKY_COIN' : 'BALANCE'
+
+      const { data, error } = await walletService.exchangeCoins(sourceWalletType, targetWalletType, 'TJS', amountNum)
 
       if (error) throw error
 

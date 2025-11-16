@@ -123,9 +123,10 @@ export function useLongPress(
   }, [])
 
   useEffect(() => {
+    const timeout = timeoutRef.current
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      if (timeout) {
+        clearTimeout(timeout)
       }
     }
   }, [])
@@ -161,9 +162,10 @@ export function useDoubleTap(
   }, [onDoubleTap, delay])
 
   useEffect(() => {
+    const timeout = timeoutRef.current
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      if (timeout) {
+        clearTimeout(timeout)
       }
     }
   }, [])

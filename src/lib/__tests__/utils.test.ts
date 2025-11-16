@@ -15,7 +15,7 @@ describe('utils', () => {
     it('should merge class names correctly', () => {
       expect(cn('foo', 'bar')).toBe('foo bar');
       expect(cn('foo', undefined, 'bar')).toBe('foo bar');
-      expect(cn('foo', false && 'bar')).toBe('foo');
+      expect(cn('foo', '')).toBe('foo');
     });
 
     it('should handle tailwind merge', () => {

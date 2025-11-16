@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -32,11 +32,7 @@ const ShowoffCreatePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true);
 
-  useEffect(() => {
-    fetchWinningLotteries();
-  }, []);
-
-  const fetchWinningLotteries = async () => {
+  const fetchWinningLotteries = useCallback(async () => {
     setIsLoadingLotteries(true);
     try {
       // TODO: 调用实际API获取中奖彩票
@@ -70,7 +66,11 @@ const ShowoffCreatePage: React.FC = () => {
     } finally {
       setIsLoadingLotteries(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchWinningLotteries();
+  }, [fetchWinningLotteries]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

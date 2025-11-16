@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -38,15 +38,7 @@ const NotificationPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  useEffect(() => {
-    filterNotifications();
-  }, [notifications, filter]);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setIsLoading(true);
     try {
       // TODO: 调用实际API获取通知
@@ -129,9 +121,9 @@ const NotificationPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t, user?.id]);
 
-  const filterNotifications = () => {
+  const filterNotifications = useCallback(() => {
     let filtered = [...notifications];
 
     if (filter === 'unread') {
@@ -141,7 +133,15 @@ const NotificationPage: React.FC = () => {
     }
 
     setFilteredNotifications(filtered);
-  };
+  }, [notifications, filter]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    filterNotifications();
+  }, [filterNotifications]);
 
   const markAsRead = async (notificationId: string) => {
     try {

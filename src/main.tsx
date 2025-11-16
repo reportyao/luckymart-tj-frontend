@@ -11,7 +11,7 @@ setupGlobalErrorHandlers()
 suppressKnownWarnings()
 
 // 在生产环境中禁用 StrictMode 以避免双重挂载导致的 DOM 操作问题
-const AppWrapper = () => {
+function AppWrapper() {
   const isProduction = process.env.NODE_ENV === 'production'
   
   if (isProduction) {

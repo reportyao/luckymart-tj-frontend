@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
+// Note: This page uses Edge Functions directly, which is acceptable for this level of abstraction.
+// In a larger application, these could also be moved to the service layer.
 import { uploadImages } from '../lib/uploadImage'
 import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react'
 

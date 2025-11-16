@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -34,11 +34,7 @@ const MarketCreatePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingTickets, setIsLoadingTickets] = useState(true);
 
-  useEffect(() => {
-    fetchMyTickets();
-  }, []);
-
-  const fetchMyTickets = async () => {
+  const fetchMyTickets = useCallback(async () => {
     setIsLoadingTickets(true);
     try {
       // 调用API获取我的奖品(可转售的)
@@ -111,7 +107,11 @@ const MarketCreatePage: React.FC = () => {
     } finally {
       setIsLoadingTickets(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchMyTickets();
+  }, [fetchMyTickets]);
 
   const selectedTicketData = myTickets.find(t => t.id === selectedTicket);
 

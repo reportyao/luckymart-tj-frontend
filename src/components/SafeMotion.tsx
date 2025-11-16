@@ -17,7 +17,7 @@ interface SafeMotionProps extends Omit<MotionProps, 'ref'> {
   className?: string
 }
 
-export const SafeMotion: React.FC<SafeMotionProps> = ({ 
+const SafeMotion: React.FC<SafeMotionProps> = ({ 
   children, 
   as = 'div',
   className,
@@ -61,6 +61,8 @@ export const SafeMotion: React.FC<SafeMotionProps> = ({
   )
 }
 
+export { SafeMotion, SafeAnimationContainer, SafeAnimationItem }
+
 // 简化的动画变体，减少DOM操作
 export const safeAnimationVariants = {
   initial: { opacity: 0, y: 10 },
@@ -73,7 +75,7 @@ export const safeAnimationVariants = {
 }
 
 // 列表动画容器
-export const SafeAnimationContainer: React.FC<{ 
+const SafeAnimationContainer: React.FC<{ 
   children: React.ReactNode; 
   className?: string 
 }> = ({ children, className }) => {
@@ -98,7 +100,7 @@ export const SafeAnimationContainer: React.FC<{
 }
 
 // 安全的列表项动画
-export const SafeAnimationItem: React.FC<{ 
+const SafeAnimationItem: React.FC<{ 
   children: React.ReactNode; 
   index?: number;
   className?: string;

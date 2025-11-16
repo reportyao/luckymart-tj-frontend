@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
@@ -15,11 +15,7 @@ const HomePage: React.FC = () => {
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
 
-  useEffect(() => {
-    loadLotteries()
-  }, [])
-
-  const loadLotteries = async () => {
+  const loadLotteries = useCallback(async () => {
     try {
       setIsLoadingLotteries(true)
       const data = await lotteryService.getActiveLotteries()
@@ -30,7 +26,11 @@ const HomePage: React.FC = () => {
     } finally {
       setIsLoadingLotteries(false)
     }
-  }
+  }, [t])
+
+  useEffect(() => {
+    loadLotteries()
+  }, [loadLotteries])
 
   const handlePurchaseLottery = (lottery: Lottery) => {
     // TODO: Navigate to purchase page or open purchase modal

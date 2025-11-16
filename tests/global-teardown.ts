@@ -103,8 +103,8 @@ async function cleanupTestData(page: any) {
 }
 
 async function generateTestReports() {
-  const fs = require('fs').promises
-  const path = require('path')
+  const fs = (await import('fs/promises')).default
+  const path = (await import('path')).default
   
   try {
     // 生成测试摘要报告
@@ -298,8 +298,8 @@ function generateHtmlReport(reportData: any) {
 }
 
 async function cleanupTempFiles() {
-  const fs = require('fs').promises
-  const path = require('path')
+  const fs = (await import('fs/promises')).default
+  const path = (await import('path')).default
   
   try {
     // 清理临时文件和目录
@@ -360,8 +360,8 @@ async function collectPerformanceData() {
       }
     }
     
-    const fs = require('fs').promises
-    const path = require('path')
+    const fs = (await import('fs/promises')).default
+    const path = (await import('path')).default
     
     const perfDir = path.join(process.cwd(), 'performance-data')
     await fs.mkdir(perfDir, { recursive: true })
@@ -408,7 +408,7 @@ async function sendTestNotifications() {
 
 async function sendSlackNotification(testSummary: any) {
   try {
-    const fetch = require('node-fetch')
+    const fetch = (await import('node-fetch')).default
     
     const message = {
       text: `🎯 LuckyMartTJ E2E测试完成`,

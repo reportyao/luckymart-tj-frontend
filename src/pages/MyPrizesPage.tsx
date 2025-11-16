@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -32,11 +32,7 @@ const MyPrizesPage: React.FC = () => {
   const [selectedPrize, setSelectedPrize] = useState<Prize | null>(null);
   const [showShippingModal, setShowShippingModal] = useState(false);
 
-  useEffect(() => {
-    loadPrizes();
-  }, []);
-
-  const loadPrizes = async () => {
+  const loadPrizes = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await fetch(
@@ -75,7 +71,11 @@ const MyPrizesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    loadPrizes();
+  }, [loadPrizes]);
 
   const handleApplyShipping = (prize: Prize) => {
     setSelectedPrize(prize);

@@ -67,7 +67,7 @@ async function setupTestData(page: any) {
           isVisible: false,
           isActive: true,
           setText: (text: string) => console.log('MainButton setText:', text),
-          onClick: (callback: Function) => console.log('MainButton onClick registered'),
+          onClick: (callback: (...args: any[]) => any) => console.log('MainButton onClick registered'),
           show: () => console.log('MainButton shown'),
           hide: () => console.log('MainButton hidden'),
           enable: () => console.log('MainButton enabled'),
@@ -75,7 +75,7 @@ async function setupTestData(page: any) {
         },
         BackButton: {
           isVisible: false,
-          onClick: (callback: Function) => console.log('BackButton onClick registered'),
+          onClick: (callback: (...args: any[]) => any) => console.log('BackButton onClick registered'),
           show: () => console.log('BackButton shown'),
           hide: () => console.log('BackButton hidden')
         },
@@ -88,10 +88,10 @@ async function setupTestData(page: any) {
         openLink: (url: string) => console.log('Telegram openLink:', url),
         showPopup: (params: any) => console.log('Telegram showPopup:', params),
         showAlert: (message: string) => console.log('Telegram showAlert:', message),
-        onEvent: (eventType: string, callback: Function) => {
+        onEvent: (eventType: string, callback: (...args: any[]) => any) => {
           console.log('Telegram onEvent registered:', eventType)
         },
-        offEvent: (eventType: string, callback: Function) => {
+        offEvent: (eventType: string, callback: (...args: any[]) => any) => {
           console.log('Telegram offEvent unregistered:', eventType)
         }
       }

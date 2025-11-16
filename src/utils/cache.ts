@@ -54,14 +54,16 @@ class CacheManager {
     let cacheData: any = null
 
     switch (storage) {
-      case 'local':
+      case 'local': {
         const localData = localStorage.getItem(key)
         cacheData = localData ? JSON.parse(localData) : null
         break
-      case 'session':
+      }
+      case 'session': {
         const sessionData = sessionStorage.getItem(key)
         cacheData = sessionData ? JSON.parse(sessionData) : null
         break
+      }
       case 'memory':
         cacheData = this.memoryCache.get(key) || null
         break
@@ -119,8 +121,8 @@ class CacheManager {
     let size = 0
     const store = storage === 'local' ? localStorage : sessionStorage
 
-    for (let key in store) {
-      if (store.hasOwnProperty(key)) {
+    for (const key in store) {
+      if (Object.hasOwn(store, key)) {
         size += store[key].length + key.length
       }
     }
