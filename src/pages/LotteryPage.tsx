@@ -16,7 +16,7 @@ const LotteryPage: React.FC = () => {
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed'>('all')
+  const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed' | 'drawResult'>('all')
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
 
@@ -27,6 +27,8 @@ const LotteryPage: React.FC = () => {
       let data: Lottery[] = []
       if (filter === 'all') {
         data = await lotteryService.getAllLotteries()
+      } else if (filter === 'drawResult') {
+        data = await lotteryService.getLotteriesByStatus('DRAWN')
       } else {
         data = await lotteryService.getLotteriesByStatus(filter.toUpperCase())
       }
@@ -50,6 +52,7 @@ const LotteryPage: React.FC = () => {
                          lottery.period.toLowerCase().includes(searchQuery.toLowerCase())
     
     if (filter === 'all') return matchesSearch
+    if (filter === 'drawResult') return matchesSearch && lottery.status === 'DRAWN'
     return matchesSearch && lottery.status === filter.toUpperCase()
   })
 
@@ -94,6 +97,7 @@ const LotteryPage: React.FC = () => {
             { key: 'active', label: t('lottery.active') },
             { key: 'upcoming', label: t('lottery.upcoming') },
             { key: 'completed', label: t('lottery.completed') },
+            { key: 'drawResult', label: t('lottery.drawResult') }
           ].map((tab) => (
             <button
               key={tab.key}

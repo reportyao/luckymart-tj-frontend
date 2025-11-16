@@ -168,6 +168,37 @@ export const lotteryService = {
    * 获取用户的夺宝订单记录
    * @param userId 用户 ID
    */
+  async getLotteryResult(lotteryId: string) {
+    const { data, error } = await supabase
+      .from('lottery_rounds')
+      .select(
+        `
+          *,
+          winners:lottery_entries!winner_entry_id (
+            *,
+            profiles (username, avatar_url)
+          ),
+          my_entries:lottery_entries!lottery_round_id (
+            *
+          )
+        `
+      )
+      .eq('lottery_id', lotteryId) // 修正：应使用 lottery_id
+      .single()
+
+    if (error) {
+      throw new Error(error.message)
+    }
+
+    // 确保 winners 数组中只有 winner_entry_id 对应的条目
+    const result = {
+      ...data,
+      winners: data.winners.filter(w => w.id === data.winner_entry_id)
+    }
+
+    return result
+  }, // 修正：添加逗号
+
   async getUserOrders(userId: string): Promise<Order[]> {
     const { data, error } = await supabase
       .from('orders')

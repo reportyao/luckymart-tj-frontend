@@ -65,7 +65,7 @@ export default defineConfig({
     strictPort: true,
     allowedHosts: process.env.ALLOWED_HOSTS
       ? process.env.ALLOWED_HOSTS.split(',')
-      : ['localhost', '127.0.0.1', '.manusvm.computer'],
+      : ['localhost', '127.0.0.1', '.manusvm.computer', '5174-ilulbq73pbic48qpfg20l-83a7d684.manus-asia.computer'],
     hmr: {
       clientPort: parseInt(process.env.VITE_PORT || '5174'),
     },

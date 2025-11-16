@@ -1,10 +1,10 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+import i18n from 'i18next'
+import { initReactI18next } from 'react-i18next'
+import LanguageDetector from 'i18next-browser-languagedetector'
 
-import zhTranslation from './locales/zh.json';
-import ruTranslation from './locales/ru.json';
-import tgTranslation from './locales/tg.json';
+import zhTranslation from './locales/zh.json'
+import ruTranslation from './locales/ru.json'
+import tgTranslation from './locales/tg.json'
 
 const resources = {
   zh: {
@@ -16,7 +16,7 @@ const resources = {
   tg: {
     translation: tgTranslation
   }
-};
+}
 
 i18n
   .use(LanguageDetector)
@@ -32,6 +32,6 @@ i18n
       order: ['localStorage', 'navigator'],
       caches: ['localStorage']
     }
-  });
+  })
 
-export default i18n;
+export default i18n

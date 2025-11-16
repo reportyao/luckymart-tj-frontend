@@ -64,12 +64,46 @@
     "myNumbers": "我的号码",
     "drawTime": "开奖时间",
     "winningNumber": "中奖号码",
+    "purchase": "购买",
+    "remaining": "剩余份数",
+    "totalShares": "总份数",
+    "pricePerShare": "每份价格",
+    "quantity": "购买数量",
+    "yourNumbers": "您的中奖码",
+    "buyNow": "立即购买",
+    "soldOut": "已售罄",
+    "drawing": "开奖中...",
+    "drawResult": "开奖结果",
+    "luckyNumber": "幸运号码",
+    "winner": "中奖用户",
+    "purchaseSuccess": "购买成功！",
+    "purchaseFailed": "购买失败",
+    "sharesNotEnough": "份额不足，请减少购买数量",
+    "maxQuantityHint": "最多可购买 {{max}} 份"
     "prizeAmount": "奖金",
     "congratulations": "恭喜中奖!",
     "notWinning": "未中奖",
     "verification": "验证信息",
     "vrfSeed": "VRF种子",
     "vrfProof": "VRF证明"
+  },
+  "fairness": {
+    "title": "为什么这个算法公平？",
+    "question1": "用户能操纵时间戳吗？",
+    "answer1": "不能，时间戳由服务器生成",
+    "question2": "平台能作弊吗？",
+    "answer2": "不能，所有订单数据公开可查",
+    "question3": "最后购买有优势吗？",
+    "answer3": "没有，所有订单权重相同",
+    "question4": "算法够随机吗？",
+    "answer4": "足够，毫秒级时间戳高度随机"
+  },
+  "verification": {
+    "title": "验证数据",
+    "timestampSum": "时间戳总和",
+    "formula": "验证公式",
+    "totalShares": "总份数",
+    "drawTime": "开奖时间"
   },
   "wallet": {
     "myWallet": "我的钱包",
@@ -245,7 +279,8 @@
     "forbidden": "权限不足",
     "notFound": "资源不存在",
     "validationError": "数据验证失败",
-    "unknownError": "未知错误"
+    "unknownError": "未知错误",
+    "networkError": "网络错误，请稍后重试"
   },
   "success": {
     "operationSuccess": "操作成功",

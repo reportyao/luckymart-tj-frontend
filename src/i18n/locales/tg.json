@@ -64,12 +64,47 @@
     "myNumbers": "Рақамҳои ман",
     "drawTime": "Вақти қуръакашӣ",
     "winningNumber": "Рақами бурд",
+    "purchase": "Харидан",
+    "remaining": "Боқимонда",
+    "totalShares": "Ҳамаги",
+    "pricePerShare": "Нархи як сахм",
+    "quantity": "Миқдор",
+    "yourNumbers": "Рақамҳои шумо",
+    "buyNow": "Ҳозир харед",
+    "soldOut": "Тамом шуд",
+    "drawing": "Қурьакашӣ...",
+    "drawResult": "Натиҷаи қурьакашӣ",
+    "luckyNumber": "Рақами хушбахт",
+    "winner": "Бурда",
+    "purchaseSuccess": "Харид муваффақ!",
+    "purchaseFailed": "Харид муваффақ нашуд",
+    "sharesNotEnough": "Сахмҳо кофӣ нест",
+    "maxQuantityHint": "Максимум {{max}} сахм харида мешавад",
     "prizeAmount": "Маблағи ҷоиза",
     "congratulations": "Табрик бо бурд!",
     "notWinning": "Набурдед",
     "verification": "Маълумоти тасдиқ",
     "vrfSeed": "VRF Seed",
     "vrfProof": "VRF Proof"
+  },
+  "fairness": {
+    "title": "Чаро ин алгоритм одилона аст?",
+    "question1": "Оё корбарон метавонанд вақтро тағир диҳанд?",
+    "answer1": "Не, вақт аз тарафи сервер сохта мешавад",
+    "question2": "Оё платформа метавонад тақаллуб кунад?",
+    "answer2": "Не, ҳамаи маълумот дастрас аст",
+    "question3": "Оё харидани охирин бартарӣ дорад?",
+    "answer3": "Не, ҳамаи фармоишҳо баробаранд",
+    "question4": "Оё алгоритм кофӣ тасодуфӣ аст?",
+    "answer4": "Бале, вақт дар миллисония хеле тасодуфӣ аст"
+  },
+  "verification": {
+    "title": "Маълумот барои санҷиш",
+    "timestampSum": "Ҷамъи вақт",
+    "formula": "Формулаи санҷиш",
+    "totalShares": "Ҳамаги сахмҳо",
+    "drawTime": "Вақти қурьакашӣ"
+  }
   },
   "wallet": {
     "myWallet": "Ҳамёни ман",
@@ -242,7 +277,8 @@
     "forbidden": "Ҳуқуқ кофӣ нест",
     "notFound": "Манбаъ ёфт нашуд",
     "validationError": "Хатои санҷиши маълумот",
-    "unknownError": "Хатои номаълум"
+    "unknownError": "Хатои номаълум",
+    "networkError": "Хатои шабака, лутфан баъдтар кӯшиш кунед"
   },
   "success": {
     "operationSuccess": "Амалиёт муваффақ",

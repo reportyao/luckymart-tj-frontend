@@ -1,63 +1,58 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { GlobeAltIcon } from '@heroicons/react/24/outline';
+import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
 
 const languages = [
-  { code: 'zh', name: '中文', nativeName: '中文' },
-  { code: 'ru', name: 'Russian', nativeName: 'Русский' },
-  { code: 'tg', name: 'Tajik', nativeName: 'Тоҷикӣ' }
-];
+  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+  { code: 'tg', name: 'Тоҷикӣ', flag: '🇹🇯' }
+]
 
-export const LanguageSwitcher: React.FC = () => {
-  const { i18n } = useTranslation();
-  const [isOpen, setIsOpen] = React.useState(false);
+export function LanguageSwitcher() {
+  const { i18n } = useTranslation()
+  const [currentLang, setCurrentLang] = useState(i18n.language)
 
-  const currentLanguage = languages.find(lang => lang.code === i18n.language) || languages[0];
+  useEffect(() => {
+    // 确保 i18n.language 状态与实际语言同步
+    setCurrentLang(i18n.language)
+  }, [i18n.language])
 
   const changeLanguage = (langCode: string) => {
-    i18n.changeLanguage(langCode);
-    setIsOpen(false);
-  };
+    i18n.changeLanguage(langCode)
+    // LanguageDetector 会自动处理 localStorage
+  }
+
+  const currentLanguage = languages.find(lang => lang.code === currentLang) || languages[0]
 
   return (
-    <div className="relative">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
-      >
-        <GlobeAltIcon className="w-5 h-5 text-gray-600" />
-        <span className="text-sm font-medium text-gray-700">
-          {currentLanguage.nativeName}
-        </span>
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-10"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-20">
-            {languages.map((lang) => (
-              <button
-                key={lang.code}
-                onClick={() => changeLanguage(lang.code)}
-                className={`w-full text-left px-4 py-3 hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-                  i18n.language === lang.code ? 'bg-blue-50 text-blue-600' : 'text-gray-700'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="font-medium">{lang.nativeName}</span>
-                  {i18n.language === lang.code && (
-                    <span className="text-blue-600">✓</span>
-                  )}
-                </div>
-                <span className="text-xs text-gray-500">{lang.name}</span>
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" size="sm" className="gap-2">
+          <span>{currentLanguage?.flag}</span>
+          <span>{currentLanguage?.name}</span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        {languages.map((lang) => (
+          <DropdownMenuItem
+            key={lang.code}
+            onClick={() => changeLanguage(lang.code)}
+            className="cursor-pointer"
+          >
+            <span className="mr-2">{lang.flag}</span>
+            <span>{lang.name}</span>
+            {lang.code === currentLang && (
+              <span className="ml-2 text-blue-600">✓</span>
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
