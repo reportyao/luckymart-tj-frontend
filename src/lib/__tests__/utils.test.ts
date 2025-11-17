@@ -6,6 +6,7 @@ import {
   getLotteryStatusText,
   getLotteryStatusColor,
   getTimeRemaining,
+  getTimeRemainingText,
   getWalletTypeText,
   copyToClipboard,
 } from '../utils';
@@ -25,17 +26,17 @@ describe('utils', () => {
 
   describe('formatCurrency', () => {
     it('should format currency with default TJS', () => {
-      expect(formatCurrency(100)).toBe('TJS 100.00');
-      expect(formatCurrency(50.5)).toBe('TJS 50.50');
+      expect(formatCurrency('TJS', 100)).toBe('TJS 100.00');
+      expect(formatCurrency('TJS', 50.5)).toBe('TJS 50.50');
     });
 
     it('should format currency with custom currency', () => {
-      expect(formatCurrency(100, 'USD')).toBe('USD 100.00');
+      expect(formatCurrency('USD', 100)).toBe('USD 100.00');
     });
 
     it('should handle decimal places correctly', () => {
-      expect(formatCurrency(99.999)).toBe('TJS 100.00');
-      expect(formatCurrency(99.994)).toBe('TJS 99.99');
+      expect(formatCurrency('TJS', 99.999)).toBe('TJS 100.00');
+      expect(formatCurrency('TJS', 99.994)).toBe('TJS 99.99');
     });
   });
 
@@ -83,29 +84,29 @@ describe('utils', () => {
     });
   });
 
-  describe('getTimeRemaining', () => {
+  describe('getTimeRemainingText', () => {
     it('should return "已结束" for past dates', () => {
       const pastDate = new Date(Date.now() - 1000).toISOString();
-      expect(getTimeRemaining(pastDate)).toBe('已结束');
+      expect(getTimeRemainingText(pastDate)).toBe('已结束');
     });
 
     it('should return days and hours for future dates', () => {
       const futureDate = new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(); // 25 hours
-      const result = getTimeRemaining(futureDate);
+      const result = getTimeRemainingText(futureDate);
       expect(result).toContain('天');
       expect(result).toContain('小时');
     });
 
     it('should return hours and minutes for dates within 24 hours', () => {
       const futureDate = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours
-      const result = getTimeRemaining(futureDate);
+      const result = getTimeRemainingText(futureDate);
       expect(result).toContain('小时');
       expect(result).toContain('分钟');
     });
 
     it('should return minutes for dates within 1 hour', () => {
       const futureDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
-      const result = getTimeRemaining(futureDate);
+      const result = getTimeRemainingText(futureDate);
       expect(result).toContain('分钟');
       expect(result).not.toContain('小时');
     });
