@@ -25,18 +25,7 @@ export class ErrorBoundary extends React.Component<
     // 捕获错误信息
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
-    // 特殊处理 DOM 操作错误
-    if (error.message.includes('removeChild') || 
-        error.message.includes('Node') ||
-        error.name === 'NotFoundError') {
-      console.warn('DOM manipulation error detected, attempting to recover...');
-      
-      // 延迟恢复，让DOM稳定
-      setTimeout(() => {
-        this.setState({ hasError: false, error: null, errorInfo: null });
-      }, 1000);
-      return;
-    }
+    // 移除 DOM 错误特殊处理，统一交给 Fallback UI 处理
 
     this.setState({
       error,
