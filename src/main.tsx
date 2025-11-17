@@ -12,22 +12,8 @@ import { SupabaseProvider } from './contexts/SupabaseContext'
 setupGlobalErrorHandlers()
 suppressKnownWarnings()
 
-// 在生产环境中禁用 StrictMode 以避免双重挂载导致的 DOM 操作问题
+// 修复 FE-BUG-002: 移除生产环境禁用 StrictMode 的逻辑，强制使用 StrictMode 以暴露副作用
 function AppWrapper() {
-  const isProduction = process.env.NODE_ENV === 'production'
-  
-  if (isProduction) {
-    return (
-      <ErrorBoundary>
-        <SupabaseProvider>
-          <UserProvider>
-            <App />
-          </UserProvider>
-        </SupabaseProvider>
-      </ErrorBoundary>
-    )
-  }
-  
   return (
     <StrictMode>
       <ErrorBoundary>

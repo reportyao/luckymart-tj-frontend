@@ -12,7 +12,7 @@ import BotPage from './pages/BotPage'
 import MonitoringPage from './pages/MonitoringPage'
 import OrderPage from './pages/OrderPage'
 import NotificationPage from './pages/NotificationPage'
-import LotteryResultPage from './pages/LotteryResultPage'
+import LotteryResultPage from './pages/LotteryResultPage'\nimport NotFoundPage from './pages/NotFoundPage'
 import InvitePage from './pages/InvitePage'
 import ShowoffPage from './pages/ShowoffPage'
 import ShowoffCreatePage from './pages/ShowoffCreatePage'
@@ -56,35 +56,18 @@ function App() {
               <Route path="/withdraw" element={<WithdrawPage />} />
               <Route path="/exchange" element={<ExchangePage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/profile/edit" element={<ProfileEditPage />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />\n              <Route path="*" element={<NotFoundPage />} />
 
             </Routes>
             
-            <BottomNavigation />
+            
           </Layout>
           
           <Toaster
             position="top-center"
             toastOptions={{
               duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-                borderRadius: '12px',
-                padding: '12px 16px',
-                fontSize: '14px',
-                maxWidth: '320px',
-              },
-              success: {
-                style: {
-                  background: '#10B981',
-                },
-              },
-              error: {
-                style: {
-                  background: '#EF4444',
-                },
-              },
+              // 移除硬编码样式，使用默认或通过 CSS 变量控制
             }}
           />
         </div>
