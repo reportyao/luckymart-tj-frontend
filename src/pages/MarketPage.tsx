@@ -2,17 +2,17 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+
 import {
   ShoppingBagIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
+
   PlusIcon,
   ClockIcon,
   TicketIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
-import { formatCurrency, formatDateTime } from '../lib/utils';
+import { formatCurrency } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 interface MarketListing {
@@ -36,12 +36,12 @@ interface MarketListing {
 const MarketPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useUser();
+
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'latest' | 'price_low' | 'price_high' | 'discount'>('latest');
-  const [showFilters, setShowFilters] = useState(false);
+
 
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
@@ -338,10 +338,10 @@ const MarketPage: React.FC = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex items-baseline space-x-2">
                         <span className="text-2xl font-bold text-green-600">
-                          {formatCurrency(listing.selling_price, listing.currency)}
+                          {formatCurrency(listing.currency, listing.selling_price)}
                         </span>
                         <span className="text-sm text-gray-400 line-through">
-                          {formatCurrency(listing.original_price, listing.currency)}
+                          {formatCurrency(listing.currency, listing.original_price)}
                         </span>
                       </div>
                       <button

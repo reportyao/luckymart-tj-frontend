@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { supabase, referralService } from '../lib/supabase';
+import React, { useState, useEffect, useCallback } from 'react';
+import { referralService, InviteStats, InvitedUser } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -20,19 +20,13 @@ import toast from 'react-hot-toast';
 const InvitePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUser();
-  const [stats, setStats] = useState<referralService.InviteStats | null>(null);
-  const [invitedUsers, setInvitedUsers] = useState<referralService.InvitedUser[]>([]);
+  const [stats, setStats] = useState<InviteStats | null>(null);
+  const [invitedUsers, setInvitedUsers] = useState<InvitedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
   const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
   const inviteLink = `https://t.me/luckymart_bot?start=${inviteCode}`;
-
-  useEffect(() => {
-    if (user) {
-      fetchInviteData();
-    }
-  }, [user, fetchInviteData]);
 
   const fetchInviteData = useCallback(async () => {
     setIsLoading(true);
@@ -54,6 +48,12 @@ const InvitePage: React.FC = () => {
       setIsLoading(false);
     }
   }, [user, t]);
+
+  useEffect(() => {
+    if (user) {
+      fetchInviteData();
+    }
+  }, [user, fetchInviteData]);
 
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
@@ -90,10 +90,7 @@ const InvitePage: React.FC = () => {
     return colors[level as keyof typeof colors] || 'bg-gray-100 text-gray-700';
   };
 
-  const getCommissionRate = (level: number) => {
-    const rates = { 1: 10, 2: 5, 3: 2 };
-    return rates[level as keyof typeof rates] || 0;
-  };
+
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
@@ -161,7 +158,7 @@ const InvitePage: React.FC = () => {
                   <UsersIcon className="w-5 h-5 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stats.total_invites}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.total_referrals}</p>
                   <p className="text-xs text-gray-500">总邀请人数</p>
                 </div>
               </div>
@@ -179,7 +176,7 @@ const InvitePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-green-600">
-                    {formatCurrency(stats.total_commission)}
+                    {formatCurrency('TJS', stats.total_commission)}
                   </p>
                   <p className="text-xs text-gray-500">累计佣金</p>
                 </div>
@@ -197,7 +194,7 @@ const InvitePage: React.FC = () => {
                   <ChartBarIcon className="w-5 h-5 text-orange-600" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900">{stats.active_invites}</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.level1_referrals}</p>
                   <p className="text-xs text-gray-500">活跃用户</p>
                 </div>
               </div>
@@ -215,7 +212,7 @@ const InvitePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency(stats.pending_commission)}
+                    {formatCurrency('TJS', stats.pending_commission)}
                   </p>
                   <p className="text-xs text-gray-500">待结算</p>
                 </div>
@@ -291,10 +288,10 @@ const InvitePage: React.FC = () => {
                   <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-blue-600 rounded-full"
-                      style={{ width: `${(stats.level1_count / stats.total_invites) * 100}%` }}
+                      style={{ width: `${(stats.level1_referrals / stats.total_referrals) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level1_count}</span>
+                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level1_referrals}</span>
                 </div>
               </div>
 
@@ -304,10 +301,10 @@ const InvitePage: React.FC = () => {
                   <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-600 rounded-full"
-                      style={{ width: `${(stats.level2_count / stats.total_invites) * 100}%` }}
+                      style={{ width: `${(stats.level2_referrals / stats.total_referrals) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level2_count}</span>
+                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level2_referrals}</span>
                 </div>
               </div>
 
@@ -317,10 +314,10 @@ const InvitePage: React.FC = () => {
                   <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-orange-600 rounded-full"
-                      style={{ width: `${(stats.level3_count / stats.total_invites) * 100}%` }}
+                      style={{ width: `${(stats.level3_referrals / stats.total_referrals) * 100}%` }}
                     />
                   </div>
-                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level3_count}</span>
+                  <span className="text-sm font-medium text-gray-900 w-8">{stats.level3_referrals}</span>
                 </div>
               </div>
             </div>
@@ -369,7 +366,7 @@ const InvitePage: React.FC = () => {
                   <div className="text-right">
                     <p className="text-sm text-gray-500">已赚</p>
                     <p className="text-lg font-bold text-green-600">
-                      +{formatCurrency(invitedUser.commission_earned)}
+                      +{formatCurrency('TJS', invitedUser.commission_earned)}
                     </p>
                   </div>
                 </div>
@@ -377,7 +374,7 @@ const InvitePage: React.FC = () => {
                 <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
                   <span className="text-gray-600">消费金额</span>
                   <span className="font-medium text-gray-900">
-                    {formatCurrency(invitedUser.total_spent)}
+                    {formatCurrency('TJS', invitedUser.total_spent)}
                   </span>
                 </div>
               </motion.div>

@@ -122,7 +122,7 @@ class CacheManager {
     const store = storage === 'local' ? localStorage : sessionStorage
 
     for (const key in store) {
-      if (Object.hasOwn(store, key)) {
+      if (Object.prototype.hasOwnProperty.call(store, key)) {
         size += store[key].length + key.length
       }
     }

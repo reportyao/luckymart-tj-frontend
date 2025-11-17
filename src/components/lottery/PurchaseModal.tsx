@@ -50,7 +50,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       const order = await lotteryService.purchaseTickets(lottery.id, quantity)
       
       // 购买成功后，使用订单中的 ticket_numbers
-      const codes = order.ticket_numbers.map(num => `#${num.toString().padStart(5, '0')}`)
+      const codes = order.ticket_numbers.map((num: number) => `#${num.toString().padStart(5, '0')}`)
       setPurchasedCodes(codes)
       setShowSuccess(true)
       

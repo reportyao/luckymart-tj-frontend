@@ -21,7 +21,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const { t } = useTranslation()
   const [showBalance, setShowBalance] = React.useState(true)
   
-  const balanceWallet = wallets.find(w => w.type === 'BALANCE')
+  const balanceWallet = wallets.find(w => w.type === 'MAIN')
   const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
 
   const toggleShowBalance = () => {
@@ -29,7 +29,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   }
 
   const formatDisplayAmount = (amount: number) => {
-    return showBalance ? formatCurrency(amount) : '****'
+    return showBalance ? formatCurrency('TJS', amount) : '****'
   }
 
   return (
@@ -89,8 +89,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {balanceWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>{t('wallet.totalDeposits')}: {formatCurrency(balanceWallet.total_deposits)}</span>
-              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(balanceWallet.total_withdrawals)}</span>
+              <span>{t('wallet.totalDeposits')}: {formatCurrency(balanceWallet.currency, 0)}</span>
+              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(balanceWallet.currency, 0)}</span>
             </div>
           )}
         </div>
@@ -113,8 +113,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {luckyCoinWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>{t('wallet.totalDeposits')}: {formatCurrency(luckyCoinWallet.total_deposits)}</span>
-              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(luckyCoinWallet.total_withdrawals)}</span>
+              <span>{t('wallet.totalDeposits')}: {formatCurrency(luckyCoinWallet.currency, 0)}</span>
+              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(luckyCoinWallet.currency, 0)}</span>
             </div>
           )}
         </div>

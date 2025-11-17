@@ -20,7 +20,7 @@ import { WithdrawModal } from '../components/wallet/WithdrawModal'
 const WalletPage: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { user, wallets, refreshWallets } = useUser()
+  const { wallets, refreshWallets } = useUser()
   const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('overview')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
@@ -39,6 +39,7 @@ const WalletPage: React.FC = () => {
       id: '1',
       type: 'LOTTERY_PURCHASE',
       amount: -10.00,
+      currency: 'TJS', // 添加 currency 字段
       status: 'COMPLETED',
       description: t('order.lotteryPurchase') + ' - TEST2025001',
       created_at: new Date().toISOString(),
@@ -47,6 +48,7 @@ const WalletPage: React.FC = () => {
       id: '2',
       type: 'LOTTERY_PRIZE',
       amount: 14.40,
+      currency: 'TJS', // 添加 currency 字段
       status: 'COMPLETED',
       description: t('lottery.prizeAmount') + ' - 1' + t('lottery.prizeAmount'),
       created_at: new Date(Date.now() - 60000).toISOString(),
@@ -55,6 +57,7 @@ const WalletPage: React.FC = () => {
       id: '3',
       type: 'DEPOSIT',
       amount: 100.00,
+      currency: 'TJS', // 添加 currency 字段
       status: 'COMPLETED',
       description: t('wallet.deposit'),
       created_at: new Date(Date.now() - 120000).toISOString(),
@@ -192,17 +195,13 @@ const WalletPage: React.FC = () => {
                 <div>
                   <p className="text-sm text-gray-500">{t('wallet.totalDeposits')}</p>
                   <p className="text-xl font-bold text-green-600">
-                    {formatCurrency(
-                      wallets.reduce((sum, w) => sum + w.total_deposits, 0)
-                    )}
+                    {formatCurrency('TJS', 0)}
                   </p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">{t('wallet.totalWithdrawals')}</p>
                   <p className="text-xl font-bold text-red-600">
-                    {formatCurrency(
-                      wallets.reduce((sum, w) => sum + w.total_withdrawals, 0)
-                    )}
+                    {formatCurrency('TJS', 0)}
                   </p>
                 </div>
               </div>
@@ -259,7 +258,7 @@ const WalletPage: React.FC = () => {
                       transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {transaction.amount > 0 ? '+' : ''}
-                      {formatCurrency(Math.abs(transaction.amount))}
+                      {formatCurrency(transaction.currency || 'TJS', Math.abs(transaction.amount))}
                     </p>
                   </div>
                 </motion.div>

@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase'
 // In a larger application, these could also be moved to the service layer.
 import { uploadImages } from '../lib/uploadImage'
 import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react'
+import { formatCurrency } from '../lib/utils'
 
 interface PaymentConfig {
   id: string
@@ -89,12 +90,12 @@ export default function DepositPage() {
 
     const amountNum = parseFloat(amount)
     if (!amountNum || amountNum < selectedMethod.config_data.min_amount) {
-      alert(t('wallet.minimumAmount') + ': ' + selectedMethod.config_data.min_amount + ' TJS')
+      alert(t('wallet.minimumAmount') + ': ' + formatCurrency('TJS', selectedMethod.config_data.min_amount))
       return
     }
 
     if (amountNum > selectedMethod.config_data.max_amount) {
-      alert(t('wallet.maximumAmount') + ': ' + selectedMethod.config_data.max_amount + ' TJS')
+      alert(t('wallet.maximumAmount') + ': ' + formatCurrency('TJS', selectedMethod.config_data.max_amount))
       return
     }
 
@@ -237,7 +238,7 @@ export default function DepositPage() {
           />
           {selectedMethod && (
             <div className="text-xs text-gray-500 mt-2">
-              {t('wallet.amountRange')}: {selectedMethod.config_data.min_amount} - {selectedMethod.config_data.max_amount} TJS
+              {t('wallet.amountRange')}: {formatCurrency('TJS', selectedMethod.config_data.min_amount)} - {formatCurrency('TJS', selectedMethod.config_data.max_amount)}
             </div>
           )}
         </div>

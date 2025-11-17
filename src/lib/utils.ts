@@ -6,7 +6,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // 货币格式化
-export function formatCurrency(amount: number, currency: string = 'TJS'): string {
+export function formatCurrency(currency: string, amount: number): string {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
@@ -144,8 +144,8 @@ export function getLocalizedText(
   }
 
   // 尝试使用主要语言（例如，没有 zh-CN 就用 zh）
-  const primaryLang = language.split('-')[0];
-  if (jsonb[primaryLang]) {
+  const primaryLang = language.split('-')[0] as keyof typeof jsonb;
+  if (primaryLang && jsonb[primaryLang]) {
     return jsonb[primaryLang];
   }
 

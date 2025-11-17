@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { useUser } from '../contexts/UserContext'
+
 import { Lottery } from '../lib/supabase'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
+import { useUser } from '../contexts/UserContext'
 
 const LotteryPage: React.FC = () => {
   const { t, i18n } = useTranslation()
-  const { user } = useUser()
+
   const { lotteryService } = useSupabase()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -64,10 +65,20 @@ const LotteryPage: React.FC = () => {
   }
 
   const handlePurchaseConfirm = async (lotteryId: string, quantity: number) => {
-    // 购买成功后刷新列表和钱包
-    await loadLotteries()
-    await refreshWallets()
-    setIsPurchaseModalOpen(false)
+    // 实际购买逻辑
+    try {
+      await lotteryService.purchaseTickets(lotteryId, quantity)
+      toast.success(t('lottery.purchaseSuccess'))
+      // 刷新列表
+      await loadLotteries()
+      await refreshWallets()
+    } catch (error: any) {
+      toast.error(error.message || t('error.networkError'))
+    } finally {
+      // 关闭模态框
+      setIsPurchaseModalOpen(false)
+      setSelectedLottery(null)
+    }
   }
 
   return (

@@ -19,6 +19,9 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        // 新增 Telegram WebApp 风格按钮
+        telegram: "bg-[#0088CC] text-white hover:bg-[#0077B3] shadow-md",
+        telegram_secondary: "bg-[#E6E6E6] text-[#000000] hover:bg-[#CCCCCC] shadow-sm",
       },
       size: {
         default: "h-10 px-4 py-2",

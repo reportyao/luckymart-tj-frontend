@@ -13,7 +13,7 @@ declare global {
 // 安全的 Motion 组件包装器，防止 DOM 操作冲突
 interface SafeMotionProps extends Omit<MotionProps, 'ref'> {
   children: React.ReactNode
-  as?: keyof JSX.IntrinsicElements
+  as?: keyof React.JSX.IntrinsicElements
   className?: string
 }
 
@@ -52,7 +52,7 @@ const SafeMotion: React.FC<SafeMotionProps> = ({
     }
   }
 
-  const MotionComponent = motion[as] as React.ComponentType<any>
+  const MotionComponent = (motion as any)[as]
 
   return (
     <MotionComponent {...safeMotionProps}>

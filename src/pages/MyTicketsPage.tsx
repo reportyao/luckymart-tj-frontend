@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useTranslation } from 'react-i18next';
+
 import {
   TicketIcon,
   TrophyIcon,
@@ -33,7 +33,7 @@ interface LotteryInfo {
 }
 
 const MyTicketsPage: React.FC = () => {
-  const { t } = useTranslation();
+
   const params = useParams();
   const navigate = useNavigate();
   const lotteryId = params.id;

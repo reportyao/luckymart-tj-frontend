@@ -61,9 +61,11 @@ class SystemHealthService {
         this.healthChecks.set(result.value.service, result.value)
       } else {
         // 处理检查失败的情况
-        const services = ['database', 'api', 'telegram', 'storage', 'edge-functions']
-        this.healthChecks.set(services[index], {
-          service: services[index],
+        const services = ["database", "api", "telegram", "storage", "edge-functions"];
+        const serviceName = services[index];
+        if (!serviceName) return;
+        this.healthChecks.set(serviceName, {
+          service: serviceName,
           status: 'unhealthy',
           responseTime: -1,
           details: `健康检查失败: ${result.reason}`,
@@ -81,7 +83,7 @@ class SystemHealthService {
     const startTime = Date.now()
     
     try {
-      const { data, error } = await this.supabase
+      const { error } = await this.supabase
         .from('users')
         .select('id')
         .limit(1)
@@ -184,13 +186,13 @@ class SystemHealthService {
         }
       }
 
-      const status = data?.status === 'active' ? 'healthy' : 'degraded'
+      const status = (data as any)?.status === 'active' ? 'healthy' : 'degraded'
 
       return {
         service: 'telegram',
         status,
         responseTime,
-        details: `Bot状态: ${data?.status || 'unknown'}`,
+                details: `Bot状态: ${(data as any)?.status || 'unknown'}`,
         timestamp: new Date()
       }
     } catch (error) {
@@ -209,8 +211,7 @@ class SystemHealthService {
     const startTime = Date.now()
     
     try {
-      const { data, error } = await this.supabase.storage
-        .from('test-bucket')
+     const { error } = await this.supabase.storage    .from('test-bucket')
         .list('', { limit: 1 })
 
       const responseTime = Date.now() - startTime
@@ -252,8 +253,7 @@ class SystemHealthService {
     
     try {
       // 测试主要的Edge Function
-      const { data, error } = await this.supabase.functions.invoke('auth-telegram', {
-        body: { test: true }
+  const { error } = await this.supabase.functions.invoke('auth-telegram', {       body: { test: true }
       })
 
       const responseTime = Date.now() - startTime
@@ -422,8 +422,8 @@ class SystemHealthService {
       })),
       statistics: {
         total_checks_24h: history.length,
-        healthy_percentage: history.filter(h => h.status === 'healthy').length / history.length * 100,
-        average_response_time: history.reduce((sum, h) => sum + (h.response_time_ms || 0), 0) / history.length
+        healthy_percentage: history.filter((h: any) => h.status === 'healthy').length / history.length * 100,
+        average_response_time: history.reduce((sum: number, h: any) => sum + (h.response_time_ms || 0), 0) / history.length
       }
     }
 

@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Settings, MessageCircle, Bell, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { Bot, MessageCircle, Bell, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
@@ -333,7 +333,7 @@ export default function BotManagement() {
         >
           <h3 className="text-lg font-semibold text-gray-900 mb-4">热门命令统计</h3>
           <div className="space-y-2">
-            {botStats.topCommands.map((cmd, index) => (
+            {botStats.topCommands.map((cmd) => (
               <div key={cmd.command} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                 <span className="font-medium">/{cmd.command}</span>
                 <span className="text-sm text-gray-600">{cmd.usage_count} 次使用</span>

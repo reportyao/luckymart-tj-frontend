@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase, walletService } from '../lib/supabase'
@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 export default function WithdrawPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+  
   const [balance, setBalance] = useState(0)
   const [withdrawalMethod, setWithdrawalMethod] = useState<'BANK_TRANSFER' | 'ALIF_MOBI' | 'DC_BANK'>('BANK_TRANSFER')
   const [amount, setAmount] = useState('')
@@ -36,13 +36,13 @@ export default function WithdrawPage() {
 
   const fetchBalance = async () => {
     try {
-      setLoading(true)
+      setSubmitting(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       // 使用抽象服务层获取钱包信息
       const wallets = await walletService.getWallets(user.id)
-      const balanceWallet = wallets.find(w => w.type === 'BALANCE')
+      const balanceWallet = wallets.find(w => w.type === 'MAIN')
 
       if (balanceWallet) {
         setBalance(balanceWallet.balance)
@@ -50,7 +50,7 @@ export default function WithdrawPage() {
     } catch (error) {
       console.error('获取余额失败:', error)
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 

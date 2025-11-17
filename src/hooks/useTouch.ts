@@ -32,7 +32,8 @@ export function useSwipe(
   })
 
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    const touch = e.touches[0]
+    const touch = e.touches[0];
+    if (!touch) return;
     touchState.current = {
       startPos: { x: touch.clientX, y: touch.clientY },
       currentPos: { x: touch.clientX, y: touch.clientY },
@@ -42,7 +43,8 @@ export function useSwipe(
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (!touchState.current.startPos) return
-    const touch = e.touches[0]
+    const touch = e.touches[0];
+    if (!touch) return;
     touchState.current.currentPos = { x: touch.clientX, y: touch.clientY }
   }, [])
 
@@ -187,7 +189,8 @@ export function usePinch(
     const touch1 = e.touches[0]
     const touch2 = e.touches[1]
 
-    const deltaX = touch2.clientX - touch1.clientX
+    if (!touch1 || !touch2) return;
+    const deltaX = touch2.clientX - touch1.clientX;
     const deltaY = touch2.clientY - touch1.clientY
     const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
 

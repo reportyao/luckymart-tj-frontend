@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -16,7 +16,7 @@ import {
   Users,
   Zap,
   Bug,
-  Shield,
+
   HardDrive,
   Cpu,
   MemoryStick,
@@ -183,6 +183,7 @@ export function MonitoringDashboard() {
       const interval = setInterval(fetchMonitoringData, 30000) // 30秒刷新一次
       return () => clearInterval(interval)
     }
+    return () => {}
   }, [autoRefresh])
 
   // 手动刷新

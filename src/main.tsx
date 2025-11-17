@@ -1,14 +1,14 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { ErrorBoundary } from './components/ErrorBoundary.tsx'
-import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHandlers.ts'
+import { ErrorBoundary } from './components/ErrorBoundary'
+import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHandlers'
 import './i18n/config'
 import './index.css'
-import App from './App.tsx'
-import { UserProvider } from './contexts/UserContext.tsx'
-import { SupabaseProvider } from './contexts/SupabaseContext.tsx'
+import App from './App'
+import { UserProvider } from './contexts/UserContext'
+import { SupabaseProvider } from './contexts/SupabaseContext'
 
-// 设置全局错误处理
+// 设置全局错误处理和警告抑制
 setupGlobalErrorHandlers()
 suppressKnownWarnings()
 
@@ -41,4 +41,8 @@ function AppWrapper() {
   )
 }
 
-createRoot(document.getElementById('root')!).render(<AppWrapper />)
+const rootElement = document.getElementById('root');
+if (!rootElement) {
+  throw new Error('Root element not found');
+}
+createRoot(rootElement).render(<AppWrapper />);

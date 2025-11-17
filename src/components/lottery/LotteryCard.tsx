@@ -122,7 +122,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               <div>
                 <p className="text-xs text-gray-500">单价</p>
                 <p className="text-lg font-bold text-green-600">
-                  {formatCurrency(lottery.ticket_price, lottery.currency)}
+                  {formatCurrency(lottery.currency, lottery.ticket_price)}
                 </p>
               </div>
               <div>
@@ -190,7 +190,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
 		              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
               <div className="flex flex-wrap gap-2">
-                {lottery.winning_numbers.map((number, index) => (
+                {Array.isArray(lottery.winning_numbers) && (lottery.winning_numbers as string[]).map((number: string, index: number) => (
                   <span
                     key={index}
                     className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-mono font-bold"

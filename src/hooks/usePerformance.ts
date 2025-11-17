@@ -85,7 +85,9 @@ export function useIntersectionObserver(
 
   useEffect(() => {
     const observer = new IntersectionObserver(([entry]) => {
-      callback(entry.isIntersecting)
+      if (entry) {
+        callback(entry.isIntersecting)
+      }
     }, {
       threshold: 0.1,
       ...options,

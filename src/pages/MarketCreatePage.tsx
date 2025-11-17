@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
+
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { useUser } from '../contexts/UserContext';
+
 import {
   ArrowLeftIcon,
   TicketIcon,
@@ -27,7 +27,7 @@ interface MyTicket {
 const MarketCreatePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useUser();
+
   const [myTickets, setMyTickets] = useState<MyTicket[]>([]);
   const [selectedTicket, setSelectedTicket] = useState<string>('');
   const [sellingPrice, setSellingPrice] = useState<string>('');
@@ -254,7 +254,7 @@ const MarketCreatePage: React.FC = () => {
                     <div className="flex items-center space-x-2 mt-1">
                       <BanknotesIcon className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-500">
-                        原价: {formatCurrency(ticket.purchase_price, ticket.currency)}
+                        原价: {formatCurrency(ticket.currency, ticket.purchase_price)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 mt-1">
@@ -279,9 +279,9 @@ const MarketCreatePage: React.FC = () => {
 
         {/* Set Price */}
         {selectedTicketData && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+          <div
+
+
             className="bg-white rounded-xl p-4"
           >
             <h3 className="font-semibold text-gray-900 mb-3">设置售价</h3>
@@ -302,7 +302,7 @@ const MarketCreatePage: React.FC = () => {
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                * 售价范围: {formatCurrency(selectedTicketData.purchase_price * 0.5, selectedTicketData.currency)} - {formatCurrency(selectedTicketData.purchase_price * 1.5, selectedTicketData.currency)}
+                * 售价范围: {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 0.5)} - {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 1.5)}
               </p>
             </div>
 
@@ -328,14 +328,14 @@ const MarketCreatePage: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">原价</span>
                   <span className="text-sm font-medium text-gray-900">
-                    {formatCurrency(selectedTicketData.purchase_price, selectedTicketData.currency)}
+                    {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">售价</span>
                   <span className="text-lg font-bold text-blue-600">
-                    {formatCurrency(parseFloat(sellingPrice), selectedTicketData.currency)}
+                    {formatCurrency(selectedTicketData.currency, parseFloat(sellingPrice))}
                   </span>
                 </div>
 
@@ -351,12 +351,12 @@ const MarketCreatePage: React.FC = () => {
                     {profit >= 0 ? '盈利' : '亏损'}
                   </span>
                   <span className={`text-lg font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {profit >= 0 ? '+' : ''}{formatCurrency(Math.abs(profit), selectedTicketData.currency)}
+                    {profit >= 0 ? '+' : ''}{formatCurrency(selectedTicketData.currency, Math.abs(profit))}
                   </span>
                 </div>
               </div>
             )}
-          </motion.div>
+          </div>
         )}
 
         {/* Tips */}

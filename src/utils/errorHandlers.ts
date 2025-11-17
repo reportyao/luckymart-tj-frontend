@@ -14,7 +14,7 @@ export const setupGlobalErrorHandlers = () => {
   })
 
   // 捕获全局 JavaScript 错误
-  window.addEventListener('error', (event) => {
+  window.addEventListener('error', (event: ErrorEvent) => {
     console.error('Global error:', event.error)
     
     // 如果是 DOM 操作错误，阻止默认错误显示
@@ -23,7 +23,7 @@ export const setupGlobalErrorHandlers = () => {
         event.error?.name === 'NotFoundError') {
       console.warn('DOM manipulation error caught and handled')
       event.preventDefault()
-      return true
+      // return true // 移除不必要的返回值
     }
   })
 

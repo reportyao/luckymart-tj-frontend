@@ -1,15 +1,17 @@
 import React, { createContext, useContext } from 'react';
-import { supabase, authService, lotteryService, walletService, commissionService, postService } from '../lib/supabase';
+import { supabase, authService, lotteryService, walletService, commissionService, showoffService } from '../lib/supabase';
 import { Database } from '../types/supabase';
 
 // 定义 Supabase 上下文的类型
 interface SupabaseContextType {
-  supabase: typeof supabase;
   authService: typeof authService;
+  supabase: typeof supabase;
+
   lotteryService: typeof lotteryService;
   walletService: typeof walletService;
   commissionService: typeof commissionService;
-  postService: typeof postService;
+
+  showoffService: typeof showoffService;
   // 导出 Database 类型，方便在其他地方使用
   Database: Database;
 }
@@ -20,12 +22,14 @@ const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined
 // 上下文提供者组件
 export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const contextValue: SupabaseContextType = {
-    supabase,
     authService,
+    supabase,
+
     lotteryService,
     walletService,
     commissionService,
-    postService,
+
+    showoffService,
     Database: {} as Database, // 仅用于类型提示，实际值不重要
   };
 

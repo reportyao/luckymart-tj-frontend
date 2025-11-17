@@ -1,7 +1,8 @@
-import React from 'react'
+
+
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
-import { UserProvider } from './contexts/UserContext'
+
 import { Layout } from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import LotteryPage from './pages/LotteryPage'
@@ -31,8 +32,7 @@ import './App.css'
 
 function App() {
   return (
-    <UserProvider>
-      <Router>
+    <Router>
         <div className="min-h-screen bg-gray-50">
           <Layout>
             <Routes>
@@ -89,7 +89,6 @@ function App() {
           />
         </div>
       </Router>
-    </UserProvider>
   )
 }
 

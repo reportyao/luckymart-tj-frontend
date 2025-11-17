@@ -760,7 +760,7 @@ export type Database = {
           quantity: number;
           status: Database["public"]["Enums"]["OrderStatus"];
           total_amount: number;
-          type: Database["public"]["Enums"]["OrderType"];
+          type: Database["public"]["Enums"]["TransactionType"];
           updated_at: string;
           user_id: string;
         };
@@ -776,7 +776,7 @@ export type Database = {
           quantity: number;
           status?: Database["public"]["Enums"]["OrderStatus"];
           total_amount: number;
-          type: Database["public"]["Enums"]["OrderType"];
+          type: Database["public"]["Enums"]["TransactionType"];
           updated_at?: string;
           user_id: string;
         };
@@ -792,7 +792,7 @@ export type Database = {
           quantity?: number;
           status?: Database["public"]["Enums"]["OrderStatus"];
           total_amount?: number;
-          type: Database["public"]["Enums"]["OrderType"];
+          type: Database["public"]["Enums"]["TransactionType"];
           updated_at?: string;
           user_id?: string;
         };
@@ -1552,11 +1552,11 @@ export type Order = Tables<"orders">;
 export type Showoff = Tables<"showoffs">;
 export type Commission = Tables<"commissions">;
 export type Deposit = Tables<"deposits">;
-export type Withdrawal = Tables<"withdrawals">;
+export type Withdrawal = Tables<"withdrawal_requests">;
 
 export type UserReferralStats = Awaited<
-  ReturnType<Functions<"get_user_referral_stats">>
+  Functions<"get_user_referral_stats">["Returns"]
 >[number];
 export type LotteryOrderResult = Awaited<
-  ReturnType<Functions<"place_lottery_order">>
+  Functions<"place_lottery_order">["Returns"]
 >;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase, walletService } from '../lib/supabase'
@@ -7,7 +7,7 @@ import { ArrowLeft, ArrowRightLeft, CheckCircle2 } from 'lucide-react'
 export default function ExchangePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const [loading, setLoading] = useState(false)
+
   const [balance, setBalance] = useState(0)
   const [luckyCoin, setLuckyCoin] = useState(0)
   const [exchangeType, setExchangeType] = useState<'BALANCE_TO_COIN' | 'COIN_TO_BALANCE'>('BALANCE_TO_COIN')
@@ -21,14 +21,13 @@ export default function ExchangePage() {
 
   const fetchWallets = async () => {
     try {
-      setLoading(true)
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
       const wallets = await walletService.getWallets(user.id)
 
       if (wallets) {
-        const balanceWallet = wallets.find(w => w.type === 'BALANCE')
+        const balanceWallet = wallets.find(w => w.type === 'MAIN')
         const coinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
         
         if (balanceWallet) setBalance(balanceWallet.balance)
@@ -37,7 +36,6 @@ export default function ExchangePage() {
     } catch (error) {
       console.error('获取钱包失败:', error)
     } finally {
-      setLoading(false)
     }
   }
 
@@ -60,11 +58,11 @@ export default function ExchangePage() {
       const sourceWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'BALANCE' : 'LUCKY_COIN'
       const targetWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'LUCKY_COIN' : 'BALANCE'
 
-      const { data, error } = await walletService.exchangeCoins(sourceWalletType, targetWalletType, 'TJS', amountNum)
+                  const result = await walletService.exchangeCoins(sourceWalletType, targetWalletType, amountNum)
 
-      if (error) throw error
+      if (result.error) throw result.error
 
-      if (data?.success) {
+      if (result.success) {
         setSuccess(true)
         setTimeout(() => {
           navigate('/wallet')

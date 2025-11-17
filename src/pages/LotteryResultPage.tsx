@@ -28,6 +28,8 @@ interface Winner extends TicketRow {
 }
 
 interface LotteryResult extends LotteryResultRow {
+  timestamp_sum: string;
+  total_shares: number;
   winner: Winner;
   my_tickets: TicketRow[];
   lottery: Lottery;
@@ -103,13 +105,13 @@ const LotteryResultPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
             <TrophyIcon className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold mb-1">{result.product_name}</h1>
-          <p className="text-white/80">{t('lottery.period')}: {result.id}</p>
+          <h1 className="text-2xl font-bold mb-1">{result.lottery.title}</h1>
+          <p className="text-white/80">{t('lottery.period')}: {result.lottery_id}</p>
         </div>
       </div>
 
       {/* My Result (if participated) */}
-      {result.my_entries && result.my_entries.length > 0 && (
+      {result.my_tickets && result.my_tickets.length > 0 && (
         <div className="px-4 -mt-6 mb-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -120,11 +122,11 @@ const LotteryResultPage: React.FC = () => {
                 : 'bg-white border-2 border-gray-200'
             }`}
           >
-            {myWinningEntry ? (
+            {myWinningTicket ? (
               <div className="text-center text-white">
                 <h2 className="text-2xl font-bold">{t('lottery.congratulations')}</h2>
                 <p className="mt-1">{t('lottery.youWon')}</p>
-                <div className="mt-4 text-4xl font-bold">{formatCurrency(result.prize_amount || 0, result.currency)}</div>
+                <div className="mt-4 text-4xl font-bold">{formatCurrency(result.lottery.currency, result.lottery.ticket_price * result.lottery.total_tickets)}</div>
               </div>
             ) : (
               <div className="text-center text-gray-700">
@@ -132,10 +134,9 @@ const LotteryResultPage: React.FC = () => {
                 <p className="mt-1 text-gray-500">{t('lottery.betterLuckNextTime')}</p>
                 <p className="mt-3 font-semibold">{t('lottery.myTickets')}:</p>
                 <div className="flex flex-wrap justify-center gap-2 mt-2 max-h-24 overflow-y-auto">
-                  {result.my_tickets.map((ticket, i) => (
-                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm">{ticket.ticket_number}</span>
-	          )}
-                </div>
+                 {result.my_tickets.map((ticket, i) => (
+	                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm">{ticket.ticket_number}</span>
+	                  ))}        </div>
               </div>
             )}
           </motion.div>
@@ -156,7 +157,7 @@ const LotteryResultPage: React.FC = () => {
 	                <span className="font-semibold text-gray-800">{result.winner.profiles?.username || 'Anonymous'}</span>
               </div>
             </div>
-          ))}
+	          )}
         </div>
       </div>
 
@@ -176,12 +177,12 @@ const LotteryResultPage: React.FC = () => {
           <div className="flex flex-col items-center">
             <UsersIcon className="w-6 h-6 text-gray-500 mb-1" />
 	            <p className="text-sm text-gray-500">{t('lottery.participants')}</p>
-	            <p className="font-semibold">{result.lottery.sold_tickets}</p>
+	            <p className="font-semibold">{result.total_shares}</p>
           </div>
           <div className="flex flex-col items-center">
             <BanknotesIcon className="w-6 h-6 text-gray-500 mb-1" />
 	            <p className="text-sm text-gray-500">{t('lottery.ticketPrice')}</p>
-	            <p className="font-semibold">{formatCurrency(result.lottery.ticket_price || 0, result.lottery.currency)}</p>
+	            <p className="font-semibold">{formatCurrency(result.lottery.currency, result.lottery.ticket_price || 0)}</p>
           </div>
         </div>
       </div>
@@ -189,8 +190,8 @@ const LotteryResultPage: React.FC = () => {
       {/* Fairness Explanation */}
       <div className="px-4">
 	        <FairnessExplanation 
-	          timestampSum={result.total_sum || '0'}
-	          totalShares={result.total_numbers || 0}
+	          timestampSum={result.timestamp_sum || '0'}
+	          totalShares={result.total_shares || 0}
 	          drawTime={result.draw_time || ''}
         />
       </div>

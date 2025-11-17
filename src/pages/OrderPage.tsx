@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useUser } from '../contexts/UserContext';
+
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ClockIcon,
-  CheckCircleIcon,
-  XCircleIcon,
+
+
   TicketIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
@@ -31,7 +31,7 @@ interface Order {
 
 const OrderPage: React.FC = () => {
   const { t } = useTranslation();
-  const { user } = useUser();
+
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -173,19 +173,7 @@ const OrderPage: React.FC = () => {
     return labels[status] || status;
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'COMPLETED':
-        return <CheckCircleIcon className="w-5 h-5 text-green-500" />;
-      case 'FAILED':
-      case 'CANCELLED':
-        return <XCircleIcon className="w-5 h-5 text-red-500" />;
-      case 'PENDING':
-        return <ClockIcon className="w-5 h-5 text-orange-500" />;
-      default:
-        return <ClockIcon className="w-5 h-5 text-gray-500" />;
-    }
-  };
+
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -355,7 +343,7 @@ const OrderPage: React.FC = () => {
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <span className="text-sm text-gray-600">{t('order.orderAmount')}</span>
                     <span className="text-lg font-bold text-gray-900">
-                      {formatCurrency(order.amount, order.currency)}
+                      {formatCurrency(order.currency, order.amount)}
                     </span>
                   </div>
                 </div>

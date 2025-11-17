@@ -23,7 +23,7 @@ export const VRFVerificationModal: React.FC<VRFVerificationModalProps> = ({
   onClose,
   lotteryData
 }) => {
-  const { t } = useTranslation();
+  const { t: _t } = useTranslation();
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);

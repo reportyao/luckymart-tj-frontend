@@ -1,24 +1,37 @@
-const SENSITIVE_KEYS = [
-  'password',
-  'token',
-  'secret',
-  'apiKey',
-  'api_key',
-  'Authorization',
-  'X-API-Key',
-  'X-Auth-Token',
-  'VITE_SUPABASE_ANON_KEY', // 明确添加 Supabase Anon Key
-  'NEXT_PUBLIC_SUPABASE_ANON_KEY', // 明确添加 Next.js/Vite 环境变量前缀
-]
+const LOG_LEVELS = {
+  DEBUG: 0,
+  INFO: 1,
+  WARN: 2,
+  ERROR: 3
+}
 
-function sanitizeObject(obj: any): any {
-  if (!obj || typeof obj !== 'object') return obj
+type LogLevel = keyof typeof LOG_LEVELS
 
-  const sanitized = Array.isArray(obj) ? [...obj] : { ...obj }
+const isDevelopment = import.meta.env.MODE === 'development'
+const currentLogLevel: LogLevel = (import.meta.env.VITE_LOG_LEVEL as LogLevel) || 'INFO'
+
+function shouldLog(level: LogLevel): boolean {
+  return LOG_LEVELS[level] >= LOG_LEVELS[currentLogLevel]
+}
+
+function sanitizeObject(obj: unknown): unknown {
+  if (typeof obj !== 'object' || obj === null) return obj
+
+  const SENSITIVE_KEYS = [
+    'password',
+    'token',
+    'secret',
+    'apikey',
+    'authorization',
+    'x-api-key',
+    'x-auth-token'
+  ]
+
+  const sanitized: Record<string, any> = Array.isArray(obj) ? [...(obj as any[])] : { ...(obj as Record<string, any>) }
 
   for (const key in sanitized) {
-    const lowerKey = key.toLowerCase()
-    if (SENSITIVE_KEYS.some(sk => lowerKey.includes(sk.toLowerCase()))) {
+    if (!Object.prototype.hasOwnProperty.call(sanitized, key)) continue
+    if (SENSITIVE_KEYS.includes(key.toLowerCase())) {
       sanitized[key] = '***REDACTED***'
     } else if (typeof sanitized[key] === 'object' && sanitized[key] !== null) {
       sanitized[key] = sanitizeObject(sanitized[key])
@@ -28,14 +41,28 @@ function sanitizeObject(obj: any): any {
   return sanitized
 }
 
+function formatMessage(level: string, message: string): string {
+  return `[${new Date().toISOString()}] [${level}] ${message}`
+}
+
 export const logger = {
-  info: (message: string, data?: any) => {
-    console.log(`[INFO] ${message}`, data ? sanitizeObject(data) : '')
+  debug: (message: string, data?: unknown): void => {
+    if (!isDevelopment || !shouldLog('DEBUG')) return
+    console.debug(formatMessage('DEBUG', message), sanitizeObject(data))
   },
-  error: (message: string, error?: any) => {
-    console.error(`[ERROR] ${message}`, error ? sanitizeObject(error) : '')
+
+  info: (message: string, data?: unknown): void => {
+    if (!shouldLog('INFO')) return
+    console.info(formatMessage('INFO', message), sanitizeObject(data))
   },
-  warn: (message: string, data?: any) => {
-    console.warn(`[WARN] ${message}`, data ? sanitizeObject(data) : '')
+
+  warn: (message: string, data?: unknown): void => {
+    if (!shouldLog('WARN')) return
+    console.warn(formatMessage('WARN', message), sanitizeObject(data))
+  },
+
+  error: (message: string, error?: unknown): void => {
+    if (!shouldLog('ERROR')) return
+    console.error(formatMessage('ERROR', message), sanitizeObject(error))
   }
 }

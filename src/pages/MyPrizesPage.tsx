@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSupabase } from '../contexts/SupabaseContext';
+import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -25,6 +27,8 @@ interface Prize {
 }
 
 const MyPrizesPage: React.FC = () => {
+  const { supabase } = useSupabase();
+  const { user } = useUser();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [prizes, setPrizes] = useState<Prize[]>([]);
@@ -35,27 +39,33 @@ const MyPrizesPage: React.FC = () => {
   const loadPrizes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          }
-        }
-      );
+      if (!user) return;
 
-      const result = await response.json();
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase.functions.invoke('get-my-prizes', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; data: any[]; error?: string };
 
       if (result.success && result.data) {
         // 转换数据格式
         const formattedPrizes: Prize[] = result.data.map((prize: any) => ({
           id: prize.id,
           lottery_id: prize.lottery_id,
-          lottery_period: prize.lottery?.id || '',
-          lottery_title: prize.prize_name,
-          lottery_image: prize.prize_image,
+          lottery_period: prize.lottery_period || '',
+          lottery_title: prize.lottery_title,
+          lottery_image: prize.lottery_image,
           winning_code: prize.winning_code,
           prize_value: prize.prize_value,
           status: prize.status,
@@ -235,7 +245,7 @@ const ShippingModal: React.FC<{
   prize: Prize;
   onClose: () => void;
   onSuccess: () => void;
-}> = ({ prize, onClose, onSuccess }) => {
+}> = ({ onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     recipient_name: '',
     phone: '',

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode, useRef, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import WebApp from '@twa-dev/sdk';
 import toast from 'react-hot-toast';
 import { useSupabase } from './SupabaseContext';
@@ -14,7 +14,13 @@ declare global {
 }
 
 // 合并 Supabase auth user 和 profile
-export type User = UserProfile & { email?: string };
+export type User = UserProfile & { 
+  email?: string;
+  telegram_username?: string;
+  is_verified?: boolean;
+  kyc_level?: string;
+  invite_code?: string; // 添加缺失的 invite_code 字段
+};
 
 interface UserContextType {
   user: User | null;
@@ -47,7 +53,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [telegramUser, setTelegramUser] = useState<any>(null);
+  const [telegramUser] = useState<any>(null);
 
   const fetchWallets = useCallback(async (userId: string) => {
     try {
@@ -77,7 +83,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   useEffect(() => {
     checkSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, _session) => {
       checkSession();
     });
 
@@ -94,7 +100,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       const startParam = WebApp.initDataUnsafe.start_param;
-      const { user, session } = await authService.authenticateWithTelegram(WebApp.initData, startParam);
+      const { user } = await authService.authenticateWithTelegram(WebApp.initData, startParam);
       setUser(user as User);
       if (user) {
         await fetchWallets(user.id);

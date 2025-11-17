@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { Showoff, Lottery } from '../types/supabase';
+import { Showoff } from '../types/supabase';
 import {
   PhotoIcon,
   HeartIcon,
   ChatBubbleLeftIcon,
   ShareIcon,
   PlusIcon,
-  FunnelIcon,
   TrophyIcon
 } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
@@ -26,12 +25,18 @@ const ShowoffPage: React.FC = () => {
   const { user } = useUser();
   const { showoffService } = useSupabase();
   interface ShowoffWithDetails extends Showoff {
-  user_name: string;
-  prize_name: string;
-  lottery_title: string;
+  user_profile: {
+    username: string;
+    avatar_url: string;
+  } | null;
+  lottery: {
+    title: string;
+    image_url: string;
+    ticket_price: number;
+    currency: string;
+  };
   is_liked: boolean;
   comments_count: number;
-  lottery: Lottery;
 }
 
   const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>([]);
@@ -41,7 +46,7 @@ const ShowoffPage: React.FC = () => {
   const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await showoffService.getApprovedShowoffs(filter) as ShowoffWithDetails[];
+      const data = await showoffService.getApprovedShowoffs(filter) as any as ShowoffWithDetails[];
       setShowoffs(data);
     } catch (error) {
       console.error('Error fetching showoffs:', error);
@@ -85,7 +90,7 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user_name}在LuckyMart中奖了${showoff.prize_name}!快来看看吧!`;
+    const text = `${showoff.user_profile?.username || '一位用户'}在LuckyMart中奖了!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
     if (navigator.share) {
@@ -173,10 +178,10 @@ const ShowoffPage: React.FC = () => {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-	                    {showoff.user_name ? showoff.user_name.charAt(0) : 'U'}
+	                    {showoff.user_profile?.username ? showoff.user_profile.username.charAt(0) : 'U'}
                     </div>
                     <div>
-	                    <p className="font-medium text-gray-900">{showoff.user_name || 'Anonymous'}</p>
+	                    <p className="font-medium text-gray-900">{showoff.user_profile?.username || 'Anonymous'}</p>
                       <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
                     </div>
                   </div>
@@ -191,7 +196,7 @@ const ShowoffPage: React.FC = () => {
                   <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
                     <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{showoff.prize_name}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{showoff.lottery.title}</p>
 	                    <p className="text-xs text-gray-500 truncate">{showoff.lottery.title}</p>
                     </div>
                   </div>
@@ -211,7 +216,7 @@ const ShowoffPage: React.FC = () => {
                       <div
                         key={idx}
                         className={`relative rounded-lg overflow-hidden ${
-                          showoff.images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'
+                          (showoff.images as string[]).length === 1 ? 'aspect-[4/3]' : 'aspect-square'
                         }`}
                       >
                         <img

@@ -139,7 +139,7 @@ const ProfilePage: React.FC = () => {
               {user?.first_name} {user?.last_name}
             </h2>
             <p className="text-white/80 text-sm">
-              @{user?.telegram_username || 'username'}
+            @{user?.telegram_username || user?.username || 'username'}
             </p>
             <div className="flex items-center space-x-2 mt-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
@@ -148,7 +148,7 @@ const ProfilePage: React.FC = () => {
                 {user?.status === 'ACTIVE' ? t('invite.active') : user?.status}
               </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
-                {user ? getKycLevelText(user.kyc_level) : t('wallet.notSet')}
+                {user ? getKycLevelText(user.kyc_level || 'BASIC') : t('wallet.notSet')}
               </span>
             </div>
           </div>

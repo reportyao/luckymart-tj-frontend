@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, forwardRef } from 'react'
 import { useThrottle } from '@/hooks/usePerformance'
 
 interface VirtualListProps<T> {
@@ -16,7 +16,7 @@ interface VirtualListProps<T> {
  * 虚拟列表组件
  * 用于高效渲染大列表，只渲染可见区域的元素
  */
-export const VirtualList = React.forwardRef<
+export const VirtualList = forwardRef<
   HTMLDivElement,
   VirtualListProps<any>
 >(
@@ -59,16 +59,18 @@ export const VirtualList = React.forwardRef<
     }, 16) // 约 60fps
 
     useEffect(() => {
-      const container = containerRef.current || (ref as any)?.current
+      const container = containerRef.current || (ref as any)?.current;
       if (container) {
-        container.addEventListener('scroll', handleScroll as any, { passive: true })
+        const handleScrollEvent = (e: Event) => handleScroll(e as unknown as React.UIEvent<HTMLDivElement>);
+        container.addEventListener('scroll', handleScrollEvent, { passive: true });
         return () => {
-          container.removeEventListener('scroll', handleScroll as any)
-        }
+          container.removeEventListener('scroll', handleScrollEvent);
+        };
       }
-    }, [handleScroll, ref])
+      return () => {};
+    }, [handleScroll, ref]);
 
-    const containerElement = containerRef.current || (ref as any)?.current
+
 
     return (
       <div
