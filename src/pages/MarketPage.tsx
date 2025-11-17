@@ -202,16 +202,16 @@ const MarketPage: React.FC = () => {
     const draw = new Date(drawTime).getTime();
     const diff = draw - now;
 
-    if (diff <= 0) return '已开奖';
+    if (diff <= 0) return '{t('lottery.drawn')}';
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return `${days}天后开奖`;
+      return `${days}{t('market.daysUntilDraw')}`;
     }
-    return `${hours}小时${minutes}分钟后开奖`;
+    return `${hours}{t('market.hours')}${minutes}{t('market.minutesUntilDraw')}`;
   };
 
   return (
@@ -219,13 +219,13 @@ const MarketPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-6 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">转售市场</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('market.resaleMarket')}</h1>
           <button
             onClick={handleCreateListing}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-medium hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>出售彩票</span>
+            <span>{t('market.sellTicket')}</span>
           </button>
         </div>
 
@@ -236,7 +236,7 @@ const MarketPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="搜索彩票名称或号码..."
+            placeholder={t('market.searchPlaceholder')}
             className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
@@ -244,10 +244,10 @@ const MarketPage: React.FC = () => {
         {/* Sort Options */}
         <div className="flex items-center space-x-2 overflow-x-auto">
           {[
-            { key: 'latest', label: '最新' },
-            { key: 'price_low', label: '价格从低到高' },
-            { key: 'price_high', label: '价格从高到低' },
-            { key: 'discount', label: '折扣最大' }
+            { key: 'latest', label: t('market.latest') },
+            { key: 'price_low', label: t('market.priceLow') },
+            { key: 'price_high', label: t('market.priceHigh') },
+            { key: 'discount', label: t('market.maxDiscount') }
           ].map((option) => (
             <button
               key={option.key}
@@ -273,13 +273,13 @@ const MarketPage: React.FC = () => {
         ) : filteredListings.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <ShoppingBagIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">暂无转售商品</p>
-            <p className="text-sm text-gray-400 mt-2">购买的彩票可以在这里转售</p>
+            <p className="text-gray-500">{t('market.noListings')}</p>
+            <p className="text-sm text-gray-400 mt-2">{t('market.canResellHint')}</p>
             <button
               onClick={handleCreateListing}
               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
-              出售彩票
+              {t('market.sellTicket')}
             </button>
           </div>
         ) : (
@@ -324,7 +324,7 @@ const MarketPage: React.FC = () => {
                     <div className="flex items-center space-x-2 mb-2">
                       <TicketIcon className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-blue-600">
-                        号码: {listing.ticket_numbers}
+                        {t('market.ticketNumbers')}: {listing.ticket_numbers}
                       </span>
                     </div>
 
@@ -348,7 +348,7 @@ const MarketPage: React.FC = () => {
                         onClick={() => handleBuy(listing)}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
                       >
-                        立即购买
+                        {t('market.buyNow')}
                       </button>
                     </div>
                   </div>
@@ -362,12 +362,12 @@ const MarketPage: React.FC = () => {
       {/* Tips */}
       <div className="px-4 pb-4">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h4 className="font-medium text-blue-900 mb-2">💡 转售说明</h4>
+          <h4 className="font-medium text-blue-900 mb-2">💡 {t('market.resaleNote')}</h4>
           <ul className="space-y-1 text-sm text-blue-800">
-            <li>• 购买的彩票在开奖前可以转售</li>
-            <li>• 转售价格由卖家自行设定</li>
-            <li>• 购买转售彩票后,号码归属权转移给买家</li>
-            <li>• 开奖后无法转售,请注意时间</li>
+            <li>• {t('market.tip1')}</li>
+            <li>• {t('market.tip2')}</li>
+            <li>• {t('market.tip3')}</li>
+            <li>• {t('market.tip4')}</li>
           </ul>
         </div>
       </div>

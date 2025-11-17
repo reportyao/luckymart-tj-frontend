@@ -77,7 +77,7 @@ const ShowoffCreatePage: React.FC = () => {
     if (!files) return;
 
     if (images.length + files.length > 9) {
-      toast.error('最多上传9张图片');
+      toast.error(t('showoff.maxImagesError'));
       return;
     }
 
@@ -100,22 +100,22 @@ const ShowoffCreatePage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedLottery) {
-      toast.error('请选择要晒单的中奖记录');
+      toast.error(t('showoff.selectWinningRecordError'));
       return;
     }
 
     if (!content.trim()) {
-      toast.error('请输入晒单内容');
+      toast.error(t('showoff.contentRequiredError'));
       return;
     }
 
     if (content.length < 10) {
-      toast.error('晒单内容至少10个字');
+      toast.error(t('showoff.minContentLengthError'));
       return;
     }
 
     if (images.length === 0) {
-      toast.error('请至少上传1张图片');
+      toast.error(t('showoff.imageRequiredError'));
       return;
     }
 
@@ -124,7 +124,7 @@ const ShowoffCreatePage: React.FC = () => {
       // TODO: 调用API提交晒单
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      toast.success('晒单发布成功,等待审核');
+      toast.success(t('showoff.showoffSuccessPending'));
       navigate('/showoff');
     } catch (error) {
       console.error('Failed to create showoff:', error);

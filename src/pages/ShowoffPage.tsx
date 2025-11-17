@@ -62,7 +62,7 @@ const ShowoffPage: React.FC = () => {
 
   const handleLike = async (showoffId: string) => {
     if (!user) {
-      toast.error(t('error.loginRequired'));
+      toast.error(t('auth.pleaseLogin'));
       return;
     }
     try {
@@ -90,18 +90,18 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user_profile?.username || '一位用户'}在LuckyMart中奖了!快来看看吧!`;
+    const text = `${showoff.user_profile?.username || '一位用户'}在LuckyMart{t('showoff.won')}了!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
     if (navigator.share) {
       navigator.share({
-        title: '晒单分享',
+        title: t('showoff.shareTitle'),
         text: text,
         url: url
       }).catch(err => console.log('分享失败:', err));
     } else {
       navigator.clipboard.writeText(url);
-      toast.success('链接已复制到剪贴板');
+      toast.success(t('common.linkCopied'));
     }
   };
 
@@ -114,22 +114,22 @@ const ShowoffPage: React.FC = () => {
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-6 sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">晒单广场</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t('showoff.showoffGallery')}</h1>
           <button
             onClick={handleCreateShowoff}
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>发布晒单</span>
+            <span>{t('showoff.createShowoff')}</span>},{find:
           </button>
         </div>
 
         {/* Filter Tabs */}
         <div className="flex space-x-2">
           {[
-            { key: 'all', label: '全部' },
-            { key: 'following', label: '关注' },
-            { key: 'popular', label: '热门' }
+            { key: 'all', label: t('showoff.all') },
+            { key: 'following', label: t('showoff.following') },
+            { key: 'popular', label: t('showoff.popular') }
           ].map((tab) => (
             <button
               key={tab.key}
@@ -155,13 +155,13 @@ const ShowoffPage: React.FC = () => {
         ) : showoffs.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <PhotoIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">暂无晒单内容</p>
-            <p className="text-sm text-gray-400 mt-2">成为第一个分享中奖喜悦的人</p>
+            <p className="text-gray-500">{t('showoff.noShowoffs')}</p>
+            <p className="text-sm text-gray-400 mt-2">{t('showoff.beTheFirst')}</p>
             <button
               onClick={handleCreateShowoff}
               className="mt-4 px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
-              立即发布
+              {t('showoff.publishNow')}
             </button>
           </div>
         ) : (
@@ -187,7 +187,7 @@ const ShowoffPage: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-1 px-3 py-1 bg-yellow-100 rounded-full">
                     <TrophyIcon className="w-4 h-4 text-yellow-600" />
-                    <span className="text-xs font-medium text-yellow-700">中奖</span>
+                    <span className="text-xs font-medium text-yellow-700">{t('showoff.won')}</span>
                   </div>
                 </div>
 
@@ -261,7 +261,7 @@ const ShowoffPage: React.FC = () => {
                     className="flex items-center space-x-2 px-3 py-1.5 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
                   >
                     <ShareIcon className="w-5 h-5 text-gray-600" />
-                    <span className="text-sm font-medium text-gray-700">分享</span>
+                    <span className="text-sm font-medium text-gray-700">{t('common.share')}</span>
                   </button>
                 </div>
               </motion.div>

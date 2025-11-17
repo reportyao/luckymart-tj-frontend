@@ -98,7 +98,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
           >
             {/* 头部 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
-              <h3 className="text-xl font-bold text-gray-900">购买彩票</h3>
+              <h3 className="text-xl font-bold text-gray-900">{t('lottery.purchaseTicket')}</h3>
               <button
                 onClick={handleClose}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
@@ -118,8 +118,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     </svg>
                   </div>
                   <div>
-                    <h4 className="text-xl font-bold text-gray-900 mb-2">购买成功!</h4>
-                    <p className="text-sm text-gray-600">您的中奖码已生成</p>
+                    <h4 className="text-xl font-bold text-gray-900 mb-2">{t('lottery.purchaseSuccessTitle')}</h4>
+                    <p className="text-sm text-gray-600">{t('lottery.winningCodeGenerated')}</p>
                   </div>
                   <div className="bg-blue-50 rounded-xl p-4 space-y-2 max-h-60 overflow-y-auto">
                     {purchasedCodes.map((code, index) => (
@@ -128,17 +128,17 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                         <button
                           onClick={() => {
                             navigator.clipboard.writeText(code)
-                            toast.success('已复制')
+                            toast.success(t('common.copied'))
                           }}
                           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                         >
-                          复制
+                          {t('common.copy')}
                         </button>
                       </div>
                     ))}
                   </div>
                   <p className="text-xs text-gray-500">
-                    您可以在"我的中奖码"页面查看所有中奖码
+                    {t('lottery.viewAllCodesHint')}
                   </p>
                 </div>
               ) : (
@@ -170,15 +170,15 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 )}
                 <div className="flex-1">
                   <h4 className="font-semibold text-gray-900 mb-1">{lottery.title}</h4>
-                  <p className="text-sm text-gray-500">期号: {lottery.period}</p>
-                  <p className="text-sm text-gray-500">单价: TJS{lottery.ticket_price.toFixed(2)}</p>
+                  <p className="text-sm text-gray-500">{t('lottery.period')}: {lottery.period}</p>
+                  <p className="text-sm text-gray-500">{t('lottery.unitPrice')}: TJS{lottery.ticket_price.toFixed(2)}</p>
                 </div>
               </div>
 
               {/* 数量选择 */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-3">
-                  购买数量
+                  {t('lottery.purchaseQuantity')}
                 </label>
                 <div className="flex items-center justify-between bg-gray-50 rounded-xl p-4">
                   <button
@@ -191,7 +191,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">{quantity}</div>
-                    <div className="text-xs text-gray-500 mt-1">最多 {maxPurchase} 张</div>
+                    <div className="text-xs text-gray-500 mt-1">{t('lottery.max')} {maxPurchase} 张</div>
                   </div>
 
                   <button
@@ -207,7 +207,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {/* 总价 */}
               <div className="bg-blue-50 rounded-xl p-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-gray-600">总计</span>
+                  <span className="text-gray-600">{t('lottery.total')}</span>
                   <span className="text-2xl font-bold text-blue-600">
                     TJS{totalPrice.toFixed(2)}
                   </span>
@@ -224,7 +224,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   onClick={handleClose}
                   className="w-full px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
                 >
-                  完成
+                  {t('common.done')}
                 </button>
               ) : (
                 <>
@@ -232,14 +232,14 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                     onClick={handleClose}
                     className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
                   >
-                    取消
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={handleConfirm}
                     disabled={isLoading}
                     className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isLoading ? '处理中...' : '确认购买'}
+                    {isLoading ? t('common.processing') : t('lottery.confirmPurchase')}
                   </button>
                 </>
               )}

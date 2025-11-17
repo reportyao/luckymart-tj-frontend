@@ -131,12 +131,12 @@ const MarketCreatePage: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!selectedTicket) {
-      toast.error('请选择要出售的彩票');
+      toast.error(t('market.selectTicketError'));
       return;
     }
 
     if (!sellingPrice || parseFloat(sellingPrice) <= 0) {
-      toast.error('请输入有效的售价');
+      toast.error(t('market.invalidPriceError'));
       return;
     }
 
@@ -144,12 +144,12 @@ const MarketCreatePage: React.FC = () => {
     if (!selectedTicketData) return;
 
     if (price > selectedTicketData.purchase_price * 1.5) {
-      toast.error('售价不能超过原价的150%');
+      toast.error(t('market.priceTooHighError'));
       return;
     }
 
     if (price < selectedTicketData.purchase_price * 0.5) {
-      toast.error('售价不能低于原价的50%');
+      toast.error(t('market.priceTooLowError'));
       return;
     }
 
@@ -178,7 +178,7 @@ const MarketCreatePage: React.FC = () => {
         throw new Error(result.error || '发布转售失败');
       }
 
-      toast.success('转售信息发布成功');
+      toast.success(t('market.publishSuccess'));
       navigate('/market');
     } catch (error) {
       console.error('Failed to create listing:', error);
@@ -201,15 +201,15 @@ const MarketCreatePage: React.FC = () => {
             className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
           >
             <ArrowLeftIcon className="w-5 h-5" />
-            <span>返回</span>
+            <span>{t('common.back')}</span>
           </button>
-          <h1 className="text-lg font-bold text-gray-900">出售彩票</h1>
+          <h1 className="text-lg font-bold text-gray-900">{t('market.sellTicket')}</h1>
           <button
             onClick={handleSubmit}
             disabled={isLoading || !selectedTicket || !sellingPrice}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? '发布中...' : '发布'}
+            {isLoading ? t('common.submitting') : t('market.publish')}
           </button>
         </div>
       </div>
@@ -217,7 +217,7 @@ const MarketCreatePage: React.FC = () => {
       <div className="px-4 py-4 space-y-4">
         {/* Select Ticket */}
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">选择要出售的彩票</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('market.selectTicketToSell')}</h3>
           {isLoadingTickets ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -225,8 +225,8 @@ const MarketCreatePage: React.FC = () => {
           ) : myTickets.length === 0 ? (
             <div className="text-center py-8">
               <TicketIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">暂无可出售的彩票</p>
-              <p className="text-sm text-gray-400 mt-1">购买彩票后即可在此出售</p>
+              <p className="text-gray-500">{t('market.noResellableTickets')}</p>
+              <p className="text-sm text-gray-400 mt-1">{t('market.buyToResellHint')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -249,12 +249,12 @@ const MarketCreatePage: React.FC = () => {
                     <p className="font-medium text-gray-900">{ticket.lottery_title}</p>
                     <div className="flex items-center space-x-2 mt-1">
                       <TicketIcon className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm text-blue-600">号码: {ticket.ticket_numbers}</span>
+                      <span className="text-sm text-blue-600">{t('market.ticketNumbers')}: {ticket.ticket_numbers}</span>
                     </div>
                     <div className="flex items-center space-x-2 mt-1">
                       <BanknotesIcon className="w-4 h-4 text-gray-500" />
                       <span className="text-sm text-gray-500">
-                        原价: {formatCurrency(ticket.currency, ticket.purchase_price)}
+                        {t('market.originalPrice')}: {formatCurrency(ticket.currency, ticket.purchase_price)}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 mt-1">
@@ -284,31 +284,31 @@ const MarketCreatePage: React.FC = () => {
 
             className="bg-white rounded-xl p-4"
           >
-            <h3 className="font-semibold text-gray-900 mb-3">设置售价</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('market.setSellingPrice')}</h3>
             
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                售价 ({selectedTicketData.currency})
+                {t('market.sellingPrice')} ({selectedTicketData.currency})
               </label>
               <div className="relative">
                 <input
                   type="number"
                   value={sellingPrice}
                   onChange={(e) => setSellingPrice(e.target.value)}
-                  placeholder="请输入售价"
+                  placeholder={t('market.enterSellingPrice')}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   step="0.01"
                   min="0"
                 />
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                * 售价范围: {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 0.5)} - {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 1.5)}
+                * {t('market.sellingPrice')}范围: {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 0.5)} - {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price * 1.5)}
               </p>
             </div>
 
             {/* Quick Price Options */}
             <div className="mb-4">
-              <p className="text-sm font-medium text-gray-700 mb-2">快速选择</p>
+              <p className="text-sm font-medium text-gray-700 mb-2">{t('market.quickSelect')}</p>
               <div className="grid grid-cols-4 gap-2">
                 {[0.7, 0.8, 0.9, 1.0].map((ratio) => (
                   <button
@@ -316,7 +316,7 @@ const MarketCreatePage: React.FC = () => {
                     onClick={() => setSellingPrice((selectedTicketData.purchase_price * ratio).toFixed(2))}
                     className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
                   >
-                    {ratio === 1.0 ? '原价' : `${Math.round(ratio * 100)}%`}
+                    {ratio === 1.0 ? '{t('market.originalPrice')}' : `${Math.round(ratio * 100)}%`}
                   </button>
                 ))}
               </div>
@@ -326,14 +326,14 @@ const MarketCreatePage: React.FC = () => {
             {sellingPrice && parseFloat(sellingPrice) > 0 && (
               <div className="space-y-3 pt-4 border-t border-gray-200">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">原价</span>
+                  <span className="text-sm text-gray-600">{t('market.originalPrice')}</span>
                   <span className="text-sm font-medium text-gray-900">
                     {formatCurrency(selectedTicketData.currency, selectedTicketData.purchase_price)}
                   </span>
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">售价</span>
+                  <span className="text-sm text-gray-600">{t('market.sellingPrice')}</span>
                   <span className="text-lg font-bold text-blue-600">
                     {formatCurrency(selectedTicketData.currency, parseFloat(sellingPrice))}
                   </span>
@@ -341,14 +341,14 @@ const MarketCreatePage: React.FC = () => {
 
                 {discount > 0 && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">折扣</span>
+                    <span className="text-sm text-gray-600">{t('market.discount')}</span>
                     <span className="text-sm font-bold text-red-600">-{discount}%</span>
                   </div>
                 )}
 
                 <div className="flex items-center justify-between pt-3 border-t border-gray-200">
                   <span className="text-sm text-gray-600">
-                    {profit >= 0 ? '盈利' : '亏损'}
+                    {profit >= 0 ? t('market.profit') : t('market.loss')}
                   </span>
                   <span className={`text-lg font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                     {profit >= 0 ? '+' : ''}{formatCurrency(selectedTicketData.currency, Math.abs(profit))}
@@ -361,12 +361,12 @@ const MarketCreatePage: React.FC = () => {
 
         {/* Tips */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <h4 className="font-medium text-yellow-900 mb-2">💡 出售须知</h4>
+          <h4 className="font-medium text-yellow-900 mb-2">💡 {t('market.saleNote')}</h4>
           <ul className="space-y-1 text-sm text-yellow-800">
-            <li>• 彩票一旦售出,号码归属权将转移给买家</li>
-            <li>• 开奖前可随时取消转售</li>
-            <li>• 建议合理定价,提高成交率</li>
-            <li>• 平台不收取转售手续费</li>
+            <li>• {t('market.saleTip1')}</li>
+            <li>• {t('market.saleTip2')}</li>
+            <li>• {t('market.saleTip3')}</li>
+            <li>• {t('market.saleTip4')}</li>
           </ul>
         </div>
       </div>
