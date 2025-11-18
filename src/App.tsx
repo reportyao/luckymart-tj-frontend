@@ -57,7 +57,8 @@ function App() {
               <Route path="/withdraw" element={<WithdrawPage />} />
               <Route path="/exchange" element={<ExchangePage />} />
               <Route path="/settings" element={<SettingsPage />} />
-              <Route path="/profile/edit" element={<ProfileEditPage />} />\n              <Route path="*" element={<NotFoundPage />} />
+              <Route path="/profile/edit" element={<ProfileEditPage />} />
+              <Route path="*" element={<NotFoundPage />} />
 
             </Routes>
             

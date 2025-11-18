@@ -384,7 +384,7 @@ export const referralService = {
    * 获取用户的推荐统计数据
    * @param userId 用户 ID
    */
-    async get  async getInviteStats(): Promise<InviteStats | null> {
+    async getInviteStats(): Promise<InviteStats | null> {
     const user = await authService.getCurrentUser();
     if (!user) throw new Error('用户未登录');
 
@@ -450,8 +450,7 @@ export const referralService = {
     }
     
     return data as { success: boolean; bonus_amount?: number };
-  },   ];
-  }
+  },
 };
 
 /**

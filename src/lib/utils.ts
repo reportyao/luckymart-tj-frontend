@@ -158,13 +158,6 @@ export function getLocalizedText(
     if (firstValue) {
       return firstValue as string;
     }
+  
+    return '';
   }
-
-  // 尝试返回第一个非空的值
-  const firstValue = Object.values(jsonb).find(value => typeof value === 'string' && value.trim() !== '');
-  if (firstValue) {
-    return firstValue as string;
-  }
-
-  return '';
-}

@@ -24,6 +24,7 @@ export type User = UserProfile & {
 
 interface UserContextType {
   user: User | null;
+  profile: UserProfile | null; // 添加 profile 字段
   wallets: Wallet[];
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -51,6 +52,7 @@ interface UserProviderProps {
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { authService, walletService, supabase } = useSupabase();
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<UserProfile | null>(null); // 添加 profile 状态
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [telegramUser] = useState<any>(null);
@@ -71,6 +73,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const currentUser = await authService.getCurrentUser();
       if (currentUser) {
         setUser(currentUser as User);
+        // 假设 currentUser 已经包含了 profile 数据，或者我们单独获取
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentUser.id)
+          .single();
+
+        if (profileError) {
+          console.error('Failed to fetch profile:', profileError);
+        } else {
+          setProfile(profileData as UserProfile);
+        }
+
         await fetchWallets(currentUser.id);
       }
     } catch (error) {
@@ -123,12 +138,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const logout = useCallback(async () => {
     await authService.signOut();
     setUser(null);
+    setProfile(null); // 登出时清空 profile
     setWallets([]);
     toast.success('已退出登录');
   }, [authService]);
 
   const value: UserContextType = {
     user,
+    profile, // 暴露 profile
     wallets,
     isLoading,
     isAuthenticated: !!user,

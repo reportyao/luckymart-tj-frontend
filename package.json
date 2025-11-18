@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-
     "build": "rm -rf node_modules/.vite-temp && tsc -b && vite build || exit 1",
     "build:prod": "rm -rf node_modules/.vite-temp && tsc -b && BUILD_MODE=prod vite build || exit 1",
     "build:check": "npm run lint && npm run type-check && npm run build",
@@ -27,6 +26,7 @@
     "pre-commit": "lint-staged"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.1.0",
     "@heroicons/react": "^2.2.0",
     "@hookform/resolvers": "^3.10.0",
     "@prisma/client": "^6.19.0",
@@ -66,6 +66,7 @@
     "@tanstack/react-query": "^5.90.7",
     "@twa-dev/sdk": "^8.0.2",
     "@types/uuid": "^11.0.0",
+    "antd": "^5.29.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

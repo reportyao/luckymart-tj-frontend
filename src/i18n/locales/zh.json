@@ -436,5 +436,46 @@
     "good": "良好",
     "warning": "警告",
     "critical": "严重"
+  },
+  "onboarding": {
+    "title": "邀请好友，终身赚分成",
+    "subtitle": "直推3% · 二级1% · 三级0.5%",
+    "description": "你的朋友每次消费，系统自动发放佣金到你的夺宝币余额，可继续参与夺宝",
+    "buttonText": "立即生成邀请链接",
+    "skipText": "稍后再说"
+  },
+  "banner": {
+    "mainText": "多一个朋友，多一条收入线",
+    "subText": "分享链接，拿4.5%终身分成",
+    "example": "举例：你邀请的朋友月消费100索莫尼 = 你每月被动收入3索莫尼",
+    "actionButton": "查看我的推荐收益"
+  },
+  "referral": {
+    "level1": "一级好友（直推）",
+    "level1Rate": "3%",
+    "level1Desc": "你直接邀请的用户",
+    "level2": "二级好友",
+    "level2Rate": "1%",
+    "level2Desc": "一级好友邀请的用户",
+    "level3": "三级好友",
+    "level3Rate": "0.5%",
+    "level3Desc": "二级好友邀请的用户",
+    "totalRate": "总计：4.5%终身分成",
+    "nonWithdrawable": "⚠️ 佣金以夺宝币形式发放，仅用于参与夺宝，不可提现"
+  },
+  "firstDepositBonus": {
+    "title": "🎁 激活您的 {{amount}} 索莫尼奖励",
+    "expireText": "截止日期：{{date}}",
+    "method1": "方式一：分享到2个群组",
+    "method2": "方式二：邀请1名好友首充",
+    "progress": "{{current}}/{{total}} ✓",
+    "activateButton": "立即激活奖励",
+    "activated": "✅ 奖励已激活",
+    "expired": "⏰ 奖励已过期"
+  },
+  "share": {
+    "buttonText": "分享到Telegram群组",
+    "successMessage": "分享成功！进度已更新",
+    "shareText": "🎁 我在LuckyMart玩一元夺宝，邀请你也来试试！\n首充10索莫尼立得2.5索莫尼！\n使用我的邀请码：{{inviteCode}}"
   }
 }

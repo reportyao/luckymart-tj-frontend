@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 5173,
       host: true,
+      allowedHosts: ['5173-iot3qdn4d99azf2yb5d5x-80fc91e3.manus-asia.computer', '5174-iot3qdn4d99azf2yb5d5x-80fc91e3.manus-asia.computer'],
       cors: {
         origin: true,
         credentials: true,

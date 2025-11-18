@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { sendTelegramMessage } from '../_shared/sendTelegramMessage.ts'
 
 serve(async (req) => {
   // 允许 OPTIONS 请求
@@ -82,6 +83,12 @@ serve(async (req) => {
       })
 
       if (rpcError) throw rpcError
+
+      // 4. 推送 Telegram 消息
+      await sendTelegramMessage(currentUserId, 'commission_earned', {
+        amount: commissionFloat,
+        level: level
+      })
 
       // 查找下一级
       const { data: nextUser, error: nextUserError } = await supabaseClient

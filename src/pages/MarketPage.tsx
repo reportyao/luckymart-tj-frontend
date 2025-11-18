@@ -205,16 +205,16 @@ interface MarketListing {
     const draw = new Date(drawTime).getTime();
     const diff = draw - now;
 
-    if (diff <= 0) return '{t('lottery.drawn')}';
+    if (diff <= 0) return t('lottery.drawn');
 
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
     if (hours > 24) {
       const days = Math.floor(hours / 24);
-      return `${days}{t('market.daysUntilDraw')}`;
+      return `${days}${t('market.daysUntilDraw')}`;
     }
-    return `${hours}{t('market.hours')}${minutes}{t('market.minutesUntilDraw')}`;
+    return `${hours}${t('market.hours')}${minutes}${t('market.minutesUntilDraw')}`;
   };
 
   return (

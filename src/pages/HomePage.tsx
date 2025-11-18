@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
+import OnboardingModal from '../components/OnboardingModal'
 import { useUser } from '../contexts/UserContext'
 import { Lottery } from '../lib/supabase'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
@@ -10,14 +11,16 @@ import { WalletCard } from '../components/wallet/WalletCard'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { SafeMotion } from '../components/SafeMotion'
 import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/react/24/outline'
+import ReferralBanner from '../components/ReferralBanner'
 import toast from 'react-hot-toast'
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation()
-  const { user, wallets, isLoading: userLoading, refreshWallets } = useUser()
+	  const { user, profile, wallets, isLoading: userLoading, refreshWallets } = useUser()
   const { lotteryService } = useSupabase()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false)
 
   const loadLotteries = useCallback(async () => {
     try {
@@ -35,6 +38,13 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     loadLotteries()
   }, [loadLotteries])
+
+  useEffect(() => {
+    // 检查是否是新用户且已登录，且尚未看过引导
+    if (user && profile && !profile.has_seen_onboarding) {
+      setShowOnboardingModal(true)
+    }
+  }, [user, profile])
 
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
@@ -118,8 +128,9 @@ const HomePage: React.FC = () => {
         </div>
       </SafeMotion>
 
-      {/* 钱包卡片 */}
-      <div className="px-4 mt-6">
+	      {/* 钱包卡片 */}
+	      <div className="px-4 mt-6">
+	        <ReferralBanner />
         <WalletCard 
           wallets={wallets} 
           onRefresh={handleRefreshWallets}
@@ -216,13 +227,17 @@ const HomePage: React.FC = () => {
 	      </div>
 	      
 	      {/* 购买模态框 */}
-	      <PurchaseModal
-	        lottery={selectedLottery}
-	        isOpen={isPurchaseModalOpen}
-	        onClose={() => setIsPurchaseModalOpen(false)}
-	        onConfirm={handlePurchaseConfirm}
-	      />
-	    </div>
+		      <PurchaseModal
+		        lottery={selectedLottery}
+		        isOpen={isPurchaseModalOpen}
+		        onClose={() => setIsPurchaseModalOpen(false)}
+		        onConfirm={handlePurchaseConfirm}
+		      />
+          <OnboardingModal
+            isVisible={showOnboardingModal}
+            onClose={() => setShowOnboardingModal(false)}
+          />
+		    </div>
 	  )
 	}
 	

@@ -314,10 +314,10 @@ const MarketCreatePage: React.FC = () => {
                   <button
                     key={ratio}
                     onClick={() => setSellingPrice((selectedTicketData.purchase_price * ratio).toFixed(2))}
-                    className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
-                  >
-                    {ratio === 1.0 ? '{t('market.originalPrice')}' : `${Math.round(ratio * 100)}%`}
-                  </button>
+                  className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg"
+                >
+                  {ratio === 1.0 ? t('market.originalPrice') : `${Math.round(ratio * 100)}% ${t('market.discount')}`}
+                </button>
                 ))}
               </div>
             </div>

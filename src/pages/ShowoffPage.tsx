@@ -120,7 +120,7 @@ const ShowoffPage: React.FC = () => {
             className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
           >
             <PlusIcon className="w-5 h-5" />
-            <span>{t('showoff.createShowoff')}</span>},{find:
+	            <span>{t('showoff.createShowoff')}</span>
           </button>
         </div>
 
