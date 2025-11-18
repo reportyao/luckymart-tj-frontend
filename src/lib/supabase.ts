@@ -32,13 +32,19 @@ export type WithdrawalRequest = Tables<'withdrawal_requests'>;
 export type Showoff = Tables<'showoffs'>;
 
 // 邀请/推荐相关类型
-export type InviteStats = Functions<'get_user_referral_stats'>['Returns'][0];
+export type InviteStats = Functions<'get_user_referral_stats'>['Returns'][0] & {
+  first_deposit_bonus_status: string;
+  first_deposit_bonus_amount: number;
+  first_deposit_bonus_expire_at: string | null;
+  activation_share_count: number;
+  activation_invite_count: number;
+};
 export interface InvitedUser {
   id: string;
-  username: string;
-  avatar_url: string;
+  username: string | null;
+  avatar_url: string | null;
   created_at: string;
-  level: number;
+  level: number; // 1, 2, or 3
   commission_earned: number;
   total_spent: number;
 }
@@ -327,18 +333,23 @@ export const walletService = {
 
   /**
    * 余额兑换（例如：佣金兑换为余额）
-   * @param sourceWalletId 源钱包 ID
-   * @param targetWalletId 目标钱包 ID
+   * 余额兑换（单向：余额 -> 夺宝币）
    * @param amount 兑换金额
    */
-      async exchangeCoins(_sourceWalletType: string, _targetWalletType: string, _amount: number): Promise<{ success: boolean; error: any | null }> {
-    // 这里的逻辑应该在后端实现，但根据数据库结构，我们可能需要一个 RPC 或 Edge Function 来处理
-    // 假设有一个名为 'exchange_wallet_balance' 的 RPC
-    // 由于没有找到对应的 RPC，我们暂时跳过或使用一个模拟的函数
-        console.warn('ExchangeCoins function is a placeholder. Needs a backend RPC/Edge Function.');
-    // 模拟一个成功的返回
-    return { success: true, error: null };
-    // throw new Error('兑换功能尚未实现后端接口');
+  async exchangeRealToBonus(amount: number): Promise<{ success: boolean; new_balance?: number }> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { data, error } = await supabase.functions.invoke('exchange-balance', {
+      body: { amount }
+    });
+
+    if (error) {
+      console.error('Failed to exchange balance:', error);
+      throw new Error(`兑换失败: ${error.message}`);
+    }
+    
+    return data as { success: boolean; new_balance?: number };
   }
 };
 
@@ -373,48 +384,73 @@ export const referralService = {
    * 获取用户的推荐统计数据
    * @param userId 用户 ID
    */
-    async getInviteStats(userId: string): Promise<InviteStats | null> {
-    const { data, error } = await supabase.rpc('get_user_referral_stats', {
-      p_user_id: userId
-    });
+    async get  async getInviteStats(): Promise<InviteStats | null> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { data, error } = await supabase.functions.invoke('get-user-referral-stats');
 
     if (error) {
       console.error('Failed to fetch referral stats:', error);
       throw new Error(`获取推荐统计失败: ${error.message}`);
     }
-    // 存储过程返回的是一个包含统计信息的数组
-        return data?.[0] || null;
+    
+    return data.data as InviteStats;
   },
 
   /**
    * 获取用户邀请的用户列表
-   * @param userId 用户 ID
    */
-  async getInvitedUsers(_userId: string): Promise<InvitedUser[]> {
-    // 这是一个模拟数据，因为没有找到对应的 RPC 或表结构
-    // 实际应用中需要实现一个 Edge Function 或 RPC 来获取这些数据
-    console.warn('getInvitedUsers is a placeholder and returns mock data.');
-    return [
-      // Mock data structure based on InvitePage.tsx usage
-      {
-        id: 'mock-1',
-        username: 'InvitedUser1',
-        avatar_url: 'https://i.pravatar.cc/150?img=1',
-        created_at: new Date().toISOString(),
-        level: 1,
-        commission_earned: 15.50,
-        total_spent: 155.00,
-      },
-      {
-        id: 'mock-2',
-        username: 'InvitedUser2',
-        avatar_url: 'https://i.pravatar.cc/150?img=2',
-        created_at: new Date().toISOString(),
-        level: 2,
-        commission_earned: 5.00,
-        total_spent: 100.00,
-      },
-    ];
+  async getInvitedUsers(): Promise<InvitedUser[]> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { data, error } = await supabase.functions.invoke('get-invited-users');
+
+    if (error) {
+      console.error('Failed to fetch invited users:', error);
+      throw new Error(`获取邀请用户列表失败: ${error.message}`);
+    }
+    
+    return data.data as InvitedUser[];
+  },
+
+  /**
+   * 记录分享事件
+   * @param shareType 分享类型
+   * @param shareTarget 分享目标
+   * @param shareData 分享数据
+   */
+  async logShareEvent(shareType: string, shareTarget: string, shareData: any): Promise<void> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { error } = await supabase.functions.invoke('log-share-event', {
+      body: { share_type: shareType, share_target: shareTarget, share_data: shareData }
+    });
+
+    if (error) {
+      console.error('Failed to log share event:', error);
+      throw new Error(`记录分享事件失败: ${error.message}`);
+    }
+  },
+
+  /**
+   * 激活首充奖励
+   */
+  async activateFirstDepositBonus(): Promise<{ success: boolean; bonus_amount?: number }> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { data, error } = await supabase.functions.invoke('activate-first-deposit-bonus');
+
+    if (error) {
+      console.error('Failed to activate bonus:', error);
+      throw new Error(`激活奖励失败: ${error.message}`);
+    }
+    
+    return data as { success: boolean; bonus_amount?: number };
+  },   ];
   }
 };
 

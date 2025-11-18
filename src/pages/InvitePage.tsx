@@ -25,6 +25,7 @@ const InvitePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
+  const [isActivating, setIsActivating] = useState(false);
   const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
   const inviteLink = `https://t.me/luckymart_bot?start=${inviteCode}`;
 
@@ -34,8 +35,8 @@ const InvitePage: React.FC = () => {
       if (!user) return;
 
       // 使用抽象服务层获取数据
-      const statsData = await referralService.getInviteStats(user.id);
-      const invitedUsersData = await referralService.getInvitedUsers(user.id);
+      const statsData = await referralService.getInviteStats();
+      const invitedUsersData = await referralService.getInvitedUsers();
 
       setStats(statsData);
       setInvitedUsers(invitedUsersData);
@@ -48,6 +49,35 @@ const InvitePage: React.FC = () => {
       setIsLoading(false);
     }
   }, [user, t]);
+
+  const handleShare = async () => {
+    try {
+      // 记录分享事件
+      await referralService.logShareEvent('activation', 'telegram_group', { /* share details */ });
+      toast.success(t('invite.shareSuccess'));
+      // 重新获取数据以更新分享计数
+      fetchInviteData();
+    } catch (error) {
+      toast.error(t('invite.shareFailed'));
+    }
+  };
+
+  const handleActivateBonus = async () => {
+    setIsActivating(true);
+    try {
+      const result = await referralService.activateFirstDepositBonus();
+      if (result.success) {
+        toast.success(t('invite.activationSuccess', { amount: result.bonus_amount }));
+        fetchInviteData(); // 重新获取数据以更新状态
+      } else {
+        toast.error(t('invite.activationFailed'));
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsActivating(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -68,16 +98,20 @@ const InvitePage: React.FC = () => {
   };
 
   const shareInvite = () => {
-    const text = `🎁 加入LuckyMart夺宝平台!\n使用我的邀请码: ${inviteCode}\n或点击链接: ${inviteLink}`;
+    const text = t('invite.shareText', { inviteCode, inviteLink });
     
     if (navigator.share) {
       navigator.share({
-        title: 'LuckyMart邀请',
+        title: t('invite.shareTitle'),
         text: text,
         url: inviteLink
+      }).then(() => {
+        // 假设分享成功后，调用记录分享事件的函数
+        handleShare();
       }).catch(err => console.log('分享失败:', err));
     } else {
       copyInviteLink();
+      handleShare(); // 如果不支持原生分享，复制链接后也记录一次
     }
   };
 
@@ -101,12 +135,12 @@ const InvitePage: React.FC = () => {
             <GiftIcon className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold mb-2">{t('invite.inviteFriends')}</h1>
-          <p className="text-white/90">邀请好友,赚取丰厚佣金</p>
+          <p className="text-white/90">{t("invite.subtitle")}</p>
         </div>
 
         {/* Invite Code Card */}
         <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20">
-          <p className="text-white/80 text-sm mb-2 text-center">我的邀请码</p>
+          <p className="text-white/80 text-sm mb-2 text-center">{t("invite.myInviteCode")}</p>
           <div className="flex items-center justify-center space-x-3 mb-4">
             <span className="text-3xl font-bold tracking-wider">{inviteCode}</span>
             <button
@@ -125,12 +159,12 @@ const InvitePage: React.FC = () => {
               {copied ? (
                 <>
                   <CheckIcon className="w-5 h-5" />
-                  <span>已复制</span>
+                  <span>{t("invite.copied")}</span>
                 </>
               ) : (
                 <>
                   <ClipboardDocumentIcon className="w-5 h-5" />
-                  <span>复制链接</span>
+                  <span>{t("invite.copyLink")}</span>
                 </>
               )}
             </button>
@@ -143,6 +177,61 @@ const InvitePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* First Deposit Bonus Card (New) */}
+      {stats && stats.first_deposit_bonus_status !== 'none' && (
+        <div className="px-4 -mt-6 mb-4">
+          <div className="bg-white rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
+            <h3 className="font-bold text-lg text-yellow-800 mb-2">{t('invite.firstDepositBonus')}</h3>
+            <p className="text-sm text-gray-600 mb-3">
+              {t('invite.bonusAmount', { amount: stats.first_deposit_bonus_amount })}
+            </p>
+
+            {stats.first_deposit_bonus_status === 'pending' && (
+              <>
+                <p className="text-xs text-red-500 mb-3">
+                  {t('invite.activationDeadline', { date: formatDateTime(stats.first_deposit_bonus_expire_at) })}
+                </p>
+                <div className="space-y-2 mb-3">
+                  <p className="font-medium text-gray-700">{t('invite.activationCondition')}</p>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">
+                      {t('invite.shareCount', { count: stats.activation_share_count })}
+                    </span>
+                    <button
+                      onClick={handleShare}
+                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
+                    >
+                      {t('invite.goShare')}
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">
+                      {t('invite.inviteCount', { count: stats.activation_invite_count })}
+                    </span>
+                    <span className="text-sm text-gray-500">{t('invite.inviteHint')}</span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleActivateBonus}
+                  disabled={isActivating}
+                  className="w-full py-3 bg-green-500 text-white rounded-xl font-bold disabled:bg-green-300 transition-colors"
+                >
+                  {isActivating ? t('invite.activating') : t('invite.activateNow')}
+                </button>
+              </>
+            )}
+
+            {stats.first_deposit_bonus_status === 'activated' && (
+              <p className="text-green-600 font-bold">{t('invite.activated')}</p>
+            )}
+
+            {stats.first_deposit_bonus_status === 'expired' && (
+              <p className="text-red-600 font-bold">{t('invite.expired')}</p>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -159,7 +248,7 @@ const InvitePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{stats.total_referrals}</p>
-                  <p className="text-xs text-gray-500">总邀请人数</p>
+                  <p className="text-xs text-gray-500">{t('invite.totalInvited')}</p>
                 </div>
               </div>
             </motion.div>
@@ -178,7 +267,7 @@ const InvitePage: React.FC = () => {
                   <p className="text-2xl font-bold text-green-600">
                     {formatCurrency('TJS', stats.total_commission)}
                   </p>
-                  <p className="text-xs text-gray-500">累计佣金</p>
+                  <p className="text-xs text-gray-500">{t('invite.totalCommission')}</p>
                 </div>
               </div>
             </motion.div>
@@ -195,7 +284,7 @@ const InvitePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-gray-900">{stats.level1_referrals}</p>
-                  <p className="text-xs text-gray-500">活跃用户</p>
+                  <p className="text-xs text-gray-500">{t('invite.level1Users')}</p>
                 </div>
               </div>
             </motion.div>
@@ -212,9 +301,9 @@ const InvitePage: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency('TJS', stats.pending_commission)}
+                    {formatCurrency('TJS', stats.bonus_balance)}
                   </p>
-                  <p className="text-xs text-gray-500">待结算</p>
+                  <p className="text-xs text-gray-500">{t('invite.bonusBalance')}</p>
                 </div>
               </div>
             </motion.div>
@@ -222,10 +311,10 @@ const InvitePage: React.FC = () => {
         </div>
       )}
 
-      {/* Commission Rules */}
+      {/* Commission Rules (New Rates) */}
       <div className="px-4 mb-4">
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">佣金规则</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('invite.commissionRules')}</h3>
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
               <div className="flex items-center space-x-3">
@@ -233,11 +322,11 @@ const InvitePage: React.FC = () => {
                   1
                 </span>
                 <div>
-                  <p className="font-medium text-gray-900">一级好友</p>
-                  <p className="text-xs text-gray-500">直接邀请的用户</p>
+                  <p className="font-medium text-gray-900">{t('invite.level1')}</p>
+                  <p className="text-xs text-gray-500">{t('invite.level1Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-blue-600">10%</span>
+              <span className="text-lg font-bold text-blue-600">3%</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
@@ -246,11 +335,11 @@ const InvitePage: React.FC = () => {
                   2
                 </span>
                 <div>
-                  <p className="font-medium text-gray-900">二级好友</p>
-                  <p className="text-xs text-gray-500">好友邀请的用户</p>
+                  <p className="font-medium text-gray-900">{t('invite.level2')}</p>
+                  <p className="text-xs text-gray-500">{t('invite.level2Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-purple-600">5%</span>
+              <span className="text-lg font-bold text-purple-600">1%</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
@@ -259,31 +348,30 @@ const InvitePage: React.FC = () => {
                   3
                 </span>
                 <div>
-                  <p className="font-medium text-gray-900">三级好友</p>
-                  <p className="text-xs text-gray-500">二级好友邀请的用户</p>
+                  <p className="font-medium text-gray-900">{t('invite.level3')}</p>
+                  <p className="text-xs text-gray-500">{t('invite.level3Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-orange-600">2%</span>
+              <span className="text-lg font-bold text-orange-600">0.5%</span>
             </div>
           </div>
 
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              💡 <strong>佣金说明:</strong> 当您邀请的用户在平台消费时,您将获得相应比例的佣金奖励。
-              佣金实时到账,可随时提现。
+              💡 <strong>{t('invite.commissionNoteTitle')}:</strong> {t('invite.commissionNoteContent')}
             </p>
           </div>
         </div>
       </div>
 
       {/* Level Distribution */}
-      {stats && (
+      {stats && stats.total_referrals > 0 && (
         <div className="px-4 mb-4">
           <div className="bg-white rounded-xl p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">邀请层级分布</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('invite.levelDistribution')}</h3>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">一级好友</span>
+                <span className="text-sm text-gray-600">{t('invite.level1')}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -296,9 +384,9 @@ const InvitePage: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">二级好友</span>
+                <span className="text-sm text-gray-600">{t('invite.level2')}</span>
                 <div className="flex items-center space-x-2">
-                  <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
                       className="h-full bg-purple-600 rounded-full"
                       style={{ width: `${(stats.level2_referrals / stats.total_referrals) * 100}%` }}
@@ -309,7 +397,7 @@ const InvitePage: React.FC = () => {
               </div>
 
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">三级好友</span>
+                <span className="text-sm text-gray-600">{t('invite.level3')}</span>
                 <div className="flex items-center space-x-2">
                   <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
                     <div
@@ -327,7 +415,7 @@ const InvitePage: React.FC = () => {
 
       {/* Invited Users List */}
       <div className="px-4 mb-4">
-        <h3 className="font-semibold text-gray-900 mb-3">我的邀请</h3>
+        <h3 className="font-semibold text-gray-900 mb-3">{t('invite.myInvitations')}</h3>
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -335,8 +423,8 @@ const InvitePage: React.FC = () => {
         ) : invitedUsers.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <UserPlusIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">还没有邀请任何好友</p>
-            <p className="text-sm text-gray-400 mt-2">分享您的邀请码开始赚取佣金</p>
+            <p className="text-gray-500">{t('invite.noInvitations')}</p>
+            <p className="text-sm text-gray-400 mt-2">{t('invite.shareToEarn')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -350,32 +438,28 @@ const InvitePage: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                      {invitedUser.username.charAt(0)}
-                    </div>
+                    <img
+                      src={invitedUser.avatar_url || 'default-avatar.png'}
+                      alt="Avatar"
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
                     <div>
-                      <div className="flex items-center space-x-2">
-                        <p className="font-medium text-gray-900">{invitedUser.username}</p>
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getLevelBadge(invitedUser.level)}`}>
-                          L{invitedUser.level}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500">{formatDateTime(invitedUser.created_at)}</p>
+                      <p className="font-medium text-gray-900">{invitedUser.username || t('invite.anonymousUser')}</p>
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelBadge(invitedUser.level)}`}>
+                        {t('invite.levelXFriend', { level: invitedUser.level })}
+                      </span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-500">已赚</p>
-                    <p className="text-lg font-bold text-green-600">
-                      +{formatCurrency('TJS', invitedUser.commission_earned)}
+                    <p className="text-sm text-gray-500">{t('invite.contributedCommission')}</p>
+                    <p className="font-bold text-green-600">
+                      {formatCurrency('TJS', invitedUser.commission_earned)}
                     </p>
                   </div>
                 </div>
-
-                <div className="mt-3 pt-3 border-t border-gray-100 flex items-center justify-between text-sm">
-                  <span className="text-gray-600">消费金额</span>
-                  <span className="font-medium text-gray-900">
-                    {formatCurrency('TJS', invitedUser.total_spent)}
-                  </span>
+                <div className="mt-3 pt-3 border-t border-gray-100 flex justify-between text-xs text-gray-500">
+                  <span>{t('invite.registrationTime')}: {formatDateTime(invitedUser.created_at)}</span>
+                  <span>{t('invite.totalConsumption')}: {formatCurrency('TJS', invitedUser.total_spent)}</span>
                 </div>
               </motion.div>
             ))}
