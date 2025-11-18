@@ -248,12 +248,7 @@ const ShowoffPage: React.FC = () => {
                       </span>
                     </button>
 
-                    <button className="flex items-center space-x-2 group">
-                      <ChatBubbleLeftIcon className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
-                      <span className="text-sm font-medium text-gray-500 group-hover:text-blue-500">
-                        {showoff.comments_count}
-                      </span>
-                    </button>
+	                    {/* 评论功能已移除 */}
                   </div>
 
                   <button

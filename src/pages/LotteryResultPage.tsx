@@ -11,7 +11,7 @@ import {
   UsersIcon,
   BanknotesIcon
 } from '@heroicons/react/24/outline';
-import { formatCurrency, formatDateTime } from '../lib/utils';
+import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import FairnessExplanation from '@/components/lottery/FairnessExplanation';
@@ -105,7 +105,7 @@ const LotteryResultPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
             <TrophyIcon className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold mb-1">{result.lottery.title}</h1>
+          <h1 className="text-2xl font-bold mb-1">{getLocalizedText(result.lottery.name_i18n, i18n.language) || result.lottery.title}</h1>
           <p className="text-white/80">{t('lottery.period')}: {result.lottery_id}</p>
         </div>
       </div>

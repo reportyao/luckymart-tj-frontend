@@ -28,9 +28,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
     setShowBalance(!showBalance)
   }
 
-  const formatDisplayAmount = (amount: number) => {
-    return showBalance ? formatCurrency('TJS', amount) : '****'
-  }
+	  const formatDisplayAmount = (currency: string, amount: number) => {
+	    return showBalance ? formatCurrency(currency, amount) : '****'
+	  }
 
   return (
     <motion.div
@@ -78,9 +78,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
               <p className="text-sm text-white/80">
                 {getWalletTypeText('BALANCE')}
               </p>
-              <p className="text-2xl font-bold">
-                {balanceWallet ? formatDisplayAmount(balanceWallet.balance) : 'TJS0.00'}
-              </p>
+	              <p className="text-2xl font-bold">
+	                {balanceWallet ? formatDisplayAmount(balanceWallet.currency, balanceWallet.balance) : 'TJS0.00'}
+	              </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
               <span className="text-lg">💰</span>
@@ -102,9 +102,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
               <p className="text-sm text-white/80">
                 {getWalletTypeText('LUCKY_COIN')}
               </p>
-              <p className="text-2xl font-bold">
-                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.balance) : 'TJS0.00'}
-              </p>
+	              <p className="text-2xl font-bold">
+	                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.currency, luckyCoinWallet.balance) : 'TJS0.00'}
+	              </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
               <span className="text-lg">🍀</span>

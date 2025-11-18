@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { XMarkIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
+import { getLocalizedText } from '../../lib/utils'
 import { useSupabase } from '../../contexts/SupabaseContext'
 import { useUser } from '../../contexts/UserContext'
 import { useTranslation } from 'react-i18next'
@@ -94,7 +95,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl z-50 max-w-md mx-auto max-h-[85vh] flex flex-col"
+            // 调整 modal 位置，使其位于底部导航栏上方
+            className="fixed inset-x-4 bottom-20 top-4 bg-white rounded-2xl shadow-2xl z-50 max-w-md mx-auto max-h-[calc(100vh-10rem)] flex flex-col"
           >
             {/* 头部 */}
             <div className="flex items-center justify-between p-6 border-b border-gray-100">
@@ -148,7 +150,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 {lottery.image_url ? (
                   <img
                     src={lottery.image_url}
-                    alt={lottery.title}
+                    alt={getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title}
                     className="w-20 h-20 rounded-xl object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
@@ -169,7 +171,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">{lottery.title}</h4>
+                  <h4 className="font-semibold text-gray-900 mb-1">{getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title}</h4>
                   <p className="text-sm text-gray-500">{t('lottery.period')}: {lottery.period}</p>
                   <p className="text-sm text-gray-500">{t('lottery.unitPrice')}: TJS{lottery.ticket_price.toFixed(2)}</p>
                 </div>

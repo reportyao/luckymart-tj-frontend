@@ -128,30 +128,36 @@ export function shareToTelegram(text: string, url?: string): void {
   window.open(telegramUrl, '_blank');
 }
 
-// 处理多语言 JSONB 字段
+// 处理多语言 JSONB 字段，用于获取夺宝标题、描述等
 export function getLocalizedText(
-  jsonb: any,
+  jsonb: Record<string, string> | null | undefined,
   language: string,
   fallbackLanguage: string = 'zh'
 ): string {
   if (!jsonb || typeof jsonb !== 'object') {
     return '';
   }
+    // 尝试使用当前语言
+    if (jsonb[language]) {
+      return jsonb[language];
+    }
 
-  // 尝试使用当前语言
-  if (jsonb[language]) {
-    return jsonb[language];
-  }
+    // 尝试使用主要语言（例如，没有 zh-CN 就用 zh）
+    const primaryLang = language.split('-')[0] as keyof typeof jsonb;
+    if (primaryLang && jsonb[primaryLang]) {
+      return jsonb[primaryLang];
+    }
 
-  // 尝试使用主要语言（例如，没有 zh-CN 就用 zh）
-  const primaryLang = language.split('-')[0] as keyof typeof jsonb;
-  if (primaryLang && jsonb[primaryLang]) {
-    return jsonb[primaryLang];
-  }
+    // 尝试使用备用语言
+    if (jsonb[fallbackLanguage]) {
+      return jsonb[fallbackLanguage];
+    }
 
-  // 尝试使用备用语言
-  if (jsonb[fallbackLanguage]) {
-    return jsonb[fallbackLanguage];
+    // 尝试返回第一个非空的值
+    const firstValue = Object.values(jsonb).find(value => typeof value === 'string' && value.trim() !== '');
+    if (firstValue) {
+      return firstValue as string;
+    }
   }
 
   // 尝试返回第一个非空的值

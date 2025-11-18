@@ -2,7 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 import { Database, Tables, Enums, Functions } from '../types/supabase';
 
 // 导出常用的类型
-export type Lottery = Tables<'lotteries'>;
+export type Lottery = Tables<'lotteries'> & {
+  name_i18n: Record<string, string> | null;
+  description_i18n: Record<string, string> | null;
+  details_i18n: Record<string, string> | null;
+};
 
 
 // 检查环境变量，优先使用 NEXT_PUBLIC_ (Next.js 风格) 或 VITE_ (Vite 风格)

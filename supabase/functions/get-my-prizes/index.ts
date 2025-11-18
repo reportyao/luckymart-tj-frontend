@@ -38,8 +38,9 @@ serve(async (req) => {
       .from('prizes')
       .select(`
         *,
-        lottery:lotteries(id, title, image_url, ticket_price, total_tickets),
-        shipping(*)
+	        lottery:lotteries(id, title, image_url, ticket_price, total_tickets, period),
+	        shipping(*),
+	        resale_listing(*)
       `)
       .eq('user_id', user.id)
       .order('won_at', { ascending: false })

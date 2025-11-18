@@ -13,6 +13,7 @@ import {
   UserIcon
 } from '@heroicons/react/24/outline';
 import { formatCurrency } from '../lib/utils';
+import { useSupabase } from '../contexts/SupabaseContext';
 import toast from 'react-hot-toast';
 
 interface MarketListing {
@@ -33,9 +34,10 @@ interface MarketListing {
   created_at: string;
 }
 
-const MarketPage: React.FC = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
+	const MarketPage: React.FC = () => {
+	  const { t } = useTranslation();
+	  const navigate = useNavigate();
+	  const { supabase } = useSupabase();
 
   const [listings, setListings] = useState<MarketListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,21 +48,22 @@ const MarketPage: React.FC = () => {
   const fetchListings = useCallback(async () => {
     setIsLoading(true);
     try {
-      // 调用API获取转售列表
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/list-resale-items?status=ACTIVE&limit=50`,
-        {
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          },
-        }
-      );
-
-      const result = await response.json();
-      
-      if (!result.success) {
-        throw new Error(result.error || '获取转售列表失败');
-      }
+	      // 调用API获取转售列表
+	      const { data, error } = await supabase.functions.invoke('list-resale-items', {
+	        body: {
+	          status: 'ACTIVE',
+	          limit: 50,
+	          sortBy,
+	        },
+	      });
+	
+	      if (error) throw error;
+	
+	      const result = data as { success: boolean; data: any[]; error?: string };
+	
+	      if (!result.success) {
+	        throw new Error(result.error || '获取转售列表失败');
+	      }
 
       // 转换数据格式
       const formattedListings: MarketListing[] = result.data.map((item: any) => ({

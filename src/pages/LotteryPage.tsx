@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 
 import { Lottery } from '../lib/supabase'
+import { getLocalizedText } from '../lib/utils'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
@@ -47,8 +48,9 @@ const LotteryPage: React.FC = () => {
   }, [loadLotteries, filter])
 
   const filteredLotteries = lotteries.filter(lottery => {
-    // 假设 lottery.title 是一个对象 {zh: '...', en: '...'}
-    const titleText = typeof lottery.title === 'string' ? lottery.title : lottery.title[i18n.language as keyof typeof lottery.title] || lottery.title['zh'] || ''
+    // 适配多语言内容展示
+    const titleText = getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title;
+    
     const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          lottery.period.toLowerCase().includes(searchQuery.toLowerCase())
     

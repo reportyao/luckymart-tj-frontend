@@ -8,6 +8,9 @@ export type Database = {
           action: string;
           created_at: string;
           description: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
           id: string;
           ip_address: string | null;
           new_data: Json | null;
@@ -21,6 +24,9 @@ export type Database = {
           action: string;
           created_at?: string;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           ip_address?: string | null;
           new_data?: Json | null;
@@ -34,6 +40,9 @@ export type Database = {
           action?: string;
           created_at?: string;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           ip_address?: string | null;
           new_data?: Json | null;
@@ -585,6 +594,9 @@ export type Database = {
           created_at: string;
           currency: Database["public"]["Enums"]["Currency"];
           description: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
           draw_time: string;
           end_time: string;
           id: string;
@@ -609,6 +621,9 @@ export type Database = {
           created_at?: string;
           currency: Database["public"]["Enums"]["Currency"];
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           draw_time: string;
           end_time: string;
           id?: string;
@@ -633,6 +648,9 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["Currency"];
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           draw_time?: string;
           end_time?: string;
           id?: string;
@@ -983,6 +1001,9 @@ export type Database = {
         Row: {
           created_at: string;
           description: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
           id: string;
           reported_entity_id: string;
           reported_entity_type: Database["public"]["Enums"]["ReportedEntityType"];
@@ -993,6 +1014,9 @@ export type Database = {
         Insert: {
           created_at?: string;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           reported_entity_id: string;
           reported_entity_type: Database["public"]["Enums"]["ReportedEntityType"];
@@ -1003,6 +1027,9 @@ export type Database = {
         Update: {
           created_at?: string;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           reported_entity_id?: string;
           reported_entity_type?: Database["public"]["Enums"]["ReportedEntityType"];
@@ -1113,6 +1140,9 @@ export type Database = {
           config_value: Json | null;
           created_at: string | null;
           description: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
           id: string;
           updated_at: string | null;
         };
@@ -1121,6 +1151,9 @@ export type Database = {
           config_value?: Json | null;
           created_at?: string | null;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           updated_at?: string | null;
         };
@@ -1129,6 +1162,9 @@ export type Database = {
           config_value?: Json | null;
           created_at?: string | null;
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           updated_at?: string | null;
         };
@@ -1191,6 +1227,9 @@ export type Database = {
           created_at: string;
           currency: Database["public"]["Enums"]["Currency"];
           description: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
           id: string;
           related_entity_id: string | null;
           related_entity_type: string | null;
@@ -1207,6 +1246,9 @@ export type Database = {
           created_at?: string;
           currency: Database["public"]["Enums"]["Currency"];
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           related_entity_id?: string | null;
           related_entity_type?: string | null;
@@ -1223,6 +1265,9 @@ export type Database = {
           created_at?: string;
           currency?: Database["public"]["Enums"]["Currency"];
           description?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
           id?: string;
           related_entity_id?: string | null;
           related_entity_type?: string | null;

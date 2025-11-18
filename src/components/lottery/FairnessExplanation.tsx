@@ -57,7 +57,8 @@ const FairnessExplanation: React.FC<FairnessExplanationProps> = ({
   ]
 
   const formula = `(${t('verification.timestampSum')} / ${t('verification.totalShares')}) % ${t('verification.totalShares')} + 1`
-  const luckyNumber = (BigInt(timestampSum) / BigInt(totalShares)) % BigInt(totalShares) + BigInt(1)
+  // 确保 BigInt 运算的正确性，避免除法问题
+  const luckyNumber = (BigInt(timestampSum) % BigInt(totalShares)) + BigInt(1)
 
   return (
     <div className="mt-8 p-6 bg-white rounded-xl shadow-lg border-l-4 border-blue-500">
