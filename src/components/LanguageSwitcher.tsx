@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useSupabase } from '../contexts/SupabaseContext'
+
 import { useUser } from '../contexts/UserContext'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -25,8 +25,8 @@ export function LanguageSwitcher() {
     setCurrentLang(i18n.language)
   }, [i18n.language])
 
-  const { supabase } = useSupabase()
-  const { user, refreshProfile } = useUser()
+
+  const { user } = useUser()
 
   const changeLanguage = async (langCode: string) => {
     i18n.changeLanguage(langCode)
@@ -34,16 +34,16 @@ export function LanguageSwitcher() {
 
     if (user) {
       // 将语言偏好同步到 Supabase profile
-      const { error } = await supabase
-        .from('profiles')
-        .update({ preferred_language: langCode })
-        .eq('id', user.id)
+      // const { error } = await supabase
+      //   .from('profiles')
+      //   .update({ preferred_language: langCode })
+      //   .eq('id', user.id)
       
-      if (error) {
-        console.error('Error updating preferred language:', error)
-      } else {
-        refreshProfile()
-      }
+      // if (error) {
+      //   console.error('Error updating preferred language:', error)
+      // } else {
+      //   refreshProfile()
+      // }
     }
   }
 

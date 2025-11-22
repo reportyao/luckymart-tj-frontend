@@ -75,7 +75,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                       <svg class="w-12 h-12 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
                       </svg>
-                      <p class="text-sm font-medium">${t('lottery.period')}: ${lottery.period}</p>
+                      <p class="text-sm font-medium">${t('lottery.period')}: ${lottery.id}</p>
                     </div>
                   </div>
                 `
@@ -86,7 +86,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center text-white">
               <StarIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm font-medium">{t('lottery.period')}: {lottery.period}</p>
+              <p className="text-sm font-medium">{t('lottery.period')}: {lottery.id}</p>
             </div>
           </div>
         )}
@@ -104,15 +104,15 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 
       <div className="p-4">
         {/* 彩票标题 */}
-	        <h3 className="text-lg font-bold text-gray-900 mb-1">
-	          {getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title}
-	        </h3>
+		        <h3 className="text-lg font-bold text-gray-900 mb-1">
+		          {getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title}
+		        </h3>
         
-	        {lottery.description && (
-	          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-	            {getLocalizedText(lottery.description_i18n, i18n.language) || lottery.description}
-	          </p>
-	        )}
+		        {lottery.description && (
+		          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+		            {getLocalizedText(lottery.description_i18n as Record<string, string> | null, i18n.language) || lottery.description}
+		          </p>
+		        )}
 
         {/* 彩票信息 */}
         <div className="space-y-3">
@@ -121,9 +121,9 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             <div className="flex items-center space-x-4">
               <div>
                 <p className="text-xs text-gray-500">单价</p>
-                <p className="text-lg font-bold text-green-600">
-                  {formatCurrency(lottery.currency, lottery.ticket_price)}
-                </p>
+	                <p className="text-lg font-bold text-green-600">
+	                  {formatCurrency('TJS', lottery.ticket_price)}
+	                </p>
               </div>
               <div>
                 <p className="text-xs text-gray-500">总数</p>
@@ -133,9 +133,9 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               </div>
               <div>
                 <p className="text-xs text-gray-500">限购</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {lottery.max_per_user}
-                </p>
+	                <p className="text-sm font-semibold text-gray-900">
+		                  {lottery.total_tickets}
+	                </p>
               </div>
             </div>
           </div>
@@ -178,29 +178,26 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	            </div>
           )}
 
-          {lottery.status === 'COMPLETED' && lottery.actual_draw_time && (
-            <div className="flex items-center text-xs text-gray-500">
-	              <ClockIcon className="w-3 h-3 mr-1" />
-	              {t('lottery.drawTime')}: {formatDateTime(lottery.actual_draw_time)}
-	            </div>
-          )}
+	          {lottery.status === 'COMPLETED' && lottery.draw_time && (
+	            <div className="flex items-center text-xs text-gray-500">
+		              <ClockIcon className="w-3 h-3 mr-1" />
+		              {t('lottery.drawTime')}: {formatDateTime(lottery.draw_time)}
+		            </div>
+	          )}
 
           {/* 中奖号码 */}
-          {lottery.status === 'COMPLETED' && lottery.winning_numbers && (
-	            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-		              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
-              <div className="flex flex-wrap gap-2">
-                {Array.isArray(lottery.winning_numbers) && (lottery.winning_numbers as string[]).map((number: string, index: number) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-mono font-bold"
-                  >
-                    {number}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+	          {lottery.status === 'COMPLETED' && lottery.winner_ticket_number && (
+		            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+			              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
+	              <div className="flex flex-wrap gap-2">
+	                <span
+	                  className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-mono font-bold"
+	                >
+	                  {lottery.winner_ticket_number}
+	                </span>
+	              </div>
+	            </div>
+	          )}
         </div>
 
         {/* 操作按钮 */}

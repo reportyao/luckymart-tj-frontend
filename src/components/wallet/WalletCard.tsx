@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
 import { Wallet } from '../../lib/supabase'
-import { formatCurrency, getWalletTypeText, cn } from '../../lib/utils'
+import { formatCurrency, cn } from '../../lib/utils'
 
 interface WalletCardProps {
   wallets: Wallet[]
@@ -21,8 +21,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const { t } = useTranslation()
   const [showBalance, setShowBalance] = React.useState(true)
   
-  const balanceWallet = wallets.find(w => w.type === 'MAIN')
-  const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
+  const balanceWallet = wallets.find(w => w.currency === 'TJS')
+  const luckyCoinWallet = wallets.find(w => w.currency === 'LUCKY_COIN')
 
   const toggleShowBalance = () => {
     setShowBalance(!showBalance)
@@ -75,9 +75,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-white/80">
-                {getWalletTypeText('BALANCE')}
-              </p>
+	              <p className="text-sm text-white/80">
+	                {t('wallet.balance')}
+	              </p>
 	              <p className="text-2xl font-bold">
 	                {balanceWallet ? formatDisplayAmount(balanceWallet.currency, balanceWallet.balance) : 'TJS0.00'}
 	              </p>
@@ -99,9 +99,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-white/80">
-                {getWalletTypeText('LUCKY_COIN')}
-              </p>
+	              <p className="text-sm text-white/80">
+	                {t('wallet.luckyCoin')}
+	              </p>
 	              <p className="text-2xl font-bold">
 	                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.currency, luckyCoinWallet.balance) : 'TJS0.00'}
 	              </p>

@@ -15,11 +15,10 @@ const ProfileEditPage: React.FC = () => {
   const navigate = useNavigate()
   const { user, telegramUser } = useUser()
   
-  const [formData, setFormData] = useState({
-    first_name: user?.first_name || '',
-    last_name: user?.last_name || '',
-    telegram_username: user?.telegram_username || '',
-  })
+	  const [formData, setFormData] = useState({
+	    username: user?.username || '',
+	    telegram_username: user?.telegram_username || '',
+	  })
   
   const [isSaving, setIsSaving] = useState(false)
 
@@ -104,79 +103,65 @@ const ProfileEditPage: React.FC = () => {
       <div className="mx-4 mt-4">
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
           {/* 名字 */}
-          <div className="p-4 border-b border-gray-100">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('common.firstName') || 'First Name'}
-            </label>
-            <input
-              type="text"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder={t('common.firstName') || 'First Name'}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+	          {/* 用户名 */}
+	          <div className="p-4 border-b border-gray-100">
+	            <label className="block text-sm font-medium text-gray-700 mb-2">
+	              {t('invite.username')}
+	            </label>
+	            <input
+	              type="text"
+	              name="username"
+	              value={formData.username}
+	              onChange={handleChange}
+	              placeholder={t('invite.username')}
+	              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+	            />
+	          </div>
 
-          {/* 姓氏 */}
-          <div className="p-4 border-b border-gray-100">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('common.lastName') || 'Last Name'}
-            </label>
-            <input
-              type="text"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder={t('common.lastName') || 'Last Name'}
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-
-          {/* 用户名 */}
-          <div className="p-4 border-b border-gray-100">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('invite.username')}
-            </label>
-            <div className="flex items-center">
-              <span className="text-gray-500 mr-1">@</span>
-              <input
-                type="text"
-                name="telegram_username"
-                value={formData.telegram_username}
-                onChange={handleChange}
-                placeholder={t('invite.username')}
-                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+	          {/* Telegram 用户名 */}
+	          <div className="p-4 border-b border-gray-100">
+	            <label className="block text-sm font-medium text-gray-700 mb-2">
+	              Telegram {t('invite.username')}
+	            </label>
+	            <div className="flex items-center">
+	              <span className="text-gray-500 mr-1">@</span>
+	              <input
+	                type="text"
+	                name="telegram_username"
+	                value={formData.telegram_username}
+	                onChange={handleChange}
+	                placeholder={t('invite.username')}
+	                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+	              />
+	            </div>
+	          </div>
 
           {/* Telegram ID (只读) */}
           <div className="p-4 border-b border-gray-100">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Telegram ID
-            </label>
-            <input
-              type="text"
-              value={user?.telegram_id || ''}
-              disabled
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
-            />
-            <p className="text-xs text-gray-500 mt-1">Telegram ID</p>
+	            <label className="block text-sm font-medium text-gray-700 mb-2">
+	              Telegram ID
+	            </label>
+	            <input
+	              type="text"
+	              value={telegramUser?.id || ''}
+	              disabled
+	              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+	            />
+	            <p className="text-xs text-gray-500 mt-1">Telegram ID</p>
           </div>
 
           {/* 推荐码 (只读) */}
           <div className="p-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('invite.myInviteCode')}
-            </label>
-            <input
-              type="text"
-              value={user?.referral_code || ''}
-              disabled
-              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed font-mono text-center text-lg"
-            />
-            <p className="text-xs text-gray-500 mt-1">{t('home.referralCode')}</p>
+	            <label className="block text-sm font-medium text-gray-700 mb-2">
+	              {t('invite.myInviteCode')}
+	            </label>
+	            <input
+	              type="text"
+	              value={user?.invite_code || ''}
+	              disabled
+	              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed font-mono text-center text-lg"
+	            />
+	            <p className="text-xs text-gray-500 mt-1">{t('home.referralCode')}</p>
           </div>
         </div>
       </div>

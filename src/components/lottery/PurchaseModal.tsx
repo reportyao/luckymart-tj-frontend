@@ -32,7 +32,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
 
   if (!lottery) return null
 
-  const maxPurchase = Math.min(lottery.max_per_user || 10, lottery.total_tickets - lottery.sold_tickets)
+  const maxPurchase = Math.min(lottery.total_tickets - lottery.sold_tickets, 10)
   const totalPrice = lottery.ticket_price * quantity
 
   const handleQuantityChange = (delta: number) => {
@@ -150,7 +150,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                 {lottery.image_url ? (
                   <img
                     src={lottery.image_url}
-                    alt={getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title}
+                    alt={getLocalizedText(lottery.name_i18n as Record<string, string> | null, t('language')) || lottery.title}
                     className="w-20 h-20 rounded-xl object-cover"
                     onError={(e) => {
                       e.currentTarget.style.display = 'none'
@@ -171,8 +171,8 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   </div>
                 )}
                 <div className="flex-1">
-                  <h4 className="font-semibold text-gray-900 mb-1">{getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title}</h4>
-                  <p className="text-sm text-gray-500">{t('lottery.period')}: {lottery.period}</p>
+                  <h4 className="font-semibold text-gray-900 mb-1">{getLocalizedText(lottery.name_i18n as Record<string, string> | null, t('language')) || lottery.title}</h4>
+                  <p className="text-sm text-gray-500">{t('lottery.period')}: {lottery.id}</p>
                   <p className="text-sm text-gray-500">{t('lottery.unitPrice')}: TJS{lottery.ticket_price.toFixed(2)}</p>
                 </div>
               </div>

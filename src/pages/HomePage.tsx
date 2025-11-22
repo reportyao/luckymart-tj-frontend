@@ -41,7 +41,7 @@ const HomePage: React.FC = () => {
 
   useEffect(() => {
     // 检查是否是新用户且已登录，且尚未看过引导
-    if (user && profile && !profile.has_seen_onboarding) {
+    if (user && profile && !('has_seen_onboarding' in profile)) {
       setShowOnboardingModal(true)
     }
   }, [user, profile])
@@ -114,16 +114,16 @@ const HomePage: React.FC = () => {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-xl font-bold mb-1">
-              {t('home.welcome')}, {user.first_name}! 👋
-            </h2>
+	            <h2 className="text-xl font-bold mb-1">
+	              {t('home.welcome')}, {user.username || '用户'}! 👋
+	            </h2>
             <p className="text-white/80 text-sm">
               {t('home.tryLuck')}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs text-white/60">{t('home.referralCode')}</p>
-            <p className="text-lg font-bold">{user.referral_code}</p>
+	            <p className="text-xs text-white/60">{t('home.referralCode')}</p>
+	            <p className="text-lg font-bold">{profile?.invite_code}</p>
           </div>
         </div>
       </SafeMotion>

@@ -25,9 +25,9 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
 
   const handleCopyReferralCode = async () => {
-    if (user?.referral_code) {
-      const success = await copyToClipboard(user.referral_code)
-      if (success) {
+    if (user?.invite_code) {
+	      const success = await copyToClipboard(user.invite_code)
+	      if (success) {
         toast.success(t('profile.copyReferralCode'))
       } else {
         toast.error(t('error.unknownError'))
@@ -36,12 +36,12 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleShareReferral = () => {
-    if (user?.referral_code) {
-      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.referral_code}`
-      const shareUrl = `https://t.me/your_bot_username?start=ref_${user.referral_code}`
-      shareToTelegram(shareText, shareUrl)
-    }
-  }
+	    if (user?.invite_code) {
+	      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
+	      const shareUrl = `https://t.me/your_bot_username?start=ref_${user.invite_code}`
+	      shareToTelegram(shareText, shareUrl)
+	    }
+	  }
 
   const menuItems = [
     {
@@ -121,7 +121,7 @@ const ProfilePage: React.FC = () => {
             ) : (
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold">
-                  {user?.first_name?.[0] || 'U'}
+                  {user?.username?.[0] || 'U'}
                 </span>
               </div>
             )}
@@ -136,20 +136,20 @@ const ProfilePage: React.FC = () => {
           {/* 用户信息 */}
           <div className="flex-1">
             <h2 className="text-xl font-bold">
-              {user?.first_name} {user?.last_name}
+              {user?.username}
             </h2>
             <p className="text-white/80 text-sm">
-            @{user?.telegram_username || user?.username || 'username'}
-            </p>
+	            @{user?.telegram_username || user?.username || 'username'}
+	            </p>
             <div className="flex items-center space-x-2 mt-2">
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                user ? getStatusColor(user.status) : 'text-gray-600 bg-gray-50'
-              }`}>
-                {user?.status === 'ACTIVE' ? t('invite.active') : user?.status}
-              </span>
+	                user ? getStatusColor(user.first_deposit_bonus_status) : 'text-gray-600 bg-gray-50'
+	              }`}>
+	                {user?.first_deposit_bonus_status === 'ACTIVE' ? t('invite.active') : user?.first_deposit_bonus_status}
+	              </span>
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
-                {user ? getKycLevelText(user.kyc_level || 'BASIC') : t('wallet.notSet')}
-              </span>
+	                {user ? getKycLevelText('BASIC') : t('wallet.notSet')}
+	              </span>
             </div>
           </div>
         </div>
@@ -159,12 +159,12 @@ const ProfilePage: React.FC = () => {
           <div className="flex justify-between text-sm">
             <div>
               <p className="text-white/60">{t('invite.username')}</p>
-              <p className="font-medium">{user?.referral_code}</p>
+              <p className="font-medium">{user?.invite_code}</p>
             </div>
             <div className="text-right">
               <p className="text-white/60">{t('invite.joinTime')}</p>
               <p className="font-medium">
-                {user?.created_at ? formatDateTime(user.created_at) : '--'}
+                {user?.updated_at ? formatDateTime(user.updated_at) : '--'}
               </p>
             </div>
           </div>
@@ -184,9 +184,9 @@ const ProfilePage: React.FC = () => {
         </div>
         
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
-          <p className="text-2xl font-bold text-center text-gray-900 font-mono">
-            {user?.referral_code || '------'}
-          </p>
+	          <p className="text-2xl font-bold text-center text-gray-900 font-mono">
+	            {user?.invite_code || '------'}
+	          </p>
         </div>
 
         <div className="flex space-x-2">

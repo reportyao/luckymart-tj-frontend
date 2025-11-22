@@ -1,4 +1,4 @@
-'''export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   public: {
@@ -177,6 +177,388 @@ export type Database = {
         };
         Relationships: [];
       };
+      likes: {
+        Row: {
+          id: string;
+          user_id: string;
+          showoff_id: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          showoff_id: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          showoff_id?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "likes_showoff_id_fkey";
+            columns: ["showoff_id"];
+            isOneToOne: false;
+            referencedRelation: "showoffs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "likes_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      lotteries: {
+        Row: {
+          id: string;
+          title: string;
+          image_url: string | null;
+          description: string | null;
+          ticket_price: number;
+          total_tickets: number;
+          sold_tickets: number;
+          start_time: string;
+          end_time: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+          winner_id: string | null;
+          winner_ticket_number: number | null;
+          draw_time: string | null;
+          name_i18n: Json | null;
+          description_i18n: Json | null;
+          details_i18n: Json | null;
+        };
+        Insert: {
+          id?: string;
+          title: string;
+          image_url?: string | null;
+          description?: string | null;
+          ticket_price: number;
+          total_tickets: number;
+          sold_tickets?: number;
+          start_time?: string;
+          end_time?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          winner_id?: string | null;
+          winner_ticket_number?: number | null;
+          draw_time?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
+        };
+        Update: {
+          id?: string;
+          title?: string;
+          image_url?: string | null;
+          description?: string | null;
+          ticket_price?: number;
+          total_tickets?: number;
+          sold_tickets?: number;
+          start_time?: string;
+          end_time?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          winner_id?: string | null;
+          winner_ticket_number?: number | null;
+          draw_time?: string | null;
+          name_i18n?: Json | null;
+          description_i18n?: Json | null;
+          details_i18n?: Json | null;
+        };
+        Relationships: [];
+      };
+      lottery_results: {
+        Row: {
+          id: string;
+          lottery_id: string;
+          winner_id: string;
+          winner_ticket_number: number;
+          draw_time: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          lottery_id: string;
+          winner_id: string;
+          winner_ticket_number: number;
+          draw_time?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          lottery_id?: string;
+          winner_id?: string;
+          winner_ticket_number?: number;
+          draw_time?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "lottery_results_lottery_id_fkey";
+            columns: ["lottery_id"];
+            isOneToOne: false;
+            referencedRelation: "lotteries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "lottery_results_winner_id_fkey";
+            columns: ["winner_id"];
+            isOneToOne: false;
+            referencedRelation: "tickets";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      orders: {
+        Row: {
+          id: string;
+          user_id: string;
+          order_type: string;
+          amount: number;
+          currency: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
+          lottery_id: string | null;
+          ticket_count: number | null;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          order_type: string;
+          amount: number;
+          currency: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          lottery_id?: string | null;
+          ticket_count?: number | null;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          order_type?: string;
+          amount?: number;
+          currency?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          lottery_id?: string | null;
+          ticket_count?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "orders_lottery_id_fkey";
+            columns: ["lottery_id"];
+            isOneToOne: false;
+            referencedRelation: "lotteries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "orders_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      showoffs: {
+        Row: {
+          id: string;
+          user_id: string;
+          lottery_id: string;
+          content: string;
+          images: Json | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
+          likes_count: number;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lottery_id: string;
+          content: string;
+          images?: Json | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          likes_count?: number;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lottery_id?: string;
+          content?: string;
+          images?: Json | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
+          likes_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "showoffs_lottery_id_fkey";
+            columns: ["lottery_id"];
+            isOneToOne: false;
+            referencedRelation: "lotteries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "showoffs_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      tickets: {
+        Row: {
+          id: string;
+          user_id: string;
+          lottery_id: string;
+          ticket_number: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          lottery_id: string;
+          ticket_number: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          lottery_id?: string;
+          ticket_number?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "tickets_lottery_id_fkey";
+            columns: ["lottery_id"];
+            isOneToOne: false;
+            referencedRelation: "lotteries";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "tickets_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      user_profiles: {
+        Row: {
+          id: string;
+          username: string | null;
+          avatar_url: string | null;
+          updated_at: string | null;
+          telegram_user_id: number | null;
+          invite_code: string | null;
+          invited_by: string | null;
+          bonus_balance: number;
+          first_deposit_bonus_amount: number;
+          first_deposit_bonus_status: string;
+          first_deposit_bonus_expire_at: string | null;
+          activation_share_count: number;
+          activation_invite_count: number;
+          level: number;
+          commission_rate: number;
+        };
+        Insert: {
+          id: string;
+          username?: string | null;
+          avatar_url?: string | null;
+          updated_at?: string | null;
+          telegram_user_id?: number | null;
+          invite_code?: string | null;
+          invited_by?: string | null;
+          bonus_balance?: number;
+          first_deposit_bonus_amount?: number;
+          first_deposit_bonus_status?: string;
+          first_deposit_bonus_expire_at?: string | null;
+          activation_share_count?: number;
+          activation_invite_count?: number;
+          level?: number;
+          commission_rate?: number;
+        };
+        Update: {
+          id?: string;
+          username?: string | null;
+          avatar_url?: string | null;
+          updated_at?: string | null;
+          telegram_user_id?: number | null;
+          invite_code?: string | null;
+          invited_by?: string | null;
+          bonus_balance?: number;
+          first_deposit_bonus_amount?: number;
+          first_deposit_bonus_status?: string;
+          first_deposit_bonus_expire_at?: string | null;
+          activation_share_count?: number;
+          activation_invite_count?: number;
+          level?: number;
+          commission_rate?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "user_profiles_invited_by_fkey";
+            columns: ["invited_by"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      wallets: {
+        Row: {
+          id: string;
+          user_id: string;
+          currency: string;
+          balance: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          currency: string;
+          balance?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          currency?: string;
+          balance?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "wallets_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "profiles";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       profiles: {
         Row: {
           id: string;
@@ -295,4 +677,10 @@ export type InvitedUser = {
   commission_earned: number;
   total_spent: number;
 };
-'''
+
+
+
+
+export type Tables<T extends keyof Database['public']['Tables']> = Database['public']['Tables'][T]['Row'];
+export type Enums<T extends keyof Database['public']['Enums']> = Database['public']['Enums'][T];
+export type Functions<T extends keyof Database['public']['Functions']> = Database['public']['Functions'][T];

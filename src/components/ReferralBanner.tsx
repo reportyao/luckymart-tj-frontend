@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Typography, Space } from 'antd';
+import { Button, Typography, Space } from 'antd';
 import { ShareAltOutlined, ArrowRightOutlined } from '@ant-design/icons';
 import { SafeMotion } from './SafeMotion';
 
@@ -22,8 +22,8 @@ const ReferralBanner: React.FC = () => {
       transition={{ delay: 0.4 }}
       className="px-4 mt-6"
     >
-      <Card
-        bordered={false}
+      <div
+
         style={{
           background: 'linear-gradient(135deg, #4CAF50 0%, #8BC34A 100%)',
           borderRadius: '16px',
@@ -31,7 +31,7 @@ const ReferralBanner: React.FC = () => {
           padding: '10px 15px',
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
         }}
-        bodyStyle={{ padding: 0 }}
+
       >
         <div className="flex items-center justify-between">
           <Space direction="vertical" size={4} style={{ flexGrow: 1 }}>
@@ -63,7 +63,7 @@ const ReferralBanner: React.FC = () => {
             {t('banner.actionButton')}
           </Button>
         </div>
-      </Card>
+      </div>
     </SafeMotion>
   );
 };

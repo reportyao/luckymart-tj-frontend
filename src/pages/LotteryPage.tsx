@@ -49,10 +49,9 @@ const LotteryPage: React.FC = () => {
 
   const filteredLotteries = lotteries.filter(lottery => {
     // 适配多语言内容展示
-    const titleText = getLocalizedText(lottery.name_i18n, i18n.language) || lottery.title;
+    const titleText = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title;
     
-    const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         lottery.period.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase())
     
     if (filter === 'all') return matchesSearch
     if (filter === 'drawResult') return matchesSearch && lottery.status === 'DRAWN'

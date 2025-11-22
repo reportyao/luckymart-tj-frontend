@@ -27,8 +27,8 @@ export default function ExchangePage() {
       const wallets = await walletService.getWallets(user.id)
 
       if (wallets) {
-        const balanceWallet = wallets.find(w => w.type === 'MAIN')
-        const coinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
+        const balanceWallet = wallets.find(w => w.currency === 'TJS')
+        const coinWallet = wallets.find(w => w.currency === 'LUCKY_COIN')
         
         if (balanceWallet) setBalance(balanceWallet.balance)
         if (coinWallet) setLuckyCoin(coinWallet.balance)
@@ -55,12 +55,12 @@ export default function ExchangePage() {
     try {
       setSubmitting(true)
 
-      const sourceWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'BALANCE' : 'LUCKY_COIN'
-      const targetWalletType = exchangeType === 'BALANCE_TO_COIN' ? 'LUCKY_COIN' : 'BALANCE'
+      
+      
 
-                  const result = await walletService.exchangeCoins(sourceWalletType, targetWalletType, amountNum)
+                  const result = await walletService.exchangeRealToBonus(amountNum)
 
-      if (result.error) throw result.error
+      
 
       if (result.success) {
         setSuccess(true)

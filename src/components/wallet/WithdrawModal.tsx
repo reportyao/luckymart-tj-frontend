@@ -20,7 +20,7 @@ export const WithdrawModal: React.FC<WithdrawModalProps> = ({ isOpen, onClose, o
   const [accountHolder, setAccountHolder] = useState<string>('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  const balanceWallet = wallets.find(w => w.type === 'MAIN');
+  const balanceWallet = wallets.find(w => w.currency === 'TJS');
   const availableBalance = balanceWallet?.balance || 0;
   const MIN_WITHDRAW = 50;
   const MAX_WITHDRAW = 10000;

@@ -49,24 +49,24 @@ export const Layout: React.FC<LayoutProps> = ({
                     />
                   ) : (
                     <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-medium">
-                        {user.first_name?.[0] || 'U'}
-                      </span>
+	                      <span className="text-white text-xs font-medium">
+		                        {(user as any).user_metadata?.first_name?.[0] || 'U'}
+	                      </span>
                     </div>
                   )}
                   <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      ID: {user.referral_code}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </motion.header>
+		                    <p className="text-sm font-medium text-gray-900">
+		                      {(user as any).user_metadata?.first_name} {(user as any).user_metadata?.last_name}
+		                    </p>
+		                    <p className="text-xs text-gray-500">
+		                      ID: {(user as any).user_metadata?.referral_code}
+		                    </p>
+	                  </div>
+	                </div>
+	              )}
+	            </div>
+	          </div>
+	        </motion.header>
       )}
       
       <main className="max-w-md mx-auto">

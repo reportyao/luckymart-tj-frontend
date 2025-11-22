@@ -4,11 +4,11 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { Showoff } from '../types/supabase';
+import { ShowoffWithDetails } from '../lib/supabase';
 import {
   PhotoIcon,
   HeartIcon,
-  ChatBubbleLeftIcon,
+
   ShareIcon,
   PlusIcon,
   TrophyIcon
@@ -24,20 +24,6 @@ const ShowoffPage: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useUser();
   const { showoffService } = useSupabase();
-  interface ShowoffWithDetails extends Showoff {
-  user_profile: {
-    username: string;
-    avatar_url: string;
-  } | null;
-  lottery: {
-    title: string;
-    image_url: string;
-    ticket_price: number;
-    currency: string;
-  };
-  is_liked: boolean;
-  comments_count: number;
-}
 
   const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +32,7 @@ const ShowoffPage: React.FC = () => {
   const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await showoffService.getApprovedShowoffs(filter) as any as ShowoffWithDetails[];
+      const data = await showoffService.getApprovedShowoffs(filter) as ShowoffWithDetails[];
       setShowoffs(data);
     } catch (error) {
       console.error('Error fetching showoffs:', error);
@@ -90,7 +76,7 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user_profile?.username || '一位用户'}在LuckyMart{t('showoff.won')}了!快来看看吧!`;
+    const text = `${showoff.user?.username || '一位用户'}在LuckyMart${t('showoff.won')}了!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
     if (navigator.share) {
@@ -178,10 +164,10 @@ const ShowoffPage: React.FC = () => {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-	                    {showoff.user_profile?.username ? showoff.user_profile.username.charAt(0) : 'U'}
+	                    {showoff.user?.username ? showoff.user.username.charAt(0) : 'U'}
                     </div>
                     <div>
-	                    <p className="font-medium text-gray-900">{showoff.user_profile?.username || 'Anonymous'}</p>
+	                    <p className="font-medium text-gray-900">{showoff.user?.username || 'Anonymous'}</p>
                       <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
                     </div>
                   </div>
@@ -196,8 +182,8 @@ const ShowoffPage: React.FC = () => {
                   <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
                     <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{showoff.lottery.title}</p>
-	                    <p className="text-xs text-gray-500 truncate">{showoff.lottery.title}</p>
+	                    <p className="text-sm font-medium text-gray-900 truncate">{showoff.lottery?.title}</p>
+		                    <p className="text-xs text-gray-500 truncate">{showoff.lottery?.title}</p>
                     </div>
                   </div>
                 </div>

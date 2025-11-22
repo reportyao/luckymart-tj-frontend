@@ -26,7 +26,7 @@ import ProfileEditPage from './pages/ProfileEditPage'
 import DepositPage from './pages/DepositPage'
 import WithdrawPage from './pages/WithdrawPage'
 import ExchangePage from './pages/ExchangePage'
-import { BottomNavigation } from './components/navigation/BottomNavigation'
+
 import './App.css'
 
 

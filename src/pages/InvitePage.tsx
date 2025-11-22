@@ -72,8 +72,8 @@ const InvitePage: React.FC = () => {
       } else {
         toast.error(t('invite.activationFailed'));
       }
-    } catch (error) {
-      toast.error(error.message);
+    } catch (error: any) {
+      toast.error(error.message || t('error.networkError'));
     } finally {
       setIsActivating(false);
     }
@@ -190,7 +190,7 @@ const InvitePage: React.FC = () => {
             {stats.first_deposit_bonus_status === 'pending' && (
               <>
                 <p className="text-xs text-red-500 mb-3">
-                  {t('invite.activationDeadline', { date: formatDateTime(stats.first_deposit_bonus_expire_at) })}
+                  {t('invite.activationDeadline', { date: stats.first_deposit_bonus_expire_at ? formatDateTime(stats.first_deposit_bonus_expire_at) : 'N/A' })}
                 </p>
                 <div className="space-y-2 mb-3">
                   <p className="font-medium text-gray-700">{t('invite.activationCondition')}</p>

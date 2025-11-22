@@ -15,7 +15,8 @@ import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import FairnessExplanation from '@/components/lottery/FairnessExplanation';
-import { Database, Lottery } from '@/types/supabase';
+import { Database } from '@/types/supabase';
+import { Lottery } from '../lib/supabase';
 
 type LotteryResultRow = Database['public']['Tables']['lottery_results']['Row'];
 type TicketRow = Database['public']['Tables']['tickets']['Row'];
@@ -28,6 +29,8 @@ interface Winner extends TicketRow {
 }
 
 interface LotteryResult extends LotteryResultRow {
+  winning_number: number;
+  draw_time: string;
   timestamp_sum: string;
   total_shares: number;
   winner: Winner;
@@ -105,8 +108,8 @@ const LotteryResultPage: React.FC = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
             <TrophyIcon className="w-8 h-8" />
           </div>
-          <h1 className="text-2xl font-bold mb-1">{getLocalizedText(result.lottery.name_i18n, i18n.language) || result.lottery.title}</h1>
-          <p className="text-white/80">{t('lottery.period')}: {result.lottery_id}</p>
+          <h1 className="text-2xl font-bold mb-1">{getLocalizedText(result.lottery.name_i18n as Record<string, string> | null, t('language')) || result.lottery.title}</h1>
+          <p className="text-white/80">{t('lottery.period')}: {result.lottery.id}</p>
         </div>
       </div>
 
@@ -126,7 +129,7 @@ const LotteryResultPage: React.FC = () => {
               <div className="text-center text-white">
                 <h2 className="text-2xl font-bold">{t('lottery.congratulations')}</h2>
                 <p className="mt-1">{t('lottery.youWon')}</p>
-                <div className="mt-4 text-4xl font-bold">{formatCurrency(result.lottery.currency, result.lottery.ticket_price * result.lottery.total_tickets)}</div>
+                <div className="mt-4 text-4xl font-bold">{formatCurrency('TJS', result.lottery.ticket_price * result.lottery.total_tickets)}</div>
               </div>
             ) : (
               <div className="text-center text-gray-700">
@@ -182,7 +185,7 @@ const LotteryResultPage: React.FC = () => {
           <div className="flex flex-col items-center">
             <BanknotesIcon className="w-6 h-6 text-gray-500 mb-1" />
 	            <p className="text-sm text-gray-500">{t('lottery.ticketPrice')}</p>
-	            <p className="font-semibold">{formatCurrency(result.lottery.currency, result.lottery.ticket_price || 0)}</p>
+			            <p className="font-semibold">{formatCurrency('TJS', result.lottery.ticket_price || 0)}</p>
           </div>
         </div>
       </div>

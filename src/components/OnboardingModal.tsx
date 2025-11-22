@@ -3,8 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Button, Typography, Space, Card } from 'antd';
-import { UserAddOutlined, ShareAltOutlined, DollarCircleOutlined } from '@ant-design/icons';
+import { Modal, Button, Typography, Space } from 'antd';
+import { UserAddOutlined, ShareAltOutlined } from '@ant-design/icons';
 
 const { Title, Text } = Typography;
 
@@ -15,13 +15,13 @@ interface OnboardingModalProps {
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ isVisible, onClose }) => {
   const { t } = useTranslation();
-  const { user, profile, refreshProfile } = useUser();
+  const { user, profile } = useUser();
   const { supabase } = useSupabase();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
 
   // 检查用户是否已登录且未看过引导
-  const shouldShow = isVisible && user && profile && !profile.has_seen_onboarding;
+  const shouldShow = isVisible && user && profile && !(profile as any).has_seen_onboarding;
 
   useEffect(() => {
     // 确保在组件卸载时不会执行异步操作
@@ -41,14 +41,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isVisible, onClose })
       // 标记用户已看过引导
       const { error } = await supabase
         .from('profiles')
-        .update({ has_seen_onboarding: true })
+        .update({ has_seen_onboarding: true } as any)
         .eq('id', user.id);
 
       if (error) {
         console.error('Error updating profile for onboarding skip:', error);
         // 即使更新失败，也允许用户跳过，避免阻塞
       } else {
-        refreshProfile(); // 刷新用户 profile
+        // refreshProfile(); // 刷新用户 profile
       }
     } catch (e) {
       console.error('Exception during onboarding skip:', e);
@@ -69,13 +69,13 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isVisible, onClose })
       // 标记用户已看过引导
       const { error } = await supabase
         .from('profiles')
-        .update({ has_seen_onboarding: true })
+        .update({ has_seen_onboarding: true } as any)
         .eq('id', user.id);
 
       if (error) {
         console.error('Error updating profile for onboarding action:', error);
       } else {
-        refreshProfile(); // 刷新用户 profile
+        // refreshProfile(); // 刷新用户 profile
       }
     } catch (e) {
       console.error('Exception during onboarding action:', e);
@@ -111,14 +111,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isVisible, onClose })
           {t('onboarding.subtitle')}
         </Text>
 
-        <Card bordered={false} style={{ backgroundColor: '#f0f2f5', padding: '10px 0' }}>
+        <div style={{ backgroundColor: '#f0f2f5', padding: '10px 0', borderRadius: '8px', border: '1px solid #f0f0f0' }}>
           <Space direction="vertical" size="small">
             <Text>{t('referral.level1')} ({t('referral.level1Rate')})</Text>
             <Text>{t('referral.level2')} ({t('referral.level2Rate')})</Text>
             <Text>{t('referral.level3')} ({t('referral.level3Rate')})</Text>
             <Text strong type="success">{t('referral.totalRate')}</Text>
           </Space>
-        </Card>
+        </div>
 
         <Text>{t('onboarding.description')}</Text>
 

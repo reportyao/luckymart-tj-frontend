@@ -42,7 +42,7 @@ export default function WithdrawPage() {
 
       // 使用抽象服务层获取钱包信息
       const wallets = await walletService.getWallets(user.id)
-      const balanceWallet = wallets.find(w => w.type === 'MAIN')
+      const balanceWallet = wallets.find(w => w.currency === 'TJS')
 
       if (balanceWallet) {
         setBalance(balanceWallet.balance)
