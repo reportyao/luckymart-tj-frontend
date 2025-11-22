@@ -233,6 +233,11 @@ export type Database = {
           name_i18n: Json | null;
           description_i18n: Json | null;
           details_i18n: Json | null;
+          specifications_i18n: Json | null;
+          material_i18n: Json | null;
+          image_urls: string[] | null;
+          currency: string | null;
+          max_per_user: number | null;
         };
         Insert: {
           id?: string;
@@ -253,6 +258,11 @@ export type Database = {
           name_i18n?: Json | null;
           description_i18n?: Json | null;
           details_i18n?: Json | null;
+          specifications_i18n?: Json | null;
+          material_i18n?: Json | null;
+          image_urls?: string[] | null;
+          currency?: string | null;
+          max_per_user?: number | null;
         };
         Update: {
           id?: string;
@@ -273,6 +283,11 @@ export type Database = {
           name_i18n?: Json | null;
           description_i18n?: Json | null;
           details_i18n?: Json | null;
+          specifications_i18n?: Json | null;
+          material_i18n?: Json | null;
+          image_urls?: string[] | null;
+          currency?: string | null;
+          max_per_user?: number | null;
         };
         Relationships: [];
       };
@@ -284,6 +299,7 @@ export type Database = {
           winner_ticket_number: number;
           draw_time: string;
           created_at: string;
+          algorithm_data: Json | null;
         };
         Insert: {
           id?: string;
@@ -292,6 +308,7 @@ export type Database = {
           winner_ticket_number: number;
           draw_time?: string;
           created_at?: string;
+          algorithm_data?: Json | null;
         };
         Update: {
           id?: string;
@@ -300,6 +317,7 @@ export type Database = {
           winner_ticket_number?: number;
           draw_time?: string;
           created_at?: string;
+          algorithm_data?: Json | null;
         };
         Relationships: [
           {
@@ -379,6 +397,7 @@ export type Database = {
           lottery_id: string;
           content: string;
           images: Json | null;
+          image_urls: string[] | null;
           status: string;
           created_at: string;
           updated_at: string;
@@ -390,6 +409,7 @@ export type Database = {
           lottery_id: string;
           content: string;
           images?: Json | null;
+          image_urls?: string[] | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
@@ -401,6 +421,7 @@ export type Database = {
           lottery_id?: string;
           content?: string;
           images?: Json | null;
+          image_urls?: string[] | null;
           status?: string;
           created_at?: string;
           updated_at?: string;
