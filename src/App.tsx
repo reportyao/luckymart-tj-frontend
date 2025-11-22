@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'
 import { Layout } from './components/layout/Layout'
 import HomePage from './pages/HomePage'
 import LotteryPage from './pages/LotteryPage'
+import LotteryDetailPage from './pages/LotteryDetailPage'
 import WalletPage from './pages/WalletPage'
 import ProfilePage from './pages/ProfilePage'
 import BotPage from './pages/BotPage'
@@ -39,6 +40,7 @@ function App() {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/lottery" element={<LotteryPage />} />
+              <Route path="/lottery/:id" element={<LotteryDetailPage />} />
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/bot" element={<BotPage />} />

@@ -2,6 +2,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { ClockIcon, UserGroupIcon, StarIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
+import { useNavigate } from 'react-router-dom'
 import { LazyImage } from '../LazyImage'
 import { useTranslation } from 'react-i18next'
 import { 
@@ -49,16 +50,23 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
     }
   }
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -2 }}
-      className={cn(
-        "bg-white rounded-2xl shadow-lg overflow-hidden",
-        className
-      )}
-    >
+	  const navigate = useNavigate();
+	
+	  const handleCardClick = () => {
+	    navigate(`/lottery/${lottery.id}`);
+	  };
+	
+	  return (
+	    <motion.div
+	      initial={{ opacity: 0, y: 20 }}
+	      animate={{ opacity: 1, y: 0 }}
+	      whileHover={{ y: -2 }}
+	      onClick={handleCardClick}
+	      className={cn(
+	        "bg-white rounded-2xl shadow-lg overflow-hidden cursor-pointer",
+	        className
+	      )}
+	    >
       {/* 彩票图片 */}
       <div className="relative h-32 bg-gradient-to-r from-purple-400 to-pink-400">
         {lottery.image_url ? (
