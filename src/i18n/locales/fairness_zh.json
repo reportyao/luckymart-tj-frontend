@@ -1,0 +1,26 @@
+{
+  "fairness": {
+    "title": "为什么这个算法公平?",
+    "question1": "用户能操纵时间戳吗?",
+    "answer1": "不能,时间戳由服务器生成,用户无法控制",
+    "question2": "平台能作弊吗?",
+    "answer2": "不能,所有订单数据公开可查,算法透明",
+    "question3": "最后购买有优势吗?",
+    "answer3": "没有,所有订单权重相同,购买顺序不影响结果",
+    "question4": "算法够随机吗?",
+    "answer4": "足够,毫秒级时间戳高度随机,无法预测",
+    "verification_title": "验证数据",
+    "timestamp_sum": "时间戳总和",
+    "total_tickets": "总票数",
+    "formula": "计算公式",
+    "verification_hint": "您可以使用上述数据自行验证开奖结果的正确性"
+  },
+  "lottery": {
+    "drawing_in": "距离开奖还有",
+    "drawing_now": "正在开奖中...",
+    "please_wait": "请稍候,开奖结果即将揭晓",
+    "minutes": "分钟",
+    "seconds": "秒",
+    "countdown_hint": "售罄后180秒自动开奖,请耐心等待"
+  }
+}

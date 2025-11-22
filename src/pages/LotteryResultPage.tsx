@@ -14,7 +14,7 @@ import {
 import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
-import FairnessExplanation from '@/components/lottery/FairnessExplanation';
+import { FairnessExplanation } from '../components/FairnessExplanation';
 import { Database } from '@/types/supabase';
 import { Lottery } from '../lib/supabase';
 
@@ -192,10 +192,11 @@ const LotteryResultPage: React.FC = () => {
 
       {/* Fairness Explanation */}
       <div className="px-4">
-	        <FairnessExplanation 
-	          timestampSum={result.timestamp_sum || '0'}
-	          totalShares={result.total_shares || 0}
-	          drawTime={result.draw_time || ''}
+        <FairnessExplanation 
+          timestampSum={result.algorithm_data?.timestamp_sum || '0'}
+          totalTickets={result.algorithm_data?.total_tickets || result.lottery.total_tickets}
+          winningNumber={result.winning_number}
+          showVerificationData={true}
         />
       </div>
     </div>

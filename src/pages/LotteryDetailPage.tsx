@@ -18,6 +18,7 @@ import {
 } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { motion } from 'framer-motion';
+import { CountdownTimer } from '../components/CountdownTimer';
 
 type Lottery = Tables<'lotteries'>;
 type Showoff = Tables<'showoffs'> & {
@@ -235,6 +236,17 @@ const LotteryDetailPage: React.FC = () => {
                 {timeRemaining.seconds.toString().padStart(2, '0')}
               </p>
             </div>
+          )}
+
+          {/* 180秒开奖倒计时 */}
+          {isSoldOut && lottery.draw_time && (
+            <CountdownTimer 
+              drawTime={lottery.draw_time} 
+              onCountdownEnd={() => {
+                // 倒计时结束后刷新页面查看开奖结果
+                fetchLottery();
+              }}
+            />
           )}
 
           {/* Purchase Button */}

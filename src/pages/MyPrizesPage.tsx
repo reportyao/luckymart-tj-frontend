@@ -248,7 +248,9 @@ const ShippingModal: React.FC<{
   prize: Prize;
   onClose: () => void;
   onSuccess: () => void;
-}> = ({ onClose, onSuccess }) => {
+}> = ({ prize, onClose, onSuccess }) => {
+  const { supabase } = useSupabase();
+  const { t } = useTranslation();
   const [formData, setFormData] = useState({
     recipient_name: '',
     phone: '',
@@ -264,13 +266,37 @@ const ShippingModal: React.FC<{
     setIsSubmitting(true);
 
     try {
-      // TODO: 调用实际API
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 调用 request-shipping Edge Function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
 
-      toast.success('发货申请已提交');
+      if (!token) {
+        throw new Error('User not authenticated');
+      }
+
+      const { data, error } = await supabase.functions.invoke('request-shipping', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: {
+          prize_id: prize.id,
+          shipping_info: formData
+        }
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string };
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to submit shipping request');
+      }
+
+      toast.success(t('myPrizes.shippingRequestSuccess') || '发货申请已提交');
       onSuccess();
-    } catch (error) {
-      toast.error('提交失败,请重试');
+    } catch (error: any) {
+      console.error('Shipping request error:', error);
+      toast.error(error.message || t('myPrizes.shippingRequestError') || '提交失败,请重试');
     } finally {
       setIsSubmitting(false);
     }
