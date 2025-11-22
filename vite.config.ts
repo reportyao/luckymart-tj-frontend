@@ -40,13 +40,40 @@ export default defineConfig(({ mode }) => {
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom'],
-            supabase: ['@supabase/supabase-js', '@supabase/ssr'],
-            ui: ['@radix-ui/react-dialog', '@radix-ui/react-select']
-          }
+          manualChunks: (id) => {
+            // React 核心库
+            if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+              return 'vendor-react';
+            }
+            // React Router
+            if (id.includes('node_modules/react-router')) {
+              return 'vendor-router';
+            }
+            // Supabase
+            if (id.includes('@supabase')) {
+              return 'vendor-supabase';
+            }
+            // UI 组件库
+            if (id.includes('@radix-ui') || id.includes('react-hot-toast')) {
+              return 'vendor-ui';
+            }
+            // i18n
+            if (id.includes('i18next') || id.includes('react-i18next')) {
+              return 'vendor-i18n';
+            }
+            // 其他 node_modules
+            if (id.includes('node_modules')) {
+              return 'vendor-misc';
+            }
+          },
+          // 优化文件名
+          chunkFileNames: 'assets/js/[name]-[hash].js',
+          entryFileNames: 'assets/js/[name]-[hash].js',
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
         }
       },
+      // 优化 chunk 大小
+      chunkSizeWarningLimit: 1000,
       target: 'es2020'
     },
     

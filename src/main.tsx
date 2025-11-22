@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHandlers';
+import { initMockTelegramWebApp } from './utils/mockTelegramWebApp';
 import i18n from './i18n/config';
 import './index.css';
 import App from './App';
@@ -12,6 +13,12 @@ import { SupabaseProvider } from './contexts/SupabaseContext';
 // 设置全局错误处理和警告抑制
 setupGlobalErrorHandlers();
 suppressKnownWarnings();
+
+// 在非Telegram环境中初始化Mock SDK
+if (!window.Telegram?.WebApp) {
+  console.log('[Dev Mode] Initializing Mock Telegram WebApp for testing');
+  initMockTelegramWebApp();
+}
 
 function AppWrapper() {
   return (

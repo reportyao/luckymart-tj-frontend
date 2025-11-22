@@ -1,32 +1,43 @@
 
 
+import { lazy, Suspense } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 
 import { Layout } from './components/layout/Layout'
-import HomePage from './pages/HomePage'
-import LotteryPage from './pages/LotteryPage'
-import LotteryDetailPage from './pages/LotteryDetailPage'
-import WalletPage from './pages/WalletPage'
-import ProfilePage from './pages/ProfilePage'
-import BotPage from './pages/BotPage'
-import MonitoringPage from './pages/MonitoringPage'
-import OrderPage from './pages/OrderPage'
-import NotificationPage from './pages/NotificationPage'
-import LotteryResultPage from './pages/LotteryResultPage'
-import NotFoundPage from './pages/NotFoundPage'
-import InvitePage from './pages/InvitePage'
-import ShowoffPage from './pages/ShowoffPage'
-import ShowoffCreatePage from './pages/ShowoffCreatePage'
-import MarketPage from './pages/MarketPage'
-import MarketCreatePage from './pages/MarketCreatePage'
-import MyTicketsPage from './pages/MyTicketsPage'
-import MyPrizesPage from './pages/MyPrizesPage'
-import SettingsPage from './pages/SettingsPage'
-import ProfileEditPage from './pages/ProfileEditPage'
-import DepositPage from './pages/DepositPage'
-import WithdrawPage from './pages/WithdrawPage'
-import ExchangePage from './pages/ExchangePage'
+import { DevTools } from './components/DevTools'
+
+// 路由级别代码分割 - 懒加载页面组件
+const HomePage = lazy(() => import('./pages/HomePage'))
+const LotteryPage = lazy(() => import('./pages/LotteryPage'))
+const LotteryDetailPage = lazy(() => import('./pages/LotteryDetailPage'))
+const LotteryResultPage = lazy(() => import('./pages/LotteryResultPage'))
+const WalletPage = lazy(() => import('./pages/WalletPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const ProfileEditPage = lazy(() => import('./pages/ProfileEditPage'))
+const BotPage = lazy(() => import('./pages/BotPage'))
+const MonitoringPage = lazy(() => import('./pages/MonitoringPage'))
+const OrderPage = lazy(() => import('./pages/OrderPage'))
+const NotificationPage = lazy(() => import('./pages/NotificationPage'))
+const InvitePage = lazy(() => import('./pages/InvitePage'))
+const ShowoffPage = lazy(() => import('./pages/ShowoffPage'))
+const ShowoffCreatePage = lazy(() => import('./pages/ShowoffCreatePage'))
+const MarketPage = lazy(() => import('./pages/MarketPage'))
+const MarketCreatePage = lazy(() => import('./pages/MarketCreatePage'))
+const MyTicketsPage = lazy(() => import('./pages/MyTicketsPage'))
+const MyPrizesPage = lazy(() => import('./pages/MyPrizesPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const DepositPage = lazy(() => import('./pages/DepositPage'))
+const WithdrawPage = lazy(() => import('./pages/WithdrawPage'))
+const ExchangePage = lazy(() => import('./pages/ExchangePage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
+
+// Loading 组件
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+  </div>
+)
 
 import './App.css'
 
@@ -36,8 +47,10 @@ function App() {
   return (
     <Router>
         <div className="min-h-screen bg-gray-50">
+          <DevTools />
           <Layout>
-            <Routes>
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/lottery" element={<LotteryPage />} />
               <Route path="/lottery/:id" element={<LotteryDetailPage />} />
@@ -63,8 +76,7 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
 
             </Routes>
-            
-            
+            </Suspense>
           </Layout>
           
           <Toaster
