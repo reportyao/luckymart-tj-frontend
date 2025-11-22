@@ -9,6 +9,7 @@ import {
   ArrowLeftIcon,
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
+import { LazyImage } from '../components/LazyImage';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -139,10 +140,12 @@ const MyTicketsPage: React.FC = () => {
         {/* 夺宝信息卡片 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex space-x-4">
-            <img
+            <LazyImage
               src={lottery.image_url}
               alt={lottery.title}
               className="w-24 h-24 rounded-xl object-cover"
+              width={96}
+              height={96}
             />
             <div className="flex-1">
               <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">

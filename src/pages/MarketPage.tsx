@@ -12,6 +12,7 @@ import {
   TicketIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import { LazyImage } from '../components/LazyImage';
 import { formatCurrency } from '../lib/utils';
 import { useSupabase } from '../contexts/SupabaseContext';
 import toast from 'react-hot-toast';
@@ -298,10 +299,12 @@ interface MarketListing {
                 <div className="flex">
                   {/* Image */}
                   <div className="w-32 h-32 flex-shrink-0">
-                    <img
+                    <LazyImage
                       src={listing.lottery_image}
                       alt={listing.lottery_title}
                       className="w-full h-full object-cover"
+                      width={128}
+                      height={128}
                     />
                   </div>
 

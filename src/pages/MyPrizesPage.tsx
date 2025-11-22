@@ -11,6 +11,7 @@ import {
   TicketIcon,
   ClockIcon
 } from '@heroicons/react/24/outline';
+import { LazyImage } from '../components/LazyImage';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -157,10 +158,12 @@ const MyPrizesPage: React.FC = () => {
             className="bg-white rounded-2xl p-6 shadow-sm"
           >
             <div className="flex space-x-4 mb-4">
-              <img
+              <LazyImage
                 src={prize.lottery_image}
                 alt={prize.lottery_title}
                 className="w-20 h-20 rounded-xl object-cover"
+                width={80}
+                height={80}
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">

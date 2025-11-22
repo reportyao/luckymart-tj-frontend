@@ -13,6 +13,7 @@ import {
   PlusIcon,
   TrophyIcon
 } from '@heroicons/react/24/outline';
+import { LazyImage } from '../components/LazyImage';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -205,11 +206,13 @@ const ShowoffPage: React.FC = () => {
                           (showoff.images as string[]).length === 1 ? 'aspect-[4/3]' : 'aspect-square'
                         }`}
                       >
-                        <img
-                          src={image}
-                          alt={`晒单图片${idx + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+	                        <LazyImage
+	                          src={image}
+	                          alt={`晒单图片${idx + 1}`}
+	                          className="w-full h-full object-cover"
+	                          width={200} // 假设图片宽度约为 200px
+	                          height={200}
+	                        />
                       </div>
                     ))}
                   </div>

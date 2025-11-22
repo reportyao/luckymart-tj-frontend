@@ -9,6 +9,7 @@ import {
   ClockIcon,
   BanknotesIcon
 } from '@heroicons/react/24/outline';
+import { LazyImage } from '../components/LazyImage';
 import { formatCurrency, formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -240,10 +241,12 @@ const MarketCreatePage: React.FC = () => {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img
+                  <LazyImage
                     src={ticket.lottery_image}
                     alt={ticket.lottery_title}
                     className="w-16 h-16 object-cover rounded-lg"
+                    width={64}
+                    height={64}
                   />
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900">{ticket.lottery_title}</p>

@@ -9,6 +9,8 @@ import {
   XMarkIcon,
   TrophyIcon
 } from '@heroicons/react/24/outline';
+import imageCompression from 'browser-image-compression';
+import { LazyImage } from '../components/LazyImage';
 import toast from 'react-hot-toast';
 
 interface WinningLottery {
@@ -72,26 +74,54 @@ const ShowoffCreatePage: React.FC = () => {
     fetchWinningLotteries();
   }, [fetchWinningLotteries]);
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files) return;
 
-    if (images.length + files.length > 9) {
+    const newFiles = Array.from(files);
+
+    if (images.length + newFiles.length > 9) {
       toast.error(t('showoff.maxImagesError'));
       return;
     }
 
-    // TODO: 实际上传到服务器
-    // 这里模拟上传
-    Array.from(files).forEach(file => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setImages(prev => [...prev, e.target!.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
+    setIsLoading(true);
+    try {
+      const compressedImages: string[] = [];
+      
+      for (const file of newFiles) {
+        // 1. 压缩图片
+        const compressedFile = await imageCompression(file, {
+          maxSizeMB: 1, // 最大文件大小 1MB
+          maxWidthOrHeight: 1920, // 最大分辨率 1920px
+          useWebWorker: true,
+          fileType: 'image/webp', // 转换为 WebP 格式
+        });
+
+        // 2. 将压缩后的文件转换为 Data URL (用于预览)
+        const reader = new FileReader();
+        const dataUrl = await new Promise<string>((resolve) => {
+          reader.onload = (e) => resolve(e.target?.result as string);
+          reader.readAsDataURL(compressedFile);
+        });
+        
+        compressedImages.push(dataUrl);
+        
+        // TODO: 在实际项目中，这里应该将 compressedFile 上传到 Supabase Storage
+        // const { data: uploadData, error: uploadError } = await supabase.storage.from('showoff-images').upload(...)
+      }
+
+      setImages(prev => [...prev, ...compressedImages]);
+      toast.success(t('showoff.imagesCompressedAndReady'));
+
+    } catch (error) {
+      console.error('Image compression/upload error:', error);
+      toast.error(t('showoff.imageUploadFailed'));
+    } finally {
+      setIsLoading(false);
+      // 清空文件输入框，以便再次选择相同文件
+      e.target.value = '';
+    }
   };
 
   const removeImage = (index: number) => {
@@ -185,10 +215,12 @@ const ShowoffCreatePage: React.FC = () => {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <img
+                  <LazyImage
                     src={lottery.prize_image}
                     alt={lottery.prize_name}
                     className="w-16 h-16 object-cover rounded-lg"
+                    width={64}
+                    height={64}
                   />
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900">{lottery.prize_name}</p>
@@ -234,11 +266,13 @@ const ShowoffCreatePage: React.FC = () => {
           <div className="grid grid-cols-3 gap-3">
             {images.map((image, index) => (
               <div key={index} className="relative aspect-square">
-                <img
-                  src={image}
-                  alt={`上传图片${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
-                />
+	                <LazyImage
+	                  src={image}
+	                  alt={`上传图片${index + 1}`}
+	                  className="w-full h-full object-cover rounded-lg"
+	                  width={100} // 假设网格项宽度约为 100px
+	                  height={100}
+	                />
                 <button
                   onClick={() => removeImage(index)}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -317,7 +351,7 @@ const ShowoffCreatePage: React.FC = () => {
                       images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'
                     }`}
                   >
-                    <img src={image} alt={`预览${idx + 1}`} className="w-full h-full object-cover" />
+	                    <LazyImage src={image} alt={`预览${idx + 1}`} className="w-full h-full object-cover" />
                     {idx === 3 && images.length > 4 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span className="text-white text-xl font-bold">+{images.length - 4}</span>
