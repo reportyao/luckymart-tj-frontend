@@ -9,7 +9,7 @@ import {
   XMarkIcon,
   TrophyIcon
 } from '@heroicons/react/24/outline';
-import imageCompression from 'browser-image-compression';
+import { uploadImage } from '@/lib/uploadImage';
 import { LazyImage } from '../components/LazyImage';
 import toast from 'react-hot-toast';
 
@@ -87,32 +87,16 @@ const ShowoffCreatePage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const compressedImages: string[] = [];
+      const uploadedUrls: string[] = [];
       
       for (const file of newFiles) {
-        // 1. 压缩图片
-        const compressedFile = await imageCompression(file, {
-          maxSizeMB: 1, // 最大文件大小 1MB
-          maxWidthOrHeight: 1920, // 最大分辨率 1920px
-          useWebWorker: true,
-          fileType: 'image/webp', // 转换为 WebP 格式
-        });
-
-        // 2. 将压缩后的文件转换为 Data URL (用于预览)
-        const reader = new FileReader();
-        const dataUrl = await new Promise<string>((resolve) => {
-          reader.onload = (e) => resolve(e.target?.result as string);
-          reader.readAsDataURL(compressedFile);
-        });
-        
-        compressedImages.push(dataUrl);
-        
-        // TODO: 在实际项目中，这里应该将 compressedFile 上传到 Supabase Storage
-        // const { data: uploadData, error: uploadError } = await supabase.storage.from('showoff-images').upload(...)
+        // 1. 上传图片 (uploadImage 内部已包含压缩和 WebP 转换)
+        const publicUrl = await uploadImage(file, true, 'public', 'showoff-images');
+        uploadedUrls.push(publicUrl);
       }
 
-      setImages(prev => [...prev, ...compressedImages]);
-      toast.success(t('showoff.imagesCompressedAndReady'));
+      setImages(prev => [...prev, ...uploadedUrls]);
+      toast.success(t('showoff.imagesUploadedAndOptimized'));
 
     } catch (error) {
       console.error('Image compression/upload error:', error);
@@ -151,8 +135,19 @@ const ShowoffCreatePage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // TODO: 调用API提交晒单
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // 实际提交晒单逻辑
+      // 假设有一个提交晒单的 API 或 Supabase 函数
+      // const { data, error } = await supabase.from('showoffs').insert({
+      //   user_id: user.id,
+      //   lottery_result_id: selectedLottery,
+      //   content: content,
+      //   image_urls: images, // 使用已上传的图片 URL
+      //   status: 'PENDING',
+      // });
+
+      // if (error) throw error;
+
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟 API 调用
 
       toast.success(t('showoff.showoffSuccessPending'));
       navigate('/showoff');
