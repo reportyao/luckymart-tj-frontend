@@ -356,16 +356,18 @@ export const createMockTelegramWebApp = (): MockTelegramWebApp => {
 
 // 初始化 Mock Telegram WebApp
 export const initMockTelegramWebApp = (): void => {
-  if (typeof window !== 'undefined' && !window.Telegram) {
+  if (typeof window !== 'undefined') {
     console.log('[Mock] Initializing Mock Telegram WebApp');
     
     const mockWebApp = createMockTelegramWebApp();
     
+    // 强制覆盖 Telegram 对象，即使它已经存在
     (window as any).Telegram = {
       WebApp: mockWebApp
     };
     
     console.log('[Mock] Mock Telegram WebApp initialized with user:', mockWebApp.initDataUnsafe.user);
+    console.log('[Mock] initData:', mockWebApp.initData);
   }
 };
 
