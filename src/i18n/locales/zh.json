@@ -298,6 +298,8 @@
     "anonymousUser": "匿名用户",
     "levelXFriend": "L{{level}} 好友",
     "contributedCommission": "贡献佣金",
+    "myTeam": "我的团队",
+    "viewTeamInfo": "查看团队信息",
     "registrationTime": "注册时间",
     "totalConsumption": "总消费",
     "shareSuccess": "分享事件已记录",
@@ -320,7 +322,9 @@
     "invitedUsers": "已邀请用户",
     "totalRewards": "总奖励",
     "copyReferralCode": "复制推荐码",
-    "shareReferralLink": "分享推荐链接"
+    "shareReferralLink": "分享推荐链接",
+    "notifications": "我的消息",
+    "viewNotifications": "查看消息通知"
   },
   "auth": {
     "welcome": "欢迎来到 LuckyMart",
@@ -348,6 +352,7 @@
   },
   "showoff": {
     "showoffGallery": "晒单广场",
+    "viewMyShowoffs": "查看我的晒单",
     "myShowoffs": "我的晒单",
     "createShowoff": "发布晒单",
     "uploadImages": "上传图片",
@@ -379,8 +384,17 @@
     "noShowoffsYet": "暂无晒单",
     "recentShowoffs": "最近晒单"
   },
+  "prize": {
+    "prizeManagement": "中奖管理",
+    "viewPrizes": "查看中奖记录",
+    "myPrizes": "我的奖品",
+    "prizeDetails": "奖品详情"
+  },
   "market": {
     "resaleMarket": "转售市场",
+    "buyResaleItems": "购买转售商品",
+    "resaleRecords": "转售记录",
+    "viewResaleHistory": "查看转售历史",
     "myListings": "我的转售",
     "createListing": "发布转售",
     "selectLottery": "选择夺宝",

@@ -59,6 +59,9 @@ function App() {
               <Route path="/market/create" element={<MarketCreatePage />} />
               <Route path="/my-tickets" element={<MyTicketsPage />} />
               <Route path="/my-prizes" element={<MyPrizesPage />} />
+              <Route path="/prizes" element={<MyPrizesPage />} />
+              <Route path="/showoff/my" element={<ShowoffPage />} />
+              <Route path="/market/my-resales" element={<MarketPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/debug" element={<DebugPage />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />

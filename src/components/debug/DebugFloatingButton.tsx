@@ -10,6 +10,16 @@ interface LogEntry {
   data?: any
 }
 
+interface NetworkRequest {
+  time: string
+  method: string
+  url: string
+  status?: number
+  statusText?: string
+  error?: string
+  duration?: number
+}
+
 interface DebugInfo {
   // 页面信息
   page: {
@@ -22,6 +32,8 @@ interface DebugInfo {
     id: string | null
     telegramId: number | null
     username: string | null
+    balance?: number
+    lucky_coins?: number
   }
   // 系统信息
   system: {
@@ -45,27 +57,30 @@ interface DebugInfo {
   }
   // 最近日志
   logs: LogEntry[]
+  // 网络请求记录
+  requests: NetworkRequest[]
 }
 
 export const DebugFloatingButton: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
+  const [requests, setRequests] = useState<NetworkRequest[]>([])
   const [isVisible, setIsVisible] = useState(false)
   const { user, telegramUser } = useUser()
   const location = useLocation()
 
-  // 监听自定义事件：点击“我的”5次触发
+  // 监听自定义事件：点击"我的"5次触发
   useEffect(() => {
     const handleShowDebugPanel = () => {
       setIsVisible(true)
       setIsOpen(true)
     }
 
-    window.addEventListener('showDebugPanel', handleShowDebugPanel)
+    window.addEventListener('showDebugPanel', handleShowDebugPanel as EventListener)
 
     return () => {
-      window.removeEventListener('showDebugPanel', handleShowDebugPanel)
+      window.removeEventListener('showDebugPanel', handleShowDebugPanel as EventListener)
     }
   }, [])
 
@@ -152,6 +167,76 @@ export const DebugFloatingButton: React.FC = () => {
     }
   }, [])
 
+  // 拦截 fetch 请求
+  useEffect(() => {
+    const originalFetch = window.fetch
+
+    window.fetch = async (...args) => {
+      const startTime = Date.now()
+      const [url, options] = args
+      const method = options?.method || 'GET'
+      const urlString = typeof url === 'string' ? url : url.toString()
+
+      try {
+        const response = await originalFetch(...args)
+        const duration = Date.now() - startTime
+
+        // 克隆响应以便读取
+        const clonedResponse = response.clone()
+        let errorDetail = ''
+
+        // 如果是错误响应，尝试读取错误信息
+        if (!response.ok) {
+          try {
+            const contentType = response.headers.get('content-type')
+            if (contentType?.includes('application/json')) {
+              const errorData = await clonedResponse.json()
+              errorDetail = JSON.stringify(errorData, null, 2)
+            } else {
+              errorDetail = await clonedResponse.text()
+            }
+          } catch (e) {
+            errorDetail = '无法读取错误详情'
+          }
+        }
+
+        setRequests(prev => [
+          {
+            time: new Date().toLocaleTimeString('zh-CN'),
+            method,
+            url: urlString,
+            status: response.status,
+            statusText: response.statusText,
+            error: errorDetail || undefined,
+            duration
+          },
+          ...prev.slice(0, 19) // 最多保留 20 条
+        ])
+
+        return response
+      } catch (error: any) {
+        const duration = Date.now() - startTime
+
+        setRequests(prev => [
+          {
+            time: new Date().toLocaleTimeString('zh-CN'),
+            method,
+            url: urlString,
+            error: error.message || String(error),
+            duration
+          },
+          ...prev.slice(0, 19)
+        ])
+
+        throw error
+      }
+    }
+
+    return () => {
+      window.fetch = originalFetch
+    }
+  }, [])
+
   // 收集调试信息
   const getDebugInfo = (): DebugInfo => {
     const nav = navigator as any
@@ -165,7 +250,9 @@ export const DebugFloatingButton: React.FC = () => {
       user: {
         id: user?.id || null,
         telegramId: telegramUser?.id || null,
-        username: telegramUser?.username || user?.telegram_username || null
+        username: telegramUser?.username || user?.telegram_username || null,
+        balance: (user as any)?.balance || 0,
+        lucky_coins: (user as any)?.lucky_coins || 0
       },
       system: {
         userAgent: navigator.userAgent,
@@ -184,7 +271,8 @@ export const DebugFloatingButton: React.FC = () => {
         tailwindVersion: '4.0',
         colorMode: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
       },
-      logs: logs.slice(0, 10)
+      logs: logs.slice(0, 10),
+      requests: requests.slice(0, 10)
     }
   }
 
@@ -203,6 +291,7 @@ export const DebugFloatingButton: React.FC = () => {
 
   const clearLogs = () => {
     setLogs([])
+    setRequests([])
   }
 
   if (!isVisible) return null
@@ -217,7 +306,7 @@ export const DebugFloatingButton: React.FC = () => {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -100, opacity: 0 }}
             className="fixed top-0 left-0 right-0 z-[10000] bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
-            style={{ maxHeight: isMinimized ? '48px' : '60vh' }}
+            style={{ maxHeight: isMinimized ? '48px' : '70vh' }}
           >
             {/* 头部 */}
             <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white">
@@ -240,6 +329,12 @@ export const DebugFloatingButton: React.FC = () => {
                   复制
                 </button>
                 <button
+                  onClick={clearLogs}
+                  className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
+                >
+                  清空
+                </button>
+                <button
                   onClick={() => setIsOpen(false)}
                   className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
                 >
@@ -250,16 +345,16 @@ export const DebugFloatingButton: React.FC = () => {
 
             {/* 内容区域 */}
             {!isMinimized && (
-              <div className="overflow-y-auto" style={{ maxHeight: 'calc(60vh - 48px)' }}>
+              <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 48px)' }}>
                 {/* 快速信息栏 */}
                 <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 border-b border-gray-200 text-xs">
                   <div>
                     <div className="text-gray-500">用户ID</div>
-                    <div className="font-mono text-gray-900 truncate">{user?.id || '未登录'}</div>
+                    <div className="font-mono text-gray-900 truncate text-[10px]">{user?.id || '未登录'}</div>
                   </div>
                   <div>
-                    <div className="text-gray-500">Telegram ID</div>
-                    <div className="font-mono text-gray-900">{telegramUser?.id || 'N/A'}</div>
+                    <div className="text-gray-500">余额</div>
+                    <div className="font-mono text-gray-900">{(user as any)?.balance || 0} TJS</div>
                   </div>
                   <div>
                     <div className="text-gray-500">视口</div>
@@ -269,16 +364,83 @@ export const DebugFloatingButton: React.FC = () => {
 
                 {/* 详细信息区域 */}
                 <div className="p-3 space-y-3">
-                  {/* 页面信息 */}
-                  <div className="bg-blue-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-blue-900 mb-1 flex items-center gap-1">
-                      <span>📄</span>
-                      <span>页面信息</span>
+                  {/* 网络请求记录 */}
+                  <div className="bg-orange-50 rounded-lg p-2">
+                    <div className="text-xs font-semibold text-orange-900 mb-1 flex items-center gap-1 justify-between">
+                      <div className="flex items-center gap-1">
+                        <span>🌐</span>
+                        <span>网络请求 ({requests.length})</span>
+                      </div>
+                      <span className="text-[10px] opacity-75">最近20条</span>
                     </div>
-                    <div className="text-xs space-y-1 text-blue-800">
-                      <div><span className="text-blue-600">路径:</span> {location.pathname}</div>
-                      <div><span className="text-blue-600">标题:</span> {document.title}</div>
-                      <div><span className="text-blue-600">时间:</span> {new Date().toLocaleString('zh-CN')}</div>
+                    <div className="text-xs space-y-2 max-h-60 overflow-y-auto">
+                      {requests.length === 0 ? (
+                        <div className="text-orange-600 text-center py-2">暂无请求记录</div>
+                      ) : (
+                        requests.map((req, idx) => (
+                          <div key={idx} className="bg-white rounded p-2 border border-orange-200">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`font-semibold ${
+                                req.status && req.status >= 200 && req.status < 300 
+                                  ? 'text-green-600' 
+                                  : 'text-red-600'
+                              }`}>
+                                {req.method} {req.status || 'FAILED'}
+                              </span>
+                              <span className="text-gray-500 text-[10px]">{req.time}</span>
+                            </div>
+                            <div className="text-[10px] text-gray-700 break-all mb-1">
+                              {req.url}
+                            </div>
+                            {req.statusText && (
+                              <div className="text-[10px] text-gray-600">
+                                状态: {req.statusText}
+                              </div>
+                            )}
+                            {req.duration && (
+                              <div className="text-[10px] text-gray-600">
+                                耗时: {req.duration}ms
+                              </div>
+                            )}
+                            {req.error && (
+                              <div className="text-[10px] text-red-600 mt-1 bg-red-50 p-1 rounded">
+                                <div className="font-semibold">错误详情:</div>
+                                <pre className="whitespace-pre-wrap mt-1">{req.error}</pre>
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 控制台日志 */}
+                  <div className="bg-gray-50 rounded-lg p-2">
+                    <div className="text-xs font-semibold text-gray-900 mb-1 flex items-center gap-1 justify-between">
+                      <div className="flex items-center gap-1">
+                        <span>📝</span>
+                        <span>控制台日志 ({logs.length})</span>
+                      </div>
+                      <span className="text-[10px] opacity-75">最近50条</span>
+                    </div>
+                    <div className="text-xs space-y-1 max-h-60 overflow-y-auto">
+                      {logs.length === 0 ? (
+                        <div className="text-gray-600 text-center py-2">暂无日志</div>
+                      ) : (
+                        logs.map((log, idx) => (
+                          <div key={idx} className={`p-1 rounded ${
+                            log.level === 'error' ? 'bg-red-50 text-red-800' :
+                            log.level === 'warn' ? 'bg-yellow-50 text-yellow-800' :
+                            'bg-blue-50 text-blue-800'
+                          }`}>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] opacity-75">{log.time}</span>
+                              <span className="font-semibold text-[10px]">[{log.level.toUpperCase()}]</span>
+                            </div>
+                            <pre className="text-[10px] whitespace-pre-wrap mt-1">{log.message}</pre>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
@@ -289,7 +451,7 @@ export const DebugFloatingButton: React.FC = () => {
                       <span>用户信息</span>
                     </div>
                     <div className="text-xs space-y-1 text-green-800">
-                      <div><span className="text-green-600">用户ID:</span> {user?.id || '未登录'}</div>
+                      <div><span className="text-green-600">用户ID:</span> <span className="font-mono text-[10px]">{user?.id || '未登录'}</span></div>
                       <div><span className="text-green-600">Telegram ID:</span> {telegramUser?.id || 'N/A'}</div>
                       <div><span className="text-green-600">用户名:</span> {telegramUser?.username || user?.telegram_username || 'N/A'}</div>
                       <div><span className="text-green-600">余额:</span> {(user as any)?.balance || 0} TJS</div>
@@ -308,72 +470,7 @@ export const DebugFloatingButton: React.FC = () => {
                       <div><span className="text-purple-600">语言:</span> {navigator.language}</div>
                       <div><span className="text-purple-600">在线:</span> {navigator.onLine ? '✅' : '❌'}</div>
                       <div><span className="text-purple-600">网络:</span> {(navigator as any).connection?.effectiveType || 'unknown'}</div>
-                      <div className="text-purple-600">UA:</div>
-                      <div className="font-mono text-[10px] break-all">{navigator.userAgent}</div>
                     </div>
-                  </div>
-
-                  {/* 样式信息 */}
-                  <div className="bg-yellow-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-yellow-900 mb-1 flex items-center gap-1">
-                      <span>🎨</span>
-                      <span>样式信息</span>
-                    </div>
-                    <div className="text-xs space-y-1 text-yellow-800">
-                      <div><span className="text-yellow-600">Tailwind:</span> v4.0</div>
-                      <div><span className="text-yellow-600">色彩模式:</span> {window.matchMedia('(prefers-color-scheme: dark)').matches ? '深色' : '浅色'}</div>
-                      <div><span className="text-yellow-600">像素比:</span> {window.devicePixelRatio}</div>
-                    </div>
-                  </div>
-
-                  {/* 最近日志 */}
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-gray-900 mb-1 flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <span>📝</span>
-                        <span>最近日志 ({logs.length})</span>
-                      </div>
-                      <button
-                        onClick={clearLogs}
-                        className="px-2 py-0.5 text-[10px] bg-gray-200 hover:bg-gray-300 rounded transition-colors"
-                      >
-                        清空
-                      </button>
-                    </div>
-                    {logs.length === 0 ? (
-                      <div className="text-xs text-gray-500 text-center py-2">暂无日志</div>
-                    ) : (
-                      <div className="space-y-1 max-h-40 overflow-y-auto">
-                        {logs.slice(0, 5).map((log, index) => (
-                          <div
-                            key={index}
-                            className={`p-1.5 rounded text-[10px] ${
-                              log.level === 'error'
-                                ? 'bg-red-100 text-red-900'
-                                : log.level === 'warn'
-                                ? 'bg-yellow-100 text-yellow-900'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
-                          >
-                            <div className="flex items-center gap-1 mb-0.5">
-                              <span className="font-mono text-gray-500">{log.time}</span>
-                              <span className={`px-1 rounded text-[9px] font-semibold ${
-                                log.level === 'error'
-                                  ? 'bg-red-200 text-red-800'
-                                  : log.level === 'warn'
-                                  ? 'bg-yellow-200 text-yellow-800'
-                                  : 'bg-blue-200 text-blue-800'
-                              }`}>
-                                {log.level.toUpperCase()}
-                              </span>
-                            </div>
-                            <pre className="whitespace-pre-wrap break-words font-mono">
-                              {log.message.length > 100 ? log.message.slice(0, 100) + '...' : log.message}
-                            </pre>
-                          </div>
-                        ))}
-                      </div>
-                    )}
                   </div>
                 </div>
               </div>
@@ -381,19 +478,6 @@ export const DebugFloatingButton: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* 小型浮动按钮（当面板关闭时显示） */}
-      {!isOpen && (
-        <motion.button
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          onClick={() => setIsOpen(true)}
-          className="fixed top-4 right-4 z-[9999] w-10 h-10 bg-red-500 text-white rounded-full shadow-lg flex items-center justify-center text-lg"
-          style={{ touchAction: 'none' }}
-        >
-          🐛
-        </motion.button>
-      )}
     </>
   )
 }

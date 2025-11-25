@@ -5,12 +5,14 @@ import { useTranslation } from 'react-i18next'
 import { 
   HomeIcon, 
   SparklesIcon, 
+  PhotoIcon,
   CreditCardIcon, 
   UserIcon 
 } from '@heroicons/react/24/outline'
 import {
   HomeIcon as HomeIconSolid,
   SparklesIcon as SparklesIconSolid,
+  PhotoIcon as PhotoIconSolid,
   CreditCardIcon as CreditCardIconSolid,
   UserIcon as UserIconSolid
 } from '@heroicons/react/24/solid'
@@ -37,6 +39,12 @@ export const BottomNavigation: React.FC = () => {
       activeIcon: SparklesIconSolid,
     },
     {
+      name: t('showoff.showoffGallery'),
+      path: '/showoff',
+      icon: PhotoIcon,
+      activeIcon: PhotoIconSolid,
+    },
+    {
       name: t('nav.wallet'),
       path: '/wallet',
       icon: CreditCardIcon,
@@ -56,7 +64,7 @@ export const BottomNavigation: React.FC = () => {
       animate={{ y: 0 }}
       className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-50"
     >
-      <div className="max-w-md mx-auto px-4 py-2">
+      <div className="max-w-md mx-auto px-2 py-2">
         <div className="flex items-center justify-around">
           {navigation.map((item) => {
             const isActive = location.pathname === item.path
@@ -96,35 +104,14 @@ export const BottomNavigation: React.FC = () => {
                 }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
-                  "flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200",
+                  "flex flex-col items-center py-2 px-2 rounded-xl transition-all duration-200",
                   isActive 
-                    ? "text-blue-600 bg-blue-50" 
-                    : "text-gray-600 hover:text-gray-900"
+                    ? "text-blue-600" 
+                    : "text-gray-500 hover:text-gray-700"
                 )}
               >
-                <div className="relative">
-                  <Icon className="w-6 h-6" />
-                  
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute -inset-1 bg-blue-100 rounded-lg -z-10"
-                      initial={false}
-                      transition={{
-                        type: "spring",
-                        stiffness: 500,
-                        damping: 30
-                      }}
-                    />
-                  )}
-                </div>
-                
-                <span className={cn(
-                  "text-xs font-medium mt-1",
-                  isActive ? "text-blue-600" : "text-gray-600"
-                )}>
-                  {item.name}
-                </span>
+                <Icon className="w-6 h-6" />
+                <span className="text-xs mt-1 font-medium">{item.name}</span>
               </motion.button>
             )
           })}

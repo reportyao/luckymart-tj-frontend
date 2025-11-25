@@ -6,28 +6,32 @@ import { useUser } from '../contexts/UserContext'
 import { 
   UserCircleIcon,
   CogIcon,
-  QuestionMarkCircleIcon,
-  ShieldCheckIcon,
+  ShoppingBagIcon,
   ClipboardDocumentIcon,
   ShareIcon,
   ChevronRightIcon,
   CheckCircleIcon,
   XMarkIcon,
-  ChartBarIcon
+  PhotoIcon,
+  BellIcon,
+  UsersIcon,
+  TrophyIcon,
+  LanguageIcon
 } from '@heroicons/react/24/outline'
-import { ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline'
-import { formatDateTime, copyToClipboard, shareToTelegram } from '../lib/utils'
+import { copyToClipboard, shareToTelegram } from '../lib/utils'
 import toast from 'react-hot-toast'
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation()
-  const { user, telegramUser, logout } = useUser()
+  const { user, logout } = useUser()
   const navigate = useNavigate()
 
-  const handleCopyReferralCode = async () => {
+  const handleCopyReferralLink = async () => {
     if (user?.invite_code) {
-	      const success = await copyToClipboard(user.invite_code)
-	      if (success) {
+      // 复制完整的邀请链接
+      const inviteLink = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
+      const success = await copyToClipboard(inviteLink)
+      if (success) {
         toast.success(t('profile.copyReferralCode'))
       } else {
         toast.error(t('error.unknownError'))
@@ -36,13 +40,39 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleShareReferral = () => {
-	    if (user?.invite_code) {
-	      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
-	      const shareUrl = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
-	      shareToTelegram(shareText, shareUrl)
-	    }
-	  }
+    if (user?.invite_code) {
+      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
+      const shareUrl = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
+      shareToTelegram(shareText, shareUrl)
+    }
+  }
 
+  // 三个功能卡片
+  const featureCards = [
+    {
+      icon: ShoppingBagIcon,
+      title: t('market.resaleMarket') || '转售市场',
+      subtitle: t('market.buyResaleItems') || '购买转售商品',
+      color: 'from-blue-500 to-blue-600',
+      action: () => navigate('/market'),
+    },
+    {
+      icon: UsersIcon,
+      title: t('invite.myTeam') || '我的团队',
+      subtitle: t('invite.viewTeamInfo') || '查看团队信息',
+      color: 'from-purple-500 to-purple-600',
+      action: () => navigate('/invite'),
+    },
+    {
+      icon: TrophyIcon,
+      title: t('prize.prizeManagement') || '中奖管理',
+      subtitle: t('prize.viewPrizes') || '查看中奖记录',
+      color: 'from-orange-500 to-orange-600',
+      action: () => navigate('/prizes'),
+    },
+  ]
+
+  // 精简后的菜单项
   const menuItems = [
     {
       icon: UserCircleIcon,
@@ -51,35 +81,28 @@ const ProfilePage: React.FC = () => {
       action: () => navigate('/profile/edit'),
     },
     {
-      icon: ChatBubbleLeftRightIcon,
-      title: t('nav.bot'),
-      subtitle: 'Telegram Bot',
-      action: () => navigate('/bot'),
-    },
-    // 系统监控入口（所有用户可见）
-    {
-      icon: ChartBarIcon,
-      title: t('nav.monitoring'),
-      subtitle: 'System Status',
-      action: () => navigate('/monitoring'),
-    },
-    {
-      icon: ShieldCheckIcon,
-      title: t('wallet.security'),
-      subtitle: t('wallet.paymentPassword'),
-      action: () => toast(t('common.loading')),
-    },
-    {
-      icon: CogIcon,
-      title: t('profile.settings'),
-      subtitle: t('profile.language'),
+      icon: LanguageIcon,
+      title: t('profile.language'),
+      subtitle: t('profile.settings'),
       action: () => navigate('/settings'),
     },
     {
-      icon: QuestionMarkCircleIcon,
-      title: t('common.help') || 'Help',
-      subtitle: 'FAQ',
-      action: () => toast(t('common.loading')),
+      icon: BellIcon,
+      title: t('nav.notifications') || t('profile.notifications') || '我的消息',
+      subtitle: t('profile.viewNotifications') || '查看消息通知',
+      action: () => navigate('/notifications'),
+    },
+    {
+      icon: ShoppingBagIcon,
+      title: t('market.resaleRecords') || '转售记录',
+      subtitle: t('market.viewResaleHistory') || '查看转售历史',
+      action: () => navigate('/market/my-resales'),
+    },
+    {
+      icon: PhotoIcon,
+      title: t('showoff.myShowoffs') || '晒单记录',
+      subtitle: t('showoff.viewMyShowoffs') || '查看我的晒单',
+      action: () => navigate('/showoff/my'),
     },
   ]
 
@@ -92,17 +115,8 @@ const ProfilePage: React.FC = () => {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ACTIVE': return 'text-green-600 bg-green-50'
-      case 'SUSPENDED': return 'text-orange-600 bg-orange-50'
-      case 'BANNED': return 'text-red-600 bg-red-50'
-      default: return 'text-gray-600 bg-gray-50'
-    }
-  }
-
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-gray-50 min-h-screen">
       {/* 用户信息卡片 */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -112,16 +126,16 @@ const ProfilePage: React.FC = () => {
         <div className="flex items-center space-x-4">
           {/* 头像 */}
           <div className="relative">
-            {telegramUser?.photo_url ? (
+            {user?.avatar_url ? (
               <img 
-                src={telegramUser.photo_url} 
+                src={user.avatar_url} 
                 alt="Avatar"
                 className="w-16 h-16 rounded-full border-4 border-white/20"
               />
             ) : (
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold">
-                  {user?.telegram_username?.[0] || 'U'}
+                  {user?.telegram_username?.[0] || user?.first_name?.[0] || 'U'}
                 </span>
               </div>
             )}
@@ -136,36 +150,12 @@ const ProfilePage: React.FC = () => {
           {/* 用户信息 */}
           <div className="flex-1">
             <h2 className="text-xl font-bold">
-              {user?.telegram_username}
+              {user?.first_name || user?.telegram_username || 'User'}
             </h2>
-            <p className="text-white/80 text-sm">
-	            @{user?.telegram_username || user?.telegram_username || 'username'}
-	            </p>
             <div className="flex items-center space-x-2 mt-2">
-              {/* <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-	                user ? getStatusColor(user.first_deposit_bonus_status) : 'text-gray-600 bg-gray-50'
-	              }`}>
-	                {user?.first_deposit_bonus_status === 'ACTIVE' ? t('invite.active') : user?.first_deposit_bonus_status}
-	              </span> */}
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
-	                {user ? getKycLevelText('BASIC') : t('wallet.notSet')}
-	              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* 用户ID和加入时间 */}
-        <div className="mt-4 pt-4 border-t border-white/20">
-          <div className="flex justify-between text-sm">
-            <div>
-              <p className="text-white/60">{t('invite.telegram_username')}</p>
-              <p className="font-medium">{user?.invite_code}</p>
-            </div>
-            <div className="text-right">
-              <p className="text-white/60">{t('invite.joinTime')}</p>
-              <p className="font-medium">
-                {user?.updated_at ? formatDateTime(user.updated_at) : '--'}
-              </p>
+                {user ? getKycLevelText('BASIC') : t('wallet.notSet')}
+              </span>
             </div>
           </div>
         </div>
@@ -184,16 +174,16 @@ const ProfilePage: React.FC = () => {
         </div>
         
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
-	          <p className="text-2xl font-bold text-center text-gray-900 font-mono">
-	            {user?.invite_code || '------'}
-	          </p>
+          <p className="text-2xl font-bold text-center text-gray-900 font-mono">
+            {user?.invite_code || '------'}
+          </p>
         </div>
 
         <div className="flex space-x-2">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
-            onClick={handleCopyReferralCode}
+            onClick={handleCopyReferralLink}
             className="flex-1 bg-blue-50 text-blue-600 py-2 px-4 rounded-lg font-medium flex items-center justify-center space-x-1"
           >
             <ClipboardDocumentIcon className="w-4 h-4" />
@@ -212,6 +202,29 @@ const ProfilePage: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* 三个功能卡片 */}
+      <div className="mx-4 mt-6">
+        <div className="grid grid-cols-3 gap-3">
+          {featureCards.map((card, index) => (
+            <motion.button
+              key={index}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 + index * 0.1 }}
+              onClick={card.action}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all"
+            >
+              <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${card.color} flex items-center justify-center mx-auto mb-2`}>
+                <card.icon className="w-6 h-6 text-white" />
+              </div>
+              <p className="text-xs font-semibold text-gray-900 text-center">{card.title}</p>
+            </motion.button>
+          ))}
+        </div>
+      </div>
+
       {/* 菜单列表 */}
       <div className="mx-4 mt-6">
         <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
@@ -220,9 +233,9 @@ const ProfilePage: React.FC = () => {
               key={index}
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 + index * 0.05 }}
+              transition={{ delay: 0.4 + index * 0.05 }}
               onClick={item.action}
-              className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
+              className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
             >
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -240,7 +253,7 @@ const ProfilePage: React.FC = () => {
       </div>
 
       {/* 退出登录 */}
-      <div className="mx-4 mt-6">
+      <div className="mx-4 mt-6 mb-6">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
@@ -250,16 +263,6 @@ const ProfilePage: React.FC = () => {
           <XMarkIcon className="w-5 h-5" />
           <span>{t('profile.logout')}</span>
         </motion.button>
-      </div>
-
-      {/* 版本信息 */}
-      <div className="text-center mt-8 px-4">
-        <p className="text-xs text-gray-400">
-          LuckyMart v1.0.0
-        </p>
-        <p className="text-xs text-gray-400 mt-1">
-          © 2024 LuckyMart. All rights reserved.
-        </p>
       </div>
     </div>
   )
