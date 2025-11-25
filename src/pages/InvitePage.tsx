@@ -32,7 +32,13 @@ const InvitePage: React.FC = () => {
   const fetchInviteData = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (!user) return;
+      if (!user) {
+        console.log('[InvitePage] User not logged in, skipping data fetch');
+        setStats(null);
+        setInvitedUsers([]);
+        setIsLoading(false);
+        return;
+      }
 
       // 使用抽象服务层获取数据
       const statsData = await referralService.getInviteStats();

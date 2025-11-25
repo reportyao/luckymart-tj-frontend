@@ -97,8 +97,17 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [authService, fetchWallets]);
 
   const authenticate = useCallback(async () => {
+    console.log('[Auth] Starting authentication...');
+    console.log('[Auth] WebApp.initData:', WebApp.initData ? `${WebApp.initData.substring(0, 50)}...` : 'null');
+    console.log('[Auth] WebApp.initDataUnsafe:', WebApp.initDataUnsafe);
+    
     if (!WebApp.initData) {
-      console.warn('Telegram initData is not available for authentication.');
+      console.error('[Auth] Telegram initData is not available');
+      console.error('[Auth] This usually means:');
+      console.error('[Auth] 1. Not running in Telegram environment');
+      console.error('[Auth] 2. Telegram SDK not loaded properly');
+      console.error('[Auth] 3. Mini App not configured correctly');
+      toast.error('无法连接到 Telegram，请确保在 Telegram 中打开');
       return;
     }
     try {
