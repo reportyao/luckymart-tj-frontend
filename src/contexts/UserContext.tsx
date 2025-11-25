@@ -107,6 +107,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     };
   }, [checkSession, supabase]);
 
+  // 自动认证：如果有 initData 但没有用户，尝试自动登录
+  useEffect(() => {
+    const autoAuthenticate = async () => {
+      // 只在有 initData 且没有当前用户时执行
+      if (WebApp.initData && !user && !isLoading) {
+        console.log('[Auto Auth] Attempting automatic authentication...');
+        await authenticate();
+      }
+    };
+
+    autoAuthenticate();
+  }, [user, isLoading, authenticate]);
+
   const authenticate = useCallback(async () => {
     if (!WebApp.initData) {
       console.warn('Telegram initData is not available for authentication.');
