@@ -38,7 +38,7 @@ const ProfilePage: React.FC = () => {
   const handleShareReferral = () => {
 	    if (user?.invite_code) {
 	      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
-	      const shareUrl = `https://t.me/your_bot_username?start=ref_${user.invite_code}`
+	      const shareUrl = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
 	      shareToTelegram(shareText, shareUrl)
 	    }
 	  }
