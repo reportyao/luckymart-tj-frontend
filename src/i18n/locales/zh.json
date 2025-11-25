@@ -190,6 +190,8 @@
     "pleaseCompleteIdentityInfo": "请填写完整的身份信息",
     "withdrawRequestFailed": "提现申请失败",
     "withdrawRequestSubmitted": "提现申请已提交",
+    "pleaseUploadProof": "请上传充值凭证",
+    "imageUploadFailed": "图片上传失败",
     "luckyCoin": "幸运币",
     "exchangeRules": "兑换规则",
     "instantExchange": "即时兑换",

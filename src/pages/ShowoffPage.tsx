@@ -55,9 +55,9 @@ const ShowoffPage: React.FC = () => {
     try {
       const isLiked = showoffs.find(s => s.id === showoffId)?.is_liked;
       if (isLiked) {
-        await showoffService.unlikeShowoff(showoffId);
+        await showoffService.unlikeShowoff(showoffId, user.id);
       } else {
-        await showoffService.likeShowoff(showoffId);
+        await showoffService.likeShowoff(showoffId, user.id);
       }
       // 乐观更新
       setShowoffs(prev =>

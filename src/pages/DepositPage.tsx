@@ -114,8 +114,8 @@ export default function DepositPage() {
       setSubmitting(true)
 
       // 检查用户认证状态
-      const { data: { session } } = await supabase.auth.getSession()
-      if (!session) {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError || !user) {
         alert(t('auth.pleaseLogin') || '请先登录')
         navigate('/login')
         return
