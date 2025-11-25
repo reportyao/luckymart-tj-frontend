@@ -28,7 +28,7 @@ export default function ExchangePage() {
 
       if (wallets) {
         const balanceWallet = wallets.find(w => w.currency === 'TJS')
-        const coinWallet = wallets.find(w => w.currency === 'LUCKY_COIN')
+        const coinWallet = wallets.find(w => w.currency === 'LUCKY_COIN' as any)
         
         if (balanceWallet) setBalance(balanceWallet.balance)
         if (coinWallet) setLuckyCoin(coinWallet.balance)

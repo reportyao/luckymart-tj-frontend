@@ -22,7 +22,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const [showBalance, setShowBalance] = React.useState(true)
   
   const balanceWallet = wallets.find(w => w.currency === 'TJS')
-  const luckyCoinWallet = wallets.find(w => w.currency === 'LUCKY_COIN')
+  const luckyCoinWallet = wallets.find(w => w.currency === 'LUCKY_COIN' as any)
 
   const toggleShowBalance = () => {
     setShowBalance(!showBalance)

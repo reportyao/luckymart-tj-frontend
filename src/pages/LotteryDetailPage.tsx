@@ -77,7 +77,7 @@ const LotteryDetailPage: React.FC = () => {
 
       if (error) throw error;
 
-      setRandomShowoffs(data as Showoff[]);
+      setRandomShowoffs(data as any);
     } catch (error) {
       console.error('Failed to fetch random showoffs:', error);
     }
