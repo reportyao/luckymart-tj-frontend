@@ -95,6 +95,28 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   }, [authService, fetchWallets]);
 
+  const authenticate = useCallback(async () => {
+    if (!WebApp.initData) {
+      console.warn('Telegram initData is not available for authentication.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      const startParam = WebApp.initDataUnsafe.start_param;
+      const { user } = await authService.authenticateWithTelegram(WebApp.initData, startParam);
+      setUser(user as User);
+      if (user) {
+        await fetchWallets(user.id);
+      }
+      toast.success('登录成功！');
+    } catch (error: any) {
+      console.error('Authentication failed:', error);
+      toast.error(error.message || '登录失败，请重试');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [authService, fetchWallets]);
+
   useEffect(() => {
     checkSession();
 
@@ -119,28 +141,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
     autoAuthenticate();
   }, [user, isLoading, authenticate]);
-
-  const authenticate = useCallback(async () => {
-    if (!WebApp.initData) {
-      console.warn('Telegram initData is not available for authentication.');
-      return;
-    }
-    try {
-      setIsLoading(true);
-      const startParam = WebApp.initDataUnsafe.start_param;
-      const { user } = await authService.authenticateWithTelegram(WebApp.initData, startParam);
-      setUser(user as User);
-      if (user) {
-        await fetchWallets(user.id);
-      }
-      toast.success('登录成功！');
-    } catch (error: any) {
-      console.error('Authentication failed:', error);
-      toast.error(error.message || '登录失败，请重试');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authService, fetchWallets]);
 
   const refreshWallets = useCallback(async () => {
     if (user) {
