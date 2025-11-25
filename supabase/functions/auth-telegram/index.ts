@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
             const referralCodeFromParam = startParam.substring(4);
             
             // 查找推荐人
-            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/users?referral_code=eq.${referralCodeFromParam}&select=id`, {
+            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?referral_code=eq.${referralCodeFromParam}&select=id`, {
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
                     'apikey': serviceRoleKey,
@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         }
 
         // 检查用户是否已存在
-        const existingUserResponse = await fetch(`${supabaseUrl}/rest/v1/users?telegram_id=eq.${telegramId}&select=*`, {
+        const existingUserResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?telegram_id=eq.${telegramId}&select=*`, {
             headers: {
                 'Authorization': `Bearer ${serviceRoleKey}`,
                 'apikey': serviceRoleKey,
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
                 updateData.referred_by_id = referredById;
             }
 
-            const updateResponse = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${user.id}`, {
+            const updateResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?id=eq.${user.id}`, {
                 method: 'PATCH',
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
@@ -158,7 +158,7 @@ Deno.serve(async (req) => {
                 updated_at: new Date().toISOString()
             };
 
-            const createResponse = await fetch(`${supabaseUrl}/rest/v1/users`, {
+            const createResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
