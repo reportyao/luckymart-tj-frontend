@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
-// import OnboardingModal from '../components/OnboardingModal'
+// import OnboardingModal from '../components/OnboardingModal' // 已删除新手引导功能
 import { useUser } from '../contexts/UserContext'
 import { Lottery } from '../lib/supabase'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
@@ -20,7 +20,7 @@ const HomePage: React.FC = () => {
   const { lotteryService } = useSupabase()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
-  // const [showOnboardingModal, setShowOnboardingModal] = useState(false)
+  // const [showOnboardingModal, setShowOnboardingModal] = useState(false) // 已删除新手引导功能
 
   const loadLotteries = useCallback(async () => {
     try {
@@ -39,12 +39,12 @@ const HomePage: React.FC = () => {
     loadLotteries()
   }, [loadLotteries])
 
-//   useEffect(() => {
-//     // 检查是否是新用户且已登录，且尚未看过引导
-//     if (user && profile && !('has_seen_onboarding' in profile)) {
-//       setShowOnboardingModal(true)
-//     }
-//   }, [user, profile])
+  // useEffect(() => {
+  //   // 检查是否是新用户且已登录，且尚未看过引导
+  //   if (user && profile && !('has_seen_onboarding' in profile)) {
+  //     setShowOnboardingModal(true)
+  //   }
+  // }, [user, profile]) // 已删除新手引导功能
 
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
@@ -115,7 +115,7 @@ const HomePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
 	            <h2 className="text-xl font-bold mb-1">
-	              {t('home.welcome')}, {user.username || '用户'}! 👋
+	              {t('home.welcome')}, {user.telegram_username || '用户'}! 👋
 	            </h2>
             <p className="text-white/80 text-sm">
               {t('home.tryLuck')}
@@ -236,7 +236,7 @@ const HomePage: React.FC = () => {
           {/* <OnboardingModal
             isVisible={showOnboardingModal}
             onClose={() => setShowOnboardingModal(false)}
-          /> */}
+          /> */} {/* 已删除新手引导功能 */}
 		    </div>
 	  )
 	}

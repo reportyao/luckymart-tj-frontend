@@ -32,7 +32,13 @@ const InvitePage: React.FC = () => {
   const fetchInviteData = useCallback(async () => {
     setIsLoading(true);
     try {
-      if (!user) return;
+      if (!user) {
+        console.log('[InvitePage] User not logged in, skipping data fetch');
+        setStats(null);
+        setInvitedUsers([]);
+        setIsLoading(false);
+        return;
+      }
 
       // 使用抽象服务层获取数据
       const statsData = await referralService.getInviteStats();
@@ -444,7 +450,7 @@ const InvitePage: React.FC = () => {
                       className="w-10 h-10 rounded-full object-cover"
                     />
                     <div>
-                      <p className="font-medium text-gray-900">{invitedUser.username || t('invite.anonymousUser')}</p>
+                      <p className="font-medium text-gray-900">{invitedUser.telegram_username || t('invite.anonymousUser')}</p>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelBadge(invitedUser.level)}`}>
                         {t('invite.levelXFriend', { level: invitedUser.level })}
                       </span>

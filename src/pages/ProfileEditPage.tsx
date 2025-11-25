@@ -16,7 +16,6 @@ const ProfileEditPage: React.FC = () => {
   const { user, telegramUser } = useUser()
   
 	  const [formData, setFormData] = useState({
-	    username: user?.username || '',
 	    telegram_username: user?.telegram_username || '',
 	  })
   
@@ -106,14 +105,14 @@ const ProfileEditPage: React.FC = () => {
 	          {/* 用户名 */}
 	          <div className="p-4 border-b border-gray-100">
 	            <label className="block text-sm font-medium text-gray-700 mb-2">
-	              {t('invite.username')}
+	              {t('invite.telegram_username')}
 	            </label>
 	            <input
 	              type="text"
 	              name="username"
-	              value={formData.username}
+	              value={formData.telegram_username}
 	              onChange={handleChange}
-	              placeholder={t('invite.username')}
+	              placeholder={t('invite.telegram_username')}
 	              className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 	            />
 	          </div>
@@ -121,7 +120,7 @@ const ProfileEditPage: React.FC = () => {
 	          {/* Telegram 用户名 */}
 	          <div className="p-4 border-b border-gray-100">
 	            <label className="block text-sm font-medium text-gray-700 mb-2">
-	              Telegram {t('invite.username')}
+	              Telegram {t('invite.telegram_username')}
 	            </label>
 	            <div className="flex items-center">
 	              <span className="text-gray-500 mr-1">@</span>
@@ -130,7 +129,7 @@ const ProfileEditPage: React.FC = () => {
 	                name="telegram_username"
 	                value={formData.telegram_username}
 	                onChange={handleChange}
-	                placeholder={t('invite.username')}
+	                placeholder={t('invite.telegram_username')}
 	                className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
 	              />
 	            </div>

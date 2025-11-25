@@ -305,9 +305,9 @@ const LotteryDetailPage: React.FC = () => {
                 <div key={showoff.id} className="border-b last:border-b-0 pb-4">
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
-                      {showoff.user?.username ? showoff.user.username[0] : 'U'}
+                      {showoff.user?.telegram_username ? showoff.user.telegram_username[0] : 'U'}
                     </div>
-                    <p className="font-semibold text-gray-800">{showoff.user?.username || '匿名用户'}</p>
+                    <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || '匿名用户'}</p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
                   {showoff.image_urls && showoff.image_urls.length > 0 && (

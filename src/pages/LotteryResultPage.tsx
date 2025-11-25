@@ -157,7 +157,7 @@ const LotteryResultPage: React.FC = () => {
 	              <p className="text-sm text-gray-500">{t('lottery.winner')}</p>
 	              <div className="flex items-center justify-center space-x-2 mt-2">
 	                <img src={result.winner.profiles?.avatar_url || '/avatar-placeholder.png'} alt="winner avatar" className="w-8 h-8 rounded-full" />
-	                <span className="font-semibold text-gray-800">{result.winner.profiles?.username || 'Anonymous'}</span>
+	                <span className="font-semibold text-gray-800">{result.winner.profiles?.telegram_username || 'Anonymous'}</span>
               </div>
             </div>
 	          )}

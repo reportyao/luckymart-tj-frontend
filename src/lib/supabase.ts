@@ -45,7 +45,7 @@ export type InviteStats = Functions<'get_user_referral_stats'>['Returns'][0] & {
 };
 export interface InvitedUser {
   id: string;
-  username: string | null;
+  telegram_username: string | null;
   avatar_url: string | null;
   created_at: string;
   level: number; // 1, 2, or 3
