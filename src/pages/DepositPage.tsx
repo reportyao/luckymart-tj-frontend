@@ -113,14 +113,6 @@ export default function DepositPage() {
     try {
       setSubmitting(true)
 
-      // 检查用户认证状态
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      if (userError || !user) {
-        alert(t('auth.pleaseLogin') || '请先登录')
-        navigate('/login')
-        return
-      }
-
       const { data, error } = await supabase.functions.invoke('deposit-request', {
         body: {
           amount: amountNum,

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUser } from '../../contexts/UserContext'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { supabase } from '../../lib/supabase'
 
 interface LogEntry {
   time: string
@@ -20,6 +21,22 @@ interface NetworkRequest {
   duration?: number
 }
 
+interface RouteChange {
+  time: string
+  from: string
+  to: string
+  trigger?: string
+}
+
+interface AuthCheck {
+  time: string
+  method: 'getUser' | 'getSession'
+  success: boolean
+  userId?: string | null
+  sessionExists?: boolean
+  error?: string
+}
+
 interface DebugInfo {
   // 页面信息
   page: {
@@ -34,6 +51,18 @@ interface DebugInfo {
     username: string | null
     balance?: number
     lucky_coins?: number
+  }
+  // Telegram环境
+  telegram: {
+    isInTelegram: boolean
+    initDataAvailable: boolean
+    webAppVersion?: string
+  }
+  // 认证状态
+  auth: {
+    hasUser: boolean
+    hasSession: boolean
+    lastCheck?: string
   }
   // 系统信息
   system: {
@@ -59,6 +88,10 @@ interface DebugInfo {
   logs: LogEntry[]
   // 网络请求记录
   requests: NetworkRequest[]
+  // 路由跳转记录
+  routes: RouteChange[]
+  // 认证检查记录
+  authChecks: AuthCheck[]
 }
 
 export const DebugFloatingButton: React.FC = () => {
@@ -66,9 +99,12 @@ export const DebugFloatingButton: React.FC = () => {
   const [isMinimized, setIsMinimized] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
   const [requests, setRequests] = useState<NetworkRequest[]>([])
+  const [routes, setRoutes] = useState<RouteChange[]>([])
+  const [authChecks, setAuthChecks] = useState<AuthCheck[]>([])
   const [isVisible, setIsVisible] = useState(false)
   const { user, telegramUser } = useUser()
   const location = useLocation()
+  const navigate = useNavigate()
 
   // 监听自定义事件：点击"我的"5次触发
   useEffect(() => {
@@ -102,68 +138,85 @@ export const DebugFloatingButton: React.FC = () => {
           setIsOpen(true)
           touchCount = 0
         }
-        
+
+        clearTimeout(touchTimer)
         touchTimer = setTimeout(() => {
           touchCount = 0
         }, 1000)
       }
     }
 
-    const handleTouchEnd = () => {
-      clearTimeout(touchTimer)
-    }
-
     document.addEventListener('touchstart', handleTouchStart)
-    document.addEventListener('touchend', handleTouchEnd)
 
     return () => {
       document.removeEventListener('touchstart', handleTouchStart)
-      document.removeEventListener('touchend', handleTouchEnd)
       clearTimeout(touchTimer)
     }
   }, [])
 
-  // 拦截 console 日志
+  // 拦截路由跳转
   useEffect(() => {
-    const originalConsoleError = console.error
-    const originalConsoleWarn = console.warn
-    const originalConsoleLog = console.log
-
-    const addLog = (level: 'info' | 'warn' | 'error', ...args: any[]) => {
-      const message = args.map(arg => 
-        typeof arg === 'object' ? JSON.stringify(arg, null, 2) : String(arg)
-      ).join(' ')
+    const prevPath = sessionStorage.getItem('debug_prev_path') || '/'
+    
+    if (prevPath !== location.pathname) {
+      const routeChange: RouteChange = {
+        time: new Date().toLocaleTimeString('zh-CN'),
+        from: prevPath,
+        to: location.pathname
+      }
       
-      setLogs(prev => [
-        {
-          time: new Date().toLocaleTimeString('zh-CN'),
-          level,
-          message,
-          data: args.length > 1 ? args : undefined
-        },
-        ...prev.slice(0, 49) // 最多保留 50 条
-      ])
+      setRoutes(prev => [routeChange, ...prev.slice(0, 9)])
+      sessionStorage.setItem('debug_prev_path', location.pathname)
+    }
+  }, [location.pathname])
+
+  // 拦截 supabase.auth 方法
+  useEffect(() => {
+    const originalGetUser = supabase.auth.getUser.bind(supabase.auth)
+    const originalGetSession = supabase.auth.getSession.bind(supabase.auth)
+
+    // 拦截 getUser
+    supabase.auth.getUser = async () => {
+      const startTime = Date.now()
+      const result = await originalGetUser()
+      const duration = Date.now() - startTime
+
+      const authCheck: AuthCheck = {
+        time: new Date().toLocaleTimeString('zh-CN'),
+        method: 'getUser',
+        success: !result.error && !!result.data.user,
+        userId: result.data.user?.id || null,
+        error: result.error?.message
+      }
+
+      setAuthChecks(prev => [authCheck, ...prev.slice(0, 9)])
+      
+      return result
     }
 
-    console.error = (...args) => {
-      originalConsoleError(...args)
-      addLog('error', ...args)
-    }
+    // 拦截 getSession
+    supabase.auth.getSession = async () => {
+      const startTime = Date.now()
+      const result = await originalGetSession()
+      const duration = Date.now() - startTime
 
-    console.warn = (...args) => {
-      originalConsoleWarn(...args)
-      addLog('warn', ...args)
-    }
+      const authCheck: AuthCheck = {
+        time: new Date().toLocaleTimeString('zh-CN'),
+        method: 'getSession',
+        success: !result.error && !!result.data.session,
+        sessionExists: !!result.data.session,
+        userId: result.data.session?.user?.id || null,
+        error: result.error?.message
+      }
 
-    console.log = (...args) => {
-      originalConsoleLog(...args)
-      addLog('info', ...args)
+      setAuthChecks(prev => [authCheck, ...prev.slice(0, 9)])
+      
+      return result
     }
 
     return () => {
-      console.error = originalConsoleError
-      console.warn = originalConsoleWarn
-      console.log = originalConsoleLog
+      supabase.auth.getUser = originalGetUser
+      supabase.auth.getSession = originalGetSession
     }
   }, [])
 
@@ -171,7 +224,7 @@ export const DebugFloatingButton: React.FC = () => {
   useEffect(() => {
     const originalFetch = window.fetch
 
-    window.fetch = async (...args) => {
+    window.fetch = async (...args: Parameters<typeof fetch>) => {
       const startTime = Date.now()
       const [url, options] = args
       const method = options?.method || 'GET'
@@ -210,7 +263,7 @@ export const DebugFloatingButton: React.FC = () => {
             error: errorDetail || undefined,
             duration
           },
-          ...prev.slice(0, 19) // 最多保留 20 条
+          ...prev.slice(0, 19)
         ])
 
         return response
@@ -237,9 +290,54 @@ export const DebugFloatingButton: React.FC = () => {
     }
   }, [])
 
-  // 收集调试信息
+  // 拦截 console 方法
+  useEffect(() => {
+    const originalLog = console.log
+    const originalWarn = console.warn
+    const originalError = console.error
+
+    const addLog = (level: 'info' | 'warn' | 'error', args: any[]) => {
+      const message = args.map(arg => 
+        typeof arg === 'object' ? JSON.stringify(arg) : String(arg)
+      ).join(' ')
+
+      setLogs(prev => [
+        {
+          time: new Date().toLocaleTimeString('zh-CN'),
+          level,
+          message,
+          data: args
+        },
+        ...prev.slice(0, 49)
+      ])
+    }
+
+    console.log = (...args: any[]) => {
+      originalLog(...args)
+      addLog('info', args)
+    }
+
+    console.warn = (...args: any[]) => {
+      originalWarn(...args)
+      addLog('warn', args)
+    }
+
+    console.error = (...args: any[]) => {
+      originalError(...args)
+      addLog('error', args)
+    }
+
+    return () => {
+      console.log = originalLog
+      console.warn = originalWarn
+      console.error = originalError
+    }
+  }, [])
+
   const getDebugInfo = (): DebugInfo => {
-    const nav = navigator as any
+    // 检测Telegram环境
+    const isInTelegram = !!(window as any).Telegram?.WebApp
+    const telegramWebApp = (window as any).Telegram?.WebApp
     
     return {
       page: {
@@ -250,9 +348,19 @@ export const DebugFloatingButton: React.FC = () => {
       user: {
         id: user?.id || null,
         telegramId: telegramUser?.id || null,
-        username: telegramUser?.username || user?.telegram_username || null,
-        balance: (user as any)?.balance || 0,
-        lucky_coins: (user as any)?.lucky_coins || 0
+        username: user?.telegram_username || telegramUser?.username || null,
+        balance: (user as any)?.balance,
+        lucky_coins: (user as any)?.lucky_coins
+      },
+      telegram: {
+        isInTelegram,
+        initDataAvailable: !!telegramWebApp?.initData,
+        webAppVersion: telegramWebApp?.version
+      },
+      auth: {
+        hasUser: !!user,
+        hasSession: false, // 将在拦截中更新
+        lastCheck: authChecks[0]?.time
       },
       system: {
         userAgent: navigator.userAgent,
@@ -265,219 +373,235 @@ export const DebugFloatingButton: React.FC = () => {
       },
       network: {
         online: navigator.onLine,
-        effectiveType: nav.connection?.effectiveType || 'unknown'
+        effectiveType: (navigator as any).connection?.effectiveType
       },
       styles: {
         tailwindVersion: '4.0',
-        colorMode: window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+        colorMode: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
       },
-      logs: logs.slice(0, 10),
-      requests: requests.slice(0, 10)
+      logs,
+      requests,
+      routes,
+      authChecks
     }
   }
 
-  // 复制调试信息
   const copyDebugInfo = () => {
-    const debugInfo = getDebugInfo()
-    const text = JSON.stringify(debugInfo, null, 2)
-    
-    navigator.clipboard.writeText(text).then(() => {
-      alert('调试信息已复制到剪贴板')
-    }).catch(err => {
-      console.error('复制失败:', err)
-      alert('复制失败，请手动复制')
-    })
+    const info = getDebugInfo()
+    navigator.clipboard.writeText(JSON.stringify(info, null, 2))
+    alert('调试信息已复制到剪贴板')
   }
 
   const clearLogs = () => {
     setLogs([])
     setRequests([])
+    setRoutes([])
+    setAuthChecks([])
   }
 
   if (!isVisible) return null
 
   return (
-    <>
-      {/* 置顶浮层调试面板 */}
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: -100, opacity: 0 }}
-            className="fixed top-0 left-0 right-0 z-[10000] bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200"
-            style={{ maxHeight: isMinimized ? '48px' : '70vh' }}
-          >
-            {/* 头部 */}
-            <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-red-500 to-pink-500 text-white">
-              <div className="flex items-center gap-2">
-                <span className="text-lg">🐛</span>
-                <span className="text-sm font-semibold">调试面板</span>
-                <span className="text-xs opacity-75">{location.pathname}</span>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ y: -100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -100, opacity: 0 }}
+          className="fixed top-0 left-0 right-0 z-[9999] bg-black/95 text-white shadow-2xl"
+          style={{ maxHeight: isMinimized ? '60px' : '80vh' }}
+        >
+          {/* 标题栏 */}
+          <div className="flex items-center justify-between p-3 border-b border-gray-700">
+            <div className="flex items-center gap-2">
+              <span className="text-lg font-bold">🐛 调试面板</span>
+              <span className="text-xs text-gray-400">v2.0</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setIsMinimized(!isMinimized)}
+                className="px-3 py-1 bg-blue-600 rounded text-sm hover:bg-blue-700"
+              >
+                {isMinimized ? '展开' : '收起'}
+              </button>
+              <button
+                onClick={copyDebugInfo}
+                className="px-3 py-1 bg-green-600 rounded text-sm hover:bg-green-700"
+              >
+                复制
+              </button>
+              <button
+                onClick={clearLogs}
+                className="px-3 py-1 bg-yellow-600 rounded text-sm hover:bg-yellow-700"
+              >
+                清空
+              </button>
+              <button
+                onClick={() => {
+                  setIsOpen(false)
+                  setIsVisible(false)
+                }}
+                className="px-3 py-1 bg-red-600 rounded text-sm hover:bg-red-700"
+              >
+                关闭
+              </button>
+            </div>
+          </div>
+
+          {/* 内容区域 */}
+          {!isMinimized && (
+            <div className="overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(80vh - 60px)' }}>
+              {/* Telegram环境 */}
+              <div className="bg-gray-800 rounded p-3">
+                <h3 className="font-bold mb-2 text-purple-400">🤖 Telegram环境</h3>
+                <div className="text-xs space-y-1">
+                  <div>在Telegram中: <span className={getDebugInfo().telegram.isInTelegram ? 'text-green-400' : 'text-red-400'}>
+                    {getDebugInfo().telegram.isInTelegram ? '是 ✅' : '否 ❌'}
+                  </span></div>
+                  <div>InitData可用: <span className={getDebugInfo().telegram.initDataAvailable ? 'text-green-400' : 'text-red-400'}>
+                    {getDebugInfo().telegram.initDataAvailable ? '是 ✅' : '否 ❌'}
+                  </span></div>
+                  {getDebugInfo().telegram.webAppVersion && (
+                    <div>WebApp版本: {getDebugInfo().telegram.webAppVersion}</div>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
-                >
-                  {isMinimized ? '展开' : '收起'}
-                </button>
-                <button
-                  onClick={copyDebugInfo}
-                  className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
-                >
-                  复制
-                </button>
-                <button
-                  onClick={clearLogs}
-                  className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
-                >
-                  清空
-                </button>
-                <button
-                  onClick={() => setIsOpen(false)}
-                  className="px-2 py-1 text-xs bg-white/20 hover:bg-white/30 rounded transition-colors"
-                >
-                  关闭
-                </button>
+
+              {/* 认证状态 */}
+              <div className="bg-gray-800 rounded p-3">
+                <h3 className="font-bold mb-2 text-blue-400">🔐 认证状态</h3>
+                <div className="text-xs space-y-1">
+                  <div>有用户: <span className={getDebugInfo().auth.hasUser ? 'text-green-400' : 'text-red-400'}>
+                    {getDebugInfo().auth.hasUser ? '是 ✅' : '否 ❌'}
+                  </span></div>
+                  <div>用户ID: {user?.id || '无'}</div>
+                  <div>Telegram ID: {telegramUser?.id || '无'}</div>
+                </div>
+              </div>
+
+              {/* 认证检查记录 */}
+              {authChecks.length > 0 && (
+                <div className="bg-gray-800 rounded p-3">
+                  <h3 className="font-bold mb-2 text-blue-400">🔍 认证检查记录 ({authChecks.length})</h3>
+                  <div className="space-y-2 text-xs max-h-40 overflow-y-auto">
+                    {authChecks.map((check, idx) => (
+                      <div key={idx} className={`p-2 rounded ${check.success ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
+                        <div className="flex justify-between items-start">
+                          <span className="font-mono">{check.time}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${check.success ? 'bg-green-600' : 'bg-red-600'}`}>
+                            {check.method}
+                          </span>
+                        </div>
+                        <div className="mt-1">
+                          成功: {check.success ? '✅' : '❌'}
+                          {check.userId && <div>用户ID: {check.userId}</div>}
+                          {check.sessionExists !== undefined && <div>Session存在: {check.sessionExists ? '✅' : '❌'}</div>}
+                          {check.error && <div className="text-red-400">错误: {check.error}</div>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 路由跳转记录 */}
+              {routes.length > 0 && (
+                <div className="bg-gray-800 rounded p-3">
+                  <h3 className="font-bold mb-2 text-yellow-400">🧭 路由跳转记录 ({routes.length})</h3>
+                  <div className="space-y-2 text-xs max-h-40 overflow-y-auto">
+                    {routes.map((route, idx) => (
+                      <div key={idx} className="p-2 bg-gray-700 rounded">
+                        <div className="font-mono text-gray-400">{route.time}</div>
+                        <div className="mt-1">
+                          <span className="text-red-400">{route.from}</span>
+                          <span className="mx-2">→</span>
+                          <span className="text-green-400">{route.to}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 网络请求记录 */}
+              {requests.length > 0 && (
+                <div className="bg-gray-800 rounded p-3">
+                  <h3 className="font-bold mb-2 text-green-400">🌐 网络请求 ({requests.length})</h3>
+                  <div className="space-y-2 text-xs max-h-60 overflow-y-auto">
+                    {requests.map((req, idx) => (
+                      <div key={idx} className={`p-2 rounded ${req.status && req.status >= 200 && req.status < 300 ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
+                        <div className="flex justify-between items-start">
+                          <span className="font-mono">{req.time}</span>
+                          <span className={`px-2 py-0.5 rounded text-xs ${req.status && req.status >= 200 && req.status < 300 ? 'bg-green-600' : 'bg-red-600'}`}>
+                            {req.method} {req.status || 'ERR'}
+                          </span>
+                        </div>
+                        <div className="mt-1 break-all">{req.url}</div>
+                        {req.statusText && <div className="text-gray-400">状态: {req.statusText}</div>}
+                        {req.duration && <div className="text-gray-400">耗时: {req.duration}ms</div>}
+                        {req.error && (
+                          <details className="mt-2">
+                            <summary className="cursor-pointer text-red-400">错误详情</summary>
+                            <pre className="mt-1 p-2 bg-black/50 rounded overflow-x-auto text-xs">{req.error}</pre>
+                          </details>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 控制台日志 */}
+              {logs.length > 0 && (
+                <div className="bg-gray-800 rounded p-3">
+                  <h3 className="font-bold mb-2">📝 控制台日志 ({logs.length})</h3>
+                  <div className="space-y-1 text-xs max-h-60 overflow-y-auto">
+                    {logs.map((log, idx) => (
+                      <div key={idx} className={`p-2 rounded ${
+                        log.level === 'error' ? 'bg-red-900/30' : 
+                        log.level === 'warn' ? 'bg-yellow-900/30' : 
+                        'bg-gray-700'
+                      }`}>
+                        <span className="font-mono text-gray-400">{log.time}</span>
+                        <span className={`ml-2 px-1 rounded text-xs ${
+                          log.level === 'error' ? 'bg-red-600' : 
+                          log.level === 'warn' ? 'bg-yellow-600' : 
+                          'bg-blue-600'
+                        }`}>{log.level}</span>
+                        <div className="mt-1 break-all">{log.message}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 用户信息 */}
+              <div className="bg-gray-800 rounded p-3">
+                <h3 className="font-bold mb-2">👤 用户信息</h3>
+                <div className="text-xs space-y-1">
+                  <div>ID: {user?.id || '未登录'}</div>
+                  <div>Telegram ID: {telegramUser?.id || '无'}</div>
+                  <div>用户名: {user?.telegram_username || telegramUser?.username || '无'}</div>
+                  <div>余额: {(user as any)?.balance || 0}</div>
+                  <div>幸运币: {(user as any)?.lucky_coins || 0}</div>
+                </div>
+              </div>
+
+              {/* 系统信息 */}
+              <div className="bg-gray-800 rounded p-3">
+                <h3 className="font-bold mb-2">⚙️ 系统信息</h3>
+                <div className="text-xs space-y-1">
+                  <div>平台: {navigator.platform}</div>
+                  <div>语言: {navigator.language}</div>
+                  <div>在线: {navigator.onLine ? '是' : '否'}</div>
+                  <div>网络: {(navigator as any).connection?.effectiveType || '未知'}</div>
+                  <div>视口: {window.innerWidth} x {window.innerHeight}</div>
+                </div>
               </div>
             </div>
-
-            {/* 内容区域 */}
-            {!isMinimized && (
-              <div className="overflow-y-auto" style={{ maxHeight: 'calc(70vh - 48px)' }}>
-                {/* 快速信息栏 */}
-                <div className="grid grid-cols-3 gap-2 p-3 bg-gray-50 border-b border-gray-200 text-xs">
-                  <div>
-                    <div className="text-gray-500">用户ID</div>
-                    <div className="font-mono text-gray-900 truncate text-[10px]">{user?.id || '未登录'}</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">余额</div>
-                    <div className="font-mono text-gray-900">{(user as any)?.balance || 0} TJS</div>
-                  </div>
-                  <div>
-                    <div className="text-gray-500">视口</div>
-                    <div className="font-mono text-gray-900">{window.innerWidth}×{window.innerHeight}</div>
-                  </div>
-                </div>
-
-                {/* 详细信息区域 */}
-                <div className="p-3 space-y-3">
-                  {/* 网络请求记录 */}
-                  <div className="bg-orange-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-orange-900 mb-1 flex items-center gap-1 justify-between">
-                      <div className="flex items-center gap-1">
-                        <span>🌐</span>
-                        <span>网络请求 ({requests.length})</span>
-                      </div>
-                      <span className="text-[10px] opacity-75">最近20条</span>
-                    </div>
-                    <div className="text-xs space-y-2 max-h-60 overflow-y-auto">
-                      {requests.length === 0 ? (
-                        <div className="text-orange-600 text-center py-2">暂无请求记录</div>
-                      ) : (
-                        requests.map((req, idx) => (
-                          <div key={idx} className="bg-white rounded p-2 border border-orange-200">
-                            <div className="flex items-center justify-between mb-1">
-                              <span className={`font-semibold ${
-                                req.status && req.status >= 200 && req.status < 300 
-                                  ? 'text-green-600' 
-                                  : 'text-red-600'
-                              }`}>
-                                {req.method} {req.status || 'FAILED'}
-                              </span>
-                              <span className="text-gray-500 text-[10px]">{req.time}</span>
-                            </div>
-                            <div className="text-[10px] text-gray-700 break-all mb-1">
-                              {req.url}
-                            </div>
-                            {req.statusText && (
-                              <div className="text-[10px] text-gray-600">
-                                状态: {req.statusText}
-                              </div>
-                            )}
-                            {req.duration && (
-                              <div className="text-[10px] text-gray-600">
-                                耗时: {req.duration}ms
-                              </div>
-                            )}
-                            {req.error && (
-                              <div className="text-[10px] text-red-600 mt-1 bg-red-50 p-1 rounded">
-                                <div className="font-semibold">错误详情:</div>
-                                <pre className="whitespace-pre-wrap mt-1">{req.error}</pre>
-                              </div>
-                            )}
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 控制台日志 */}
-                  <div className="bg-gray-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-gray-900 mb-1 flex items-center gap-1 justify-between">
-                      <div className="flex items-center gap-1">
-                        <span>📝</span>
-                        <span>控制台日志 ({logs.length})</span>
-                      </div>
-                      <span className="text-[10px] opacity-75">最近50条</span>
-                    </div>
-                    <div className="text-xs space-y-1 max-h-60 overflow-y-auto">
-                      {logs.length === 0 ? (
-                        <div className="text-gray-600 text-center py-2">暂无日志</div>
-                      ) : (
-                        logs.map((log, idx) => (
-                          <div key={idx} className={`p-1 rounded ${
-                            log.level === 'error' ? 'bg-red-50 text-red-800' :
-                            log.level === 'warn' ? 'bg-yellow-50 text-yellow-800' :
-                            'bg-blue-50 text-blue-800'
-                          }`}>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] opacity-75">{log.time}</span>
-                              <span className="font-semibold text-[10px]">[{log.level.toUpperCase()}]</span>
-                            </div>
-                            <pre className="text-[10px] whitespace-pre-wrap mt-1">{log.message}</pre>
-                          </div>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 用户信息 */}
-                  <div className="bg-green-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-green-900 mb-1 flex items-center gap-1">
-                      <span>👤</span>
-                      <span>用户信息</span>
-                    </div>
-                    <div className="text-xs space-y-1 text-green-800">
-                      <div><span className="text-green-600">用户ID:</span> <span className="font-mono text-[10px]">{user?.id || '未登录'}</span></div>
-                      <div><span className="text-green-600">Telegram ID:</span> {telegramUser?.id || 'N/A'}</div>
-                      <div><span className="text-green-600">用户名:</span> {telegramUser?.username || user?.telegram_username || 'N/A'}</div>
-                      <div><span className="text-green-600">余额:</span> {(user as any)?.balance || 0} TJS</div>
-                      <div><span className="text-green-600">幸运币:</span> {(user as any)?.lucky_coins || 0}</div>
-                    </div>
-                  </div>
-
-                  {/* 系统信息 */}
-                  <div className="bg-purple-50 rounded-lg p-2">
-                    <div className="text-xs font-semibold text-purple-900 mb-1 flex items-center gap-1">
-                      <span>⚙️</span>
-                      <span>系统信息</span>
-                    </div>
-                    <div className="text-xs space-y-1 text-purple-800">
-                      <div><span className="text-purple-600">平台:</span> {navigator.platform}</div>
-                      <div><span className="text-purple-600">语言:</span> {navigator.language}</div>
-                      <div><span className="text-purple-600">在线:</span> {navigator.onLine ? '✅' : '❌'}</div>
-                      <div><span className="text-purple-600">网络:</span> {(navigator as any).connection?.effectiveType || 'unknown'}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          )}
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }
