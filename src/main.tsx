@@ -14,9 +14,10 @@ import { SupabaseProvider } from './contexts/SupabaseContext';
 setupGlobalErrorHandlers();
 suppressKnownWarnings();
 
-// 在非Telegram环境中初始化Mock SDK
-if (!window.Telegram?.WebApp) {
+// 在非Telegram环境中或initData为空时初始化Mock SDK
+if (!window.Telegram?.WebApp || !window.Telegram.WebApp.initData) {
   console.log('[Dev Mode] Initializing Mock Telegram WebApp for testing');
+  console.log('[Dev Mode] Reason:', !window.Telegram?.WebApp ? 'No Telegram object' : 'Empty initData');
   initMockTelegramWebApp();
 }
 
