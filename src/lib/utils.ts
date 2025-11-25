@@ -130,11 +130,11 @@ export function shareToTelegram(text: string, url?: string): void {
 
 // 处理多语言 JSONB 字段，用于获取夺宝标题、描述等
 export function getLocalizedText(
-  jsonb: Record<string, string> | null | undefined,
+  jsonb: Record<string, string> | null | undefined | any,
   language: string,
   fallbackLanguage: string = 'zh'
 ): string {
-  if (!jsonb || typeof jsonb !== 'object') {
+  if (!jsonb || typeof jsonb !== 'object' || Array.isArray(jsonb)) {
     return '';
   }
     // 尝试使用当前语言

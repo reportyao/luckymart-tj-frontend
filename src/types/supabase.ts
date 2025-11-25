@@ -230,6 +230,7 @@ export type Database = {
           winner_id: string | null;
           winner_ticket_number: number | null;
           draw_time: string | null;
+          title_i18n: Json | null;
           name_i18n: Json | null;
           description_i18n: Json | null;
           details_i18n: Json | null;
@@ -255,6 +256,7 @@ export type Database = {
           winner_id?: string | null;
           winner_ticket_number?: number | null;
           draw_time?: string | null;
+          title_i18n?: Json | null;
           name_i18n?: Json | null;
           description_i18n?: Json | null;
           details_i18n?: Json | null;
@@ -280,6 +282,7 @@ export type Database = {
           winner_id?: string | null;
           winner_ticket_number?: number | null;
           draw_time?: string | null;
+          title_i18n?: Json | null;
           name_i18n?: Json | null;
           description_i18n?: Json | null;
           details_i18n?: Json | null;

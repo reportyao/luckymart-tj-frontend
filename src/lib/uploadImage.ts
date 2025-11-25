@@ -76,7 +76,7 @@ export async function uploadImages(
   bucket: string = 'payment-proofs',
   folder?: string
 ): Promise<string[]> {
-  const uploadPromises = files.map(file => uploadImage(file, bucket, folder, compress))
+  const uploadPromises = files.map(file => uploadImage(file, compress, bucket, folder))
   return Promise.all(uploadPromises)
 }
 

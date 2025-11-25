@@ -74,7 +74,7 @@ export default function DepositPage() {
 
     try {
       const fileArray = Array.from(files)
-      const urls = await uploadImages(fileArray, 'payment-proofs', 'deposits')
+      const urls = await uploadImages(fileArray, true, 'payment-proofs', 'deposits')
       setUploadedImages(prev => [...prev, ...urls])
     } catch (error) {
       console.error('图片上传失败:', error)

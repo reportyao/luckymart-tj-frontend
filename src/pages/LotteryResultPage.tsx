@@ -193,8 +193,8 @@ const LotteryResultPage: React.FC = () => {
       {/* Fairness Explanation */}
       <div className="px-4">
         <FairnessExplanation 
-          timestampSum={result.algorithm_data?.timestamp_sum || '0'}
-          totalTickets={result.algorithm_data?.total_tickets || result.lottery.total_tickets}
+          timestampSum={(result.algorithm_data as any)?.timestamp_sum || '0'}
+          totalTickets={(result.algorithm_data as any)?.total_tickets || result.lottery.total_tickets}
           winningNumber={result.winning_number}
           showVerificationData={true}
         />
