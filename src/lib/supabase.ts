@@ -38,9 +38,14 @@ export type ShowoffWithDetails = Showoff & {
 // 邀请/推荐相关类型
 export interface InviteStats {
   total_invites: number;
+  total_referrals: number;
+  level1_referrals: number;
+  level2_referrals: number;
+  level3_referrals: number;
   total_commission: number;
   pending_commission: number;
   paid_commission: number;
+  bonus_balance: number;
   first_deposit_bonus_status?: string;
   first_deposit_bonus_amount?: number;
   first_deposit_bonus_expire_at?: string | null;

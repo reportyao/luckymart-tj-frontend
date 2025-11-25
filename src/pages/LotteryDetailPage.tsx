@@ -310,9 +310,9 @@ const LotteryDetailPage: React.FC = () => {
                     <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || '匿名用户'}</p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
-                  {showoff.image_urls && showoff.image_urls.length > 0 && (
+                  {showoff.images && showoff.images.length > 0 && (
                     <div className="flex space-x-2 overflow-x-auto">
-                      {showoff.image_urls.slice(0, 3).map((url, imgIndex) => (
+                      {showoff.images.slice(0, 3).map((url, imgIndex) => (
                         <LazyImage
                           key={imgIndex}
                           src={url}
