@@ -56,6 +56,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [telegramUser] = useState<any>(null);
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false); // 记录是否已尝试认证
 
   const fetchWallets = useCallback(async (userId: string) => {
     try {
@@ -132,15 +133,16 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // 自动认证：如果有 initData 但没有用户，尝试自动登录
   useEffect(() => {
     const autoAuthenticate = async () => {
-      // 只在有 initData 且没有当前用户时执行
-      if (WebApp.initData && !user && !isLoading) {
+      // 只在有 initData、没有当前用户、未尝试过认证时执行
+      if (WebApp.initData && !user && !isLoading && !hasAttemptedAuth) {
         console.log('[Auto Auth] Attempting automatic authentication...');
+        setHasAttemptedAuth(true); // 标记已尝试
         await authenticate();
       }
     };
 
     autoAuthenticate();
-  }, [user, isLoading, authenticate]);
+  }, [user, isLoading, hasAttemptedAuth, authenticate]);
 
   const refreshWallets = useCallback(async () => {
     if (user) {
