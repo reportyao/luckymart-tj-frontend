@@ -146,8 +146,18 @@ export const authService = {
         console.error('Telegram authentication failed:', error);
         throw new Error(`Telegram 认证失败: ${error.message}`);
       }
-      // 假设 Edge Function 返回 { session: Session, user: User }
-      return data as { session: any, user: UserProfile };
+      
+      // Edge Function 返回的数据结构是 { data: { user, wallets, session, ... } }
+      if (!data || !data.data) {
+        throw new Error('Invalid response from auth-telegram function');
+      }
+      
+      return {
+        user: data.data.user,
+        session: data.data.session,
+        wallets: data.data.wallets,
+        is_new_user: data.data.is_new_user
+      };
     } catch (error) {
       console.error('authenticateWithTelegram error:', error);
       throw error;
