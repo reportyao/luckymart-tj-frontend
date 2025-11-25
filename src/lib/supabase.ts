@@ -574,9 +574,9 @@ export const referralService = {
 	    if (!user) throw new Error('用户未登录');
 	    
 	
-	    const { error } = await supabase
-	      .from('likes')
-       .insert({ showoff_id: showoffId, user_id: user.id });
+    const { error } = await supabase
+      .from('likes')
+       .insert({ post_id: showoffId, user_id: user.id });
 	
 	    if (error) {
 	      console.error('Failed to like showoff:', error);
