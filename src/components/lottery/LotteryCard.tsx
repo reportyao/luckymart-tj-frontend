@@ -181,14 +181,14 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	          )}
 
           {/* 中奖号码 */}
-	          {lottery.status === 'COMPLETED' && lottery.winner_ticket_number && (
+	          {lottery.status === 'COMPLETED' && lottery.winning_ticket_number && (
 		            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
 			              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
 	              <div className="flex flex-wrap gap-2">
 	                <span
 	                  className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-mono font-bold"
 	                >
-	                  {lottery.winner_ticket_number}
+	                  {lottery.winning_ticket_number}
 	                </span>
 	              </div>
 	            </div>

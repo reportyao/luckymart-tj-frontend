@@ -36,13 +36,17 @@ export type ShowoffWithDetails = Showoff & {
 
 
 // 邀请/推荐相关类型
-// export type InviteStats = Functions<'get_user_referral_stats'>['Returns'][0] & {
-//   first_deposit_bonus_status: string;
-//   first_deposit_bonus_amount: number;
-//   first_deposit_bonus_expire_at: string | null;
-//   activation_share_count: number;
-//   activation_invite_count: number;
-// };
+export interface InviteStats {
+  total_invites: number;
+  total_commission: number;
+  pending_commission: number;
+  paid_commission: number;
+  first_deposit_bonus_status?: string;
+  first_deposit_bonus_amount?: number;
+  first_deposit_bonus_expire_at?: string | null;
+  activation_share_count?: number;
+  activation_invite_count?: number;
+}
 export interface InvitedUser {
   id: string;
   telegram_username: string | null;
