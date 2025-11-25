@@ -123,7 +123,7 @@ const HomePage: React.FC = () => {
           </div>
           <div className="text-right">
 	            <p className="text-xs text-white/60">{t('home.referralCode')}</p>
-	            <p className="text-lg font-bold">{profile?.invite_code}</p>
+	            <p className="text-lg font-bold">{profile?.referral_code}</p>
           </div>
         </div>
       </SafeMotion>
