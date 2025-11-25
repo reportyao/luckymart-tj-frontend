@@ -76,7 +76,7 @@ export const likeService = {
       .from('likes')
       .select('id')
       .eq('user_id', user.id)
-      .eq('showoff_id', showoffId)
+      .eq('post_id', showoffId)
       .single();
 
     if (error && error.code !== 'PGRST116') {
@@ -97,7 +97,7 @@ export const likeService = {
 
     const { error } = await supabase
       .from('likes')
-      .insert({ user_id: user.id, showoff_id: showoffId });
+      .insert({ user_id: user.id, post_id: showoffId });
 
     if (error) {
       console.error('Failed to like showoff:', error);
@@ -117,7 +117,7 @@ export const likeService = {
       .from('likes')
       .delete()
       .eq('user_id', user.id)
-      .eq('showoff_id', showoffId);
+      .eq('post_id', showoffId);
 
     if (error) {
       console.error('Failed to unlike showoff:', error);
@@ -609,7 +609,7 @@ export const referralService = {
 			    const { data: existingLike, error: selectError } = await supabase
 			      .from('likes')
 			      .select('id')
-			      .eq('showoff_id', showoffId)
+			      .eq('post_id', showoffId)
 			      .eq('user_id', user.id)
 			      .single();
 		
@@ -622,7 +622,7 @@ export const referralService = {
 			      const { error } = await supabase
 			        .from('likes')
 			        .delete()
-			        .eq('showoff_id', showoffId)
+			        .eq('post_id', showoffId)
 			        .eq('user_id', user.id);
 			
 			      if (error) {
@@ -633,7 +633,7 @@ export const referralService = {
 			      // 点赞
 			      const { error } = await supabase
 			        .from('likes')
-			        .insert({ showoff_id: showoffId, user_id: user.id });
+			        .insert({ post_id: showoffId, user_id: user.id });
 			
 			      if (error) {
 			        console.error('Failed to like showoff:', error);
