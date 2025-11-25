@@ -75,7 +75,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	        className
 	      )}
 	    >
-      {/* 彩票图片 */}
+      {/* 抽奖图片 */}
       <div className="relative h-32 bg-gradient-to-r from-purple-400 to-pink-400">
         {lottery.image_url ? (
           <LazyImage 
@@ -106,7 +106,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
       </div>
 
       <div className="p-4">
-        {/* 彩票标题 */}
+        {/* 抽奖标题 */}
 	        <h3 className="text-lg font-bold text-gray-900 mb-1">
 	          {(() => {
 	            const localizedName = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language);
@@ -121,7 +121,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 		          </p>
 		        )}
 
-        {/* 彩票信息 */}
+        {/* 抽奖信息 */}
         <div className="space-y-3">
           {/* 价格和参与信息 */}
           <div className="flex items-center justify-between">

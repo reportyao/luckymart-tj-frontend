@@ -17,7 +17,6 @@ import {
   getLocalizedText
 } from '../lib/utils';
 import toast from 'react-hot-toast';
-import { lotteryService } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { CountdownTimer } from '../components/CountdownTimer';
 
@@ -37,8 +36,6 @@ const LotteryDetailPage: React.FC = () => {
   const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof getTimeRemaining> | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [randomShowoffs, setRandomShowoffs] = useState<Showoff[]>([]);
-  const [quantity, setQuantity] = useState<number>(1);
-  const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
 
   const fetchLottery = useCallback(async () => {
     if (!id) return;
@@ -130,72 +127,10 @@ const LotteryDetailPage: React.FC = () => {
   const isSoldOut = lottery.status === 'SOLD_OUT';
   const isUpcoming = lottery.status === 'UPCOMING' || lottery.status === 'PENDING';
 
-  const handlePurchase = async () => {
-    if (!isActive || quantity < 1) {
-      toast.error(t('lottery.pleaseEnterQuantity'));
-      return;
-    }
-
-    if (!lottery) {
-      toast.error(t('error.unknownError'));
-      return;
-    }
-
-    // 检查剩余票数
-    if (quantity > (lottery.total_tickets - lottery.sold_tickets)) {
-      toast.error(t('lottery.sharesNotEnough'));
-      return;
-    }
-
-    // 检查用户限购
-    if (lottery.max_per_user && quantity > lottery.max_per_user) {
-      toast.error(t('lottery.maxQuantityHint', { max: lottery.max_per_user }));
-      return;
-    }
-
-    setIsPurchasing(true);
-    
-    try {
-      // 调用购买 API
-      const order = await lotteryService.purchaseTickets(lottery.id, quantity);
-      
-      console.log('Purchase successful:', order);
-      toast.success(t('lottery.purchaseSuccess'));
-      
-      // 刷新抽奖数据
-      await fetchLottery();
-      
-      // 重置数量为 1
-      setQuantity(1);
-      
-      // 可选：跳转到订单详情页
-      // navigate(`/orders/${order.id}`);
-      
-    } catch (error: any) {
-      console.error('Purchase failed:', error);
-      
-      // 处理特定错误
-      if (error.message?.includes('余额不足')) {
-        toast.error(t('wallet.insufficientBalance'));
-      } else if (error.message?.includes('已售罄')) {
-        toast.error(t('lottery.soldOut'));
-      } else if (error.message?.includes('超过限购')) {
-        toast.error(t('lottery.maxQuantityHint', { max: lottery.max_per_user }));
-      } else {
-        toast.error(error.message || t('error.purchaseFailed'));
-      }
-      
-      // 刷新抽奖数据以获取最新状态
-      await fetchLottery();
-    } finally {
-      setIsPurchasing(false);
-    }
-  };
-
-  const handleQuantityChange = (delta: number) => {
-    const newQuantity = quantity + delta;
-    if (newQuantity >= 1 && lottery && newQuantity <= (lottery.total_tickets - lottery.sold_tickets)) {
-      setQuantity(newQuantity);
+  const handlePurchase = () => {
+    if (isActive) {
+      // TODO: 弹出购买模态框
+      toast.success(t('lottery.purchaseModalPlaceholder'));
     }
   };
 
@@ -324,54 +259,21 @@ const LotteryDetailPage: React.FC = () => {
             />
           )}
 
-          {/* Quantity Selector */}
-          <div className="bg-white rounded-xl shadow-md p-4 space-y-3">
-            <h3 className="text-lg font-semibold text-gray-900">{t('lottery.selectQuantity')}</h3>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button
-                  onClick={() => handleQuantityChange(-1)}
-                  disabled={quantity <= 1}
-                  className="w-10 h-10 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold"
-                >
-                  -
-                </button>
-                <span className="text-2xl font-bold text-gray-900 w-16 text-center">{quantity}</span>
-                <button
-                  onClick={() => handleQuantityChange(1)}
-                  disabled={!lottery || quantity >= (lottery.total_tickets - lottery.sold_tickets)}
-                  className="w-10 h-10 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-xl font-bold text-white"
-                >
-                  +
-                </button>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600">{t('lottery.totalPrice')}</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {formatCurrency(lottery?.currency || 'TJS', (lottery?.ticket_price || 0) * quantity)}
-                </p>
-              </div>
-            </div>
-            <p className="text-sm text-gray-500">
-              {t('lottery.remainingTickets')}: {lottery ? lottery.total_tickets - lottery.sold_tickets : 0}
-            </p>
-          </div>
-
           {/* Purchase Button */}
           <div className="pt-4">
             <motion.button
               whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.99 }}
               onClick={handlePurchase}
-              disabled={!isActive || isSoldOut || isPurchasing}
+              disabled={!isActive || isSoldOut}
               className={cn(
                 "w-full py-3 rounded-xl font-semibold shadow-lg transition-all duration-200",
-                isActive && !isSoldOut && !isPurchasing
+                isActive && !isSoldOut
                   ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-xl"
                   : "bg-gray-300 text-gray-600 cursor-not-allowed"
               )}
             >
-              {isPurchasing ? t('common.submitting') : isSoldOut ? t('lottery.soldOut') : isActive ? t('lottery.participateNow') : t('lottery.upcoming')}
+              {isSoldOut ? t('lottery.soldOut') : isActive ? t('lottery.participateNow') : t('lottery.upcoming')}
             </motion.button>
           </div>
         </div>

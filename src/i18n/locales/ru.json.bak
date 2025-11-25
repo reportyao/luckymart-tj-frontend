@@ -28,7 +28,7 @@
   },
   "nav": {
     "home": "Главная",
-    "lottery": "Розыгрыш",
+    "lottery": "Лотерея",
     "wallet": "Кошелёк",
     "profile": "Профиль",
     "bot": "Управление ботом",
@@ -55,8 +55,8 @@
     "upcoming": "Скоро",
     "completed": "Завершённые",
     "soldOut": "Распродано",
-    "ticketPrice": "Цена участия",
-    "totalTickets": "Всего участий",
+    "ticketPrice": "Цена билета",
+    "totalTickets": "Всего билетов",
     "soldTickets": "Продано",
     "progress": "Прогресс",
     "participate": "Участвовать",
@@ -75,7 +75,7 @@
     "drawResult": "Результат розыгрыша",
     "luckyNumber": "Счастливый номер",
     "winner": "Победитель",
-    "purchaseSuccess": "Покупка успешна",
+    "purchaseSuccess": "Покупка успешна!",
     "purchaseFailed": "Покупка не удалась",
     "sharesNotEnough": "Недостаточно долей",
     "maxQuantityHint": "Максимум можно купить {{max}} долей",
@@ -84,11 +84,7 @@
     "notWinning": "Не выиграл",
     "verification": "Информация о проверке",
     "vrfSeed": "VRF Seed",
-    "vrfProof": "VRF Proof",
-    "selectQuantity": "Выберите количество",
-    "totalPrice": "Общая цена",
-    "remainingTickets": "Осталось",
-    "pleaseEnterQuantity": "Пожалуйста, введите количество"
+    "vrfProof": "VRF Proof"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",
@@ -179,7 +175,6 @@
     "exchangeRules": "Правила обмена",
     "instantExchange": "Мгновенный обмен",
     "noFee": "Без комиссии",
-    "oneWayExchange": "Только обмен баланса на монеты удачи, односторонний",
     "youWillGet": "Вы получите",
     "quickAmount": "Быстрая сумма",
     "confirmExchange": "Подтвердить обмен",
@@ -314,14 +309,14 @@
     "pleaseLogin": "Пожалуйста, войдите через Telegram"
   },
   "error": {
-    "networkError": "Ошибка сети, повторите попытку позже",
+    "networkError": "Ошибка сети, попробуйте позже",
     "serverError": "Ошибка сервера",
     "unauthorized": "Не авторизован, войдите",
     "forbidden": "Недостаточно прав",
     "notFound": "Ресурс не найден",
     "validationError": "Ошибка валидации данных",
     "unknownError": "Неизвестная ошибка",
-    "purchaseFailed": "Покупка не удалась, попробуйте еще раз"
+    "networkError": "Ошибка сети, повторите попытку позже"
   },
   "success": {
     "operationSuccess": "Операция успешна",

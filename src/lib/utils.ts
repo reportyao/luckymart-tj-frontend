@@ -21,7 +21,7 @@ export function formatDateTime(dateString: string): string {
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 
-// 获取彩票状态文本
+// 获取抽奖状态文本
 export function getLotteryStatusText(status: string): string {
   const statusMap: Record<string, string> = {
     'ACTIVE': '进行中',
@@ -34,7 +34,7 @@ export function getLotteryStatusText(status: string): string {
   return statusMap[status] || status;
 }
 
-// 获取彩票状态颜色
+// 获取抽奖状态颜色
 export function getLotteryStatusColor(status: string): string {
   const colorMap: Record<string, string> = {
     'ACTIVE': 'bg-green-100 text-green-700',

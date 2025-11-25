@@ -20,6 +20,8 @@ export const BottomNavigation: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
+  const [profileClickCount, setProfileClickCount] = React.useState(0)
+  const [clickTimer, setClickTimer] = React.useState<NodeJS.Timeout | null>(null)
 
   const navigation = [
     {
@@ -63,7 +65,34 @@ export const BottomNavigation: React.FC = () => {
             return (
               <motion.button
                 key={item.name}
-                onClick={() => navigate(item.path)}
+                onClick={() => {
+                  // 如果点击的是"我的" tab
+                  if (item.path === '/profile') {
+                    // 增加点击计数
+                    const newCount = profileClickCount + 1
+                    setProfileClickCount(newCount)
+                    
+                    // 清除之前的定时器
+                    if (clickTimer) {
+                      clearTimeout(clickTimer)
+                    }
+                    
+                    // 如果连续点击 5 次，跳转到调试页面
+                    if (newCount >= 5) {
+                      setProfileClickCount(0)
+                      navigate('/debug')
+                      return
+                    }
+                    
+                    // 设置 1 秒后重置计数
+                    const timer = setTimeout(() => {
+                      setProfileClickCount(0)
+                    }, 1000)
+                    setClickTimer(timer)
+                  }
+                  
+                  navigate(item.path)
+                }}
                 whileTap={{ scale: 0.95 }}
                 className={cn(
                   "flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200",

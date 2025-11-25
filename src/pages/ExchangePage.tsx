@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { supabase, walletService } from '../lib/supabase'
-import { ArrowLeft, ArrowRightLeft, CheckCircle2 } from 'lucide-react'
+import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
+import { useTranslation } from "react-i18next"
+import { supabase, walletService } from "../lib/supabase"
+import { ArrowLeft, ArrowDown, CheckCircle2 } from "lucide-react"
 
 export default function ExchangePage() {
   const { t } = useTranslation()
@@ -10,8 +10,7 @@ export default function ExchangePage() {
 
   const [balance, setBalance] = useState(0)
   const [luckyCoin, setLuckyCoin] = useState(0)
-  const [exchangeType, setExchangeType] = useState<'BALANCE_TO_COIN' | 'COIN_TO_BALANCE'>('BALANCE_TO_COIN')
-  const [amount, setAmount] = useState('')
+  const [amount, setAmount] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
 
@@ -25,62 +24,51 @@ export default function ExchangePage() {
       if (!user) return
 
       const wallets = await walletService.getWallets(user.id)
-
       if (wallets) {
-        const balanceWallet = wallets.find(w => w.currency === 'TJS')
-        const coinWallet = wallets.find(w => w.currency === 'LUCKY_COIN' as any)
+        const balanceWallet = wallets.find(w => w.currency === "TJS")
+        const coinWallet = wallets.find(w => w.currency === "LUCKY_COIN" as any)
         
         if (balanceWallet) setBalance(balanceWallet.balance)
         if (coinWallet) setLuckyCoin(coinWallet.balance)
       }
     } catch (error) {
-      console.error('获取钱包失败:', error)
-    } finally {
+      console.error("获取钱包失败:", error)
     }
   }
 
   const handleExchange = async () => {
     const amountNum = parseFloat(amount)
+    
     if (!amountNum || amountNum <= 0) {
-      alert(t('wallet.pleaseEnterValidAmount'))
+      alert(t("wallet.pleaseEnterValidAmount"))
       return
     }
 
-    const sourceBalance = exchangeType === 'BALANCE_TO_COIN' ? balance : luckyCoin
-    if (amountNum > sourceBalance) {
-      alert(t('wallet.insufficientBalance'))
+    if (amountNum > balance) {
+      alert(t("wallet.insufficientBalance"))
       return
     }
 
     try {
       setSubmitting(true)
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error("未登录")
 
+      // 调用 Edge Function 进行兑换（余额 → 幸运币）
+      const result = await walletService.exchangeRealToBonus(amountNum)
       
-      
-
-                  const result = await walletService.exchangeRealToBonus(amountNum)
-
-      
-
       if (result.success) {
         setSuccess(true)
         setTimeout(() => {
-          navigate('/wallet')
+          navigate("/wallet")
         }, 2000)
       }
     } catch (error: any) {
-      console.error('兑换失败:', error)
-      alert(error.message || t('wallet.exchangeFailed'))
+      console.error("兑换失败:", error)
+      alert(error.message || t("wallet.exchangeFailed"))
     } finally {
       setSubmitting(false)
     }
-  }
-
-  const toggleExchangeType = () => {
-    setExchangeType(prev => 
-      prev === 'BALANCE_TO_COIN' ? 'COIN_TO_BALANCE' : 'BALANCE_TO_COIN'
-    )
-    setAmount('')
   }
 
   if (success) {
@@ -88,8 +76,8 @@ export default function ExchangePage() {
       <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl p-8 text-center max-w-md">
           <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('wallet.exchangeSuccess')}</h2>
-          <p className="text-gray-600">{t('wallet.balanceUpdated')}</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">{t("wallet.exchangeSuccess")}</h2>
+          <p className="text-gray-600">{t("wallet.balanceUpdated")}</p>
         </div>
       </div>
     )
@@ -102,71 +90,61 @@ export default function ExchangePage() {
         <button onClick={() => navigate(-1)} className="text-white">
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="text-white text-xl font-bold ml-4">{t('wallet.exchange')}</h1>
+        <h1 className="text-white text-xl font-bold ml-4">{t("wallet.exchange")}</h1>
       </div>
 
       <div className="p-4 space-y-4">
         {/* 兑换卡片 */}
         <div className="bg-white rounded-2xl p-6">
-          {/* 源钱包 */}
+          {/* 源钱包（余额） */}
           <div className="bg-gradient-to-r from-purple-100 to-pink-100 rounded-xl p-4 mb-4">
-            <div className="text-sm text-gray-600 mb-1">
-              {exchangeType === 'BALANCE_TO_COIN' ? t('wallet.balance') : t('wallet.luckyCoin')}
-            </div>
-            <div className="text-2xl font-bold text-purple-600">
-              {exchangeType === 'BALANCE_TO_COIN' ? balance.toFixed(2) : luckyCoin.toFixed(2)} TJS
-            </div>
+            <div className="text-sm text-gray-600 mb-1">{t("wallet.balance")}</div>
+            <div className="text-2xl font-bold text-purple-600">{balance.toFixed(2)} TJS</div>
           </div>
 
-          {/* 兑换按钮 */}
+          {/* 向下箭头 */}
           <div className="flex justify-center my-4">
-            <button
-              onClick={toggleExchangeType}
-              className="bg-purple-500 text-white p-3 rounded-full hover:bg-purple-600 transition-colors"
-            >
-              <ArrowRightLeft className="w-6 h-6" />
-            </button>
+            <div className="bg-purple-500 text-white p-3 rounded-full">
+              <ArrowDown className="w-6 h-6" />
+            </div>
           </div>
 
-          {/* 目标钱包 */}
+          {/* 目标钱包（幸运币） */}
           <div className="bg-gradient-to-r from-pink-100 to-red-100 rounded-xl p-4">
-            <div className="text-sm text-gray-600 mb-1">
-              {exchangeType === 'BALANCE_TO_COIN' ? t('wallet.luckyCoin') : t('wallet.balance')}
-            </div>
-            <div className="text-2xl font-bold text-pink-600">
-              {exchangeType === 'BALANCE_TO_COIN' ? luckyCoin.toFixed(2) : balance.toFixed(2)} TJS
-            </div>
+            <div className="text-sm text-gray-600 mb-1">{t("wallet.luckyCoin")}</div>
+            <div className="text-2xl font-bold text-pink-600">{luckyCoin.toFixed(2)}</div>
           </div>
         </div>
 
         {/* 兑换说明 */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-2">{t('wallet.exchangeRules')}</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-2">{t("wallet.exchangeRules")}</h2>
           <div className="text-sm text-gray-600 space-y-2">
-            <p>• {t('wallet.exchangeRate')}: 1:1</p>
-            <p>• {t('wallet.instantExchange')}</p>
-            <p>• {t('wallet.noFee')}</p>
+            <p>• {t("wallet.exchangeRate")}: 1:1</p>
+            <p>• {t("wallet.instantExchange")}</p>
+            <p>• {t("wallet.noFee")}</p>
+            <p className="text-red-500">• {t("wallet.oneWayExchange")}</p>
           </div>
         </div>
 
         {/* 兑换金额 */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.exchangeAmount')}</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">{t("wallet.exchangeAmount")}</h2>
           <input
             type="number"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            placeholder={t('wallet.enterAmount')}
+            placeholder={t("wallet.enterAmount")}
             className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
           />
           <div className="mt-2 text-sm text-gray-500">
-            {t('wallet.youWillGet')}: {amount || '0'} {exchangeType === 'BALANCE_TO_COIN' ? t('wallet.luckyCoin') : t('wallet.balance')}
+            {t("wallet.youWillGet")}: {amount || "0"} {t("wallet.luckyCoin")}
           </div>
         </div>
 
         {/* 快捷金额 */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.quickAmount')}</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">{t("wallet.quickAmount")}</h2>
           <div className="grid grid-cols-4 gap-2">
             {[10, 50, 100, 500].map(val => (
               <button
@@ -186,7 +164,7 @@ export default function ExchangePage() {
           disabled={submitting}
           className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50"
         >
-          {submitting ? t('common.exchanging') : t('wallet.confirmExchange')}
+          {submitting ? t("common.exchanging") : t("wallet.confirmExchange")}
         </button>
       </div>
     </div>

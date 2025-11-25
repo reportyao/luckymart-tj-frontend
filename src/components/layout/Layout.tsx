@@ -1,18 +1,21 @@
-import React from 'react'
-import { motion } from 'framer-motion'
-import { useUser } from '../../contexts/UserContext'
-import { cn } from '../../lib/utils'
+import React from "react"
+import { motion } from "framer-motion"
+import { useUser } from "../../contexts/UserContext"
+import { cn } from "../../lib/utils"
+import { BottomNavigation } from "../navigation/BottomNavigation"
 
 interface LayoutProps {
   children: React.ReactNode
   className?: string
   showHeader?: boolean
+  showBottomNav?: boolean
 }
 
 export const Layout: React.FC<LayoutProps> = ({ 
   children, 
   className,
-  showHeader = true 
+  showHeader = true,
+  showBottomNav = true
 }) => {
   const { user, telegramUser } = useUser()
 
@@ -49,29 +52,34 @@ export const Layout: React.FC<LayoutProps> = ({
                     />
                   ) : (
                     <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-	                      <span className="text-white text-xs font-medium">
-		                        {(user as any).user_metadata?.first_name?.[0] || 'U'}
-	                      </span>
+                      <span className="text-white text-xs font-medium">
+                        {(user as any).user_metadata?.first_name?.[0] || "U"}
+                      </span>
                     </div>
                   )}
                   <div className="text-right">
-		                    <p className="text-sm font-medium text-gray-900">
-		                      {(user as any).user_metadata?.first_name} {(user as any).user_metadata?.last_name}
-		                    </p>
-		                    <p className="text-xs text-gray-500">
-		                      ID: {(user as any).user_metadata?.referral_code}
-		                    </p>
-	                  </div>
-	                </div>
-	              )}
-	            </div>
-	          </div>
-	        </motion.header>
+                    <p className="text-sm font-medium text-gray-900">
+                      {(user as any).user_metadata?.first_name} {(user as any).user_metadata?.last_name}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      ID: {(user as any).user_metadata?.referral_code}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.header>
       )}
       
-      <main className="max-w-md mx-auto">
+      <main className={cn(
+        "max-w-md mx-auto",
+        showBottomNav && "pb-20"
+      )}>
         {children}
       </main>
+
+      {showBottomNav && <BottomNavigation />}
     </div>
   )
 }

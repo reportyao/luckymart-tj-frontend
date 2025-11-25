@@ -55,8 +55,8 @@
     "upcoming": "Ба қарибӣ",
     "completed": "Анҷом ёфт",
     "soldOut": "Фурӯхта шуд",
-    "ticketPrice": "Нархи иштирок",
-    "totalTickets": "Шумораи умумии иштирокҳо",
+    "ticketPrice": "Нархи билет",
+    "totalTickets": "Шумораи умумии билетҳо",
     "soldTickets": "Фурӯхта шуд",
     "progress": "Раванд",
     "participate": "Иштирок кардан",
@@ -75,7 +75,7 @@
     "drawResult": "Натиҷаи бозӣ",
     "luckyNumber": "Рақами хушбахт",
     "winner": "Ғолиб",
-    "purchaseSuccess": "Харид муваффақ шуд",
+    "purchaseSuccess": "Харид муваффақ!",
     "purchaseFailed": "Хариди ноком",
     "sharesNotEnough": "Ҳиссаҳо кофӣ нест",
     "maxQuantityHint": "Максимум {{max}} ҳисса",
@@ -84,11 +84,7 @@
     "notWinning": "Бу-бурд нест",
     "verification": "Тафтиш",
     "vrfSeed": "VRF Seed",
-    "vrfProof": "VRF Proof",
-    "selectQuantity": "Шумораро интихоб кунед",
-    "totalPrice": "Нархи умумӣ",
-    "remainingTickets": "Боқимонда",
-    "pleaseEnterQuantity": "Лутфан шумораро ворид кунед"
+    "vrfProof": "VRF Proof"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -179,7 +175,6 @@
     "exchangeRules": "Қоидаҳои иваз",
     "instantExchange": "Ивази фаврӣ",
     "noFee": "Бе комиссия",
-    "oneWayExchange": "Танҳо табдили баланс ба тангаҳои хушбахт, якҷониба",
     "youWillGet": "Шумо мегиред",
     "quickAmount": "Маблағи зуд",
     "confirmExchange": "Ивазро тасдиқ кунед",
@@ -321,7 +316,7 @@
     "notFound": "Манбаъ ёфт нашуд",
     "validationError": "Хатогии тасдиқи маълумот",
     "unknownError": "Хатогии номаълум",
-    "purchaseFailed": "Харид ноком шуд, аз нав кӯшиш кунед"
+    "networkError": "Хатогии шабака, лутфан баъдтар кӯшиш кунед"
   },
   "success": {
     "operationSuccess": "Амалиёт муваффақ",

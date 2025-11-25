@@ -8,11 +8,12 @@ const corsHeaders = {
 
 interface ReferralNode {
   id: string
-  username: string
+  telegram_username: string
+  first_name: string
+  last_name: string
   telegram_id: string
-  referral_code: string
-  referrer_id: string | null
-  referral_level: number
+  invite_code: string
+  referred_by_id: string | null
   created_at: string
   children: ReferralNode[]
   stats: {
@@ -73,13 +74,13 @@ serve(async (req) => {
       const { data: children } = await supabaseClient
         .from('users')
         .select('*')
-        .eq('referrer_id', userId)
+        .eq('referred_by_id', userId)
 
       // 获取返利统计
       const { data: commissions } = await supabaseClient
         .from('commissions')
         .select('amount, level')
-        .eq('referrer_id', userId)
+        .eq('referred_by_id', userId)
 
       const stats = {
         level1_count: 0,
@@ -108,11 +109,12 @@ serve(async (req) => {
 
       return {
         id: currentUser.id,
-        username: currentUser.username,
+        telegram_username: currentUser.telegram_username,
+        first_name: currentUser.first_name,
+        last_name: currentUser.last_name,
         telegram_id: currentUser.telegram_id,
-        referral_code: currentUser.referral_code,
-        referrer_id: currentUser.referrer_id,
-        referral_level: currentUser.referral_level,
+        invite_code: currentUser.invite_code,
+        referred_by_id: currentUser.referred_by_id,
         created_at: currentUser.created_at,
         children: childNodes,
         stats
