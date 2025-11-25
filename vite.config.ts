@@ -32,6 +32,8 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       sourcemap: mode !== 'production',
       minify: 'terser',
+      // 强制每次构建生成新的文件名
+      assetsInlineLimit: 0,
       terserOptions: {
         compress: {
           drop_console: mode === 'production',
