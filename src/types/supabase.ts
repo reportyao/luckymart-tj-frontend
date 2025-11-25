@@ -181,27 +181,27 @@ export type Database = {
         Row: {
           id: string;
           user_id: string;
-          showoff_id: string;
+          post_id: string;
           created_at: string;
         };
         Insert: {
           id?: string;
           user_id: string;
-          showoff_id: string;
+          post_id: string;
           created_at?: string;
         };
         Update: {
           id?: string;
           user_id?: string;
-          showoff_id?: string;
+          post_id?: string;
           created_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "likes_showoff_id_fkey";
-            columns: ["showoff_id"];
+            foreignKeyName: "likes_post_id_fkey";
+            columns: ["post_id"];
             isOneToOne: false;
-            referencedRelation: "showoffs";
+            referencedRelation: "posts";
             referencedColumns: ["id"];
           },
           {
