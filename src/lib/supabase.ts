@@ -589,11 +589,11 @@ export const referralService = {
 	    if (!user) throw new Error('用户未登录');
 	    
 	
-	    const { error } = await supabase
-	      .from('likes')
-	      .delete()
-	      .eq('post_id', showoffId)
-	      .eq('user_id', user.id);
+    const { error } = await supabase
+      .from('likes')
+      .delete()
+      .eq('post_id', showoffId)
+      .eq('user_id', user.id) as any;
 	
 	    if (error) {
 	      console.error('Failed to unlike showoff:', error);
