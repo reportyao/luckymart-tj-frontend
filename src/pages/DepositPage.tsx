@@ -104,8 +104,22 @@ export default function DepositPage() {
       return
     }
 
+    // 验证是否上传了凭证
+    if (!uploadedImages || uploadedImages.length === 0) {
+      alert(t('wallet.pleaseUploadProof') || '请上传充值凭证')
+      return
+    }
+
     try {
       setSubmitting(true)
+
+      // 检查用户认证状态
+      const { data: { session } } = await supabase.auth.getSession()
+      if (!session) {
+        alert(t('auth.pleaseLogin') || '请先登录')
+        navigate('/login')
+        return
+      }
 
       const { data, error } = await supabase.functions.invoke('deposit-request', {
         body: {
