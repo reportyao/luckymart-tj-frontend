@@ -77,10 +77,11 @@ export const BottomNavigation: React.FC = () => {
                       clearTimeout(clickTimer)
                     }
                     
-                    // 如果连续点击 5 次，跳转到调试页面
+                    // 如果连续点击 5 次，触发浮层调试面板
                     if (newCount >= 5) {
                       setProfileClickCount(0)
-                      navigate('/debug')
+                      // 触发浮层调试面板（通过自定义事件）
+                      window.dispatchEvent(new CustomEvent('showDebugPanel'))
                       return
                     }
                     

@@ -128,6 +128,7 @@
     "exchangeAmount": "Сумма обмена",
     "exchangeSuccess": "Обмен успешен",
     "insufficientBalance": "Недостаточно средств",
+    "insufficientLuckyCoins": "Недостаточно счастливых монет",
     "depositSuccess": "Пополнение успешно",
     "withdrawSuccess": "Вывод успешен",
     "balanceUpdated": "Баланс обновлён",
@@ -321,7 +322,8 @@
     "notFound": "Ресурс не найден",
     "validationError": "Ошибка валидации данных",
     "unknownError": "Неизвестная ошибка",
-    "purchaseFailed": "Покупка не удалась, попробуйте еще раз"
+    "purchaseFailed": "Покупка не удалась, попробуйте еще раз",
+    "notLoggedIn": "Пожалуйста, войдите сначала"
   },
   "success": {
     "operationSuccess": "Операция успешна",

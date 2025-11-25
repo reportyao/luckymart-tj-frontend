@@ -55,7 +55,21 @@ export const DebugFloatingButton: React.FC = () => {
   const { user, telegramUser } = useUser()
   const location = useLocation()
 
-  // 长按右下角 3 秒显示调试按钮
+  // 监听自定义事件：点击“我的”5次触发
+  useEffect(() => {
+    const handleShowDebugPanel = () => {
+      setIsVisible(true)
+      setIsOpen(true)
+    }
+
+    window.addEventListener('showDebugPanel', handleShowDebugPanel)
+
+    return () => {
+      window.removeEventListener('showDebugPanel', handleShowDebugPanel)
+    }
+  }, [])
+
+  // 长按右下角 3 次显示调试按钮（备用方法）
   useEffect(() => {
     let touchTimer: NodeJS.Timeout
     let touchCount = 0

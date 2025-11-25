@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
+import { useUser } from '../contexts/UserContext';
 import { Tables, Enums } from '../types/supabase';
 import { ArrowLeftIcon, ClockIcon, UserGroupIcon, StarIcon } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
@@ -29,6 +30,7 @@ type Showoff = Tables<'showoffs'> & {
 const LotteryDetailPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { supabase } = useSupabase();
+  const { user, wallets } = useUser();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
@@ -131,6 +133,12 @@ const LotteryDetailPage: React.FC = () => {
   const isUpcoming = lottery.status === 'UPCOMING' || lottery.status === 'PENDING';
 
   const handlePurchase = async () => {
+    // 检查登录状态
+    if (!user) {
+      toast.error(t('error.notLoggedIn') || '请先登录');
+      return;
+    }
+
     if (!isActive || quantity < 1) {
       toast.error(t('lottery.pleaseEnterQuantity'));
       return;
@@ -138,6 +146,18 @@ const LotteryDetailPage: React.FC = () => {
 
     if (!lottery) {
       toast.error(t('error.unknownError'));
+      return;
+    }
+
+    // 计算需要的幸运币数量
+    const totalCost = lottery.ticket_price * quantity;
+    
+    // 检查幸运币余额
+    const luckyCoinsWallet = wallets.find(w => w.type === 'LUCKY_COIN');
+    const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
+    
+    if (luckyCoinsBalance < totalCost) {
+      toast.error(t('wallet.insufficientLuckyCoins') || `幸运币余额不足，需要 ${totalCost} 幸运币，当前余额 ${luckyCoinsBalance} 幸运币`);
       return;
     }
 

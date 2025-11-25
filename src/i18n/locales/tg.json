@@ -128,6 +128,7 @@
     "exchangeAmount": "Маблағи иваз",
     "exchangeSuccess": "Иваз муваффақ",
     "insufficientBalance": "Маблағ кофӣ нест",
+    "insufficientLuckyCoins": "Тангаҳои бахтиор кофӣ нест",
     "depositSuccess": "Пуркунӣ муваффақ",
     "withdrawSuccess": "Гирифтан муваффақ",
     "balanceUpdated": "Тавозун навсозӣ шуд",
@@ -321,7 +322,8 @@
     "notFound": "Манбаъ ёфт нашуд",
     "validationError": "Хатогии тасдиқи маълумот",
     "unknownError": "Хатогии номаълум",
-    "purchaseFailed": "Харид ноком шуд, аз нав кӯшиш кунед"
+    "purchaseFailed": "Харид ноком шуд, аз нав кӯшиш кунед",
+    "notLoggedIn": "Лутфан аввал ворид шавед"
   },
   "success": {
     "operationSuccess": "Амалиёт муваффақ",

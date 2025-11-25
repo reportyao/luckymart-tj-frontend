@@ -143,6 +143,7 @@
     "exchangeAmount": "兑换数量",
     "exchangeSuccess": "兑换成功",
     "insufficientBalance": "余额不足",
+    "insufficientLuckyCoins": "幸运币余额不足",
     "depositSuccess": "充值成功",
     "withdrawSuccess": "提现成功",
     "pleaseSelectPaymentMethod": "请选择支付方式",
@@ -336,7 +337,8 @@
     "notFound": "资源不存在",
     "validationError": "数据验证失败",
     "unknownError": "未知错误",
-    "purchaseFailed": "购买失败，请重试"
+    "purchaseFailed": "购买失败，请重试",
+    "notLoggedIn": "请先登录"
   },
   "success": {
     "operationSuccess": "操作成功",
