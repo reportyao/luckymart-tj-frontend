@@ -5,7 +5,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
 
 import { Layout } from './components/layout/Layout'
-import { DevTools } from './components/DevTools'
+
 
 // 路由级别代码分割 - 懒加载页面组件
 const HomePage = lazy(() => import('./pages/HomePage'))
@@ -47,7 +47,6 @@ function App() {
   return (
     <Router>
         <div className="min-h-screen bg-gray-50">
-          <DevTools />
           <Layout>
             <Suspense fallback={<PageLoader />}>
               <Routes>
