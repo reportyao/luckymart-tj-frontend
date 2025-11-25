@@ -54,7 +54,7 @@
     "active": "进行中",
     "upcoming": "即将开始",
     "completed": "已完成",
-    "soldOut": "已售完",
+    "soldOut": "已售罄",
     "ticketPrice": "票价",
     "totalTickets": "总票数",
     "soldTickets": "已售",
@@ -71,7 +71,6 @@
     "quantity": "购买数量",
     "yourNumbers": "您的中奖码",
     "buyNow": "立即购买",
-    "soldOut": "已售罄",
     "drawing": "开奖中...",
     "drawResult": "开奖结果",
     "luckyNumber": "幸运号码",
@@ -85,7 +84,22 @@
     "notWinning": "未中奖",
     "verification": "验证信息",
     "vrfSeed": "VRF种子",
-    "vrfProof": "VRF证明"
+    "vrfProof": "VRF证明",
+    "participateNow": "立即参与",
+    "productDetails": "商品详情",
+    "maxPerUser": "每人限购",
+    "recentShowoffs": "最近晒单",
+    "noShowoffsYet": "暂无晒单",
+    "won": "中奖了",
+    "purchaseModalPlaceholder": "请输入购买数量",
+    "purchaseModalTitle": "购买夺宝券",
+    "confirmPurchase": "确认购买",
+    "drawing_in": "开奖倒计时",
+    "drawing_now": "正在开奖",
+    "please_wait": "请稍候...",
+    "countdown_hint": "售罄后自动开奖",
+    "minutes": "分",
+    "seconds": "秒"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -127,9 +141,6 @@
     "insufficientBalance": "余额不足",
     "depositSuccess": "充值成功",
     "withdrawSuccess": "提现成功",
-    "deposit": "充值",
-    "withdraw": "提现",
-    "exchange": "兑换",
     "pleaseSelectPaymentMethod": "请选择支付方式",
     "minimumAmount": "最小金额",
     "maximumAmount": "最大金额",
@@ -313,14 +324,13 @@
     "pleaseLogin": "请通过 Telegram 访问此应用"
   },
   "error": {
-    "networkError": "网络错误,请稍后重试",
+    "networkError": "网络错误，请稍后重试",
     "serverError": "服务器错误",
     "unauthorized": "未授权,请先登录",
     "forbidden": "权限不足",
     "notFound": "资源不存在",
     "validationError": "数据验证失败",
-    "unknownError": "未知错误",
-    "networkError": "网络错误，请稍后重试"
+    "unknownError": "未知错误"
   },
   "success": {
     "operationSuccess": "操作成功",
@@ -356,7 +366,10 @@
     "following": "关注",
     "popular": "热门",
     "noShowoffs": "暂无晒单",
-    "loadMore": "加载更多"
+    "loadMore": "加载更多",
+    "won": "中奖了",
+    "noShowoffsYet": "暂无晒单",
+    "recentShowoffs": "最近晒单"
   },
   "market": {
     "resaleMarket": "转售市场",
@@ -436,13 +449,6 @@
     "good": "良好",
     "warning": "警告",
     "critical": "严重"
-  },
-  "onboarding": {
-    "title": "邀请好友，终身赚分成",
-    "subtitle": "直推3% · 二级1% · 三级0.5%",
-    "description": "你的朋友每次消费，系统自动发放佣金到你的夺宝币余额，可继续参与夺宝",
-    "buttonText": "立即生成邀请链接",
-    "skipText": "稍后再说"
   },
   "banner": {
     "mainText": "多一个朋友，多一条收入线",

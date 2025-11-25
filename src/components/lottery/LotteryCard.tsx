@@ -27,17 +27,25 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
   className
 }) => {
 	  const { t, i18n } = useTranslation()
-  const [timeRemaining, setTimeRemaining] = React.useState(
-    getTimeRemaining(lottery.end_time)
-  )
+  // 卖罄后显示开奖倒计时，否则显示结束时间倒计时
+  const [timeRemaining, setTimeRemaining] = React.useState(() => {
+    if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
+      return getTimeRemaining(lottery.draw_time);
+    }
+    return getTimeRemaining(lottery.end_time);
+  });
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setTimeRemaining(getTimeRemaining(lottery.end_time))
-    }, 1000)
+      if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
+        setTimeRemaining(getTimeRemaining(lottery.draw_time));
+      } else {
+        setTimeRemaining(getTimeRemaining(lottery.end_time));
+      }
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [lottery.end_time])
+    return () => clearInterval(timer);
+  }, [lottery.end_time, lottery.draw_time, lottery.status]);
 
   const progress = (lottery.sold_tickets / lottery.total_tickets) * 100
   const isActive = lottery.status === 'ACTIVE'
@@ -81,7 +89,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center text-white">
               <StarIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm font-medium">{t('lottery.period')}: {lottery.id}</p>
+              <p className="text-sm font-medium">{lottery.title}</p>
             </div>
           </div>
         )}
@@ -99,9 +107,13 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 
       <div className="p-4">
         {/* 彩票标题 */}
-		        <h3 className="text-lg font-bold text-gray-900 mb-1">
-		          {getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title}
-		        </h3>
+	        <h3 className="text-lg font-bold text-gray-900 mb-1">
+	          {(() => {
+	            const localizedName = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language);
+	            const localizedTitle = getLocalizedText(lottery.title_i18n as Record<string, string> | null, i18n.language);
+	            return localizedName || localizedTitle || lottery.title;
+	          })()}
+	        </h3>
         
 		        {lottery.description && (
 		          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -161,6 +173,16 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	              {t('lottery.remainingTime')}: {' '}
 	              {timeRemaining.days > 0 && `${timeRemaining.days}天 `}
               {timeRemaining.hours.toString().padStart(2, '0')}:
+              {timeRemaining.minutes.toString().padStart(2, '0')}:
+              {timeRemaining.seconds.toString().padStart(2, '0')}
+            </div>
+          )}
+          
+          {/* 售罄后显示开奖倒计时 */}
+          {isSoldOut && timeRemaining.total > 0 && (
+            <div className="flex items-center text-xs text-red-600 font-semibold">
+              <ClockIcon className="w-3 h-3 mr-1" />
+              {t('lottery.drawing_in')}: {' '}
               {timeRemaining.minutes.toString().padStart(2, '0')}:
               {timeRemaining.seconds.toString().padStart(2, '0')}
             </div>

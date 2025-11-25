@@ -134,6 +134,15 @@ export function getLocalizedText(
   language: string,
   fallbackLanguage: string = 'zh'
 ): string {
+  // 如果是字符串，尝试解析为 JSON
+  if (typeof jsonb === 'string') {
+    try {
+      jsonb = JSON.parse(jsonb);
+    } catch (e) {
+      return '';
+    }
+  }
+  
   if (!jsonb || typeof jsonb !== 'object' || Array.isArray(jsonb)) {
     return '';
   }

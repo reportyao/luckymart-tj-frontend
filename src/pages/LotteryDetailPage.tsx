@@ -106,8 +106,18 @@ const LotteryDetailPage: React.FC = () => {
     return <div className="text-center py-10 text-red-500">{t('lottery.notFound')}</div>;
   }
 
-  const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
-  const description = getLocalizedText(lottery.description_i18n, i18n.language) || lottery.description;
+  // 处理 title：优先使用 title_i18n，如果为空则尝试解析 title 是否为 JSON 字符串
+  let title = getLocalizedText(lottery.title_i18n, i18n.language);
+  if (!title) {
+    title = getLocalizedText(lottery.title as any, i18n.language) || lottery.title;
+  }
+
+  // 处理 description：优先使用 description_i18n，如果为空则尝试解析 description 是否为 JSON 字符串
+  let description = getLocalizedText(lottery.description_i18n, i18n.language);
+  if (!description) {
+    description = getLocalizedText(lottery.description as any, i18n.language) || lottery.description || '';
+  }
+
   const specifications = getLocalizedText(lottery.specifications_i18n, i18n.language);
   const material = getLocalizedText(lottery.material_i18n, i18n.language);
   const details = getLocalizedText(lottery.details_i18n, i18n.language);

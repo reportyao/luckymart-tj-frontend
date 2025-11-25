@@ -161,8 +161,14 @@ export const authService = {
         throw new Error('Invalid response from auth-telegram function');
       }
       
+      // 添加字段映射：referral_code -> invite_code
+      const user = {
+        ...data.data.user,
+        invite_code: data.data.user.referral_code // 映射字段
+      };
+      
       return {
-        user: data.data.user,
+        user,
         session: data.data.session,
         wallets: data.data.wallets,
         is_new_user: data.data.is_new_user
@@ -192,7 +198,12 @@ export const authService = {
       throw new Error(`获取用户资料失败: ${error.message}`);
     }
 
-    return { ...user, ...profile };
+    // 添加字段映射：referral_code -> invite_code
+    return { 
+      ...user, 
+      ...profile,
+      invite_code: profile.referral_code // 映射字段
+    };
   },
 
   /**
@@ -555,14 +566,8 @@ export const referralService = {
 	    // TODO: 实现 filter 逻辑
     const { data, error } = await supabase
 	      .from('showoffs')
-	      .select(
-	        `
-	          *,
-	          lottery:lotteries (title, image_url, ticket_price, currency),
-	          user_profile:users (telegram_username, avatar_url)
-	        `
-	      )
-	      .eq('status', 'APPROVED' as ShowoffStatus)
+	      .select('*')
+	      .eq('status', 'APPROVED')
       .order('created_at', { ascending: false });
 
     if (error) {
