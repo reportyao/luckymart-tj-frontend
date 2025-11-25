@@ -18,7 +18,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // 导出常用的类型
 
-export type UserProfile = Tables<'user_profiles'>;
+export type UserProfile = Tables<'users'>;
 export type Wallet = Tables<'wallets'>;
 export type Order = Tables<'orders'>;
 export type Commission = Tables<'commissions'>;
@@ -173,7 +173,7 @@ export const authService = {
 
     // 获取用户 Profile
     const { data: profile, error } = await supabase
-	      .from('user_profiles')
+	      .from('users')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -321,7 +321,7 @@ export const lotteryService: any = {
 	          winner:tickets!lottery_results_winner_id_fkey (
 	            ticket_number,
 	            user_id,
-	            profiles:user_profiles (username, avatar_url)
+	            profiles:users (telegram_username, avatar_url)
 	          ),
 	          lottery:lotteries (
 	            title,
@@ -550,7 +550,7 @@ export const referralService = {
 	        `
 	          *,
 	          lottery:lotteries (title, image_url, ticket_price, currency),
-	          user_profile:user_profiles (username, avatar_url)
+	          user_profile:users (telegram_username, avatar_url)
 	        `
 	      )
 	      .eq('status', 'APPROVED' as ShowoffStatus)
