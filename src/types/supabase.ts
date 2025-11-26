@@ -2906,6 +2906,14 @@ export type Database = {
         }
         Returns: Json
       }
+      increment_likes_count: {
+        Args: { showoff_id: string }
+        Returns: undefined
+      }
+      decrement_likes_count: {
+        Args: { showoff_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       CommentStatus: "PUBLISHED" | "HIDDEN" | "DELETED"
