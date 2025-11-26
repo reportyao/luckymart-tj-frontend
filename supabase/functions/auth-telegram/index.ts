@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         }
 
         // 检查用户是否已存在
-        const existingUserResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?telegram_id=eq.${telegramId}&select=*`, {
+        const existingUserResponse = await fetch(`${supabaseUrl}/rest/v1/users?telegram_id=eq.${telegramId}&select=*`, {
             headers: {
                 'Authorization': `Bearer ${serviceRoleKey}`,
                 'apikey': serviceRoleKey,
@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
                 {
                     user_id: user.id,
                     type: 'BALANCE',
-                    currency: 'USD',
+                    currency: 'TJS',
                     balance: 0,
                     frozen_balance: 0,
                     total_deposits: 0,
@@ -196,7 +196,7 @@ Deno.serve(async (req) => {
                 {
                     user_id: user.id,
                     type: 'LUCKY_COIN',
-                    currency: 'USD',
+                    currency: 'TJS',
                     balance: 0,
                     frozen_balance: 0,
                     total_deposits: 0,
