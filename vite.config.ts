@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => {
       outDir: 'dist',
       sourcemap: false,
       minify: 'terser',
-      assetsInlineLimit: 4096,
+      assetsInlineLimit: 0,  // 强制每次构建生成新的文件名，防止缓存
       terserOptions: {
         compress: {
           drop_console: true,
