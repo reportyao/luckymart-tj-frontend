@@ -28,7 +28,7 @@
   },
   "nav": {
     "home": "首页",
-    "lottery": "夺宝",
+    "lottery": "抽奖",
     "wallet": "钱包",
     "profile": "我的",
     "bot": "Bot管理",
@@ -75,7 +75,7 @@
     "drawResult": "开奖结果",
     "luckyNumber": "幸运号码",
     "winner": "中奖用户",
-    "purchaseSuccess": "购买成功！",
+    "purchaseSuccess": "购买成功",
     "purchaseFailed": "购买失败",
     "sharesNotEnough": "份额不足，请减少购买数量",
     "maxQuantityHint": "最多可购买 {{max}} 份",
@@ -99,7 +99,11 @@
     "please_wait": "请稍候...",
     "countdown_hint": "售罄后自动开奖",
     "minutes": "分",
-    "seconds": "秒"
+    "seconds": "秒",
+    "selectQuantity": "选择数量",
+    "totalPrice": "总价",
+    "remainingTickets": "剩余",
+    "pleaseEnterQuantity": "请输入购买数量"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -122,7 +126,7 @@
   "wallet": {
     "myWallet": "我的钱包",
     "balance": "余额",
-    "luckyCoins": "夺宝币",
+    "luckyCoins": "幸运币",
     "deposit": "充值",
     "withdraw": "提现",
     "exchange": "兑换",
@@ -139,6 +143,7 @@
     "exchangeAmount": "兑换数量",
     "exchangeSuccess": "兑换成功",
     "insufficientBalance": "余额不足",
+    "insufficientLuckyCoins": "幸运币余额不足",
     "depositSuccess": "充值成功",
     "withdrawSuccess": "提现成功",
     "pleaseSelectPaymentMethod": "请选择支付方式",
@@ -185,10 +190,13 @@
     "pleaseCompleteIdentityInfo": "请填写完整的身份信息",
     "withdrawRequestFailed": "提现申请失败",
     "withdrawRequestSubmitted": "提现申请已提交",
-    "luckyCoin": "夺宝币",
+    "pleaseUploadProof": "请上传充值凭证",
+    "imageUploadFailed": "图片上传失败",
+    "luckyCoin": "幸运币",
     "exchangeRules": "兑换规则",
     "instantExchange": "即时兑换",
     "noFee": "无手续费",
+    "oneWayExchange": "仅支持余额兑换幸运币，单向兑换",
     "youWillGet": "您将获得",
     "quickAmount": "快捷金额",
     "confirmExchange": "确认兑换",
@@ -202,7 +210,7 @@
     "orderStatus": "订单状态",
     "orderAmount": "订单金额",
     "orderTime": "下单时间",
-    "lotteryPurchase": "彩票购买",
+    "lotteryPurchase": "参与抽奖",
     "coinExchange": "币种兑换",
     "pending": "待处理",
     "completed": "已完成",
@@ -211,7 +219,7 @@
     "viewDetails": "查看详情",
     "noOrders": "暂无订单记录",
     "orderDetails": "订单详情",
-    "lotteryInfo": "彩票信息",
+    "lotteryInfo": "抽奖信息",
     "paymentInfo": "支付信息",
     "purchasedNumbers": "购买号码"
   },
@@ -220,7 +228,7 @@
     "markAllRead": "全部标记已读",
     "noNotifications": "暂无通知",
     "lotteryResult": "开奖结果",
-    "lotteryReminder": "彩票提醒",
+    "lotteryReminder": "抽奖提醒",
     "paymentSuccess": "支付成功",
     "paymentFailed": "支付失败",
     "marketSold": "市场售出",
@@ -292,6 +300,8 @@
     "anonymousUser": "匿名用户",
     "levelXFriend": "L{{level}} 好友",
     "contributedCommission": "贡献佣金",
+    "myTeam": "我的团队",
+    "viewTeamInfo": "查看团队信息",
     "registrationTime": "注册时间",
     "totalConsumption": "总消费",
     "shareSuccess": "分享事件已记录",
@@ -314,7 +324,9 @@
     "invitedUsers": "已邀请用户",
     "totalRewards": "总奖励",
     "copyReferralCode": "复制推荐码",
-    "shareReferralLink": "分享推荐链接"
+    "shareReferralLink": "分享推荐链接",
+    "notifications": "我的消息",
+    "viewNotifications": "查看消息通知"
   },
   "auth": {
     "welcome": "欢迎来到 LuckyMart",
@@ -330,7 +342,9 @@
     "forbidden": "权限不足",
     "notFound": "资源不存在",
     "validationError": "数据验证失败",
-    "unknownError": "未知错误"
+    "unknownError": "未知错误",
+    "purchaseFailed": "购买失败，请重试",
+    "notLoggedIn": "请先登录"
   },
   "success": {
     "operationSuccess": "操作成功",
@@ -339,7 +353,9 @@
     "updateSuccess": "更新成功"
   },
   "showoff": {
+    "showoff": "晒单",
     "showoffGallery": "晒单广场",
+    "viewMyShowoffs": "查看我的晒单",
     "myShowoffs": "我的晒单",
     "createShowoff": "发布晒单",
     "uploadImages": "上传图片",
@@ -369,10 +385,30 @@
     "loadMore": "加载更多",
     "won": "中奖了",
     "noShowoffsYet": "暂无晒单",
-    "recentShowoffs": "最近晒单"
+    "recentShowoffs": "最近晒单",
+    "imageRequiredError": "请至少上传一张图片",
+    "contentRequiredError": "请填写晒单内容",
+    "lotteryRequiredError": "请选择中奖奖品",
+    "maxImagesError": "最多只能上传9张图片",
+    "imagesUploadedAndOptimized": "图片上传成功",
+    "showoffSuccessPending": "晒单发布成功，等待审核",
+    "selectWinningRecordError": "请选择中奖记录",
+    "minContentLengthError": "晒单内容至少需要10个字",
+    "unknownLottery": "未知夺宝",
+    "beTheFirst": "暂无晒单",
+    "publishNow": "立即发布"
+  },
+  "prize": {
+    "prizeManagement": "中奖管理",
+    "viewPrizes": "查看中奖记录",
+    "myPrizes": "我的奖品",
+    "prizeDetails": "奖品详情"
   },
   "market": {
     "resaleMarket": "转售市场",
+    "buyResaleItems": "购买转售商品",
+    "resaleRecords": "转售记录",
+    "viewResaleHistory": "查看转售历史",
     "myListings": "我的转售",
     "createListing": "发布转售",
     "selectLottery": "选择夺宝",

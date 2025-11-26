@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
+import { useInviteStats } from '../hooks/useInviteStats'
 import { Lottery } from '../lib/supabase'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { useSupabase } from '../contexts/SupabaseContext'
@@ -16,6 +17,7 @@ const HomePage: React.FC = () => {
   const { t } = useTranslation()
 	  const { user, profile, wallets, isLoading: userLoading, refreshWallets } = useUser()
   const { lotteryService } = useSupabase()
+  const { stats: inviteStats } = useInviteStats()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
 
@@ -132,7 +134,7 @@ const HomePage: React.FC = () => {
             <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <TrophyIcon className="w-5 h-5 text-blue-600" />
             </div>
-            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
             <p className="text-xs text-gray-500">{t('home.winCount')}</p>
           </SafeMotion>
 
@@ -145,7 +147,7 @@ const HomePage: React.FC = () => {
             <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <StarIcon className="w-5 h-5 text-green-600" />
             </div>
-            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
             <p className="text-xs text-gray-500">{t('home.participationCount')}</p>
           </SafeMotion>
 
@@ -158,7 +160,7 @@ const HomePage: React.FC = () => {
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
               <UsersIcon className="w-5 h-5 text-purple-600" />
             </div>
-            <p className="text-lg font-bold text-gray-900">0</p>
+            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
             <p className="text-xs text-gray-500">{t('home.inviteFriends')}</p>
           </SafeMotion>
         </div>

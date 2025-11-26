@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
             const referralCodeFromParam = startParam.substring(4);
             
             // 查找推荐人
-            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/user_profiles?referral_code=eq.${referralCodeFromParam}&select=id`, {
+            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/users?referral_code=eq.${referralCodeFromParam}&select=id`, {
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
                     'apikey': serviceRoleKey,
@@ -117,6 +117,7 @@ Deno.serve(async (req) => {
 
             // 如果用户还没有推荐人，且有有效的推荐码，则设置推荐关系
             if (!user.referred_by_id && referredById) {
+                updateData.referrer_id = referredById;
                 updateData.referred_by_id = referredById;
             }
 
@@ -148,6 +149,7 @@ Deno.serve(async (req) => {
                 language_code: userData.language_code || 'zh',
                 referral_code: referralCode,
                 referred_by_id: referredById,
+                referrer_id: referredById,
                 status: 'ACTIVE',
                 is_verified: false,
                 kyc_level: 'NONE',
