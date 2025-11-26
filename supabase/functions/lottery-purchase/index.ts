@@ -39,9 +39,9 @@ Deno.serve(async (req) => {
 
     const sessionToken = authHeader.replace('Bearer ', '');
 
-    // ✅ 查询 user_sessions 表验证 token
+    // ✅ 查询 user_sessions 表验证 token (分两步避免类型冲突)
     const sessionResponse = await fetch(
-      `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*,user:users(*)`,
+      `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -68,7 +68,28 @@ Deno.serve(async (req) => {
       throw new Error('Session expired');
     }
 
-    const user = session.user;
+    // ✅ 单独查询用户信息
+    const userResponse = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${session.user_id}&select=*`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!userResponse.ok) {
+      throw new Error('User not found');
+    }
+
+    const users = await userResponse.json();
+    if (users.length === 0) {
+      throw new Error('User not found');
+    }
+
+    const user = users[0];
     const userId = user.id;
 
     // 获取彩票信息
