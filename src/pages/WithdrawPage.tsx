@@ -8,7 +8,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 export default function WithdrawPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { wallets } = useUser()
+  const { wallets, sessionToken } = useUser()
   
   const [withdrawalMethod, setWithdrawalMethod] = useState<'BANK_TRANSFER' | 'ALIF_MOBI' | 'DC_BANK'>('BANK_TRANSFER')
   const [amount, setAmount] = useState('')
@@ -68,9 +68,12 @@ export default function WithdrawPage() {
     try {
       setSubmitting(true)
 
-      // 假设 withdraw-request 是一个 Edge Function
-      const { data, error } = await supabase.functions.invoke('withdraw-request', {
-        body: {
+      console.log('[Debug] Withdraw - Session token:', sessionToken ? `${sessionToken.substring(0, 8)}...` : 'null');
+      console.log('[Debug] Withdraw - Amount:', amountNum);
+      console.log('[Debug] Withdraw - Method:', withdrawalMethod);
+
+      const requestBody = {
+        session_token: sessionToken,
           amount: amountNum,
           currency: 'TJS',
           withdrawalMethod: withdrawalMethod,
@@ -83,8 +86,17 @@ export default function WithdrawPage() {
           idCardNumber: idCardNumber,
           idCardName: idCardName,
           phoneNumber: phoneNumber,
-        }
-      })
+        };
+      
+      console.log('[Debug] Withdraw - Request body:', requestBody);
+
+      // 假设 withdraw-request 是一个 Edge Function
+      const { data, error } = await supabase.functions.invoke('withdraw-request', {
+        body: requestBody
+      });
+
+      console.log('[Debug] Withdraw - Response data:', data);
+      console.log('[Debug] Withdraw - Response error:', error);
 
       if (error) throw error
 

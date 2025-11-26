@@ -16,6 +16,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 // 创建 Supabase 客户端实例
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
+// Helper 函数：获取带有自定义 session token 的请求选项
+function getAuthHeaders() {
+  const sessionToken = localStorage.getItem('custom_session_token');
+  if (sessionToken) {
+    return {
+      headers: {
+        Authorization: `Bearer ${sessionToken}`
+      }
+    };
+  }
+  return {};
+}
+
 // 导出常用的类型
 
 export type UserProfile = Tables<'users'>;
@@ -439,12 +452,29 @@ export const walletService = {
    * @param amount 兑换金额
    */
   async exchangeRealToBonus(amount: number): Promise<{ success: boolean; new_balance?: number }> {
-    const user = await authService.getCurrentUser();
-    if (!user) throw new Error('用户未登录');
+    // 从 localStorage 获取 session token
+    const sessionToken = localStorage.getItem('custom_session_token');
+    console.log('[Debug] exchangeRealToBonus called');
+    console.log('[Debug] Session token:', sessionToken ? `${sessionToken.substring(0, 8)}...` : 'null');
+    console.log('[Debug] Amount:', amount);
+    
+    if (!sessionToken) {
+      console.error('[Debug] No session token found in localStorage');
+      throw new Error('用户未登录');
+    }
+
+    const requestBody = { 
+      session_token: sessionToken,
+      amount 
+    };
+    console.log('[Debug] Request body:', requestBody);
 
     const { data, error } = await supabase.functions.invoke('exchange-balance', {
-      body: { amount }
+      body: requestBody
     });
+    
+    console.log('[Debug] Response data:', data);
+    console.log('[Debug] Response error:', error);
 
     if (error) {
       console.error('Failed to exchange balance:', error);

@@ -1,53 +1,144 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// 通用的 session 验证函数
+async function validateSession(sessionToken: string) {
+  if (!sessionToken) {
+    throw new Error('未授权：缺少认证令牌');
+  }
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('服务器配置错误');
+  }
+
+  // 查询 user_sessions 表验证 session
+  const sessionResponse = await fetch(
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*,users(*)`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!sessionResponse.ok) {
+    throw new Error('验证会话失败');
+  }
+
+  const sessions = await sessionResponse.json();
+  
+  if (sessions.length === 0) {
+    throw new Error('未授权：会话不存在或已失效');
+  }
+
+  const session = sessions[0];
+
+  // 检查 session 是否过期
+  const expiresAt = new Date(session.expires_at);
+  const now = new Date();
+  
+  if (expiresAt < now) {
+    throw new Error('未授权：会话已过期');
+  }
+
+  // 检查是否有用户数据
+  if (!session.users) {
+    throw new Error('未授权：用户不存在');
+  }
+
+  return {
+    userId: session.user_id,
+    user: session.users,
+    session: session
+  };
+}
 
 serve(async (req) => {
   // 允许 OPTIONS 请求
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const { amount } = await req.json()
+    // 从 body 中获取 session_token 和 amount
+    const body = await req.json()
+    const { session_token, amount } = body
+
+    console.log('[Exchange] Received request:', { session_token: session_token ? 'present' : 'missing', amount });
+
+    if (!session_token) {
+      throw new Error('未授权：缺少 session_token');
+    }
+
+    if (!amount || amount <= 0) {
+      throw new Error('兑换金额必须大于0');
+    }
+
+    // 验证用户 session
+    const { userId } = await validateSession(session_token);
     
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    console.log('[Exchange] User validated:', userId);
 
-    // 1. 获取用户 ID
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+    // 调用 RPC 实现单向兑换：余额 -> 幸运币
+    // 注意：RPC 函数期望 uuid 类型，需要进行类型转换
+    const rpcResponse = await fetch(
+      `${supabaseUrl}/rest/v1/rpc/exchange_real_to_bonus_balance`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'params=single-object'
+        },
+        body: JSON.stringify({
+          p_user_id: userId,
+          p_amount: parseFloat(amount)
+        })
+      }
+    );
+
+    console.log('[Exchange] RPC response status:', rpcResponse.status);
+
+    if (!rpcResponse.ok) {
+      const errorText = await rpcResponse.text();
+      console.error('[Exchange] RPC调用失败:', errorText);
+      
+      // 尝试解析错误信息
+      try {
+        const errorJson = JSON.parse(errorText);
+        throw new Error(errorJson.message || '兑换失败');
+      } catch {
+        throw new Error(errorText || '兑换失败');
+      }
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    const data = await rpcResponse.json();
 
-    if (authError || !user) {
-      throw new Error('Invalid token')
-    }
-    const userId = user.id
-
-    // 2. 调用 RPC 实现单向兑换：余额 -> 夺宝币
-    // 假设 RPC 名称为 exchange_real_to_bonus_balance
-    const { data, error } = await supabaseClient.rpc('exchange_real_to_bonus_balance', {
-      p_user_id: userId,
-      p_amount: amount
-    })
-
-    if (error) throw error
+    console.log('[Exchange] Success, new balance:', data);
 
     return new Response(
       JSON.stringify({ success: true, message: 'Exchange successful', new_balance: data }),
-      { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 200 }
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
     )
 
   } catch (error) {
-    console.error('exchange_balance error:', error)
+    console.error('[Exchange] Error:', error)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 400 }
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
     )
   }
 })
