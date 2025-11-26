@@ -334,6 +334,7 @@
     "updateSuccess": "Навсозӣ муваффақ"
   },
   "showoff": {
+    "showoff": "Намоишҳо",
     "showoffGallery": "Галереяи намоишҳо",
     "myShowoffs": "Намоишҳои ман",
     "createShowoff": "Эҷоди намоиш",
@@ -361,7 +362,14 @@
     "following": "Пайравӣ",
     "popular": "Машҳур",
     "noShowoffs": "Намоишҳо нест",
-    "loadMore": "Боргирии бештар"
+    "loadMore": "Боргирии бештар",
+    "selectWinningRecordError": "Лутфан, сабти бурдро интихоб кунед",
+    "contentRequiredError": "Лутфан, матлабро пур кунед",
+    "minContentLengthError": "Матлаб бояд ҳадди ақал 10 аломат дошта бошад",
+    "imageRequiredError": "Лутфан, ҳадди ақал як тасвир бор кунед",
+    "imagesUploadedAndOptimized": "Тасвирҳо бомуваффақият бор шуданд",
+    "imageUploadFailed": "Боргирии тасвир ноком шуд",
+    "showoffSuccessPending": "Намоиш бомуваффақият нашр шуд, дар интизории тасдиқ"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",

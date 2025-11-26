@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
+import { useUser } from '../contexts/UserContext'
 // Note: This page uses Edge Functions directly, which is acceptable for this level of abstraction.
 // In a larger application, these could also be moved to the service layer.
 import { uploadImages } from '../lib/uploadImage'
@@ -31,6 +32,7 @@ interface PaymentConfig {
 export default function DepositPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
+  const { user } = useUser()
   const [loading, setLoading] = useState(false)
   const [configs, setConfigs] = useState<PaymentConfig[]>([])
   const [selectedMethod, setSelectedMethod] = useState<PaymentConfig | null>(null)
@@ -115,6 +117,7 @@ export default function DepositPage() {
 
       const { data, error } = await supabase.functions.invoke('deposit-request', {
         body: {
+          userId: user?.id,
           amount: amountNum,
           currency: 'TJS',
           paymentMethod: selectedMethod.config_data.method,

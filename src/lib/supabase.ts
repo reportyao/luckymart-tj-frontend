@@ -626,12 +626,12 @@ export const referralService = {
 		    const user = await authService.getCurrentUser();
 		    if (!user) throw new Error('用户未登录');
 
-			    const { data: existingLike, error: selectError } = await supabase
-			      .from('likes')
-			      .select('id')
-			      .eq('post_id', showoffId)
-			      .eq('user_id', user.id)
-			      .single();
+    const { data: existingLike, error: selectError } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('post_id', showoffId)
+      .eq('user_id', user.id)
+      .single();
 		
 			    if (selectError && selectError.code !== 'PGRST116') {
 			      console.error('Failed to check like status:', selectError);
@@ -639,11 +639,11 @@ export const referralService = {
 		    }
 				    if (existingLike) {
 			      // 取消点赞
-			      const { error } = await supabase
-			        .from('likes')
-			        .delete()
-			        .eq('post_id', showoffId)
-			        .eq('user_id', user.id);
+      const { error } = await supabase
+        .from('likes')
+        .delete()
+        .eq('post_id', showoffId)
+        .eq('user_id', user.id);
 			
 			      if (error) {
 			        console.error('Failed to unlike showoff:', error);
@@ -651,9 +651,9 @@ export const referralService = {
 			      }
 			    } else {
 			      // 点赞
-			      const { error } = await supabase
-			        .from('likes')
-			        .insert({ post_id: showoffId, user_id: user.id });
+      const { error } = await supabase
+        .from('likes')
+        .insert({ post_id: showoffId, user_id: user.id });
 			
 			      if (error) {
 			        console.error('Failed to like showoff:', error);

@@ -334,6 +334,7 @@
     "updateSuccess": "Обновлено успешно"
   },
   "showoff": {
+    "showoff": "Выигрыши",
     "showoffGallery": "Галерея выигрышей",
     "myShowoffs": "Мои выигрыши",
     "createShowoff": "Опубликовать выигрыш",
@@ -361,7 +362,14 @@
     "following": "Подписки",
     "popular": "Популярные",
     "noShowoffs": "Нет выигрышей",
-    "loadMore": "Загрузить ещё"
+    "loadMore": "Загрузить ещё",
+    "selectWinningRecordError": "Пожалуйста, выберите запись о выигрыше",
+    "contentRequiredError": "Пожалуйста, заполните содержание",
+    "minContentLengthError": "Содержание должно содержать минимум 10 символов",
+    "imageRequiredError": "Пожалуйста, загрузите хотя бы одно изображение",
+    "imagesUploadedAndOptimized": "Изображения успешно загружены",
+    "imageUploadFailed": "Ошибка при загрузке изображения",
+    "showoffSuccessPending": "Опубликовано успешно, ожидает модерации"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",
