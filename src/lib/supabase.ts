@@ -31,6 +31,7 @@ export type ShowoffWithDetails = Showoff & {
   lottery: Lottery | null;
   is_liked: boolean;
   likes_count: number;
+  lottery_title?: string;
 };
 
 
@@ -596,14 +597,14 @@ export const referralService = {
       return data.map(showoff => ({
         ...showoff,
         is_liked: likedIds.has(showoff.id),
-        lottery_title: showoff.lottery?.title || ''
+        lottery_title: (showoff.lottery as any)?.title || ''
       })) as any as Showoff[];
     }
 
     return data.map(showoff => ({
       ...showoff,
       is_liked: false,
-      lottery_title: showoff.lottery?.title || ''
+      lottery_title: (showoff.lottery as any)?.title || ''
     })) as any as Showoff[];
   },
 
