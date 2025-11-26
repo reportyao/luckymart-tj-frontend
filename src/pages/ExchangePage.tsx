@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { supabase, walletService } from "../lib/supabase"
+import { supabase, walletService, authService } from "../lib/supabase"
 import { ArrowLeft, ArrowDown, CheckCircle2 } from "lucide-react"
 
 export default function ExchangePage() {
@@ -20,7 +20,7 @@ export default function ExchangePage() {
 
   const fetchWallets = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await authService.getCurrentUser()
       if (!user) return
 
       const wallets = await walletService.getWallets(user.id)
@@ -51,7 +51,7 @@ export default function ExchangePage() {
 
     try {
       setSubmitting(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await authService.getCurrentUser()
       if (!user) throw new Error("未登录")
 
       // 调用 Edge Function 进行兑换（余额 → 幸运币）

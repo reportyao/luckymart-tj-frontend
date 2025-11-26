@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { supabase, walletService } from '../lib/supabase'
+import { supabase, walletService, authService } from '../lib/supabase'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 
 export default function WithdrawPage() {
@@ -37,12 +37,12 @@ export default function WithdrawPage() {
   const fetchBalance = async () => {
     try {
       setSubmitting(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await authService.getCurrentUser()
       if (!user) return
 
       // 使用抽象服务层获取钱包信息
       const wallets = await walletService.getWallets(user.id)
-      const balanceWallet = wallets.find(w => w.currency === 'TJS')
+      const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
 
       if (balanceWallet) {
         setBalance(balanceWallet.balance)
