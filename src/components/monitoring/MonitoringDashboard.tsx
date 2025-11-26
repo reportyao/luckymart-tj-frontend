@@ -506,7 +506,7 @@ export function MonitoringDashboard() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-purple-600">12.3%</div>
-                <p className="text-sm text-gray-600">彩票购买转化率</p>
+                <p className="text-sm text-gray-600">参与抽奖转化率</p>
               </CardContent>
             </Card>
           </div>

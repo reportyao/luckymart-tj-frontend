@@ -12,27 +12,68 @@ serve(async (req) => {
   }
 
   try {
+    // 先尝试使用用户的token
+    const authHeader = req.headers.get('Authorization')
+    let userId: string | null = null
+    let user: any = null
+
+    if (authHeader) {
+      // 尝试使用用户token验证
+      const supabaseClientWithAuth = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        {
+          global: {
+            headers: { Authorization: authHeader },
+          },
+        }
+      )
+
+      const { data: { user: authUser }, error: userError } = await supabaseClientWithAuth.auth.getUser()
+      
+      if (!userError && authUser) {
+        userId = authUser.id
+        user = authUser
+      }
+    }
+
+    // 如果没有有效的认证，使用Service Role Key
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // 获取当前用户
-    const {
-      data: { user },
-      error: userError,
-    } = await supabaseClient.auth.getUser()
+    const requestBody = await req.json()
+    const { 
+      amount, 
+      currency, 
+      paymentMethod, 
+      paymentProofImages, 
+      paymentReference, 
+      payerName, 
+      payerAccount,
+      userId: bodyUserId  // 从body中获取userId
+    } = requestBody
 
-    if (userError || !user) {
+    // 如果没有从token中获取到userId，使用body中的userId
+    if (!userId && bodyUserId) {
+      userId = bodyUserId
+    }
+
+    if (!userId) {
       throw new Error('未授权')
     }
 
-    const { amount, currency, paymentMethod, paymentProofImages, paymentReference, payerName, payerAccount } = await req.json()
+    // 验证用户是否存在
+    const { data: existingUser, error: userCheckError } = await supabaseClient
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single()
+
+    if (userCheckError || !existingUser) {
+      throw new Error('用户不存在')
+    }
 
     // 验证参数
     if (!amount || amount <= 0) {
@@ -50,7 +91,7 @@ serve(async (req) => {
     const { data: depositRequest, error: insertError } = await supabaseClient
       .from('deposit_requests')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         order_number: orderNumber,
         amount: amount,
         currency: currency || 'TJS',

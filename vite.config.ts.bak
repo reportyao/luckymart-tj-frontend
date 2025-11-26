@@ -8,47 +8,48 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     
-    base: '/',
-    
     server: {
       port: 5173,
       host: true,
+      allowedHosts: ["seardao.org", "www.seardao.org", '5173-iot3qdn4d99azf2yb5d5x-80fc91e3.manus-asia.computer', '5174-iot3qdn4d99azf2yb5d5x-80fc91e3.manus-asia.computer'],
       cors: {
-        origin: '*',
+        origin: true,
         credentials: true,
         methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
         allowedHeaders: ['Content-Type', 'Authorization']
+      },
+      proxy: {
+        '/api': {
+          target: env.VITE_API_BASE_URL || 'http://localhost:5176',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api/, ''),
+          ws: true
+        }
       }
     },
     
     build: {
       outDir: 'dist',
-      sourcemap: false,
+      sourcemap: mode !== 'production',
       minify: 'terser',
-      assetsInlineLimit: 4096,
+      // 强制每次构建生成新的文件名
+      assetsInlineLimit: 0,
       terserOptions: {
         compress: {
-          drop_console: true,
-          drop_debugger: true
+          drop_console: mode === 'production',
+          drop_debugger: mode === 'production'
         }
       },
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            supabase: ['@supabase/supabase-js'],
-          },
+          // 简化分块策略，避免模块加载顺序问题
+          manualChunks: undefined,
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
-          assetFileNames: (assetInfo) => {
-            const name = assetInfo.name || '';
-            if (name.endsWith('.css')) {
-              return 'assets/css/[name]-[hash][extname]';
-            }
-            return 'assets/[name]-[hash][extname]';
-          }
+          assetFileNames: 'assets/[ext]/[name]-[hash].[ext]'
         }
       },
+      // 优化 chunk 大小
       chunkSizeWarningLimit: 1000,
       target: 'es2020'
     },

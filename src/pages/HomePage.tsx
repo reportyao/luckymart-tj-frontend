@@ -6,7 +6,6 @@ import { useUser } from '../contexts/UserContext'
 import { Lottery } from '../lib/supabase'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { useSupabase } from '../contexts/SupabaseContext'
-import { WalletCard } from '../components/wallet/WalletCard'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { SafeMotion } from '../components/SafeMotion'
 import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/react/24/outline'
@@ -113,20 +112,12 @@ const HomePage: React.FC = () => {
               {t('home.tryLuck')}
             </p>
           </div>
-          <div className="text-right">
-	            <p className="text-xs text-white/60">{t('home.referralCode')}</p>
-	            <p className="text-lg font-bold">{profile?.referral_code}</p>
-          </div>
         </div>
       </SafeMotion>
 
 	      {/* 钱包卡片 */}
 	      <div className="px-4 mt-6">
 	        <ReferralBanner />
-        <WalletCard 
-          wallets={wallets} 
-          onRefresh={handleRefreshWallets}
-        />
       </div>
 
       {/* 快速统计 */}

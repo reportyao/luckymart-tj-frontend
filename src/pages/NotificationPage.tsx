@@ -51,7 +51,7 @@ const NotificationPage: React.FC = () => {
           user_id: user?.id || '',
           type: 'LOTTERY_RESULT',
           title: '恭喜中奖!',
-          content: '您在彩票 "iPhone 15 Pro Max 夺宝" 中获得1等奖,奖金 500.00 TJS',
+          content: '您在抽奖 "iPhone 15 Pro Max 夺宝" 中获得1等奖,奖金 500.00 TJS',
           related_id: 'lottery1',
           related_type: 'lottery',
           is_read: false,

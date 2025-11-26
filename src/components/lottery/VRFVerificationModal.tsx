@@ -83,16 +83,16 @@ export const VRFVerificationModal: React.FC<VRFVerificationModalProps> = ({
 
             {/* Lottery Information */}
             <div className="space-y-4">
-              <h3 className="font-semibold text-gray-900">彩票信息</h3>
+              <h3 className="font-semibold text-gray-900">抽奖信息</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">彩票ID</p>
+                  <p className="text-sm text-gray-600 mb-1">抽奖ID</p>
                   <p className="font-mono text-sm font-medium text-gray-900">{lotteryData.id}</p>
                 </div>
                 
                 <div className="bg-gray-50 rounded-lg p-4">
-                  <p className="text-sm text-gray-600 mb-1">彩票名称</p>
+                  <p className="text-sm text-gray-600 mb-1">抽奖名称</p>
                   <p className="text-sm font-medium text-gray-900">{lotteryData.title}</p>
                 </div>
 
@@ -140,7 +140,7 @@ export const VRFVerificationModal: React.FC<VRFVerificationModalProps> = ({
                   </p>
                 </div>
                 <p className="text-xs text-gray-500">
-                  * 种子是生成随机数的初始输入,由时间戳、彩票ID和随机字节组合生成
+                  * 种子是生成随机数的初始输入,由时间戳、抽奖ID和随机字节组合生成
                 </p>
               </div>
             )}

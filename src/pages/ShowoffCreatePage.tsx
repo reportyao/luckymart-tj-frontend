@@ -92,7 +92,7 @@ const ShowoffCreatePage: React.FC = () => {
       
       for (const file of newFiles) {
         // 1. 上传图片 (uploadImage 内部已包含压缩和 WebP 转换)
-        const publicUrl = await uploadImage(file, true, 'public', 'showoff-images');
+        const publicUrl = await uploadImage(file, true, 'payment-proofs', 'showoff-images');
         uploadedUrls.push(publicUrl);
       }
 
