@@ -142,6 +142,7 @@
     "exchangeRate": "兑换比例",
     "exchangeAmount": "兑换数量",
     "exchangeSuccess": "兑换成功",
+    "exchangeSuccessMessage": "兑换成功！余额已更新",
     "insufficientBalance": "余额不足",
     "insufficientLuckyCoins": "幸运币余额不足",
     "depositSuccess": "充值成功",

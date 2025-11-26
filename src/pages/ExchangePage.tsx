@@ -4,11 +4,12 @@ import { useTranslation } from "react-i18next"
 import { walletService } from "../lib/supabase"
 import { useUser } from "../contexts/UserContext"
 import { ArrowLeft, ArrowDown, CheckCircle2 } from "lucide-react"
+import toast from "react-hot-toast"
 
 export default function ExchangePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { wallets } = useUser()
+  const { wallets, refreshWallets } = useUser()
 
   const [amount, setAmount] = useState("")
   const [submitting, setSubmitting] = useState(false)
@@ -41,10 +42,16 @@ export default function ExchangePage() {
       const result = await walletService.exchangeRealToBonus(amountNum)
       
       if (result.success) {
-        setSuccess(true)
+        // 显示成功提示
+        toast.success(t("wallet.exchangeSuccessMessage"))
+        
+        // 刷新钱包数据
+        await refreshWallets()
+        
+        // 短暂延迟后跳转回钱包页面
         setTimeout(() => {
           navigate("/wallet")
-        }, 2000)
+        }, 1500)
       }
     } catch (error: any) {
       console.error("兑换失败:", error)

@@ -127,6 +127,7 @@
     "exchangeRate": "Курс обмена",
     "exchangeAmount": "Сумма обмена",
     "exchangeSuccess": "Обмен успешен",
+    "exchangeSuccessMessage": "Обмен успешен! Баланс обновлён",
     "insufficientBalance": "Недостаточно средств",
     "insufficientLuckyCoins": "Недостаточно счастливых монет",
     "depositSuccess": "Пополнение успешно",

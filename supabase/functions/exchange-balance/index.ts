@@ -18,9 +18,9 @@ async function validateSession(sessionToken: string) {
     throw new Error('服务器配置错误');
   }
 
-  // 查询 user_sessions 表验证 session
+  // 查询 user_sessions 表验证 session (不使用关联查询避免类型冲突)
   const sessionResponse = await fetch(
-    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*,users(*)`,
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
     {
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
@@ -50,14 +50,31 @@ async function validateSession(sessionToken: string) {
     throw new Error('未授权：会话已过期');
   }
 
-  // 检查是否有用户数据
-  if (!session.users) {
+  // 单独查询用户数据
+  const userResponse = await fetch(
+    `${supabaseUrl}/rest/v1/users?id=eq.${session.user_id}&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!userResponse.ok) {
+    throw new Error('查询用户信息失败');
+  }
+
+  const users = await userResponse.json();
+  
+  if (users.length === 0) {
     throw new Error('未授权：用户不存在');
   }
 
   return {
     userId: session.user_id,
-    user: session.users,
+    user: users[0],
     session: session
   };
 }
@@ -104,7 +121,7 @@ serve(async (req) => {
           'Prefer': 'params=single-object'
         },
         body: JSON.stringify({
-          p_user_id: userId,
+          p_user_id: userId,  // PostgreSQL will auto-cast text to uuid
           p_amount: parseFloat(amount)
         })
       }

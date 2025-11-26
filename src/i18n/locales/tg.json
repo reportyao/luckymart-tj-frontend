@@ -127,6 +127,7 @@
     "exchangeRate": "Қурби асъор",
     "exchangeAmount": "Маблағи иваз",
     "exchangeSuccess": "Иваз муваффақ",
+    "exchangeSuccessMessage": "Иваз муваффақ! Тавозун навсозӣ шуд",
     "insufficientBalance": "Маблағ кофӣ нест",
     "insufficientLuckyCoins": "Тангаҳои бахтиор кофӣ нест",
     "depositSuccess": "Пуркунӣ муваффақ",
