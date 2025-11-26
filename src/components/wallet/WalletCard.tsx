@@ -21,7 +21,9 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const { t } = useTranslation()
   const [showBalance, setShowBalance] = React.useState(true)
   
-  const balanceWallet = wallets.find(w => w.type === 'BALANCE')
+  // 查找 TJS 货币的余额钱包
+  const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
+  // 查找幸运币钱包
   const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
   
   const toggleShowBalance = () => {
@@ -89,8 +91,8 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {balanceWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>{t('wallet.totalDeposits')}: {formatCurrency(balanceWallet.currency, 0)}</span>
-              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(balanceWallet.currency, 0)}</span>
+              <span>{t('wallet.totalDeposits')}: {formatCurrency(balanceWallet.currency, balanceWallet.total_deposits || 0)}</span>
+              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(balanceWallet.currency, balanceWallet.total_withdrawals || 0)}</span>
             </div>
           )}
         </div>
