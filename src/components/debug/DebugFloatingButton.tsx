@@ -84,6 +84,11 @@ interface DebugInfo {
     tailwindVersion: string
     colorMode: string
   }
+  // 构建信息
+  build: {
+    version: string
+    buildTime: string
+  }
   // 最近日志
   logs: LogEntry[]
   // 网络请求记录
@@ -379,6 +384,10 @@ export const DebugFloatingButton: React.FC = () => {
         tailwindVersion: '4.0',
         colorMode: document.documentElement.classList.contains('dark') ? 'dark' : 'light'
       },
+      build: {
+        version: import.meta.env.VITE_APP_VERSION || '1.0.1',
+        buildTime: (typeof __BUILD_TIME__ !== 'undefined' ? __BUILD_TIME__ : 'unknown') as string
+      },
       logs,
       requests,
       routes,
@@ -451,6 +460,15 @@ export const DebugFloatingButton: React.FC = () => {
           {/* 内容区域 */}
           {!isMinimized && (
             <div className="overflow-y-auto p-4 space-y-4" style={{ maxHeight: 'calc(80vh - 60px)' }}>
+              {/* 构建信息 */}
+              <div className="bg-gray-800 rounded p-3">
+                <h3 className="font-bold mb-2 text-cyan-400">📦 构建信息</h3>
+                <div className="text-xs space-y-1">
+                  <div>版本: <span className="text-green-400">{getDebugInfo().build.version}</span></div>
+                  <div>构建时间: <span className="text-yellow-400">{new Date(getDebugInfo().build.buildTime).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' })}</span></div>
+                </div>
+              </div>
+
               {/* Telegram环境 */}
               <div className="bg-gray-800 rounded p-3">
                 <h3 className="font-bold mb-2 text-purple-400">🤖 Telegram环境</h3>

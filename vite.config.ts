@@ -4,9 +4,14 @@ import path from 'path'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
+  const buildTime = new Date().toISOString()
 
   return {
     plugins: [react()],
+    
+    define: {
+      __BUILD_TIME__: JSON.stringify(buildTime),
+    },
     
     base: '/',
     
