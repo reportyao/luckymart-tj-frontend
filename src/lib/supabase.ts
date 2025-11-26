@@ -566,14 +566,10 @@ export const referralService = {
     // 暂时忽略 filter 逻辑，直接获取所有已审核晒单
     // TODO: 实现 filter 逻辑
     
-    // 查询晒单，关联 lotteries 表获取夺宝标题
-    const { data, error } = await supabase
+    // 1. 查询晒单列表
+    const { data: showoffs, error } = await supabase
       .from('showoffs')
-      .select(`
-        *,
-        lottery:lotteries(title),
-        user:users(telegram_username, avatar_url)
-      `)
+      .select('*')
       .eq('status', 'APPROVED')
       .order('created_at', { ascending: false });
 
@@ -582,30 +578,50 @@ export const referralService = {
       throw new Error(`获取晒单列表失败: ${error.message}`);
     }
 
-    // 如果有 userId，查询用户的点赞状态
-    if (userId && data) {
-      const showoffIds = data.map(s => s.id);
+    if (!showoffs || showoffs.length === 0) {
+      return [];
+    }
+
+    // 2. 批量查询用户信息
+    const userIds = [...new Set(showoffs.map(s => s.user_id))];
+    const { data: users } = await supabase
+      .from('users')
+      .select('id, telegram_username, avatar_url')
+      .in('id', userIds);
+    const userMap = new Map(users?.map(u => [u.id, u]) || []);
+
+    // 3. 批量查询夺宝信息
+    const lotteryIds = [...new Set(showoffs.map(s => s.lottery_id).filter(Boolean))];
+    const { data: lotteries } = await supabase
+      .from('lotteries')
+      .select('id, title')
+      .in('id', lotteryIds);
+    const lotteryMap = new Map(lotteries?.map(l => [l.id, l]) || []);
+
+    // 4. 如果有 userId，查询用户的点赞状态
+    let likedIds = new Set<string>();
+    if (userId) {
+      const showoffIds = showoffs.map(s => s.id);
       const { data: likes } = await supabase
         .from('likes')
         .select('post_id')
         .eq('user_id', userId)
         .in('post_id', showoffIds);
-
-      const likedIds = new Set(likes?.map(l => l.post_id) || []);
-
-      // 添加 is_liked 字段
-      return data.map(showoff => ({
-        ...showoff,
-        is_liked: likedIds.has(showoff.id),
-        lottery_title: (showoff.lottery as any)?.title || ''
-      })) as any as Showoff[];
+      likedIds = new Set(likes?.map(l => l.post_id) || []);
     }
 
-    return data.map(showoff => ({
-      ...showoff,
-      is_liked: false,
-      lottery_title: (showoff.lottery as any)?.title || ''
-    })) as any as Showoff[];
+    // 5. 组装数据
+    return showoffs.map(showoff => {
+      const user = userMap.get(showoff.user_id);
+      const lottery = lotteryMap.get(showoff.lottery_id);
+      return {
+        ...showoff,
+        user: user || null,
+        lottery: lottery || null,
+        is_liked: likedIds.has(showoff.id),
+        lottery_title: lottery?.title || ''
+      };
+    }) as any as Showoff[];
   },
 
   /**
