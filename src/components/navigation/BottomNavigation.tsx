@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { DebugPanel } from '../DebugPanel'
+// 调试面板通过事件触发，不需要直接导入
 import { 
   HomeIcon, 
   SparklesIcon, 
@@ -23,7 +23,6 @@ export const BottomNavigation: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const [showDebugPanel, setShowDebugPanel] = useState(false)
   const clickCountRef = useRef(0)
   const clickTimerRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -83,9 +82,9 @@ export const BottomNavigation: React.FC = () => {
                     clearTimeout(clickTimerRef.current)
                   }
 
-                  // 如果达到5次，显示调试面板
+                  // 如果达到5次，触发调试面板事件
                   if (clickCountRef.current >= 5) {
-                    setShowDebugPanel(true)
+                    window.dispatchEvent(new CustomEvent('showDebugPanel'))
                     clickCountRef.current = 0
                     return
                   }
@@ -141,10 +140,7 @@ export const BottomNavigation: React.FC = () => {
         </div>
       </motion.nav>
 
-      {/* 调试面板 */}
-      {showDebugPanel && (
-        <DebugPanel onClose={() => setShowDebugPanel(false)} />
-      )}
+      {/* 调试面板由 App.tsx 中的 DebugFloatingButton 组件处理 */}
     </>
   )
 }
