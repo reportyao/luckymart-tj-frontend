@@ -8,6 +8,8 @@
     "dev": "vite",
     "build": "rm -rf node_modules/.vite-temp && tsc -b && vite build || exit 1",
     "build:prod": "rm -rf node_modules/.vite-temp && tsc -b && BUILD_MODE=prod vite build || exit 1",
+    "build:deploy": "npm run build && npm run deploy",
+    "deploy": "rm -rf /var/www/luckymart-frontend/* && cp -r dist/* /var/www/luckymart-frontend/ && echo 'Deployed to Nginx directory successfully'",
     "build:check": "npm run lint && npm run type-check && npm run build",
     "lint": "eslint . --fix",
     "type-check": "tsc --noEmit",

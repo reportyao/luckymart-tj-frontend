@@ -12,6 +12,7 @@ import {
 import { uploadImage } from '@/lib/uploadImage';
 import { LazyImage } from '../components/LazyImage';
 import toast from 'react-hot-toast';
+import { showoffService } from '@/lib/supabase';
 
 interface WinningLottery {
   id: string;
@@ -43,8 +44,8 @@ const ShowoffCreatePage: React.FC = () => {
       const mockLotteries: WinningLottery[] = [
         {
           id: '1',
-          lottery_id: 'lottery1',
-          lottery_title: 'iPhone 15 Pro Max 夺宝',
+          lottery_id: '6f40be8d-4ad8-4705-bedc-3efeb85e552a', // 真实的 lottery UUID
+          lottery_title: 'iPhone 15 Pro Max 256GB 夺宝',
           prize_name: 'iPhone 15 Pro Max 256GB',
           prize_image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400',
           winning_number: '001',
@@ -52,8 +53,8 @@ const ShowoffCreatePage: React.FC = () => {
         },
         {
           id: '2',
-          lottery_id: 'lottery2',
-          lottery_title: 'MacBook Pro 夺宝',
+          lottery_id: '3d600f86-e251-4bc5-9bd5-af40f07e8ac3', // 真实的 lottery UUID
+          lottery_title: 'MacBook Pro 14" M3 夺宝',
           prize_name: 'MacBook Pro 14" M3',
           prize_image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400',
           winning_number: '015',
@@ -135,25 +136,25 @@ const ShowoffCreatePage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // 实际提交晒单逻辑
-      // 假设有一个提交晒单的 API 或 Supabase 函数
-      // const { data, error } = await supabase.from('showoffs').insert({
-      //   user_id: user.id,
-      //   lottery_result_id: selectedLottery,
-      //   content: content,
-      //   image_urls: images, // 使用已上传的图片 URL
-      //   status: 'PENDING',
-      // });
+      // 获取选中的中奖记录
+      const selectedLotteryData = winningLotteries.find(l => l.id === selectedLottery);
+      if (!selectedLotteryData) {
+        toast.error('未找到选中的中奖记录');
+        return;
+      }
 
-      // if (error) throw error;
-
-      await new Promise(resolve => setTimeout(resolve, 2000)); // 模拟 API 调用
+      // 调用晒单创建 API
+      await showoffService.createShowoff({
+        lottery_id: selectedLotteryData.lottery_id, // 使用 lottery_id 而不是 id
+        content: content.trim(),
+        images: images,
+      });
 
       toast.success(t('showoff.showoffSuccessPending'));
       navigate('/showoff');
     } catch (error) {
       console.error('Failed to create showoff:', error);
-      toast.error(t('error.networkError'));
+      toast.error(error instanceof Error ? error.message : t('error.networkError'));
     } finally {
       setIsLoading(false);
     }
@@ -314,10 +315,10 @@ const ShowoffCreatePage: React.FC = () => {
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-                  {user?.telegram_username?.charAt(0) || user?.username?.charAt(0) || 'U'}
+                  {user?.telegram_username?.charAt(0) || user?.telegram_username?.charAt(0) || 'U'}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{user?.telegram_username || user?.username || '用户'}</p>
+                  <p className="font-medium text-gray-900">{user?.telegram_username || user?.telegram_username || '用户'}</p>
                   <p className="text-xs text-gray-500">刚刚</p>
                 </div>
               </div>

@@ -77,7 +77,7 @@ const LotteryDetailPage: React.FC = () => {
 
       if (error) throw error;
 
-      setRandomShowoffs(data as Showoff[]);
+      setRandomShowoffs(data as any);
     } catch (error) {
       console.error('Failed to fetch random showoffs:', error);
     }
@@ -106,8 +106,18 @@ const LotteryDetailPage: React.FC = () => {
     return <div className="text-center py-10 text-red-500">{t('lottery.notFound')}</div>;
   }
 
-  const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
-  const description = getLocalizedText(lottery.description_i18n, i18n.language) || lottery.description;
+  // 处理 title：优先使用 title_i18n，如果为空则尝试解析 title 是否为 JSON 字符串
+  let title = getLocalizedText(lottery.title_i18n, i18n.language);
+  if (!title) {
+    title = getLocalizedText(lottery.title as any, i18n.language) || lottery.title;
+  }
+
+  // 处理 description：优先使用 description_i18n，如果为空则尝试解析 description 是否为 JSON 字符串
+  let description = getLocalizedText(lottery.description_i18n, i18n.language);
+  if (!description) {
+    description = getLocalizedText(lottery.description as any, i18n.language) || lottery.description || '';
+  }
+
   const specifications = getLocalizedText(lottery.specifications_i18n, i18n.language);
   const material = getLocalizedText(lottery.material_i18n, i18n.language);
   const details = getLocalizedText(lottery.details_i18n, i18n.language);
@@ -305,14 +315,14 @@ const LotteryDetailPage: React.FC = () => {
                 <div key={showoff.id} className="border-b last:border-b-0 pb-4">
                   <div className="flex items-center space-x-3 mb-2">
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
-                      {showoff.user?.username ? showoff.user.username[0] : 'U'}
+                      {showoff.user?.telegram_username ? showoff.user.telegram_username[0] : 'U'}
                     </div>
-                    <p className="font-semibold text-gray-800">{showoff.user?.username || '匿名用户'}</p>
+                    <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || '匿名用户'}</p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
-                  {showoff.image_urls && showoff.image_urls.length > 0 && (
+                  {showoff.images && showoff.images.length > 0 && (
                     <div className="flex space-x-2 overflow-x-auto">
-                      {showoff.image_urls.slice(0, 3).map((url, imgIndex) => (
+                      {showoff.images.slice(0, 3).map((url, imgIndex) => (
                         <LazyImage
                           key={imgIndex}
                           src={url}

@@ -121,7 +121,7 @@ const ProfilePage: React.FC = () => {
             ) : (
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
                 <span className="text-2xl font-bold">
-                  {user?.username?.[0] || 'U'}
+                  {user?.telegram_username?.[0] || 'U'}
                 </span>
               </div>
             )}
@@ -136,17 +136,17 @@ const ProfilePage: React.FC = () => {
           {/* 用户信息 */}
           <div className="flex-1">
             <h2 className="text-xl font-bold">
-              {user?.username}
+              {user?.telegram_username}
             </h2>
             <p className="text-white/80 text-sm">
-	            @{user?.telegram_username || user?.username || 'username'}
+	            @{user?.telegram_username || user?.telegram_username || 'username'}
 	            </p>
             <div className="flex items-center space-x-2 mt-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+              {/* <span className={`px-2 py-1 rounded-full text-xs font-medium ${
 	                user ? getStatusColor(user.first_deposit_bonus_status) : 'text-gray-600 bg-gray-50'
 	              }`}>
 	                {user?.first_deposit_bonus_status === 'ACTIVE' ? t('invite.active') : user?.first_deposit_bonus_status}
-	              </span>
+	              </span> */}
               <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
 	                {user ? getKycLevelText('BASIC') : t('wallet.notSet')}
 	              </span>
@@ -158,7 +158,7 @@ const ProfilePage: React.FC = () => {
         <div className="mt-4 pt-4 border-t border-white/20">
           <div className="flex justify-between text-sm">
             <div>
-              <p className="text-white/60">{t('invite.username')}</p>
+              <p className="text-white/60">{t('invite.telegram_username')}</p>
               <p className="font-medium">{user?.invite_code}</p>
             </div>
             <div className="text-right">

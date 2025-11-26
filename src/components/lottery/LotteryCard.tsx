@@ -27,17 +27,25 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
   className
 }) => {
 	  const { t, i18n } = useTranslation()
-  const [timeRemaining, setTimeRemaining] = React.useState(
-    getTimeRemaining(lottery.end_time)
-  )
+  // 卖罄后显示开奖倒计时，否则显示结束时间倒计时
+  const [timeRemaining, setTimeRemaining] = React.useState(() => {
+    if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
+      return getTimeRemaining(lottery.draw_time);
+    }
+    return getTimeRemaining(lottery.end_time);
+  });
 
   React.useEffect(() => {
     const timer = setInterval(() => {
-      setTimeRemaining(getTimeRemaining(lottery.end_time))
-    }, 1000)
+      if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
+        setTimeRemaining(getTimeRemaining(lottery.draw_time));
+      } else {
+        setTimeRemaining(getTimeRemaining(lottery.end_time));
+      }
+    }, 1000);
 
-    return () => clearInterval(timer)
-  }, [lottery.end_time])
+    return () => clearInterval(timer);
+  }, [lottery.end_time, lottery.draw_time, lottery.status]);
 
   const progress = (lottery.sold_tickets / lottery.total_tickets) * 100
   const isActive = lottery.status === 'ACTIVE'
@@ -81,7 +89,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           <div className="w-full h-full flex items-center justify-center">
             <div className="text-center text-white">
               <StarIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm font-medium">{t('lottery.period')}: {lottery.id}</p>
+              <p className="text-sm font-medium">{lottery.title}</p>
             </div>
           </div>
         )}
@@ -99,9 +107,13 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 
       <div className="p-4">
         {/* 彩票标题 */}
-		        <h3 className="text-lg font-bold text-gray-900 mb-1">
-		          {getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title}
-		        </h3>
+	        <h3 className="text-lg font-bold text-gray-900 mb-1">
+	          {(() => {
+	            const localizedName = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language);
+	            const localizedTitle = getLocalizedText(lottery.title_i18n as Record<string, string> | null, i18n.language);
+	            return localizedName || localizedTitle || lottery.title;
+	          })()}
+	        </h3>
         
 		        {lottery.description && (
 		          <p className="text-sm text-gray-600 mb-3 line-clamp-2">
@@ -165,6 +177,16 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               {timeRemaining.seconds.toString().padStart(2, '0')}
             </div>
           )}
+          
+          {/* 售罄后显示开奖倒计时 */}
+          {isSoldOut && timeRemaining.total > 0 && (
+            <div className="flex items-center text-xs text-red-600 font-semibold">
+              <ClockIcon className="w-3 h-3 mr-1" />
+              {t('lottery.drawing_in')}: {' '}
+              {timeRemaining.minutes.toString().padStart(2, '0')}:
+              {timeRemaining.seconds.toString().padStart(2, '0')}
+            </div>
+          )}
 
           {isUpcoming && (
             <div className="flex items-center text-xs text-gray-500">
@@ -181,14 +203,14 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	          )}
 
           {/* 中奖号码 */}
-	          {lottery.status === 'COMPLETED' && lottery.winner_ticket_number && (
+	          {lottery.status === 'COMPLETED' && lottery.winning_ticket_number && (
 		            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
 			              <p className="text-xs text-yellow-700 mb-1">{t('lottery.luckyNumber')}</p>
 	              <div className="flex flex-wrap gap-2">
 	                <span
 	                  className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-sm font-mono font-bold"
 	                >
-	                  {lottery.winner_ticket_number}
+	                  {lottery.winning_ticket_number}
 	                </span>
 	              </div>
 	            </div>

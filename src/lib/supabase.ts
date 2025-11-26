@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { Database, Tables, Functions } from '../types/supabase';
+import { Database, Tables } from '../types/supabase';
 
 // 导出常用的类型
 export type Lottery = Tables<'lotteries'>;
@@ -18,7 +18,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 
 // 导出常用的类型
 
-export type UserProfile = Tables<'user_profiles'>;
+export type UserProfile = Tables<'users'>;
 export type Wallet = Tables<'wallets'>;
 export type Order = Tables<'orders'>;
 export type Commission = Tables<'commissions'>;
@@ -36,16 +36,25 @@ export type ShowoffWithDetails = Showoff & {
 
 
 // 邀请/推荐相关类型
-export type InviteStats = Functions<'get_user_referral_stats'>['Returns'][0] & {
-  first_deposit_bonus_status: string;
-  first_deposit_bonus_amount: number;
-  first_deposit_bonus_expire_at: string | null;
-  activation_share_count: number;
-  activation_invite_count: number;
-};
+export interface InviteStats {
+  total_invites: number;
+  total_referrals: number;
+  level1_referrals: number;
+  level2_referrals: number;
+  level3_referrals: number;
+  total_commission: number;
+  pending_commission: number;
+  paid_commission: number;
+  bonus_balance: number;
+  first_deposit_bonus_status?: string;
+  first_deposit_bonus_amount?: number;
+  first_deposit_bonus_expire_at?: string | null;
+  activation_share_count?: number;
+  activation_invite_count?: number;
+}
 export interface InvitedUser {
   id: string;
-  username: string | null;
+  telegram_username: string | null;
   avatar_url: string | null;
   created_at: string;
   level: number; // 1, 2, or 3
@@ -152,8 +161,14 @@ export const authService = {
         throw new Error('Invalid response from auth-telegram function');
       }
       
+      // 添加字段映射：referral_code -> invite_code
+      const user = {
+        ...data.data.user,
+        invite_code: data.data.user.referral_code // 映射字段
+      };
+      
       return {
-        user: data.data.user,
+        user,
         session: data.data.session,
         wallets: data.data.wallets,
         is_new_user: data.data.is_new_user
@@ -173,7 +188,7 @@ export const authService = {
 
     // 获取用户 Profile
     const { data: profile, error } = await supabase
-	      .from('user_profiles')
+	      .from('users')
       .select('*')
       .eq('id', user.id)
       .single();
@@ -183,7 +198,12 @@ export const authService = {
       throw new Error(`获取用户资料失败: ${error.message}`);
     }
 
-    return { ...user, ...profile };
+    // 添加字段映射：referral_code -> invite_code
+    return { 
+      ...user, 
+      ...profile,
+      invite_code: profile.referral_code // 映射字段
+    };
   },
 
   /**
@@ -321,7 +341,7 @@ export const lotteryService: any = {
 	          winner:tickets!lottery_results_winner_id_fkey (
 	            ticket_number,
 	            user_id,
-	            profiles:user_profiles (username, avatar_url)
+	            profiles:users (telegram_username, avatar_url)
 	          ),
 	          lottery:lotteries (
 	            title,
@@ -546,14 +566,8 @@ export const referralService = {
 	    // TODO: 实现 filter 逻辑
     const { data, error } = await supabase
 	      .from('showoffs')
-	      .select(
-	        `
-	          *,
-	          lottery:lotteries (title, image_url, ticket_price, currency),
-	          user_profile:user_profiles (username, avatar_url)
-	        `
-	      )
-	      .eq('status', 'APPROVED' as ShowoffStatus)
+	      .select('*')
+	      .eq('status', 'APPROVED')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -640,5 +654,36 @@ export const referralService = {
 				        throw new Error(`点赞失败: ${error.message}`);
 				      }
 				    }
-			  }
+			  },
+
+  /**
+   * 创建晒单
+   */
+  async createShowoff(params: {
+    lottery_id: string;
+    content: string;
+    images: string[];
+  }): Promise<Showoff> {
+    const user = await authService.getCurrentUser();
+    if (!user) throw new Error('用户未登录');
+
+    const { data, error } = await supabase
+      .from('showoffs')
+      .insert({
+        user_id: user.id,
+        lottery_id: params.lottery_id,
+        content: params.content,
+        images: params.images,
+        status: 'PENDING',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Failed to create showoff:', error);
+      throw new Error(`创建晒单失败: ${error.message}`);
+    }
+
+    return data as Showoff;
+  }
 		};

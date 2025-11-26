@@ -77,7 +77,7 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user?.username || '一位用户'}在LuckyMart${t('showoff.won')}了!快来看看吧!`;
+    const text = `${showoff.user?.telegram_username || '一位用户'}在LuckyMart${t('showoff.won')}了!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
     if (navigator.share) {
@@ -165,10 +165,10 @@ const ShowoffPage: React.FC = () => {
                 <div className="p-4 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-	                    {showoff.user?.username ? showoff.user.username.charAt(0) : 'U'}
+	                    {showoff.user?.telegram_username ? showoff.user.telegram_username.charAt(0) : 'U'}
                     </div>
                     <div>
-	                    <p className="font-medium text-gray-900">{showoff.user?.username || 'Anonymous'}</p>
+	                    <p className="font-medium text-gray-900">{showoff.user?.telegram_username || 'Anonymous'}</p>
                       <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
                     </div>
                   </div>

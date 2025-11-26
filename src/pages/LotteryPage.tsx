@@ -30,7 +30,7 @@ const LotteryPage: React.FC = () => {
       if (filter === 'all') {
         data = await lotteryService.getAllLotteries()
       } else if (filter === 'drawResult') {
-        data = await lotteryService.getLotteriesByStatus('DRAWN')
+        data = await lotteryService.getLotteriesByStatus('COMPLETED' as any)
       } else {
         data = await lotteryService.getLotteriesByStatus(filter.toUpperCase())
       }
@@ -54,7 +54,7 @@ const LotteryPage: React.FC = () => {
     const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase())
     
     if (filter === 'all') return matchesSearch
-    if (filter === 'drawResult') return matchesSearch && lottery.status === 'DRAWN'
+    if (filter === 'drawResult') return matchesSearch && lottery.status === 'COMPLETED'
     return matchesSearch && lottery.status === filter.toUpperCase()
   })
 

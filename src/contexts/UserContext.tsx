@@ -76,7 +76,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         setUser(currentUser as User);
         // 假设 currentUser 已经包含了 profile 数据，或者我们单独获取
         const { data: profileData, error: profileError } = await supabase
-          .from('profiles')
+          .from('users')
           .select('*')
           .eq('id', currentUser.id)
           .single();
