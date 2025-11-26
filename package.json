@@ -2,7 +2,7 @@
   "name": "luckymart-tj-frontend",
   "description": "LuckyMart TJ - Telegram Mini App 夺宝平台前端",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
