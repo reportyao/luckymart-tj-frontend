@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { supabase, walletService, authService } from '../lib/supabase'
+import { supabase } from '../lib/supabase'
+import { useUser } from '../contexts/UserContext'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 
 export default function WithdrawPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { wallets } = useUser()
   
-  const [balance, setBalance] = useState(0)
   const [withdrawalMethod, setWithdrawalMethod] = useState<'BANK_TRANSFER' | 'ALIF_MOBI' | 'DC_BANK'>('BANK_TRANSFER')
   const [amount, setAmount] = useState('')
   
@@ -30,29 +31,9 @@ export default function WithdrawPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  useEffect(() => {
-    fetchBalance()
-  }, [])
-
-  const fetchBalance = async () => {
-    try {
-      setSubmitting(true)
-      const user = await authService.getCurrentUser()
-      if (!user) return
-
-      // 使用抽象服务层获取钱包信息
-      const wallets = await walletService.getWallets(user.id)
-      const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
-
-      if (balanceWallet) {
-        setBalance(balanceWallet.balance)
-      }
-    } catch (error) {
-      console.error('获取余额失败:', error)
-    } finally {
-      setSubmitting(false)
-    }
-  }
+  // 从 UserContext 获取钱包数据
+  const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
+  const balance = balanceWallet?.balance || 0
 
   const handleSubmit = async () => {
     const amountNum = parseFloat(amount)

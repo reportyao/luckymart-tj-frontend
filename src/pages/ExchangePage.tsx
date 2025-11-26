@@ -1,40 +1,25 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTranslation } from "react-i18next"
-import { supabase, walletService, authService } from "../lib/supabase"
+import { walletService } from "../lib/supabase"
+import { useUser } from "../contexts/UserContext"
 import { ArrowLeft, ArrowDown, CheckCircle2 } from "lucide-react"
 
 export default function ExchangePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
+  const { wallets } = useUser()
 
-  const [balance, setBalance] = useState(0)
-  const [luckyCoin, setLuckyCoin] = useState(0)
   const [amount, setAmount] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  useEffect(() => {
-    fetchWallets()
-  }, [])
-
-  const fetchWallets = async () => {
-    try {
-      const user = await authService.getCurrentUser()
-      if (!user) return
-
-      const wallets = await walletService.getWallets(user.id)
-      if (wallets) {
-        const balanceWallet = wallets.find(w => w.type === "BALANCE" && w.currency === "TJS")
-        const coinWallet = wallets.find(w => w.type === "LUCKY_COIN")
-        
-        if (balanceWallet) setBalance(balanceWallet.balance)
-        if (coinWallet) setLuckyCoin(coinWallet.balance)
-      }
-    } catch (error) {
-      console.error("获取钱包失败:", error)
-    }
-  }
+  // 从 UserContext 获取钱包数据
+  const balanceWallet = wallets.find(w => w.type === "BALANCE" && w.currency === "TJS")
+  const coinWallet = wallets.find(w => w.type === "LUCKY_COIN" && w.currency === "TJS")
+  
+  const balance = balanceWallet?.balance || 0
+  const luckyCoin = coinWallet?.balance || 0
 
   const handleExchange = async () => {
     const amountNum = parseFloat(amount)
@@ -51,8 +36,6 @@ export default function ExchangePage() {
 
     try {
       setSubmitting(true)
-      const user = await authService.getCurrentUser()
-      if (!user) throw new Error("未登录")
 
       // 调用 Edge Function 进行兑换（余额 → 幸运币）
       const result = await walletService.exchangeRealToBonus(amountNum)
