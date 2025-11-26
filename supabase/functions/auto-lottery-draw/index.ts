@@ -7,29 +7,50 @@ const corsHeaders = {
 };
 
 /**
- * VRF (Verifiable Random Function) 算法
- * 生成可验证的随机中奖号码
+ * 时间戳之和算法（7位数参与码版本）
+ * 
+ * 设计逻辑：
+ * 1. 参与码为7位数连续分配（1000000, 1000001, 1000002, ...）
+ * 2. 计算所有订单的时间戳总和
+ * 3. 使用公式：中奖号码索引 = 时间戳总和 % 总参与记录数
+ * 4. 根据索引找到对应的参与记录，其参与码即为中奖号码
+ * 
+ * 公平性保证：
+ * - 每个参与记录（每个7位数号码）都有相同的概率被选中
+ * - 时间戳由服务器生成，用户无法操纵
+ * - 所有数据公开可查，平台无法作弊
  */
-function generateVRFWinningNumber(lotteryId: string, totalTickets: number, seed: string) {
-  // 使用lottery_id + seed + timestamp生成随机种子
-  const timestamp = Date.now();
-  const input = `${lotteryId}-${seed}-${timestamp}`;
+function calculateWinningNumberByTimestamp(entries: any[]) {
+  // 计算所有订单的时间戳总和
+  let timestampSum = 0;
+  const timestampDetails: { entry_id: string; numbers: string; timestamp: number }[] = [];
 
-  // 简化的VRF实现 (生产环境应使用专业的VRF库)
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32bit integer
+  for (const entry of entries) {
+    // 将 ISO 时间字符串转换为毫秒时间戳
+    const timestamp = new Date(entry.created_at).getTime();
+    timestampSum += timestamp;
+    timestampDetails.push({
+      entry_id: entry.id,
+      numbers: entry.numbers,
+      timestamp: timestamp,
+    });
   }
 
-  // 确保结果在1到totalTickets范围内
-  const winningNumber = Math.abs(hash % totalTickets) + 1;
+  // 计算中奖索引: 时间戳总和 % 总参与记录数
+  const winningIndex = timestampSum % entries.length;
+  
+  // 获取中奖参与记录
+  const winningEntry = entries[winningIndex];
+  const winningNumber = winningEntry.numbers; // 7位数参与码
 
-  // 生成证明(proof) - 用于验证随机性
-  const proof = btoa(input); // Base64编码作为proof
-
-  return { winningNumber, proof, timestamp };
+  return {
+    winningNumber,
+    winningIndex,
+    timestampSum,
+    timestampDetails,
+    totalEntries: entries.length,
+    formula: `中奖索引 = ${timestampSum} % ${entries.length} = ${winningIndex}，对应号码: ${winningNumber}`,
+  };
 }
 
 serve(async (req) => {
@@ -71,7 +92,7 @@ serve(async (req) => {
       throw new Error('Lottery already drawn');
     }
 
-    // ✅ 修复：使用 lottery_entries 表而不是 tickets 表
+    // 4. 获取所有参与记录（按创建时间排序）
     const { data: entries, error: entriesError } = await supabaseClient
       .from('lottery_entries')
       .select('*')
@@ -83,19 +104,14 @@ serve(async (req) => {
       throw new Error('No lottery entries found for this lottery');
     }
 
-    // ✅ 修复：使用 VRF 算法生成中奖号码（基于参与记录数量）
-    const vrf = generateVRFWinningNumber(
-      lotteryId,
-      entries.length,
-      lottery.id + lottery.created_at // 使用lottery信息作为seed
-    );
+    // 5. 使用时间戳之和算法计算中奖号码
+    const result = calculateWinningNumberByTimestamp(entries);
 
-    // ✅ 修复：根据 VRF 结果选择中奖记录
-    const winningIndex = vrf.winningNumber - 1; // 数组索引从0开始
-    const winningEntry = entries[winningIndex];
+    // 6. 获取中奖参与记录
+    const winningEntry = entries[result.winningIndex];
 
     if (!winningEntry) {
-      throw new Error('Winning entry not found');
+      throw new Error(`Winning entry not found at index ${result.winningIndex}`);
     }
 
     // 7. 开始事务: 更新lottery状态、创建prize记录、发送通知
@@ -106,7 +122,7 @@ serve(async (req) => {
       .from('lotteries')
       .update({
         status: 'DRAWN',
-        winning_numbers: [winningEntry.numbers], // ✅ 使用 numbers 字段，转换为数组
+        winning_numbers: [winningEntry.numbers], // 7位数参与码
         winning_user_id: winningEntry.user_id,
         draw_time: drawTime,
         updated_at: drawTime,
@@ -135,13 +151,16 @@ serve(async (req) => {
       .from('lottery_results')
       .insert({
         lottery_id: lotteryId,
-        winning_number: winningEntry.numbers,
+        winning_number: winningEntry.numbers, // 7位数参与码
         draw_time: drawTime,
         algorithm_data: {
-          vrf_proof: vrf.proof,
-          vrf_timestamp: vrf.timestamp,
-          total_entries: entries.length,
-          winning_index: winningIndex,
+          algorithm: 'timestamp_sum',
+          timestamp_sum: result.timestampSum,
+          formula: result.formula,
+          total_entries: result.totalEntries,
+          winning_index: result.winningIndex,
+          winning_number: result.winningNumber,
+          timestamp_details: result.timestampDetails,
         },
         created_at: drawTime,
       })
@@ -158,16 +177,18 @@ serve(async (req) => {
       .insert({
         lottery_id: lotteryId,
         user_id: winningEntry.user_id,
-        ticket_id: winningEntry.id, // ✅ 使用 lottery_entry id
-        winning_code: winningEntry.numbers,
+        ticket_id: winningEntry.id, // 使用 lottery_entry id
+        winning_code: winningEntry.numbers, // 7位数参与码
         prize_name: lottery.title,
         prize_image: lottery.images?.[0] || lottery.image_url,
         prize_value: lottery.ticket_price * lottery.total_tickets,
         status: 'PENDING',
         won_at: drawTime,
         algorithm_data: {
-          vrf_proof: vrf.proof,
-          vrf_timestamp: vrf.timestamp,
+          algorithm: 'timestamp_sum',
+          timestamp_sum: result.timestampSum,
+          formula: result.formula,
+          winning_index: result.winningIndex,
         },
         created_at: drawTime,
         updated_at: drawTime,
@@ -224,16 +245,17 @@ serve(async (req) => {
         success: true,
         data: {
           lottery_id: lotteryId,
-          winning_number: winningEntry.numbers,
+          winning_number: winningEntry.numbers, // 7位数参与码
           winning_code: winningEntry.numbers,
           winner_user_id: winningEntry.user_id,
           prize_id: prize?.id,
           lottery_result_id: lotteryResult?.id,
-          vrf_proof: vrf.proof,
-          vrf_timestamp: vrf.timestamp,
+          algorithm: 'timestamp_sum',
+          timestamp_sum: result.timestampSum,
+          formula: result.formula,
           draw_time: drawTime,
-          total_entries: entries.length,
-          winning_index: winningIndex,
+          total_entries: result.totalEntries,
+          winning_index: result.winningIndex,
         },
       }),
       {

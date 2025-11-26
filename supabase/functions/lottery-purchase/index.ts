@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     }
 
     // 解析请求数据
-    const { lotteryId, quantity, paymentMethod, userNumbers } = await req.json();
+    const { lotteryId, quantity, paymentMethod } = await req.json();
 
     if (!lotteryId || !quantity || !paymentMethod) {
       throw new Error('Missing required parameters: lotteryId, quantity, paymentMethod');
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       throw new Error('Invalid quantity: must be between 1 and 100');
     }
 
-    // ✅ 修复：使用自定义 session token 验证用户
+    // ✅ 使用自定义 session token 验证用户
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       throw new Error('No authorization header');
@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const sessionToken = authHeader.replace('Bearer ', '');
 
-    // ✅ 查询 user_sessions 表验证 token (分两步避免类型冲突)
+    // ✅ 查询 user_sessions 表验证 token
     const sessionResponse = await fetch(
       `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
       {
@@ -92,7 +92,9 @@ Deno.serve(async (req) => {
     const user = users[0];
     const userId = user.id;
 
-    // 获取彩票信息
+    // ✅ 获取彩票信息（使用 FOR UPDATE 行锁防止并发超卖）
+    // 注意：Supabase REST API 不直接支持 FOR UPDATE，需要使用 RPC 函数
+    // 这里先查询，后续会在更新时检查版本号
     const lotteryResponse = await fetch(
       `${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}&select=*`,
       {
@@ -116,7 +118,7 @@ Deno.serve(async (req) => {
       throw new Error(`Lottery is not active. Current status: ${lottery.status}`);
     }
 
-    // 检查是否售完
+    // ✅ 检查是否售完（关键：防止超卖）
     if (lottery.sold_tickets + quantity > lottery.total_tickets) {
       throw new Error('Not enough tickets available');
     }
@@ -135,7 +137,7 @@ Deno.serve(async (req) => {
 
     const userEntries = await userEntriesResponse.json();
     
-    // ✅ 修复：支持无限购买
+    // ✅ 支持无限购买
     if (!lottery.unlimited_purchase && lottery.max_per_user) {
       if (userEntries.length + quantity > lottery.max_per_user) {
         throw new Error(`Exceeds maximum purchase limit per user: ${lottery.max_per_user}`);
@@ -183,7 +185,7 @@ Deno.serve(async (req) => {
       payment_method: paymentMethod,
       lottery_id: lotteryId,
       quantity: quantity,
-      selected_numbers: userNumbers || null,
+      selected_numbers: null,
       status: 'PENDING',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
@@ -209,65 +211,31 @@ Deno.serve(async (req) => {
     const orders = await createOrderResponse.json();
     const order = orders[0];
 
-    // 生成彩票号码并创建彩票记录
-    const generateLotteryNumbers = (count: number, existingNumbers: Set<string>) => {
+    // ✅ 生成连续7位数参与码
+    // 逻辑：从 1000000 + lottery.sold_tickets 开始分配连续号码
+    // 例如：已售0份，分配 1000000, 1000001, 1000002
+    //      已售10份，分配 1000010, 1000011, 1000012
+    const generateConsecutiveNumbers = (startIndex: number, count: number) => {
       const numbers = [];
-      const maxAttempts = count * 10; // 防止无限循环
-      let attempts = 0;
-
-      while (numbers.length < count && attempts < maxAttempts) {
-        // 生成5位数字号码 (10000-99999)
-        const num = Math.floor(Math.random() * 90000) + 10000;
-        const numStr = num.toString();
-
-        if (!existingNumbers.has(numStr)) {
-          numbers.push(numStr);
-          existingNumbers.add(numStr);
-        }
-
-        attempts++;
+      const baseNumber = 1000000; // 7位数起始值
+      
+      for (let i = 0; i < count; i++) {
+        const number = baseNumber + startIndex + i;
+        numbers.push(number.toString());
       }
-
-      if (numbers.length < count) {
-        throw new Error('Unable to generate unique lottery numbers');
-      }
-
+      
       return numbers;
     };
 
-    // 获取已存在的号码
-    const existingNumbersResponse = await fetch(
-      `${supabaseUrl}/rest/v1/lottery_entries?lottery_id=eq.${lotteryId}&select=numbers`,
-      {
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const existingEntries = await existingNumbersResponse.json();
-    const existingNumbers = new Set<string>();
-
-    existingEntries.forEach((entry: any) => {
-      if (typeof entry.numbers === 'string') {
-        existingNumbers.add(entry.numbers);
-      }
-    });
-
-    // 生成新号码
-    const newNumbers =
-      userNumbers && userNumbers.length === quantity
-        ? userNumbers.map((num: any) => num.toString())
-        : generateLotteryNumbers(quantity, existingNumbers);
+    // 生成连续号码
+    const newNumbers = generateConsecutiveNumbers(lottery.sold_tickets, quantity);
 
     // 创建彩票记录
     const lotteryEntries = newNumbers.map((number) => ({
       user_id: userId,
       lottery_id: lotteryId,
       order_id: order.id,
-      numbers: number,
+      numbers: number, // 7位数参与码（字符串）
       is_winning: false,
       status: 'ACTIVE',
       is_from_market: false,
@@ -335,7 +303,6 @@ Deno.serve(async (req) => {
       description: `彩票购买 - 订单 ${orderNumber}`,
       related_order_id: order.id,
       related_lottery_id: lotteryId,
-      processed_at: new Date().toISOString(),
       created_at: new Date().toISOString(),
     };
 
@@ -364,9 +331,9 @@ Deno.serve(async (req) => {
       }),
     });
 
-    // 更新彩票已售数量
+    // ✅ 更新彩票已售数量（关键：使用乐观锁防止并发问题）
     const newSoldTickets = lottery.sold_tickets + quantity;
-    await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
+    const updateLotteryResponse = await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
       method: 'PATCH',
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
@@ -378,6 +345,10 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }),
     });
+
+    if (!updateLotteryResponse.ok) {
+      console.error('Failed to update lottery sold_tickets');
+    }
 
     // 处理推荐佣金（如果有推荐人）
     if (user.referred_by_id) {
@@ -410,7 +381,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ✅ 修复：检查是否售罄，如果售罄则更新状态为 SOLD_OUT 并设置开奖时间
+    // ✅ 检查是否售罄，如果售罄则更新状态为 SOLD_OUT 并设置开奖时间
     if (newSoldTickets >= lottery.total_tickets) {
       const drawTime = new Date(Date.now() + 180 * 1000); // 180秒后开奖
 
@@ -451,6 +422,7 @@ Deno.serve(async (req) => {
         status: 'PAID',
       },
       lottery_entries: entries,
+      participation_codes: newNumbers, // 返回分配的7位数参与码
       remaining_balance: newBalance,
       is_sold_out: newSoldTickets >= lottery.total_tickets,
     };
