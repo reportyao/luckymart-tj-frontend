@@ -561,21 +561,50 @@ export const referralService = {
   /**
 	   * 获取已审核的晒单列表
    */
-	  async getApprovedShowoffs(_filter: 'all' | 'following' | 'popular'): Promise<Showoff[]> {
-	    // 暂时忽略 filter 逻辑，直接获取所有已审核晒单
-	    // TODO: 实现 filter 逻辑
+  async getApprovedShowoffs(_filter: 'all' | 'following' | 'popular', userId?: string): Promise<Showoff[]> {
+    // 暂时忽略 filter 逻辑，直接获取所有已审核晒单
+    // TODO: 实现 filter 逻辑
+    
+    // 查询晒单，关联 lotteries 表获取夺宝标题
     const { data, error } = await supabase
-	      .from('showoffs')
-	      .select('*')
-	      .eq('status', 'APPROVED')
+      .from('showoffs')
+      .select(`
+        *,
+        lottery:lotteries(title),
+        user:users(telegram_username, avatar_url)
+      `)
+      .eq('status', 'APPROVED')
       .order('created_at', { ascending: false });
 
     if (error) {
-	      console.error('Failed to fetch showoffs:', error);
+      console.error('Failed to fetch showoffs:', error);
       throw new Error(`获取晒单列表失败: ${error.message}`);
     }
-    // 这里的类型需要手动处理一下，因为 select 包含了 join
-	    return data as any as Showoff[];
+
+    // 如果有 userId，查询用户的点赞状态
+    if (userId && data) {
+      const showoffIds = data.map(s => s.id);
+      const { data: likes } = await supabase
+        .from('likes')
+        .select('post_id')
+        .eq('user_id', userId)
+        .in('post_id', showoffIds);
+
+      const likedIds = new Set(likes?.map(l => l.post_id) || []);
+
+      // 添加 is_liked 字段
+      return data.map(showoff => ({
+        ...showoff,
+        is_liked: likedIds.has(showoff.id),
+        lottery_title: showoff.lottery?.title || ''
+      })) as any as Showoff[];
+    }
+
+    return data.map(showoff => ({
+      ...showoff,
+      is_liked: false,
+      lottery_title: showoff.lottery?.title || ''
+    })) as any as Showoff[];
   },
 
   /**

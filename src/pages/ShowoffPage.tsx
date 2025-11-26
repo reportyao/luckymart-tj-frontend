@@ -33,7 +33,7 @@ const ShowoffPage: React.FC = () => {
   const fetchShowoffs = useCallback(async () => {
     setIsLoading(true);
     try {
-      const data = await showoffService.getApprovedShowoffs(filter) as ShowoffWithDetails[];
+      const data = await showoffService.getApprovedShowoffs(filter, user?.id) as ShowoffWithDetails[];
       setShowoffs(data);
     } catch (error) {
       console.error('Error fetching showoffs:', error);
@@ -41,7 +41,7 @@ const ShowoffPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [t, filter, showoffService]);
+  }, [t, filter, showoffService, user?.id]);
 
   useEffect(() => {
     fetchShowoffs();
@@ -183,8 +183,9 @@ const ShowoffPage: React.FC = () => {
                   <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
                     <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-	                    <p className="text-sm font-medium text-gray-900 truncate">{showoff.lottery?.title}</p>
-		                    <p className="text-xs text-gray-500 truncate">{showoff.lottery?.title}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {showoff.lottery?.title || showoff.lottery_title || t('showoff.unknownLottery')}
+                      </p>
                     </div>
                   </div>
                 </div>

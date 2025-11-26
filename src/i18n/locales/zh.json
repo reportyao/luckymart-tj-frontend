@@ -353,6 +353,7 @@
     "updateSuccess": "更新成功"
   },
   "showoff": {
+    "showoff": "晒单",
     "showoffGallery": "晒单广场",
     "viewMyShowoffs": "查看我的晒单",
     "myShowoffs": "我的晒单",
@@ -392,7 +393,8 @@
     "imagesUploadedAndOptimized": "图片上传成功",
     "showoffSuccessPending": "晒单发布成功，等待审核",
     "selectWinningRecordError": "请选择中奖记录",
-    "minContentLengthError": "晒单内容至少需要10个字"
+    "minContentLengthError": "晒单内容至少需要10个字",
+    "unknownLottery": "未知夺宝"
   },
   "prize": {
     "prizeManagement": "中奖管理",
