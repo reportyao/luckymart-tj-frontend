@@ -127,22 +127,22 @@ const MyPrizesPage: React.FC = () => {
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center space-x-3 mb-4">
             <TrophyIcon className="w-8 h-8" />
-            <h1 className="text-2xl font-bold">我的中奖</h1>
+            <h1 className="text-2xl font-bold">{t('profile.myPrizes')}</h1>
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
               <p className="text-2xl font-bold">{prizes.length}</p>
-              <p className="text-xs mt-1 opacity-90">总中奖</p>
+              <p className="text-xs mt-1 opacity-90">{t('profile.totalPrizes')}</p>
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
               <p className="text-2xl font-bold">{prizes.filter(p => p.status === 'PENDING').length}</p>
-              <p className="text-xs mt-1 opacity-90">待处理</p>
+              <p className="text-xs mt-1 opacity-90">{t('profile.pendingPrizes')}</p>
             </div>
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 text-center">
               <p className="text-2xl font-bold">
                 TJS{prizes.reduce((sum, p) => sum + p.prize_value, 0).toFixed(0)}
               </p>
-              <p className="text-xs mt-1 opacity-90">总价值</p>
+              <p className="text-xs mt-1 opacity-90">{t('profile.totalValue')}</p>
             </div>
           </div>
         </div>

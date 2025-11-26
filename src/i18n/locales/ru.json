@@ -308,7 +308,13 @@
     "invitedUsers": "Приглашённые пользователи",
     "totalRewards": "Всего наград",
     "copyReferralCode": "Скопировано",
-    "shareReferralLink": "Поделиться реферальной ссылкой"
+    "shareReferralLink": "Поделиться реферальной ссылкой",
+    "viewNotifications": "Просмотреть уведомления",
+    "myPrizes": "Мои выигрыши",
+    "totalPrizes": "Всего выигрышей",
+    "pendingPrizes": "Ожидают обработки",
+    "totalValue": "Общая стоимость",
+    "viewShowoffs": "Просмотреть выигрыши"
   },
   "auth": {
     "welcome": "Добро пожаловать в LuckyMart",
@@ -370,7 +376,14 @@
     "imageRequiredError": "Пожалуйста, загрузите хотя бы одно изображение",
     "imagesUploadedAndOptimized": "Изображения успешно загружены",
     "imageUploadFailed": "Ошибка при загрузке изображения",
-    "showoffSuccessPending": "Опубликовано успешно, ожидает модерации"
+    "showoffSuccessPending": "Опубликовано успешно, ожидает модерации",
+    "publish": "Опубликовать",
+    "selectPrizeRecord": "Выберите запись о выигрыше",
+    "content": "Содержание",
+    "noPrizes": "Нет записей о выигрыше",
+    "noPrizesHint": "Участвуйте в розыгрышах, чтобы выиграть и поделиться",
+    "winningNumber": "Выигрышный номер",
+    "contentPlaceholderLong": "Поделитесь своей радостью от выигрыша, расскажите о своих впечатлениях... (минимум 10 символов)"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",

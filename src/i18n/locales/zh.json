@@ -327,7 +327,12 @@
     "copyReferralCode": "复制推荐码",
     "shareReferralLink": "分享推荐链接",
     "notifications": "我的消息",
-    "viewNotifications": "查看消息通知"
+    "viewNotifications": "查看消息通知",
+    "myPrizes": "我的中奖",
+    "totalPrizes": "总中奖",
+    "pendingPrizes": "待处理",
+    "totalValue": "总价值",
+    "viewShowoffs": "查看晒单"
   },
   "auth": {
     "welcome": "欢迎来到 LuckyMart",
@@ -397,7 +402,14 @@
     "minContentLengthError": "晒单内容至少需要10个字",
     "unknownLottery": "未知夺宝",
     "beTheFirst": "暂无晒单",
-    "publishNow": "立即发布"
+    "publishNow": "立即发布",
+    "publish": "发布",
+    "selectPrizeRecord": "选择中奖记录",
+    "content": "晒单内容",
+    "noPrizes": "暂无中奖记录",
+    "noPrizesHint": "参与夺宝活动,中奖后即可晒单",
+    "winningNumber": "中奖号码",
+    "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)"
   },
   "prize": {
     "prizeManagement": "中奖管理",

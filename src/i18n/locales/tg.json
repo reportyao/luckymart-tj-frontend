@@ -308,7 +308,13 @@
     "invitedUsers": "Истифодабарандагони даъватшуда",
     "totalRewards": "Мукофотҳои умумӣ",
     "copyReferralCode": "Нусхабардории рамзи рефералӣ",
-    "shareReferralLink": "Мубодилаи истиноди рефералӣ"
+    "shareReferralLink": "Мубодилаи истиноди рефералӣ",
+    "viewNotifications": "Дидани огоҳӣҳо",
+    "myPrizes": "Бурдҳои ман",
+    "totalPrizes": "Ҳамаи бурдҳо",
+    "pendingPrizes": "Дар интизорӣ",
+    "totalValue": "Арзиши умумӣ",
+    "viewShowoffs": "Дидани намоишҳо"
   },
   "auth": {
     "welcome": "Хуш омадед ба LuckyMart",
@@ -370,7 +376,14 @@
     "imageRequiredError": "Лутфан, ҳадди ақал як тасвир бор кунед",
     "imagesUploadedAndOptimized": "Тасвирҳо бомуваффақият бор шуданд",
     "imageUploadFailed": "Боргирии тасвир ноком шуд",
-    "showoffSuccessPending": "Намоиш бомуваффақият нашр шуд, дар интизории тасдиқ"
+    "showoffSuccessPending": "Намоиш бомуваффақият нашр шуд, дар интизории тасдиқ",
+    "publish": "Нашр кардан",
+    "selectPrizeRecord": "Сабти бурдро интихоб кунед",
+    "content": "Матлаб",
+    "noPrizes": "Сабтҳои бурд нест",
+    "noPrizesHint": "Дар лотореяҳо иштирок кунед, барои бурдан ва мубодила кардан",
+    "winningNumber": "Рақами бурд",
+    "contentPlaceholderLong": "Шодӣи худро аз бурд мубодила кунед, дар бораи эҳсосҳоятон нақл кунед... (ҳадди ақал 10 аломат)"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",

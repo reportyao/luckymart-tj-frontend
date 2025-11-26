@@ -173,15 +173,15 @@ const ShowoffCreatePage: React.FC = () => {
             className="flex items-center space-x-2 text-gray-700 hover:text-gray-900"
           >
             <ArrowLeftIcon className="w-5 h-5" />
-            <span>返回</span>
+            <span>{t('common.back')}</span>
           </button>
-          <h1 className="text-lg font-bold text-gray-900">发布晒单</h1>
+          <h1 className="text-lg font-bold text-gray-900">{t('showoff.createShowoff')}</h1>
           <button
             onClick={handleSubmit}
             disabled={isLoading}
             className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
           >
-            {isLoading ? '发布中...' : '发布'}
+            {isLoading ? `${t('showoff.publish')}...` : t('showoff.publish')}
           </button>
         </div>
       </div>
@@ -189,7 +189,7 @@ const ShowoffCreatePage: React.FC = () => {
       <div className="px-4 py-4 space-y-4">
         {/* Select Winning Lottery */}
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">选择中奖记录</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.selectPrizeRecord')}</h3>
           {isLoadingLotteries ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
@@ -197,8 +197,8 @@ const ShowoffCreatePage: React.FC = () => {
           ) : winningLotteries.length === 0 ? (
             <div className="text-center py-8">
               <TrophyIcon className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">暂无中奖记录</p>
-              <p className="text-sm text-gray-400 mt-1">参与夺宝活动,中奖后即可晒单</p>
+              <p className="text-gray-500">{t('showoff.noPrizes')}</p>
+              <p className="text-sm text-gray-400 mt-1">{t('showoff.noPrizesHint')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -222,7 +222,7 @@ const ShowoffCreatePage: React.FC = () => {
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900">{lottery.prize_name}</p>
                     <p className="text-sm text-gray-500">{lottery.lottery_title}</p>
-                    <p className="text-xs text-gray-400 mt-1">中奖号码: {lottery.winning_number}</p>
+                    <p className="text-xs text-gray-400 mt-1">{t('showoff.winningNumber')}: {lottery.winning_number}</p>
                   </div>
                   {selectedLottery === lottery.id && (
                     <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
@@ -239,11 +239,11 @@ const ShowoffCreatePage: React.FC = () => {
 
         {/* Content Input */}
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">晒单内容</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.content')}</h3>
           <textarea
             value={content}
             onChange={(e) => setContent(e.target.value)}
-            placeholder="分享你的中奖喜悦,说说你的感受吧...(至少10个字)"
+            placeholder={t('showoff.contentPlaceholderLong')}
             className="w-full h-32 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
             maxLength={500}
           />
