@@ -646,6 +646,14 @@ export const referralService = {
       console.error('Failed to like showoff:', error);
       throw new Error(`点赞失败: ${error.message}`);
     }
+
+    // 如果不是重复点赞，更新 likes_count
+    if (!error) {
+      const { error: updateError } = await supabase.rpc('increment_likes_count', { showoff_id: showoffId });
+      if (updateError) {
+        console.error('Failed to update likes_count:', updateError);
+      }
+    }
   },
 	
   async unlikeShowoff(showoffId: string, userId?: string): Promise<void> {
@@ -666,6 +674,12 @@ export const referralService = {
 	      console.error('Failed to unlike showoff:', error);
 	      throw new Error(`取消点赞失败: ${error.message}`);
 	    }
+
+      // 更新 likes_count
+      const { error: updateError } = await supabase.rpc('decrement_likes_count', { showoff_id: showoffId });
+      if (updateError) {
+        console.error('Failed to update likes_count:', updateError);
+      }
 	  },
 	
 	  // 原始的 toggleLike 逻辑被拆分为 likeShowoff 和 unlikeShowoff

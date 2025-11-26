@@ -66,7 +66,10 @@ const ShowoffPage: React.FC = () => {
             ? {
                 ...showoff,
                 is_liked: !showoff.is_liked,
-                likes_count: showoff.is_liked ? showoff.likes_count - 1 : showoff.likes_count + 1
+                // 注意：这里的 is_liked 是更新前的状态
+                // 如果当前已点赞，点击后应该取消，所以 -1
+                // 如果当前未点赞，点击后应该点赞，所以 +1
+                likes_count: Math.max(0, showoff.is_liked ? showoff.likes_count - 1 : showoff.likes_count + 1)
               }
             : showoff
         )
