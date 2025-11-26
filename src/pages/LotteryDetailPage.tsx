@@ -55,9 +55,6 @@ const LotteryDetailPage: React.FC = () => {
       if (error) throw error;
 
       setLottery(data);
-      if (data.end_time) {
-        setTimeRemaining(getTimeRemaining(data.end_time));
-      }
     } catch (error) {
       console.error('Failed to fetch lottery:', error);
       toast.error(t('error.networkError'));
@@ -93,15 +90,7 @@ const LotteryDetailPage: React.FC = () => {
     fetchRandomShowoffs();
   }, [fetchLottery, fetchRandomShowoffs]);
 
-  useEffect(() => {
-    if (!lottery || !lottery.end_time) return;
-
-    const timer = setInterval(() => {
-      setTimeRemaining(getTimeRemaining(lottery.end_time));
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [lottery]);
+  // 移除活动结束时间倒计时，只保留售罄后的 180 秒开奖倒计时
 
   if (isLoading) {
     return <div className="text-center py-10">{t('common.loading')}...</div>;
@@ -320,18 +309,7 @@ const LotteryDetailPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Countdown */}
-          {isActive && timeRemaining && timeRemaining.total > 0 && (
-            <div className="flex items-center justify-center bg-yellow-50 p-3 rounded-lg">
-              <ClockIcon className="w-5 h-5 mr-2 text-yellow-700" />
-              <p className="text-sm font-medium text-yellow-700">
-                {t('lottery.remainingTime')}: {timeRemaining.days > 0 && `${timeRemaining.days}天 `}
-                {timeRemaining.hours.toString().padStart(2, '0')}:
-                {timeRemaining.minutes.toString().padStart(2, '0')}:
-                {timeRemaining.seconds.toString().padStart(2, '0')}
-              </p>
-            </div>
-          )}
+          {/* 移除活动结束倒计时 */}
 
           {/* 180秒开奖倒计时 */}
           {isSoldOut && lottery.draw_time && (
