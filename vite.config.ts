@@ -1,13 +1,14 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
+import timestampPlugin from './vite-plugin-timestamp.js'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const buildTime = new Date().toISOString()
 
   return {
-    plugins: [react()],
+    plugins: [react(), timestampPlugin()],
     
     define: {
       __BUILD_TIME__: JSON.stringify(buildTime),
@@ -33,7 +34,7 @@ export default defineConfig(({ mode }) => {
       assetsInlineLimit: 0,  // 强制每次构建生成新的文件名，防止缓存
       terserOptions: {
         compress: {
-          drop_console: true,
+          drop_console: false,  // 保留 console.log 以便调试
           drop_debugger: true
         }
       },

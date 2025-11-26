@@ -79,25 +79,77 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const storedUser = localStorage.getItem('custom_user');
       
       if (storedToken && storedUser) {
-        console.log('[Session] Found stored session, restoring user...');
+        console.log('[Session] Found stored session, validating...');
         const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser as User);
-        setSessionToken(storedToken);
         
-        // 获取 profile
-        const { data: profileData, error: profileError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', parsedUser.id)
-          .single();
+        // 验证 session token 是否有效
+        try {
+          // 使用 fetch 直接调用 Supabase REST API 避免类型错误
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+          const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          
+          const response = await fetch(
+            `${supabaseUrl}/rest/v1/user_sessions?token=eq.${storedToken}&user_id=eq.${parsedUser.id}&select=*`,
+            {
+              headers: {
+                'apikey': supabaseKey,
+                'Authorization': `Bearer ${supabaseKey}`,
+              }
+            }
+          );
+          
+          const sessions = await response.json();
+          
+          if (!response.ok || !sessions || sessions.length === 0) {
+            console.log('[Session] Session token invalid or expired, clearing...');
+            localStorage.removeItem('custom_session_token');
+            localStorage.removeItem('custom_user');
+            setSessionToken(null);
+            setUser(null);
+            setProfile(null);
+            return;
+          }
+          
+          const sessionData = sessions[0];
+          
+          // 检查 session 是否过期
+          const expiresAt = new Date(sessionData.expires_at);
+          if (expiresAt < new Date()) {
+            console.log('[Session] Session expired, clearing...');
+            localStorage.removeItem('custom_session_token');
+            localStorage.removeItem('custom_user');
+            setSessionToken(null);
+            setUser(null);
+            setProfile(null);
+            return;
+          }
+          
+          console.log('[Session] Session valid, restoring user...');
+          setUser(parsedUser as User);
+          setSessionToken(storedToken);
+          
+          // 获取 profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('id', parsedUser.id)
+            .single();
 
-        if (profileError) {
-          console.error('Failed to fetch profile:', profileError);
-        } else {
-          setProfile(profileData as UserProfile);
+          if (profileError) {
+            console.error('Failed to fetch profile:', profileError);
+          } else {
+            setProfile(profileData as UserProfile);
+          }
+
+          await fetchWallets(parsedUser.id);
+        } catch (error) {
+          console.error('[Session] Error validating session:', error);
+          localStorage.removeItem('custom_session_token');
+          localStorage.removeItem('custom_user');
+          setSessionToken(null);
+          setUser(null);
+          setProfile(null);
         }
-
-        await fetchWallets(parsedUser.id);
       } else {
         console.log('[Session] No stored session found');
       }
@@ -175,16 +227,31 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // 自动认证：如果有 initData 但没有用户，尝试自动登录
   useEffect(() => {
     const autoAuthenticate = async () => {
-      // 只在有 initData、没有当前用户、未尝试过认证时执行
-      if (WebApp.initData && !user && !isLoading && !hasAttemptedAuth) {
-        console.log('[Auto Auth] Attempting automatic authentication...');
-        setHasAttemptedAuth(true); // 标记已尝试
+      console.log('[Auto Auth] Checking authentication state...');
+      console.log('[Auto Auth] Has initData:', !!WebApp.initData);
+      console.log('[Auto Auth] Has user:', !!user);
+      console.log('[Auto Auth] Has sessionToken state:', !!sessionToken);
+      console.log('[Auto Auth] Is loading:', isLoading);
+      console.log('[Auto Auth] Has attempted:', hasAttemptedAuth);
+      
+      // 等待 checkSession 完成
+      if (isLoading) {
+        console.log('[Auto Auth] Waiting for checkSession to complete...');
+        return;
+      }
+      
+      // 如果有 initData 但没有用户且没有 session token，尝试认证
+      if (WebApp.initData && !user && !sessionToken && !hasAttemptedAuth) {
+        console.log('[Auto Auth] No user or session, attempting authentication...');
+        setHasAttemptedAuth(true);
         await authenticate();
+      } else {
+        console.log('[Auto Auth] Skipping authentication');
       }
     };
 
     autoAuthenticate();
-  }, [user, isLoading, hasAttemptedAuth, authenticate]);
+  }, [user, sessionToken, isLoading, hasAttemptedAuth, authenticate]);
 
   const refreshWallets = useCallback(async () => {
     if (user) {
