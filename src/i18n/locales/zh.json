@@ -384,7 +384,15 @@
     "loadMore": "加载更多",
     "won": "中奖了",
     "noShowoffsYet": "暂无晒单",
-    "recentShowoffs": "最近晒单"
+    "recentShowoffs": "最近晒单",
+    "imageRequiredError": "请至少上传一张图片",
+    "contentRequiredError": "请填写晒单内容",
+    "lotteryRequiredError": "请选择中奖奖品",
+    "maxImagesError": "最多只能上传9张图片",
+    "imagesUploadedAndOptimized": "图片上传成功",
+    "showoffSuccessPending": "晒单发布成功，等待审核",
+    "selectWinningRecordError": "请选择中奖记录",
+    "minContentLengthError": "晒单内容至少需要10个字"
   },
   "prize": {
     "prizeManagement": "中奖管理",

@@ -593,13 +593,14 @@ export const referralService = {
 
     const { error } = await supabase
       .from('likes')
-       .insert({ post_id: showoffId, user_id: uid });
-	
-	    if (error) {
-	      console.error('Failed to like showoff:', error);
-	      throw new Error(`点赞失败: ${error.message}`);
-	    }
-	  },
+      .insert({ post_id: showoffId, user_id: uid });
+
+    // 如果是重复点赞错误，忽略它（用户已经点赞过）
+    if (error && error.code !== '23505') {
+      console.error('Failed to like showoff:', error);
+      throw new Error(`点赞失败: ${error.message}`);
+    }
+  },
 	
   async unlikeShowoff(showoffId: string, userId?: string): Promise<void> {
     let uid = userId;
@@ -669,14 +670,19 @@ export const referralService = {
     lottery_id: string;
     content: string;
     images: string[];
+    user_id?: string;
   }): Promise<Showoff> {
-    const user = await authService.getCurrentUser();
-    if (!user) throw new Error('用户未登录');
+    let userId = params.user_id;
+    if (!userId) {
+      const user = await authService.getCurrentUser();
+      if (!user) throw new Error('用户未登录');
+      userId = user.id;
+    }
 
     const { data, error } = await supabase
       .from('showoffs')
       .insert({
-        user_id: user.id,
+        user_id: userId,
         lottery_id: params.lottery_id,
         content: params.content,
         images: params.images,

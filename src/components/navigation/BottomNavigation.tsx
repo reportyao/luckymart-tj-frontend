@@ -40,7 +40,7 @@ export const BottomNavigation: React.FC = () => {
       activeIcon: SparklesIconSolid,
     },
     {
-      name: t('showoff.showoff'),
+      name: t('showoff.showoffGallery'),
       path: '/showoff',
       icon: PhotoIcon,
       activeIcon: PhotoIconSolid,

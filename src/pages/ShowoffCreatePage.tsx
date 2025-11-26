@@ -148,6 +148,7 @@ const ShowoffCreatePage: React.FC = () => {
         lottery_id: selectedLotteryData.lottery_id, // 使用 lottery_id 而不是 id
         content: content.trim(),
         images: images,
+        user_id: user?.id, // 传入 user_id 避免 session 问题
       });
 
       toast.success(t('showoff.showoffSuccessPending'));
