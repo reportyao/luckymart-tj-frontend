@@ -106,7 +106,7 @@ serve(async (req) => {
       .from('lotteries')
       .update({
         status: 'DRAWN',
-        winning_number: winningEntry.numbers, // ✅ 使用 numbers 字段
+        winning_numbers: [winningEntry.numbers], // ✅ 使用 numbers 字段，转换为数组
         winning_user_id: winningEntry.user_id,
         draw_time: drawTime,
         updated_at: drawTime,
