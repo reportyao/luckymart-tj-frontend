@@ -89,7 +89,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           
           const response = await fetch(
-            `${supabaseUrl}/rest/v1/user_sessions?token=eq.${storedToken}&user_id=eq.${parsedUser.id}&select=*`,
+            `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${storedToken}&user_id=eq.${parsedUser.id}&select=*`,
             {
               headers: {
                 'apikey': supabaseKey,
