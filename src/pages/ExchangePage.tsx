@@ -25,8 +25,8 @@ export default function ExchangePage() {
 
       const wallets = await walletService.getWallets(user.id)
       if (wallets) {
-        const balanceWallet = wallets.find(w => w.currency === "TJS")
-        const coinWallet = wallets.find(w => w.currency === "LUCKY_COIN" as any)
+        const balanceWallet = wallets.find(w => w.type === "BALANCE")
+        const coinWallet = wallets.find(w => w.type === "LUCKY_COIN")
         
         if (balanceWallet) setBalance(balanceWallet.balance)
         if (coinWallet) setLuckyCoin(coinWallet.balance)

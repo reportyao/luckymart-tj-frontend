@@ -21,16 +21,16 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const { t } = useTranslation()
   const [showBalance, setShowBalance] = React.useState(true)
   
-  const balanceWallet = wallets.find(w => w.currency === 'TJS')
-  const luckyCoinWallet = wallets.find(w => w.currency === 'LUCKY_COIN' as any)
-
+  const balanceWallet = wallets.find(w => w.type === 'BALANCE')
+  const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
+  
   const toggleShowBalance = () => {
     setShowBalance(!showBalance)
   }
 
-	  const formatDisplayAmount = (currency: string, amount: number) => {
-	    return showBalance ? formatCurrency(currency, amount) : '****'
-	  }
+  const formatDisplayAmount = (currency: string, amount: number) => {
+    return showBalance ? formatCurrency(currency, amount) : '****'
+  }
 
   return (
     <motion.div
@@ -75,12 +75,12 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-	              <p className="text-sm text-white/80">
-	                {t('wallet.balance')}
-	              </p>
-	              <p className="text-2xl font-bold">
-	                {balanceWallet ? formatDisplayAmount(balanceWallet.currency, balanceWallet.balance) : 'TJS0.00'}
-	              </p>
+              <p className="text-sm text-white/80">
+                {t('wallet.balance')}
+              </p>
+              <p className="text-2xl font-bold">
+                {balanceWallet ? formatDisplayAmount(balanceWallet.currency, balanceWallet.balance) : 'TJS0.00'}
+              </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
               <span className="text-lg">💰</span>
@@ -99,12 +99,12 @@ export const WalletCard: React.FC<WalletCardProps> = ({
         <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-	              <p className="text-sm text-white/80">
-	                {t('wallet.luckyCoin')}
-	              </p>
-	              <p className="text-2xl font-bold">
-	                {luckyCoinWallet ? formatDisplayAmount(luckyCoinWallet.currency, luckyCoinWallet.balance) : 'TJS0.00'}
-	              </p>
+              <p className="text-sm text-white/80">
+                {t('wallet.luckyCoin')}
+              </p>
+              <p className="text-2xl font-bold">
+                {luckyCoinWallet ? (showBalance ? luckyCoinWallet.balance.toString() : '****') : '0'}
+              </p>
             </div>
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
               <span className="text-lg">🍀</span>
@@ -113,14 +113,12 @@ export const WalletCard: React.FC<WalletCardProps> = ({
           
           {luckyCoinWallet && showBalance && (
             <div className="mt-2 flex justify-between text-xs text-white/70">
-              <span>{t('wallet.totalDeposits')}: {formatCurrency(luckyCoinWallet.currency, 0)}</span>
-              <span>{t('wallet.totalWithdrawals')}: {formatCurrency(luckyCoinWallet.currency, 0)}</span>
+              <span>{t('wallet.totalDeposits')}: {luckyCoinWallet.total_deposits || 0}</span>
+              <span>{t('wallet.totalWithdrawals')}: {luckyCoinWallet.total_withdrawals || 0}</span>
             </div>
           )}
         </div>
       </div>
-
-
     </motion.div>
   )
 }
