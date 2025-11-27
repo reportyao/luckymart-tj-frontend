@@ -497,7 +497,10 @@
     "tip2": "买家购买后即可参与开奖",
     "tip3": "如果中奖，奖品将归买家所有",
     "tip4": "建议在开奖前一小时完成交易",
-    "canResellHint": "可转售"
+    "canResellHint": "可转售",
+    "confirmPurchase": "确认购买",
+    "purchaseSuccess": "购买成功",
+    "purchaseError": "购买失败"
   },
   "bot": {
     "botManagement": "Bot管理",

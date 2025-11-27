@@ -193,8 +193,41 @@ interface MarketListing {
     listing.ticket_numbers.includes(searchQuery)
   );
 
-  const handleBuy = (listing: MarketListing) => {
-    navigate(`/market/${listing.id}`);
+  const handleBuy = async (listing: MarketListing) => {
+    if (!window.confirm(`${t('market.confirmPurchase')}\n${listing.lottery_title}\n${t('market.price')}: ${listing.currency} ${listing.selling_price.toFixed(2)}`)) {
+      return;
+    }
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+
+      if (!token) {
+        toast.error(t('common.pleaseLogin'));
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('purchase-resale', {
+        body: { resale_item_id: listing.id },
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string };
+
+      if (result.success) {
+        toast.success(t('market.purchaseSuccess'));
+        fetchListings(); // 刷新列表
+      } else {
+        throw new Error(result.error || 'Purchase failed');
+      }
+    } catch (error: any) {
+      console.error('Purchase error:', error);
+      toast.error(error.message || t('market.purchaseError'));
+    }
   };
 
   const handleCreateListing = () => {
