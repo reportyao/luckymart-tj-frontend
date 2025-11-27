@@ -459,7 +459,7 @@ const LotteryResultPage: React.FC = () => {
           </div>
 
           {/* 算法介绍和数据验证 */}
-          {isCompleted && lottery.draw_algorithm_data && (
+          {isCompleted && (
             <div className="mt-6 space-y-4">
               {/* 算法介绍 */}
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
