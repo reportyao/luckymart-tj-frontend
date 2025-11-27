@@ -25,7 +25,17 @@ export class ErrorBoundary extends React.Component<
     // 捕获错误信息
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
-    // 移除 DOM 错误特殊处理，统一交给 Fallback UI 处理
+    // 忽略 Framer Motion 的 DOM 操作错误
+    if (error && error.message && (
+      error.message.includes('removeChild') ||
+      error.message.includes('insertBefore') ||
+      error.name === 'NotFoundError'
+    )) {
+      console.warn('Suppressed Framer Motion DOM error:', error);
+      // 重置错误状态，不显示错误 UI
+      this.setState({ hasError: false, error: null, errorInfo: null });
+      return;
+    }
 
     this.setState({
       error,

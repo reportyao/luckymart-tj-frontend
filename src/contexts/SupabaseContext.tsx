@@ -16,8 +16,19 @@ interface SupabaseContextType {
   Database: Database;
 }
 
+// 创建默认上下文值
+const defaultContextValue: SupabaseContextType = {
+  authService,
+  supabase,
+  lotteryService,
+  walletService,
+  commissionService,
+  showoffService,
+  Database: {} as Database,
+};
+
 // 创建上下文
-const SupabaseContext = createContext<SupabaseContextType | undefined>(undefined);
+const SupabaseContext = createContext<SupabaseContextType>(defaultContextValue);
 
 // 上下文提供者组件
 export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -43,8 +54,6 @@ export const SupabaseProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 // 自定义 Hook，用于在组件中访问 Supabase 服务
 export const useSupabase = () => {
   const context = useContext(SupabaseContext);
-  if (context === undefined) {
-    throw new Error('useSupabase must be used within a SupabaseProvider');
-  }
+  // 不再检查 undefined，因为我们提供了默认值
   return context;
 };

@@ -1632,7 +1632,7 @@ export type Database = {
           telegram_id: string
           telegram_username: string | null
           updated_at: string | null
-          username: string | null
+          // username: string | null / removed - use telegram_username instead
         }
         Insert: {
           avatar_url?: string | null
@@ -1650,7 +1650,7 @@ export type Database = {
           telegram_id: string
           telegram_username?: string | null
           updated_at?: string | null
-          username?: string | null
+          // username?: string | null / removed - use telegram_username instead
         }
         Update: {
           avatar_url?: string | null
@@ -1668,7 +1668,7 @@ export type Database = {
           telegram_id?: string
           telegram_username?: string | null
           updated_at?: string | null
-          username?: string | null
+          // username?: string | null / removed - use telegram_username instead
         }
         Relationships: []
       }
@@ -2900,11 +2900,11 @@ export type Database = {
       }
       place_lottery_order: {
         Args: {
+          p_user_id: string
           p_lottery_id: string
           p_ticket_count: number
-          p_user_id: string
         }
-        Returns: Json
+        Returns: string
       }
       increment_likes_count: {
         Args: { showoff_id: string }

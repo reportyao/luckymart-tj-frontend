@@ -55,6 +55,11 @@ const LotteryDetailPage: React.FC = () => {
       if (error) throw error;
 
       setLottery(data);
+      
+      // 如果已售罄或已开奖，跳转到开奖页面
+      if (data && (data.status === 'SOLD_OUT' || data.status === 'COMPLETED')) {
+        navigate(`/lottery/${id}/result`);
+      }
     } catch (error) {
       console.error('Failed to fetch lottery:', error);
       toast.error(t('error.networkError'));
@@ -65,23 +70,50 @@ const LotteryDetailPage: React.FC = () => {
 
   const fetchRandomShowoffs = useCallback(async () => {
     try {
-      // 假设存在一个 RPC 或 Edge Function 来获取随机晒单
-      // 这里使用简化查询，获取最近的 3 个已审核晒单
-      const { data, error } = await supabase
+      // 获取最近的 3 个已审核晒单
+      const { data: showoffsData, error: showoffsError } = await supabase
         .from('showoffs')
-        .select(`
-          *,
-          user:user_id (username, avatar_url)
-        `)
+        .select('*')
         .eq('status', 'APPROVED')
         .order('created_at', { ascending: false })
         .limit(3);
 
-      if (error) throw error;
+      if (showoffsError) throw showoffsError;
 
-      setRandomShowoffs(data as any);
+      // 手动获取用户信息
+      if (showoffsData && showoffsData.length > 0) {
+        const userIds = showoffsData.map((s: any) => s.user_id).filter(Boolean);
+        
+        if (userIds.length > 0) {
+          const { data: usersData, error: usersError } = await supabase
+            .from('users')
+            .select('id, telegram_username, avatar_url')
+            .in('id', userIds);
+
+          if (usersError) throw usersError;
+
+          // 合并数据
+          const showoffsWithUsers = showoffsData.map((showoff: any) => ({
+            ...showoff,
+            user: usersData?.find((u: any) => u.id === showoff.user_id) || null
+          }));
+
+          setRandomShowoffs(showoffsWithUsers);
+        } else {
+          // 如果没有 user_id，也需要添加 user 字段以符合类型
+          const showoffsWithNullUsers = showoffsData.map((showoff: any) => ({
+            ...showoff,
+            user: null
+          }));
+          setRandomShowoffs(showoffsWithNullUsers);
+        }
+      } else {
+        setRandomShowoffs([]);
+      }
     } catch (error) {
       console.error('Failed to fetch random showoffs:', error);
+      // 即使失败也不影响页面其他功能
+      setRandomShowoffs([]);
     }
   }, [supabase]);
 
@@ -165,8 +197,8 @@ const LotteryDetailPage: React.FC = () => {
     setIsPurchasing(true);
     
     try {
-      // 调用购买 API
-      const order = await lotteryService.purchaseTickets(lottery.id, quantity);
+      // 调用购买 API，传入 user.id
+      const order = await lotteryService.purchaseTickets(lottery.id, quantity, user.id);
       
       console.log('Purchase successful:', order);
       toast.success(t('lottery.purchaseSuccess'));
@@ -177,8 +209,17 @@ const LotteryDetailPage: React.FC = () => {
       // 重置数量为 1
       setQuantity(1);
       
-      // 可选：跳转到订单详情页
-      // navigate(`/orders/${order.id}`);
+      // 如果售罄，跳转到开奖页面
+      const { data: updatedLottery } = await supabase
+        .from('lotteries')
+        .select('status')
+        .eq('id', id)
+        .single();
+      
+      if (updatedLottery?.status === 'SOLD_OUT') {
+        toast.success(t('lottery.soldOutRedirect'));
+        navigate(`/lottery/${id}/result`);
+      }
       
     } catch (error: any) {
       console.error('Purchase failed:', error);
@@ -228,12 +269,31 @@ const LotteryDetailPage: React.FC = () => {
       <div className="space-y-4 p-4">
         {/* Image Carousel */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
-          <div className="relative aspect-square">
+          <div 
+            className="relative aspect-square overflow-hidden"
+            onTouchStart={(e) => {
+              const touch = e.touches[0];
+              (e.currentTarget as any)._touchStartX = touch.clientX;
+            }}
+            onTouchEnd={(e) => {
+              const touch = e.changedTouches[0];
+              const startX = (e.currentTarget as any)._touchStartX;
+              const diff = startX - touch.clientX;
+              
+              if (Math.abs(diff) > 50 && lottery.image_urls) {
+                if (diff > 0 && activeImageIndex < lottery.image_urls.length - 1) {
+                  setActiveImageIndex(activeImageIndex + 1);
+                } else if (diff < 0 && activeImageIndex > 0) {
+                  setActiveImageIndex(activeImageIndex - 1);
+                }
+              }
+            }}
+          >
             {lottery.image_urls && lottery.image_urls.length > 0 ? (
               <LazyImage
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 width={600}
                 height={600}
               />
@@ -250,8 +310,8 @@ const LotteryDetailPage: React.FC = () => {
                     key={index}
                     onClick={() => setActiveImageIndex(index)}
                     className={cn(
-                      'w-2 h-2 rounded-full transition-colors',
-                      index === activeImageIndex ? 'bg-white' : 'bg-gray-400'
+                      "w-2 h-2 rounded-full transition-colors",
+                      index === activeImageIndex ? "bg-white" : "bg-gray-400"
                     )}
                   />
                 ))}
@@ -315,9 +375,19 @@ const LotteryDetailPage: React.FC = () => {
           {isSoldOut && lottery.draw_time && (
             <CountdownTimer 
               drawTime={lottery.draw_time} 
-              onCountdownEnd={() => {
-                // 倒计时结束后刷新页面查看开奖结果
-                fetchLottery();
+              onCountdownEnd={async () => {
+                // 倒计时结束后执行开奖
+                try {
+                  console.log('开始开奖:', id);
+                  await lotteryService.drawLottery(id!);
+                  console.log('开奖成功');
+                  // 刷新页面查看开奖结果
+                  await fetchLottery();
+                } catch (error: any) {
+                  console.error('开奖失败:', error);
+                  // 即使开奖失败也刷新页面，可能已经开奖了
+                  await fetchLottery();
+                }
               }}
             />
           )}

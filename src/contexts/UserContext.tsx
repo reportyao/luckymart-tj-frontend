@@ -35,14 +35,31 @@ interface UserContextType {
   logout: () => Promise<void>;
 }
 
-const UserContext = createContext<UserContextType | undefined>(undefined);
+// 创建一个默认值，确保 Context 永远不会是 undefined
+const defaultContextValue: UserContextType = {
+  user: null,
+  profile: null,
+  wallets: [],
+  isLoading: true,
+  isAuthenticated: false,
+  telegramUser: null,
+  sessionToken: null,
+  authenticate: async () => {
+    throw new Error('UserProvider not initialized');
+  },
+  refreshWallets: async () => {
+    throw new Error('UserProvider not initialized');
+  },
+  logout: async () => {
+    throw new Error('UserProvider not initialized');
+  },
+};
+
+const UserContext = createContext<UserContextType>(defaultContextValue);
 UserContext.displayName = 'UserContext';
 
 export const useUser = () => {
   const context = useContext(UserContext);
-  if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
-  }
   return context;
 };
 

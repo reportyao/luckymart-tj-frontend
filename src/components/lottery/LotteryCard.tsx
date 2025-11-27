@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { ClockIcon, UserGroupIcon, StarIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
@@ -28,14 +28,14 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 }) => {
 	  const { t, i18n } = useTranslation()
   // 卖罄后显示开奖倒计时，否则显示结束时间倒计时
-  const [timeRemaining, setTimeRemaining] = React.useState(() => {
+  const [timeRemaining, setTimeRemaining] = useState(() => {
     if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
       return getTimeRemaining(lottery.draw_time);
     }
     return getTimeRemaining(lottery.end_time);
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => {
       if (lottery.status === 'SOLD_OUT' && lottery.draw_time) {
         setTimeRemaining(getTimeRemaining(lottery.draw_time));
@@ -166,18 +166,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             </div>
           </div>
 
-          {/* 时间信息 */}
-          {isActive && timeRemaining.total > 0 && (
-            <div className="flex items-center text-xs text-gray-500">
-              <ClockIcon className="w-3 h-3 mr-1" />
-	              {t('lottery.remainingTime')}: {' '}
-	              {timeRemaining.days > 0 && `${timeRemaining.days}天 `}
-              {timeRemaining.hours.toString().padStart(2, '0')}:
-              {timeRemaining.minutes.toString().padStart(2, '0')}:
-              {timeRemaining.seconds.toString().padStart(2, '0')}
-            </div>
-          )}
-          
           {/* 售罄后显示开奖倒计时 */}
           {isSoldOut && timeRemaining.total > 0 && (
             <div className="flex items-center text-xs text-red-600 font-semibold">

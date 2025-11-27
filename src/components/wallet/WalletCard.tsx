@@ -1,4 +1,4 @@
-import React from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { EyeIcon, EyeSlashIcon, ArrowPathIcon } from '@heroicons/react/24/outline'
@@ -19,7 +19,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   className
 }) => {
   const { t } = useTranslation()
-  const [showBalance, setShowBalance] = React.useState(true)
+  const [showBalance, setShowBalance] = useState(true)
   
   // 查找 TJS 货币的余额钱包
   const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')

@@ -21,9 +21,14 @@ export function useInviteStats() {
       const statsData = await referralService.getInviteStats();
       setStats(statsData);
     } catch (err) {
-      console.error('Failed to fetch invite stats:', err);
-      setError(err as Error);
-      setStats(null);
+      // 忽略“用户未登录”错误，这是正常的初始化状态
+      if (err instanceof Error && err.message.includes('用户未登录')) {
+        setStats(null);
+      } else {
+        console.error('Failed to fetch invite stats:', err);
+        setError(err as Error);
+        setStats(null);
+      }
     } finally {
       setIsLoading(false);
     }

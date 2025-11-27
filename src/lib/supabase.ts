@@ -310,13 +310,18 @@ export const lotteryService: any = {
    * @param lotteryId 夺宝 ID
    * @param ticketCount 购买数量
    */
-  async purchaseTickets(lotteryId: string, ticketCount: number): Promise<Order> {
-    const user = await authService.getCurrentUser();
-    if (!user) throw new Error('用户未登录');
+  async purchaseTickets(lotteryId: string, ticketCount: number, userId?: string): Promise<Order> {
+    // 如果没有传入 userId，则从 auth 中获取
+    let finalUserId = userId;
+    if (!finalUserId) {
+      const user = await authService.getCurrentUser();
+      if (!user) throw new Error('用户未登录');
+      finalUserId = user.id;
+    }
 
     // 调用 Supabase 存储过程 place_lottery_order
     const { data, error } = await supabase.rpc('place_lottery_order' as any, {
-      p_user_id: user.id,
+      p_user_id: finalUserId,
       p_lottery_id: lotteryId,
       p_ticket_count: ticketCount
     });
@@ -386,6 +391,23 @@ export const lotteryService: any = {
 	
 		    return result
 	  },
+
+  /**
+   * 执行开奖
+   * @param lotteryId 夺宝 ID
+   */
+  async drawLottery(lotteryId: string): Promise<any> {
+    const { data, error } = await supabase.rpc('draw_lottery' as any, {
+      p_lottery_id: lotteryId
+    });
+
+    if (error) {
+      console.error('Draw lottery failed:', error);
+      throw new Error(`开奖失败: ${error.message}`);
+    }
+
+    return data;
+  },
 
   async getUserOrders(userId: string): Promise<Order[]> {
     const { data, error } = await supabase

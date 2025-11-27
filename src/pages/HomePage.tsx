@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
-
+import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'

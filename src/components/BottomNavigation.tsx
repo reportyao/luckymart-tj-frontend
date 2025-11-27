@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -22,8 +22,8 @@ export const BottomNavigation: React.FC = () => {
   const { t } = useTranslation()
   const location = useLocation()
   const navigate = useNavigate()
-  const [profileClickCount, setProfileClickCount] = React.useState(0)
-  const [clickTimer, setClickTimer] = React.useState<NodeJS.Timeout | null>(null)
+  const [profileClickCount, setProfileClickCount] = useState(0)
+  const [clickTimer, setClickTimer] = useState<NodeJS.Timeout | null>(null)
 
   const navigation = [
     {

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 
 /**
  * 防抖hook - 延迟执行函数
@@ -144,14 +144,14 @@ export function useVirtualScroll(
  * 网络状态检测hook
  */
 export function useNetworkStatus() {
-  const [isOnline, setIsOnline] = React.useState(
+  const [isOnline, setIsOnline] = useState(
     typeof navigator !== 'undefined' ? navigator.onLine : true
   )
-  const [effectiveType, setEffectiveType] = React.useState<
+  const [effectiveType, setEffectiveType] = useState<
     '4g' | '3g' | '2g' | 'slow-2g' | 'unknown'
   >('4g')
 
-  React.useEffect(() => {
+  useEffect(() => {
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
@@ -187,4 +187,3 @@ export function useNetworkStatus() {
   return { isOnline, effectiveType }
 }
 
-import React from 'react'

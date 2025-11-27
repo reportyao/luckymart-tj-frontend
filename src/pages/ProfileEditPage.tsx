@@ -109,7 +109,7 @@ const ProfileEditPage: React.FC = () => {
 	            </label>
 	            <input
 	              type="text"
-	              name="username"
+	              name="telegram_username"
 	              value={formData.telegram_username}
 	              onChange={handleChange}
 	              placeholder={t('invite.telegram_username')}

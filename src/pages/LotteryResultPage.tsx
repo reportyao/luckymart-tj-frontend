@@ -1,87 +1,171 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import {
   TrophyIcon,
   ArrowLeftIcon,
-  CalendarIcon,
+  UserGroupIcon,
   TicketIcon,
-  UsersIcon,
-  BanknotesIcon
+  SparklesIcon,
+  CheckCircleIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
-import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
+import { formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
-import { FairnessExplanation } from '../components/FairnessExplanation';
-import { Database } from '@/types/supabase';
-import { Lottery } from '../lib/supabase';
+import { useUser } from '@/contexts/UserContext';
+import { Tables } from '@/types/supabase';
+import { CountdownTimer } from '../components/CountdownTimer';
+import { lotteryService } from '@/lib/supabase';
 
-type LotteryResultRow = Database['public']['Tables']['lottery_results']['Row'];
-type TicketRow = Database['public']['Tables']['tickets']['Row'];
+type Lottery = Tables<'lotteries'>;
+type Ticket = Tables<'tickets'>;
+type User = Tables<'users'>;
 
-interface Winner extends TicketRow {
-  profiles: {
-    username: string;
-    avatar_url: string;
-  } | null;
-}
-
-interface LotteryResult extends LotteryResultRow {
-  winning_number: number;
-  draw_time: string;
-  timestamp_sum: string;
-  total_shares: number;
-  winner: Winner;
-  my_tickets: TicketRow[];
-  lottery: Lottery;
+interface ParticipantWithTickets {
+  user: User;
+  tickets: number[];
+  ticketCount: number;
 }
 
 const LotteryResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { lotteryService } = useSupabase();
-  const [result, setResult] = useState<LotteryResult | null>(null);
+  const { supabase } = useSupabase();
+  const { user: currentUser } = useUser();
+  
+  const [lottery, setLottery] = useState<Lottery | null>(null);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [participants, setParticipants] = useState<ParticipantWithTickets[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDrawing, setIsDrawing] = useState(false);
 
-  const fetchLotteryResult = useCallback(async (lotteryId: string) => {
-    if (!lotteryService) return;
-    setIsLoading(true);
+  // 获取夺宝信息
+  const fetchLottery = useCallback(async () => {
+    if (!id) return;
+    
     try {
-      const data = await lotteryService.getLotteryResult(lotteryId);
-      setResult(data as any);
+      const { data, error } = await supabase
+        .from('lotteries')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) throw error;
+      setLottery(data);
     } catch (error: any) {
-      console.error('Failed to fetch lottery result:', error);
-      toast.error(error.message || t('error.networkError'));
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to fetch lottery:', error);
+      toast.error(t('error.networkError'));
     }
-  }, [lotteryService, t]);
+  }, [id, supabase, t]);
+
+  // 获取所有票据和参与用户
+  const fetchTicketsAndParticipants = useCallback(async () => {
+    if (!id) return;
+
+    try {
+      // 获取所有票据
+      const { data: ticketsData, error: ticketsError } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('lottery_id', id)
+        .order('ticket_number', { ascending: true });
+
+      if (ticketsError) throw ticketsError;
+      setTickets(ticketsData || []);
+
+      // 获取所有参与用户
+      const userIds = [...new Set(ticketsData?.map(t => t.user_id) || [])];
+      
+      if (userIds.length > 0) {
+        const { data: usersData, error: usersError } = await supabase
+          .from('users')
+          .select('*')
+          .in('id', userIds);
+
+        if (usersError) throw usersError;
+
+        // 组织参与者数据
+        const participantsMap: { [key: string]: ParticipantWithTickets } = {};
+        
+        ticketsData?.forEach(ticket => {
+          const user = usersData?.find(u => u.id === ticket.user_id);
+          if (!user) return;
+
+          if (!participantsMap[user.id]) {
+            participantsMap[user.id] = {
+              user,
+              tickets: [],
+              ticketCount: 0
+            };
+          }
+
+          participantsMap[user.id].tickets.push(ticket.ticket_number);
+          participantsMap[user.id].ticketCount++;
+        });
+
+        setParticipants(Object.values(participantsMap));
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch tickets:', error);
+    }
+  }, [id, supabase]);
 
   useEffect(() => {
-    if (id) {
-      fetchLotteryResult(id as string);
+    const loadData = async () => {
+      setIsLoading(true);
+      await Promise.all([fetchLottery(), fetchTicketsAndParticipants()]);
+      setIsLoading(false);
+    };
+
+    loadData();
+  }, [fetchLottery, fetchTicketsAndParticipants]);
+
+  // 倒计时结束后执行开奖
+  const handleDrawLottery = async () => {
+    if (!id) return;
+
+    setIsDrawing(true);
+    try {
+      console.log('开始开奖:', id);
+      await lotteryService.drawLottery(id);
+      console.log('开奖成功');
+      
+      // 刷新数据
+      await fetchLottery();
+      toast.success(t('lottery.drawSuccess'));
+    } catch (error: any) {
+      console.error('开奖失败:', error);
+      toast.error(t('lottery.drawFailed'));
+      
+      // 即使失败也刷新，可能已经开奖了
+      await fetchLottery();
+    } finally {
+      setIsDrawing(false);
     }
-  }, [id, fetchLotteryResult]);
+  };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-	              </div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">{t('common.loading')}...</p>
+        </div>
+      </div>
     );
   }
 
-  if (!result) {
+  if (!lottery) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">{t('lottery.drawResultNotFound')}</p>
+          <p className="text-gray-500 mb-4">{t('lottery.notFound')}</p>
           <button
             onClick={() => navigate('/lottery')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
           >
             {t('lottery.backToHall')}
           </button>
@@ -90,114 +174,315 @@ const LotteryResultPage: React.FC = () => {
     );
   }
 
-  const myWinningTicket = result.my_tickets?.find(t => t.ticket_number === result.winning_number);
+  const isSoldOut = lottery.status === 'SOLD_OUT';
+  const isCompleted = lottery.status === 'COMPLETED';
+  const winningTicketNumber = lottery.winning_ticket_number;
+  const winningTicket = tickets.find(t => t.ticket_number === winningTicketNumber);
+  const winningUser = participants.find(p => p.user.id === lottery.winning_user_id);
+  const isCurrentUserWinner = currentUser?.id === lottery.winning_user_id;
+  const myTickets = tickets.filter(t => t.user_id === currentUser?.id);
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center space-x-2 mb-4 text-white/90 hover:text-white"
-        >
-          <ArrowLeftIcon className="w-5 h-5" />
-          <span>{t('common.back')}</span>
-        </button>
-
-        <div className="text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
-            <TrophyIcon className="w-8 h-8" />
-          </div>
-          <h1 className="text-2xl font-bold mb-1">{getLocalizedText(result.lottery.name_i18n as Record<string, string> | null, t('language')) || result.lottery.title}</h1>
-          <p className="text-white/80">{t('lottery.period')}: {result.lottery.id}</p>
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-6 sticky top-0 z-10 shadow-lg">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <button
+            onClick={() => navigate('/lottery')}
+            className="p-2 hover:bg-white/20 rounded-full transition"
+          >
+            <ArrowLeftIcon className="w-6 h-6" />
+          </button>
+          <h1 className="text-xl font-bold flex items-center gap-2">
+            <SparklesIcon className="w-6 h-6" />
+            {isCompleted ? t('lottery.drawResult') : t('lottery.drawingPage')}
+          </h1>
+          <div className="w-10"></div>
         </div>
       </div>
 
-      {/* My Result (if participated) */}
-      {result.my_tickets && result.my_tickets.length > 0 && (
-        <div className="px-4 -mt-6 mb-4">
+      <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
+        {/* 夺宝信息卡片 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-lg p-6"
+        >
+          <div className="flex items-start gap-4">
+            <img
+              src={lottery.image_url || '/placeholder.png'}
+              alt={getLocalizedText(lottery.title_i18n, 'zh')}
+              className="w-24 h-24 object-cover rounded-xl"
+            />
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-gray-900 mb-2">
+                {getLocalizedText(lottery.title_i18n, 'zh')}
+              </h2>
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center gap-1">
+                  <TicketIcon className="w-4 h-4" />
+                  {t('lottery.period')}: {lottery.period}
+                </span>
+                <span className="flex items-center gap-1">
+                  <UserGroupIcon className="w-4 h-4" />
+                  {participants.length} {t('lottery.participants')}
+                </span>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 开奖倒计时 */}
+        {isSoldOut && lottery.draw_time && !isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-2xl shadow-lg p-8 text-center text-white"
+          >
+            <SparklesIcon className="w-16 h-16 mx-auto mb-4 animate-pulse" />
+            <h3 className="text-2xl font-bold mb-4">{t('lottery.drawingCountdown')}</h3>
+            <CountdownTimer
+              drawTime={lottery.draw_time}
+              onCountdownEnd={handleDrawLottery}
+            />
+            {isDrawing && (
+              <p className="mt-4 text-sm animate-pulse">{t('lottery.drawing')}...</p>
+            )}
+          </motion.div>
+        )}
+
+        {/* 开奖结果 */}
+        {isCompleted && winningTicketNumber && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={`rounded-2xl shadow-lg p-8 text-center ${
+              isCurrentUserWinner
+                ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white'
+                : 'bg-white'
+            }`}
+          >
+            {isCurrentUserWinner ? (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: 'spring', duration: 0.6 }}
+                >
+                  <CheckCircleIcon className="w-24 h-24 mx-auto mb-4" />
+                </motion.div>
+                <h2 className="text-3xl font-bold mb-2">🎉 {t('lottery.congratulations')} 🎉</h2>
+                <p className="text-xl mb-6">{t('lottery.youWon')}</p>
+              </>
+            ) : (
+              <>
+                <XCircleIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
+                <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('lottery.notThisTime')}</h2>
+                <p className="text-gray-600 mb-6">{t('lottery.betterLuckNextTime')}</p>
+              </>
+            )}
+
+            <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-4">
+              <p className={`text-sm mb-2 ${isCurrentUserWinner ? 'text-white/80' : 'text-gray-600'}`}>
+                {t('lottery.winningNumber')}
+              </p>
+              <div className="text-6xl font-bold mb-4">
+                #{winningTicketNumber}
+              </div>
+              {winningUser && (
+                <div className="flex items-center justify-center gap-3 mt-4">
+                  <img
+                    src={winningUser.user.avatar_url || '/default-avatar.png'}
+                    alt={winningUser.user.telegram_username || 'Winner'}
+                    className="w-12 h-12 rounded-full border-4 border-white"
+                  />
+                  <div className={`text-left ${isCurrentUserWinner ? 'text-white' : 'text-gray-900'}`}>
+                    <p className="font-semibold">
+                      {winningUser.user.telegram_username || winningUser.user.telegram_id}
+                    </p>
+                    <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-600'}`}>
+                      {t('lottery.winner')}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {lottery.draw_time && (
+              <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-500'}`}>
+                {t('lottery.drawTime')}: {formatDateTime(lottery.draw_time)}
+              </p>
+            )}
+          </motion.div>
+        )}
+
+        {/* 参与用户 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-2xl shadow-lg p-6"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <UserGroupIcon className="w-5 h-5" />
+            {t('lottery.allParticipants')} ({participants.length})
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {participants.map((participant) => (
+              <div
+                key={participant.user.id}
+                className={`flex flex-col items-center p-4 rounded-xl transition ${
+                  participant.user.id === lottery.winning_user_id
+                    ? 'bg-gradient-to-br from-yellow-100 to-orange-100 ring-2 ring-yellow-400'
+                    : 'bg-gray-50 hover:bg-gray-100'
+                }`}
+              >
+                <div className="relative">
+                  <img
+                    src={participant.user.avatar_url || '/default-avatar.png'}
+                    alt={participant.user.telegram_username || 'User'}
+                    className="w-16 h-16 rounded-full mb-2"
+                  />
+                  {participant.user.id === lottery.winning_user_id && (
+                    <TrophyIcon className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-1" />
+                  )}
+                </div>
+                <p className="text-sm font-medium text-gray-900 text-center truncate w-full">
+                  {participant.user.telegram_username || participant.user.telegram_id}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {participant.ticketCount} {t('lottery.tickets')}
+                </p>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* 所有参与码 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-2xl shadow-lg p-6"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <TicketIcon className="w-5 h-5" />
+            {t('lottery.allTickets')} ({tickets.length})
+          </h3>
+          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+            {tickets.map((ticket) => {
+              const isWinning = ticket.ticket_number === winningTicketNumber;
+              const isMine = ticket.user_id === currentUser?.id;
+              
+              return (
+                <motion.div
+                  key={ticket.id}
+                  whileHover={{ scale: 1.05 }}
+                  className={`
+                    aspect-square rounded-lg flex items-center justify-center text-sm font-semibold
+                    transition-all cursor-pointer
+                    ${isWinning
+                      ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-white ring-4 ring-yellow-300 shadow-lg scale-110'
+                      : isMine
+                      ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }
+                  `}
+                >
+                  {ticket.ticket_number}
+                </motion.div>
+              );
+            })}
+          </div>
+        </motion.div>
+
+        {/* 公平性说明 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="bg-white rounded-2xl shadow-lg p-6"
+        >
+          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
+            <span className="text-green-600 mr-2">✅</span>
+            {t('lottery.fairnessTitle')}
+          </h3>
+          <div className="space-y-4">
+            {/* 问题1 */}
+            <div className="border-l-4 border-red-500 pl-4">
+              <p className="font-semibold text-gray-800 flex items-center">
+                <span className="text-red-600 mr-2">❌</span>
+                {t('lottery.fairnessQuestion1')}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 ml-6">
+                {t('lottery.fairnessAnswer1')}
+              </p>
+            </div>
+            
+            {/* 问题2 */}
+            <div className="border-l-4 border-red-500 pl-4">
+              <p className="font-semibold text-gray-800 flex items-center">
+                <span className="text-red-600 mr-2">❌</span>
+                {t('lottery.fairnessQuestion2')}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 ml-6">
+                {t('lottery.fairnessAnswer2')}
+              </p>
+            </div>
+            
+            {/* 问题3 */}
+            <div className="border-l-4 border-red-500 pl-4">
+              <p className="font-semibold text-gray-800 flex items-center">
+                <span className="text-red-600 mr-2">❌</span>
+                {t('lottery.fairnessQuestion3')}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 ml-6">
+                {t('lottery.fairnessAnswer3')}
+              </p>
+            </div>
+            
+            {/* 问题4 */}
+            <div className="border-l-4 border-green-500 pl-4">
+              <p className="font-semibold text-gray-800 flex items-center">
+                <span className="text-green-600 mr-2">✅</span>
+                {t('lottery.fairnessQuestion4')}
+              </p>
+              <p className="text-sm text-gray-600 mt-1 ml-6">
+                {t('lottery.fairnessAnswer4')}
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 我的参与码 */}
+        {myTickets.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`rounded-2xl p-6 text-white ${
-              myWinningTicket
-                ? 'bg-gradient-to-r from-yellow-400 to-orange-500 shadow-xl'
-                : 'bg-white border-2 border-gray-200'
-            }`}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-lg p-6"
           >
-            {myWinningTicket ? (
-              <div className="text-center text-white">
-                <h2 className="text-2xl font-bold">{t('lottery.congratulations')}</h2>
-                <p className="mt-1">{t('lottery.youWon')}</p>
-                <div className="mt-4 text-4xl font-bold">{formatCurrency('TJS', result.lottery.ticket_price * result.lottery.total_tickets)}</div>
-              </div>
-            ) : (
-              <div className="text-center text-gray-700">
-                <h2 className="text-xl font-bold">{t('lottery.notWinning')}</h2>
-                <p className="mt-1 text-gray-500">{t('lottery.betterLuckNextTime')}</p>
-                <p className="mt-3 font-semibold">{t('lottery.myTickets')}:</p>
-                <div className="flex flex-wrap justify-center gap-2 mt-2 max-h-24 overflow-y-auto">
-                 {result.my_tickets.map((ticket, i) => (
-	                    <span key={i} className="px-2 py-1 bg-gray-100 text-gray-800 rounded-md text-sm">{ticket.ticket_number}</span>
-	                  ))}        </div>
-              </div>
-            )}
-          </motion.div>
-        </div>
-      )}
-
-      {/* Winner Info */}
-      <div className="px-4 mb-6">
-        <div className="bg-white rounded-xl shadow-md p-6">
-          <h2 className="text-xl font-bold text-gray-800 mb-4 text-center">{t('lottery.drawResult')}</h2>
-	          {result.winner && (
-	            <div className="text-center border-t pt-4 mt-4 first:mt-0 first:border-t-0">
-	              <p className="text-sm text-gray-500">{t('lottery.winningNumber')}</p>
-	              <p className="text-4xl font-bold text-blue-600 my-2">{result.winning_number}</p>
-	              <p className="text-sm text-gray-500">{t('lottery.winner')}</p>
-	              <div className="flex items-center justify-center space-x-2 mt-2">
-	                <img src={(result.winner.profiles as any)?.avatar_url || '/avatar-placeholder.png'} alt="winner avatar" className="w-8 h-8 rounded-full" />
-	                <span className="font-semibold text-gray-800">{(result.winner.profiles as any)?.telegram_username || 'Anonymous'}</span>
-              </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">
+              {t('lottery.myTickets')} ({myTickets.length})
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {myTickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className={`
+                    px-4 py-2 rounded-lg font-semibold
+                    ${ticket.ticket_number === winningTicketNumber
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
+                      : 'bg-white text-blue-600'
+                    }
+                  `}
+                >
+                  #{ticket.ticket_number}
+                </div>
+              ))}
             </div>
-	          )}
-        </div>
-      </div>
-
-      {/* Lottery Details */}
-      <div className="px-4 mb-6">
-        <div className="bg-white rounded-xl shadow-md p-6 grid grid-cols-2 gap-4 text-center">
-	          <div className="flex flex-col items-center">
-            <CalendarIcon className="w-6 h-6 text-gray-500 mb-1" />
-            <p className="text-sm text-gray-500">{t('lottery.drawTime')}</p>
-            <p className="font-semibold">{formatDateTime(result.draw_time || '')}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <TicketIcon className="w-6 h-6 text-gray-500 mb-1" />
-	            <p className="text-sm text-gray-500">{t('lottery.totalTickets')}</p>
-	            <p className="font-semibold">{result.lottery.total_tickets}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <UsersIcon className="w-6 h-6 text-gray-500 mb-1" />
-	            <p className="text-sm text-gray-500">{t('lottery.participants')}</p>
-	            <p className="font-semibold">{result.total_shares}</p>
-          </div>
-          <div className="flex flex-col items-center">
-            <BanknotesIcon className="w-6 h-6 text-gray-500 mb-1" />
-	            <p className="text-sm text-gray-500">{t('lottery.ticketPrice')}</p>
-			            <p className="font-semibold">{formatCurrency('TJS', result.lottery.ticket_price || 0)}</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Fairness Explanation */}
-      <div className="px-4">
-        <FairnessExplanation 
-          timestampSum={(result.algorithm_data as any)?.timestamp_sum || '0'}
-          totalTickets={(result.algorithm_data as any)?.total_tickets || result.lottery.total_tickets}
-          winningNumber={result.winning_number}
-          showVerificationData={true}
-        />
+          </motion.div>
+        )}
       </div>
     </div>
   );
