@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -108,46 +109,148 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // 调用 RPC 实现单向兑换：余额 -> 幸运币
-    // 注意：RPC 函数期望 uuid 类型，需要进行类型转换
-    const rpcResponse = await fetch(
-      `${supabaseUrl}/rest/v1/rpc/exchange_real_to_bonus_balance`,
+    // 创建 Supabase 客户端
+    const supabaseClient = createClient(
+      supabaseUrl,
+      serviceRoleKey,
       {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'params=single-object'
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
         },
-        body: JSON.stringify({
-          p_user_id: userId,  // PostgreSQL will auto-cast text to uuid
-          p_amount: parseFloat(amount)
-        })
       }
     );
 
-    console.log('[Exchange] RPC response status:', rpcResponse.status);
+    // 获取源钱包（BALANCE）
+    const { data: sourceWallet, error: sourceError } = await supabaseClient
+      .from('wallets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'BALANCE')
+      .eq('currency', 'TJS')
+      .single()
 
-    if (!rpcResponse.ok) {
-      const errorText = await rpcResponse.text();
-      console.error('[Exchange] RPC调用失败:', errorText);
-      
-      // 尝试解析错误信息
-      try {
-        const errorJson = JSON.parse(errorText);
-        throw new Error(errorJson.message || '兑换失败');
-      } catch {
-        throw new Error(errorText || '兑换失败');
-      }
+    if (sourceError || !sourceWallet) {
+      console.error('[Exchange] Source wallet error:', sourceError);
+      throw new Error('未找到余额钱包');
     }
 
-    const data = await rpcResponse.json();
+    // 获取目标钱包（LUCKY_COIN）
+    const { data: targetWallet, error: targetError } = await supabaseClient
+      .from('wallets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'LUCKY_COIN')
+      .eq('currency', 'TJS')
+      .single()
 
-    console.log('[Exchange] Success, new balance:', data);
+    if (targetError || !targetWallet) {
+      console.error('[Exchange] Target wallet error:', targetError);
+      throw new Error('未找到幸运币钱包');
+    }
+
+    // 检查源钱包余额
+    if (sourceWallet.balance < amount) {
+      throw new Error('余额不足');
+    }
+
+    console.log('[Exchange] Wallets found, processing exchange...');
+    console.log('[Exchange] Source balance:', sourceWallet.balance, 'Amount:', amount);
+    console.log('[Exchange] Target balance:', targetWallet.balance);
+
+    // 记录兑换前余额
+    const sourceBalanceBefore = sourceWallet.balance;
+    const targetBalanceBefore = targetWallet.balance;
+
+    // 更新源钱包余额
+    const { error: updateSourceError } = await supabaseClient
+      .from('wallets')
+      .update({
+        balance: sourceWallet.balance - amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', sourceWallet.id)
+
+    if (updateSourceError) {
+      console.error('[Exchange] Update source wallet error:', updateSourceError);
+      throw new Error('更新余额钱包失败');
+    }
+
+    // 更新目标钱包余额
+    const { error: updateTargetError } = await supabaseClient
+      .from('wallets')
+      .update({
+        balance: targetWallet.balance + amount,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', targetWallet.id)
+
+    if (updateTargetError) {
+      console.error('[Exchange] Update target wallet error:', updateTargetError);
+      // 回滚源钱包
+      await supabaseClient
+        .from('wallets')
+        .update({
+          balance: sourceWallet.balance,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', sourceWallet.id)
+      throw new Error('更新幸运币钱包失败');
+    }
+
+    // 创建兑换记录
+    const { data: exchangeRecord, error: recordError } = await supabaseClient
+      .from('exchange_records')
+      .insert({
+        user_id: userId,
+        exchange_type: 'BALANCE_TO_COIN',
+        amount: amount,
+        currency: 'TJS',
+        exchange_rate: 1.0,
+        source_wallet_id: sourceWallet.id,
+        target_wallet_id: targetWallet.id,
+        source_balance_before: sourceBalanceBefore,
+        source_balance_after: sourceWallet.balance - amount,
+        target_balance_before: targetBalanceBefore,
+        target_balance_after: targetWallet.balance + amount,
+      })
+      .select()
+      .single()
+
+    if (recordError) {
+      console.error('[Exchange] Create exchange record error:', recordError);
+    }
+
+    // 创建钱包交易记录
+    await supabaseClient.from('wallet_transactions').insert([
+      {
+        wallet_id: sourceWallet.id,
+        type: 'EXCHANGE_OUT',
+        amount: -amount,
+        balance_after: sourceWallet.balance - amount,
+        description: `兑换${amount}TJS到幸运币`,
+      },
+      {
+        wallet_id: targetWallet.id,
+        type: 'EXCHANGE_IN',
+        amount: amount,
+        balance_after: targetWallet.balance + amount,
+        description: `从余额兑换${amount}TJS`,
+      },
+    ])
+
+    console.log('[Exchange] Success, new balances:', {
+      source: sourceWallet.balance - amount,
+      target: targetWallet.balance + amount
+    });
 
     return new Response(
-      JSON.stringify({ success: true, message: 'Exchange successful', new_balance: data }),
+      JSON.stringify({ 
+        success: true, 
+        message: '兑换成功',
+        new_balance: sourceWallet.balance - amount,
+        lucky_coin_balance: targetWallet.balance + amount
+      }),
       { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
     )
 
