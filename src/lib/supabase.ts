@@ -542,7 +542,12 @@ export const referralService = {
     const user = await authService.getCurrentUser();
     if (!user) throw new Error('用户未登录');
 
-    const { data, error } = await supabase.functions.invoke('get-user-referral-stats');
+    const sessionToken = localStorage.getItem('custom_session_token');
+    if (!sessionToken) throw new Error('未授权：缺少 session_token');
+
+    const { data, error } = await supabase.functions.invoke('get-user-referral-stats', {
+      body: { session_token: sessionToken }
+    });
 
     if (error) {
       console.error('Failed to fetch referral stats:', error);
@@ -559,7 +564,12 @@ export const referralService = {
     const user = await authService.getCurrentUser();
     if (!user) throw new Error('用户未登录');
 
-    const { data, error } = await supabase.functions.invoke('get-invited-users');
+    const sessionToken = localStorage.getItem('custom_session_token');
+    if (!sessionToken) throw new Error('未授权：缺少 session_token');
+
+    const { data, error } = await supabase.functions.invoke('get-invited-users', {
+      body: { session_token: sessionToken }
+    });
 
     if (error) {
       console.error('Failed to fetch invited users:', error);

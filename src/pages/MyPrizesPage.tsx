@@ -29,7 +29,7 @@ interface Prize {
 
 const MyPrizesPage: React.FC = () => {
   const { supabase } = useSupabase();
-  const { user } = useUser();
+  const { user, sessionToken } = useUser();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [prizes, setPrizes] = useState<Prize[]>([]);
@@ -42,16 +42,13 @@ const MyPrizesPage: React.FC = () => {
     try {
       if (!user) return;
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      if (!token) {
+      if (!sessionToken) {
         throw new Error('User not authenticated');
       }
 
 	      const { data, error } = await supabase.functions.invoke('get-my-prizes', {
-	        headers: {
-	          Authorization: `Bearer ${token}`,
+	        body: {
+	          session_token: sessionToken,
 	        },
 	      });
 	
@@ -82,7 +79,7 @@ const MyPrizesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, t]);
+  }, [supabase, user, sessionToken, t]);
 
   useEffect(() => {
     loadPrizes();

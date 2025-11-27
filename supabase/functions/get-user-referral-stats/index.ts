@@ -1,47 +1,152 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// 通用的 session 验证函数
+async function validateSession(sessionToken: string) {
+  if (!sessionToken) {
+    throw new Error('未授权：缺少认证令牌');
+  }
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('服务器配置错误');
+  }
+
+  // 查询 user_sessions 表验证 session
+  const sessionResponse = await fetch(
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!sessionResponse.ok) {
+    throw new Error('验证会话失败');
+  }
+
+  const sessions = await sessionResponse.json();
+  
+  if (sessions.length === 0) {
+    throw new Error('未授权：会话不存在或已失效');
+  }
+
+  const session = sessions[0];
+
+  // 检查 session 是否过期
+  const expiresAt = new Date(session.expires_at);
+  const now = new Date();
+  
+  if (expiresAt < now) {
+    throw new Error('未授权：会话已过期');
+  }
+
+  // 单独查询用户数据
+  const userResponse = await fetch(
+    `${supabaseUrl}/rest/v1/users?id=eq.${session.user_id}&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!userResponse.ok) {
+    throw new Error('查询用户信息失败');
+  }
+
+  const users = await userResponse.json();
+  
+  if (users.length === 0) {
+    throw new Error('未授权：用户不存在');
+  }
+
+  return {
+    userId: session.user_id,
+    user: users[0],
+    session: session
+  };
+}
 
 serve(async (req) => {
   // 允许 OPTIONS 请求
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    // 从 body 中获取 session_token
+    const body = await req.json()
+    const { session_token } = body
 
-    // 1. 获取用户 ID
-    const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
+    console.log('[GetUserReferralStats] Received request:', { session_token: session_token ? 'present' : 'missing' });
+
+    if (!session_token) {
+      throw new Error('未授权：缺少 session_token');
     }
 
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+    // 验证用户 session
+    const { userId } = await validateSession(session_token);
+    
+    console.log('[GetUserReferralStats] User validated:', userId);
 
-    if (authError || !user) {
-      throw new Error('Invalid token')
-    }
-    const userId = user.id
+    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
     // 2. 获取统计数据
-    const { data: stats, error: statsError } = await supabaseClient.rpc('get_user_referral_stats', {
-      p_user_id: userId
-    })
+    const statsResponse = await fetch(
+      `${supabaseUrl}/rest/v1/rpc/get_user_referral_stats`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'params=single-object'
+        },
+        body: JSON.stringify({
+          p_user_id: userId
+        })
+      }
+    );
 
-    if (statsError) throw statsError
+    if (!statsResponse.ok) {
+      const errorText = await statsResponse.text();
+      console.error('[GetUserReferralStats] RPC调用失败:', errorText);
+      throw new Error('获取推荐统计失败');
+    }
+
+    const stats = await statsResponse.json();
 
     // 3. 获取用户信息
-    const { data: userInfo, error: userError } = await supabaseClient
-      .from('users')
-      .select('id, telegram_username')
-      .eq('id', userId)
-      .single()
+    const userResponse = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=id,telegram_username`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
 
-    if (userError) throw userError
+    if (!userResponse.ok) {
+      throw new Error('获取用户信息失败');
+    }
+
+    const users = await userResponse.json();
+    const userInfo = users[0];
 
     const result = {
       ...(stats && stats[0] ? stats[0] : {}),
@@ -54,16 +159,18 @@ serve(async (req) => {
       activation_invite_count: 0,
     }
 
+    console.log('[GetUserReferralStats] Success:', result);
+
     return new Response(
       JSON.stringify({ success: true, data: result }),
-      { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 200 }
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
     )
 
   } catch (error) {
-    console.error('get_user_referral_stats error:', error)
+    console.error('[GetUserReferralStats] Error:', error)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
-      { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 400 }
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
     )
   }
 })

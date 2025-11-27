@@ -41,6 +41,7 @@ export default function DepositPage() {
   const [payerAccount, setPayerAccount] = useState('')
   const [paymentReference, setPaymentReference] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
+  const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
 
@@ -72,15 +73,33 @@ export default function DepositPage() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files
-    if (!files) return
+    if (!files || files.length === 0) return
 
     try {
+      setUploading(true)
+      console.log('[DepositPage] Starting image upload, file count:', files.length)
+      
       const fileArray = Array.from(files)
+      console.log('[DepositPage] Files to upload:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
+      
       const urls = await uploadImages(fileArray, true, 'payment-proofs', 'deposits')
-      setUploadedImages(prev => [...prev, ...urls])
+      console.log('[DepositPage] Upload successful, URLs:', urls)
+      
+      setUploadedImages(prev => {
+        const newImages = [...prev, ...urls]
+        console.log('[DepositPage] Updated images state:', newImages)
+        return newImages
+      })
+      
+      // 显示成功提示
+      alert(t('wallet.imageUploadSuccess') || '图片上传成功')
     } catch (error) {
-      console.error('图片上传失败:', error)
-      alert(t('wallet.imageUploadFailed'))
+      console.error('[DepositPage] Image upload failed:', error)
+      alert(t('wallet.imageUploadFailed') || '图片上传失败，请重试')
+    } finally {
+      setUploading(false)
+      // 清空 input，允许重新选择同一文件
+      e.target.value = ''
     }
   }
 
@@ -283,14 +302,28 @@ export default function DepositPage() {
         {/* 上传凭证 */}
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.uploadProof')}</h2>
-          <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-purple-500 transition-colors">
-            <Upload className="w-8 h-8 text-gray-400 mb-2" />
-            <span className="text-sm text-gray-600">{t('wallet.clickToUpload')}</span>
+          <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors ${
+            uploading 
+              ? 'border-purple-500 bg-purple-50 cursor-wait' 
+              : 'border-gray-300 cursor-pointer hover:border-purple-500'
+          }`}>
+            {uploading ? (
+              <>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-2"></div>
+                <span className="text-sm text-purple-600">{t('common.uploading') || '上传中...'}</span>
+              </>
+            ) : (
+              <>
+                <Upload className="w-8 h-8 text-gray-400 mb-2" />
+                <span className="text-sm text-gray-600">{t('wallet.clickToUpload')}</span>
+              </>
+            )}
             <input
               type="file"
               accept="image/*"
               multiple
               onChange={handleImageUpload}
+              disabled={uploading}
               className="hidden"
             />
           </label>
