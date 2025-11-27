@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -16,53 +16,67 @@ import { formatCurrency, formatDateTime } from '../lib/utils'
 import toast from 'react-hot-toast'
 import { DepositModal } from '../components/wallet/DepositModal'
 import { WithdrawModal } from '../components/wallet/WithdrawModal'
+import { useSupabase } from '../contexts/SupabaseContext'
 
 const WalletPage: React.FC = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { wallets, refreshWallets } = useUser()
-  const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('overview')
+  const { wallets, refreshWallets, user } = useUser()
+  const { supabase } = useSupabase()
+  const [activeTab, setActiveTab] = useState<'overview' | 'transactions'>('transactions')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showDepositModal, setShowDepositModal] = useState(false)
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
+  const [transactions, setTransactions] = useState<any[]>([])
+  const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
     await refreshWallets()
+    await fetchTransactions()
     setIsRefreshing(false)
     toast.success(t('wallet.balanceUpdated'))
   }
 
-  // Mock transaction data - in real app, this would come from API
-  const mockTransactions = [
-    {
-      id: '1',
-      type: 'LOTTERY_PURCHASE',
-      amount: -10.00,
-      currency: 'TJS', // 添加 currency 字段
-      status: 'COMPLETED',
-      description: t('order.lotteryPurchase') + ' - TEST2025001',
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: '2',
-      type: 'LOTTERY_PRIZE',
-      amount: 14.40,
-      currency: 'TJS', // 添加 currency 字段
-      status: 'COMPLETED',
-      description: t('lottery.prizeAmount') + ' - 1' + t('lottery.prizeAmount'),
-      created_at: new Date(Date.now() - 60000).toISOString(),
-    },
-    {
-      id: '3',
-      type: 'DEPOSIT',
-      amount: 100.00,
-      currency: 'TJS', // 添加 currency 字段
-      status: 'COMPLETED',
-      description: t('wallet.deposit'),
-      created_at: new Date(Date.now() - 120000).toISOString(),
-    },
-  ]
+  const fetchTransactions = useCallback(async () => {
+    if (!user) return
+    
+    setIsLoadingTransactions(true)
+    try {
+      // 获取用户的所有钱包 ID
+      const walletIds = wallets.map(w => w.id)
+      
+      if (walletIds.length === 0) {
+        setTransactions([])
+        return
+      }
+      
+      // 查询最近 20 条交易记录
+      const { data, error } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .in('wallet_id', walletIds)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      
+      if (error) throw error
+      
+      setTransactions(data || [])
+    } catch (error) {
+      console.error('Failed to fetch transactions:', error)
+      toast.error(t('error.networkError'))
+    } finally {
+      setIsLoadingTransactions(false)
+    }
+  }, [user, wallets, supabase, t])
+
+  useEffect(() => {
+    if (user && wallets.length > 0) {
+      fetchTransactions()
+    }
+  }, [user, wallets, fetchTransactions])
+
+
 
   const getTransactionIcon = (type: string) => {
     switch (type) {
@@ -158,78 +172,25 @@ const WalletPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 标签页 */}
+      {/* 交易记录 */}
       <div className="px-4 mt-8">
-        <div className="flex bg-gray-100 rounded-xl p-1">
-          <button
-            onClick={() => setActiveTab('overview')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'overview'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600'
-            }`}
-          >
-            {t('wallet.overview')}
-          </button>
-          <button
-            onClick={() => setActiveTab('transactions')}
-            className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
-              activeTab === 'transactions'
-                ? 'bg-white text-gray-900 shadow-sm'
-                : 'text-gray-600'
-            }`}
-          >
-            {t('wallet.transactions')}
-          </button>
-        </div>
-      </div>
-
-      {/* 内容区域 */}
-      <div className="px-4 mt-4">
-        {activeTab === 'overview' ? (
-          <div className="space-y-4">
-            {/* 钱包统计 */}
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('wallet.overview')}</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-gray-500">{t('wallet.totalDeposits')}</p>
-                  <p className="text-xl font-bold text-green-600">
-                    {formatCurrency('TJS', 0)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500">{t('wallet.totalWithdrawals')}</p>
-                  <p className="text-xl font-bold text-red-600">
-                    {formatCurrency('TJS', 0)}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* 安全设置 */}
-            <div className="bg-white rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">{t('wallet.security')}</h3>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">{t('wallet.paymentPassword')}</span>
-                  <span className="text-sm text-gray-500">{t('wallet.notSet')}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">{t('wallet.authentication')}</span>
-                  <span className="text-sm text-gray-500">{t('wallet.basicVerification')}</span>
-                </div>
-              </div>
-            </div>
+        <div className="bg-white rounded-xl overflow-hidden">
+          <div className="p-4 border-b border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900">{t('wallet.transactions')}</h3>
           </div>
-        ) : (
-          <div className="bg-white rounded-xl overflow-hidden">
-            <div className="p-4 border-b border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900">{t('wallet.transactions')}</h3>
-            </div>
             
             <div className="divide-y divide-gray-100">
-              {mockTransactions.map((transaction) => (
+              {isLoadingTransactions ? (
+                <div className="p-8 text-center text-gray-500">
+                  <ArrowPathIcon className="w-8 h-8 mx-auto mb-2 animate-spin" />
+                  <p>{t('common.loading')}</p>
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <p>{t('wallet.noTransactions')}</p>
+                </div>
+              ) : (
+                transactions.map((transaction) => (
                 <motion.div
                   key={transaction.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -258,14 +219,14 @@ const WalletPage: React.FC = () => {
                       transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {transaction.amount > 0 ? '+' : ''}
-                      {formatCurrency(transaction.currency || 'TJS', Math.abs(transaction.amount))}
+                      {formatCurrency('TJS', Math.abs(parseFloat(transaction.amount)))}
                     </p>
                   </div>
                 </motion.div>
-              ))}
-            </div>
+              ))
+              )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Modals */}
