@@ -397,7 +397,8 @@ const LotteryResultPage: React.FC = () => {
                   </span>
                 </motion.div>
               );
-            })}          </div>
+            })}
+          </div>
         </motion.div>
 
         {/* 公平性说明 */}
