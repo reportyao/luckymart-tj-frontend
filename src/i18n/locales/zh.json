@@ -109,8 +109,10 @@
     "drawSuccess": "开奖成功",
     "drawFailed": "开奖失败",
     "youWon": "你中奖了！",
+    "itemIsYours": "恭喜，这个商品是你的了！",
     "notThisTime": "很遗憾，未中奖",
     "betterLuckNextTime": "下次一定有好运！",
+    "nextTimeForSure": "很遗憾，相信下次一定是你",
     "allParticipants": "所有参与者",
     "participants": "人参与",
     "allTickets": "所有参与码",
@@ -132,7 +134,13 @@
     "fairnessQuestion3": "最后购买有优势吗？",
     "fairnessAnswer3": "没有，所有订单权重相同",
     "fairnessQuestion4": "算法够随机吗？",
-    "fairnessAnswer4": "足够，毫秒级时间戳高度随机"
+    "fairnessAnswer4": "足够，毫秒级时间戳高度随机",
+    "algorithmIntro": "算法介绍",
+    "algorithmDescription": "我们使用所有参与订单的时间戳总和作为随机种子，通过取模运算生成获胜号码。这种方法确保了结果的不可预测性和公平性，任何人都无法提前知道或操纵结果。",
+    "verificationData": "验证数据",
+    "timestampSum": "时间戳总和",
+    "verificationFormula": "验证公式",
+    "verificationDataUnavailable": "验证数据暂不可用"
   },
   "fairness": {
     "title": "为什么这个算法公平？",

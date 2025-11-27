@@ -82,7 +82,7 @@ const MyPrizesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [t]);
+  }, [supabase, user, t]);
 
   useEffect(() => {
     loadPrizes();

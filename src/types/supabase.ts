@@ -837,6 +837,7 @@ export type Database = {
           winning_numbers: Json | null
           winning_ticket_number: number | null
           winning_user_id: string | null
+          draw_algorithm_data: Json | null
         }
         Insert: {
           actual_draw_time?: string | null
@@ -870,6 +871,7 @@ export type Database = {
           winning_numbers?: Json | null
           winning_ticket_number?: number | null
           winning_user_id?: string | null
+          draw_algorithm_data?: Json | null
         }
         Update: {
           actual_draw_time?: string | null
@@ -903,6 +905,7 @@ export type Database = {
           winning_numbers?: Json | null
           winning_ticket_number?: number | null
           winning_user_id?: string | null
+          draw_algorithm_data?: Json | null
         }
         Relationships: []
       }

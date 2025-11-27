@@ -126,6 +126,14 @@ serve(async (req) => {
         winning_user_id: winningEntry.user_id,
         draw_time: drawTime,
         updated_at: drawTime,
+        draw_algorithm_data: {
+          algorithm: 'timestamp_sum',
+          timestamp_sum: result.timestampSum,
+          formula: result.formula,
+          total_entries: result.totalEntries,
+          winning_index: result.winningIndex,
+          winning_number: result.winningNumber,
+        },
       })
       .eq('id', lotteryId);
 

@@ -272,13 +272,13 @@ const LotteryResultPage: React.FC = () => {
                   <CheckCircleIcon className="w-24 h-24 mx-auto mb-4" />
                 </motion.div>
                 <h2 className="text-3xl font-bold mb-2">🎉 {t('lottery.congratulations')} 🎉</h2>
-                <p className="text-xl mb-6">{t('lottery.youWon')}</p>
+                <p className="text-xl mb-6">{t('lottery.itemIsYours')}</p>
               </>
             ) : (
               <>
                 <XCircleIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('lottery.notThisTime')}</h2>
-                <p className="text-gray-600 mb-6">{t('lottery.betterLuckNextTime')}</p>
+                <p className="text-gray-600 mb-6">{t('lottery.nextTimeForSure')}</p>
               </>
             )}
 
@@ -452,6 +452,64 @@ const LotteryResultPage: React.FC = () => {
               </p>
             </div>
           </div>
+
+          {/* 算法介绍和数据验证 */}
+          {isCompleted && lottery.draw_algorithm_data && (
+            <div className="mt-6 space-y-4">
+              {/* 算法介绍 */}
+              <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
+                  <span className="text-blue-600 mr-2">📊</span>
+                  {t('lottery.algorithmIntro')}
+                </h4>
+                <p className="text-sm text-blue-800 leading-relaxed">
+                  {t('lottery.algorithmDescription')}
+                </p>
+              </div>
+
+              {/* 验证数据 */}
+              <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-300">
+                <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
+                  <span className="text-gray-600 mr-2">🔍</span>
+                  {t('lottery.verificationData')}
+                </h4>
+                <div className="space-y-2 font-mono text-sm">
+                  {(() => {
+                    try {
+                      const algorithmData = typeof lottery.draw_algorithm_data === 'string'
+                        ? JSON.parse(lottery.draw_algorithm_data)
+                        : lottery.draw_algorithm_data;
+                      
+                      const timestampSum = algorithmData.timestamp_sum || 0;
+                      const totalTickets = lottery.total_tickets || 100;
+                      const calculatedNumber = (timestampSum % totalTickets) + 1;
+                      
+                      return (
+                        <>
+                          <div className="flex justify-between items-center py-2 border-b border-gray-300">
+                            <span className="text-gray-600">{t('lottery.timestampSum')}:</span>
+                            <span className="text-gray-900 font-semibold">{timestampSum.toLocaleString()}</span>
+                          </div>
+                          <div className="bg-white rounded-lg p-3 mt-2">
+                            <p className="text-gray-600 mb-1">{t('lottery.verificationFormula')}:</p>
+                            <p className="text-gray-900 font-semibold">
+                              {winningTicketNumber} = {timestampSum.toLocaleString()} % {totalTickets} + 1
+                            </p>
+                          </div>
+                        </>
+                      );
+                    } catch (e) {
+                      return (
+                        <p className="text-gray-500 text-center py-2">
+                          {t('lottery.verificationDataUnavailable')}
+                        </p>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* 我的参与码 */}
