@@ -110,6 +110,7 @@ Deno.serve(async (req) => {
                 first_name: userData.first_name || null,
                 last_name: userData.last_name || null,
                 language_code: userData.language_code || 'zh',
+                avatar_url: userData.photo_url || user.avatar_url || null,
                 last_login_at: new Date().toISOString(),
                 last_active_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -147,6 +148,7 @@ Deno.serve(async (req) => {
                 first_name: userData.first_name || null,
                 last_name: userData.last_name || null,
                 language_code: userData.language_code || 'zh',
+                avatar_url: userData.photo_url || null,
                 referral_code: referralCode,
                 referred_by_id: referredById,
                 referrer_id: referredById,

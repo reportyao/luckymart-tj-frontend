@@ -369,18 +369,21 @@ const LotteryResultPage: React.FC = () => {
             <TicketIcon className="w-5 h-5" />
             {t('lottery.allTickets')} ({tickets.length})
           </h3>
-          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
             {tickets.map((ticket) => {
               const isWinning = ticket.ticket_number === winningTicketNumber;
               const isMine = ticket.user_id === currentUser?.id;
+              const ticketStr = String(ticket.ticket_number);
+              const isLongNumber = ticketStr.length > 7;
               
               return (
                 <motion.div
                   key={ticket.id}
                   whileHover={{ scale: 1.05 }}
                   className={`
-                    aspect-square rounded-lg flex items-center justify-center text-sm font-semibold
-                    transition-all cursor-pointer
+                    aspect-square rounded-lg flex items-center justify-center font-semibold
+                    transition-all cursor-pointer p-1
+                    ${isLongNumber ? 'text-[10px]' : 'text-sm'}
                     ${isWinning
                       ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-white ring-4 ring-yellow-300 shadow-lg scale-110'
                       : isMine
@@ -389,11 +392,12 @@ const LotteryResultPage: React.FC = () => {
                     }
                   `}
                 >
-                  {ticket.ticket_number}
+                  <span className="break-all text-center leading-tight">
+                    {ticket.ticket_number}
+                  </span>
                 </motion.div>
               );
-            })}
-          </div>
+            })}          </div>
         </motion.div>
 
         {/* 公平性说明 */}
@@ -476,13 +480,36 @@ const LotteryResultPage: React.FC = () => {
                 <div className="space-y-2 font-mono text-sm">
                   {(() => {
                     try {
+                      // 确保有算法数据
+                      if (!lottery.draw_algorithm_data) {
+                        console.log('[LotteryResult] No draw_algorithm_data');
+                        return (
+                          <p className="text-gray-500 text-center py-2">
+                            {t('lottery.verificationDataUnavailable')}
+                          </p>
+                        );
+                      }
+
                       const algorithmData = typeof lottery.draw_algorithm_data === 'string'
                         ? JSON.parse(lottery.draw_algorithm_data)
                         : lottery.draw_algorithm_data;
                       
+                      console.log('[LotteryResult] Algorithm data:', algorithmData);
+                      console.log('[LotteryResult] Winning ticket number:', winningTicketNumber);
+                      
                       const timestampSum = algorithmData.timestamp_sum || 0;
                       const totalTickets = lottery.total_tickets || 100;
                       const calculatedNumber = (timestampSum % totalTickets) + 1;
+                      
+                      // 如果没有时间戳总和，显示不可用
+                      if (!timestampSum) {
+                        console.log('[LotteryResult] No timestamp_sum in algorithm data');
+                        return (
+                          <p className="text-gray-500 text-center py-2">
+                            {t('lottery.verificationDataUnavailable')}
+                          </p>
+                        );
+                      }
                       
                       return (
                         <>
@@ -492,13 +519,14 @@ const LotteryResultPage: React.FC = () => {
                           </div>
                           <div className="bg-white rounded-lg p-3 mt-2">
                             <p className="text-gray-600 mb-1">{t('lottery.verificationFormula')}:</p>
-                            <p className="text-gray-900 font-semibold">
-                              {winningTicketNumber} = {timestampSum.toLocaleString()} % {totalTickets} + 1
+                            <p className="text-gray-900 font-semibold break-all">
+                              {winningTicketNumber || calculatedNumber} = {timestampSum.toLocaleString()} % {totalTickets} + 1
                             </p>
                           </div>
                         </>
                       );
                     } catch (e) {
+                      console.error('[LotteryResult] Error parsing algorithm data:', e);
                       return (
                         <p className="text-gray-500 text-center py-2">
                           {t('lottery.verificationDataUnavailable')}
@@ -524,20 +552,26 @@ const LotteryResultPage: React.FC = () => {
               {t('lottery.myTickets')} ({myTickets.length})
             </h3>
             <div className="flex flex-wrap gap-2">
-              {myTickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className={`
-                    px-4 py-2 rounded-lg font-semibold
-                    ${ticket.ticket_number === winningTicketNumber
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
-                      : 'bg-white text-blue-600'
-                    }
-                  `}
-                >
-                  #{ticket.ticket_number}
-                </div>
-              ))}
+              {myTickets.map((ticket) => {
+                const ticketStr = String(ticket.ticket_number);
+                const isLongNumber = ticketStr.length > 7;
+                
+                return (
+                  <div
+                    key={ticket.id}
+                    className={`
+                      px-3 py-2 rounded-lg font-semibold
+                      ${isLongNumber ? 'text-xs' : 'text-sm'}
+                      ${ticket.ticket_number === winningTicketNumber
+                        ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
+                        : 'bg-white text-blue-600'
+                      }
+                    `}
+                  >
+                    <span className="break-all">#{ticket.ticket_number}</span>
+                  </div>
+                );
+              })}
             </div>
           </motion.div>
         )}
