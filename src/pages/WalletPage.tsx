@@ -78,6 +78,31 @@ const WalletPage: React.FC = () => {
 
 
 
+  const getTransactionTypeLabel = (type: string) => {
+    const typeMap: Record<string, string> = {
+      'DEPOSIT': t('wallet.transactionType.deposit'),
+      'WITHDRAWAL': t('wallet.transactionType.withdrawal'),
+      'LOTTERY_PURCHASE': t('wallet.transactionType.lotteryPurchase'),
+      'LOTTERY_REFUND': t('wallet.transactionType.lotteryRefund'),
+      'LOTTERY_PRIZE': t('wallet.transactionType.lotteryPrize'),
+      'REFERRAL_BONUS': t('wallet.transactionType.referralBonus'),
+      'COIN_EXCHANGE': t('wallet.transactionType.coinExchange'),
+      'MARKET_PURCHASE': t('wallet.transactionType.marketPurchase'),
+      'MARKET_SALE': t('wallet.transactionType.marketSale'),
+      'ADMIN_ADJUSTMENT': t('wallet.transactionType.adminAdjustment')
+    }
+    return typeMap[type] || type
+  }
+
+  const getTransactionStatusLabel = (status: string) => {
+    const statusMap: Record<string, string> = {
+      'COMPLETED': t('wallet.transactionStatus.completed'),
+      'PENDING': t('wallet.transactionStatus.pending'),
+      'FAILED': t('wallet.transactionStatus.failed')
+    }
+    return statusMap[status] || status
+  }
+
   const getTransactionIcon = (type: string) => {
     switch (type) {
       case 'DEPOSIT':
@@ -203,7 +228,7 @@ const WalletPage: React.FC = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">
-                        {transaction.description}
+                        {getTransactionTypeLabel(transaction.type)}
                       </p>
                       <div className="flex items-center space-x-2 mt-1">
                         {getStatusIcon(transaction.status)}

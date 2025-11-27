@@ -239,6 +239,24 @@
     "quickAmount": "快捷金额",
     "confirmExchange": "确认兑换",
     "exchangeFailed": "兑换失败",
+    "transactionType": {
+      "deposit": "充值",
+      "withdrawal": "提现",
+      "lotteryPurchase": "参与夺宝",
+      "lotteryRefund": "夺宝退款",
+      "lotteryPrize": "中奖奖金",
+      "referralBonus": "推荐返佣",
+      "coinExchange": "余额兑换",
+      "marketPurchase": "市场购买",
+      "marketSale": "市场出售",
+      "adminAdjustment": "管理员调整"
+    },
+    "transactionStatus": {
+      "completed": "已完成",
+      "pending": "处理中",
+      "failed": "失败"
+    },
+    "noTransactions": "暂无交易记录",
     "balanceUpdated": "余额已更新"
   },
   "order": {
@@ -500,7 +518,29 @@
     "canResellHint": "可转售",
     "confirmPurchase": "确认购买",
     "purchaseSuccess": "购买成功",
-    "purchaseError": "购买失败"
+    "purchaseError": "购买失败",
+    "selectTicketToSell": "选择要出售的票券",
+    "saleNote": "出售须知",
+    "saleTip1": "出售的票券不影响开奖结果",
+    "saleTip2": "买家购买后即可参与开奖",
+    "saleTip3": "如果中奖，奖品将归买家所有",
+    "saleTip4": "建议在开奖前一小时完成交易",
+    "originalPrice": "原价",
+    "sellingPrice": "售价",
+    "setSellingPrice": "设置售价",
+    "enterSellingPrice": "请输入售价",
+    "discount": "折扣",
+    "profit": "盈利",
+    "loss": "亏损",
+    "quickSelect": "快速选择",
+    "publish": "发布",
+    "publishSuccess": "发布成功",
+    "selectTicketError": "请选择要出售的票券",
+    "invalidPriceError": "请输入有效的价格",
+    "priceTooLowError": "售价不能低于原价的50%",
+    "priceTooHighError": "售价不能高于原价的200%",
+    "noResellableTickets": "暂无可转售的票券",
+    "buyToResellHint": "购买票券后可在此转售"
   },
   "bot": {
     "botManagement": "Bot管理",

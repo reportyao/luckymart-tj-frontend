@@ -227,7 +227,26 @@
     "youWillGet": "Шумо мегиред",
     "quickAmount": "Маблағи зуд",
     "confirmExchange": "Ивазро тасдиқ кунед",
-    "exchangeFailed": "Иваз ноком шуд"
+    "exchangeFailed": "Иваз ноком шуд",
+    "transactionType": {
+      "deposit": "Пур кардан",
+      "withdrawal": "Гирифтан",
+      "lotteryPurchase": "Иштирок дар қуръа",
+      "lotteryRefund": "Баргардонидани пул барои қуръа",
+      "lotteryPrize": "Ҷоизаи бурд",
+      "referralBonus": "Бонуси рефералӣ",
+      "coinExchange": "Ивази баланс",
+      "marketPurchase": "Харид дар бозор",
+      "marketSale": "Фурӯш дар бозор",
+      "adminAdjustment": "Танзими маъмур"
+    },
+    "transactionStatus": {
+      "completed": "Анҷом ёфт",
+      "pending": "Дар коркард",
+      "failed": "Ноком"
+    },
+    "noTransactions": "Сабтҳои амалиёт нест",
+    "balanceUpdated": "Баланс навсозӣ шуд"
   },
   "order": {
     "myOrders": "Фармоишҳои ман",
@@ -470,7 +489,29 @@
     "canResellHint": "Мумкин аст фурӯши дубора",
     "confirmPurchase": "Тасдиқи харид",
     "purchaseSuccess": "Харид муваффақиятомиз анҷом шуд",
-    "purchaseError": "Хатои харид"
+    "purchaseError": "Хатои харид",
+    "selectTicketToSell": "Билетеро барои фурӯш интихоб кунед",
+    "saleNote": "Эзоҳи фурӯш",
+    "saleTip1": "Фурӯши билетҳо ба натиҷаи қуръа таъсир намерасонад",
+    "saleTip2": "Харидор пас аз харид дар қуръа иштирок карда метавонад",
+    "saleTip3": "Агар бурдед, ҷоиза ба харидор мерасад",
+    "saleTip4": "Тавсия мешавад пеш аз қуръа як соат сафқаро анҷом диҳед",
+    "originalPrice": "Нархи аслӣ",
+    "sellingPrice": "Нархи фурӯш",
+    "setSellingPrice": "Нархро муқаррар кунед",
+    "enterSellingPrice": "Нархи фурӯшро ворид кунед",
+    "discount": "Тахфиф",
+    "profit": "Фоида",
+    "loss": "Зарар",
+    "quickSelect": "Интихоби зуд",
+    "publish": "Нашр кардан",
+    "publishSuccess": "Бомуваффақият нашр шуд",
+    "selectTicketError": "Билетеро барои фурӯш интихоб кунед",
+    "invalidPriceError": "Нархи дурустро ворид кунед",
+    "priceTooLowError": "Нарх наметавонад аз 50% нархи аслӣ камтар бошад",
+    "priceTooHighError": "Нарх наметавонад аз 200% нархи аслӣ зиёдтар бошад",
+    "noResellableTickets": "Билетҳо барои фурӯш нестанд",
+    "buyToResellHint": "Билетҳоро харед, то дар ин ҷо фурӯшед"
   },
   "bot": {
     "botManagement": "Идораи бот",

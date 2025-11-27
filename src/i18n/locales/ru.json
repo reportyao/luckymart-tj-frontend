@@ -227,7 +227,26 @@
     "youWillGet": "Вы получите",
     "quickAmount": "Быстрая сумма",
     "confirmExchange": "Подтвердить обмен",
-    "exchangeFailed": "Обмен не удался"
+    "exchangeFailed": "Обмен не удался",
+    "transactionType": {
+      "deposit": "Пополнение",
+      "withdrawal": "Вывод",
+      "lotteryPurchase": "Участие в розыгрыше",
+      "lotteryRefund": "Возврат за розыгрыш",
+      "lotteryPrize": "Выигрыш",
+      "referralBonus": "Реферальный бонус",
+      "coinExchange": "Обмен баланса",
+      "marketPurchase": "Покупка на рынке",
+      "marketSale": "Продажа на рынке",
+      "adminAdjustment": "Корректировка администратора"
+    },
+    "transactionStatus": {
+      "completed": "Завершено",
+      "pending": "В обработке",
+      "failed": "Не удалось"
+    },
+    "noTransactions": "Нет транзакций",
+    "balanceUpdated": "Баланс обновлён"
   },
   "order": {
     "myOrders": "Мои заказы",
@@ -470,7 +489,29 @@
     "canResellHint": "Можно перепродать",
     "confirmPurchase": "Подтвердить покупку",
     "purchaseSuccess": "Покупка успешна",
-    "purchaseError": "Ошибка покупки"
+    "purchaseError": "Ошибка покупки",
+    "selectTicketToSell": "Выберите билет для продажи",
+    "saleNote": "Примечание о продаже",
+    "saleTip1": "Перепродажа билетов не влияет на результат розыгрыша",
+    "saleTip2": "Покупатель может участвовать в розыгрыше сразу после покупки",
+    "saleTip3": "Если выиграете, приз перейдёт к покупателю",
+    "saleTip4": "Рекомендуется завершить сделку за час до розыгрыша",
+    "originalPrice": "Исходная цена",
+    "sellingPrice": "Цена продажи",
+    "setSellingPrice": "Установить цену",
+    "enterSellingPrice": "Введите цену продажи",
+    "discount": "Скидка",
+    "profit": "Прибыль",
+    "loss": "Убыток",
+    "quickSelect": "Быстрый выбор",
+    "publish": "Опубликовать",
+    "publishSuccess": "Успешно опубликовано",
+    "selectTicketError": "Выберите билет для продажи",
+    "invalidPriceError": "Введите корректную цену",
+    "priceTooLowError": "Цена не может быть ниже 50% от исходной",
+    "priceTooHighError": "Цена не может быть выше 200% от исходной",
+    "noResellableTickets": "Нет билетов для перепродажи",
+    "buyToResellHint": "Купите билеты, чтобы перепродать их здесь"
   },
   "bot": {
     "botManagement": "Управление ботом",
