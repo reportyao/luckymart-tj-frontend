@@ -28,7 +28,7 @@ serve(async (req) => {
       .select(`
         *,
         lotteries (*),
-        prizes (*),
+        resales (*),
         seller:users!seller_id (
           id,
           telegram_username,

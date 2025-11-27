@@ -34,22 +34,24 @@ serve(async (req) => {
 
     if (statsError) throw statsError
 
-    // 3. 获取待激活奖励状态
-    const { data: profile, error: profileError } = await supabaseClient
-      .from('profiles')
-      .select('first_deposit_bonus_status, first_deposit_bonus_amount, first_deposit_bonus_expire_at, activation_share_count, activation_invite_count')
+    // 3. 获取用户信息
+    const { data: userInfo, error: userError } = await supabaseClient
+      .from('users')
+      .select('id, telegram_username')
       .eq('id', userId)
       .single()
 
-    if (profileError) throw profileError
+    if (userError) throw userError
 
     const result = {
-      ...stats[0],
-      first_deposit_bonus_status: profile.first_deposit_bonus_status,
-      first_deposit_bonus_amount: profile.first_deposit_bonus_amount,
-      first_deposit_bonus_expire_at: profile.first_deposit_bonus_expire_at,
-      activation_share_count: profile.activation_share_count,
-      activation_invite_count: profile.activation_invite_count,
+      ...(stats && stats[0] ? stats[0] : {}),
+      total_invites: stats?.[0]?.total_invites || 0,
+      total_commission: stats?.[0]?.total_commission || 0,
+      first_deposit_bonus_status: 'INACTIVE',
+      first_deposit_bonus_amount: 0,
+      first_deposit_bonus_expire_at: null,
+      activation_share_count: 0,
+      activation_invite_count: 0,
     }
 
     return new Response(

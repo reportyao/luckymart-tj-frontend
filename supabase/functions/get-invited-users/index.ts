@@ -27,87 +27,74 @@ serve(async (req) => {
     }
     const userId = user.id
 
-    // 2. 获取一级好友 (invited_by = userId)
+    // 2. 获取一级好友 (referred_by_id = userId)
     const { data: level1Users, error: level1Error } = await supabaseClient
-      .from('profiles')
+      .from('users')
       .select(`
         id,
-        username,
+        telegram_username,
         avatar_url,
-        created_at,
-        level,
-        total_spent:orders(amount),
-        commissions!from_user_id(commission_amount)
+        created_at
       `)
-      .eq('invited_by', userId)
+      .eq('referred_by_id', userId)
 
     if (level1Error) throw level1Error
 
-    // 3. 获取二级好友 (invited_by = level1Users.id)
-    const level1Ids = level1Users.map(u => u.id)
+    // 3. 获取二级好友 (referred_by_id = level1Users.id)
+    const level1Ids = level1Users?.map(u => u.id) || []
     let level2Users: any[] = []
     if (level1Ids.length > 0) {
       const { data, error } = await supabaseClient
-        .from('profiles')
+        .from('users')
         .select(`
           id,
-          username,
+          telegram_username,
           avatar_url,
           created_at,
-          level,
-          invited_by,
-          total_spent:orders(amount),
-          commissions!from_user_id(commission_amount)
+          referred_by_id
         `)
-        .in('invited_by', level1Ids)
+        .in('referred_by_id', level1Ids)
       
       if (error) throw error
       level2Users = data
     }
 
-    // 4. 获取三级好友 (invited_by = level2Users.id)
+    // 4. 获取三级好友 (referred_by_id = level2Users.id)
     const level2Ids = level2Users.map(u => u.id)
     let level3Users: any[] = []
     if (level2Ids.length > 0) {
       const { data, error } = await supabaseClient
-        .from('profiles')
+        .from('users')
         .select(`
           id,
-          username,
+          telegram_username,
           avatar_url,
           created_at,
-          level,
-          invited_by,
-          total_spent:orders(amount),
-          commissions!from_user_id(commission_amount)
+          referred_by_id
         `)
-        .in('invited_by', level2Ids)
+        .in('referred_by_id', level2Ids)
       
       if (error) throw error
       level3Users = data
     }
 
     // 5. 整合数据并计算统计
-    const allInvitedUsers = [...level1Users, ...level2Users, ...level3Users]
+    const allInvitedUsers = [...(level1Users || []), ...level2Users, ...level3Users]
       .map(u => {
-        // 简化计算逻辑，实际应更复杂
-        const totalSpent = u.total_spent.reduce((sum: number, order: { amount: number }) => sum + order.amount, 0)
-        const commissionEarned = u.commissions.reduce((sum: number, commission: { commission_amount: number }) => sum + commission.commission_amount, 0)
-        
         // 确定层级
         let userLevel = 0
-        if (level1Users.some(l1 => l1.id === u.id)) userLevel = 1
+        if (level1Users?.some(l1 => l1.id === u.id)) userLevel = 1
         else if (level2Users.some(l2 => l2.id === u.id)) userLevel = 2
         else if (level3Users.some(l3 => l3.id === u.id)) userLevel = 3
 
         return {
           id: u.id,
-          username: u.username,
+          username: u.telegram_username || `User${u.id.slice(-4)}`,
           avatar_url: u.avatar_url,
           created_at: u.created_at,
           level: userLevel,
-          commission_earned: commissionEarned,
-          total_spent: totalSpent,
+          commission_earned: 0, // TODO: 查询佣金
+          total_spent: 0, // TODO: 查询总消费
         }
       })
 
