@@ -61,23 +61,56 @@ const LotteryResultPage: React.FC = () => {
     }
   }, [id, supabase, t]);
 
-  // 获取所有票据和参与用户
+  // 获取所有票据和参与用户 (支持 tickets 表和 lottery_entries 表)
   const fetchTicketsAndParticipants = useCallback(async () => {
     if (!id) return;
 
     try {
-      // 获取所有票据
+      // 首先尝试从 tickets 表获取
       const { data: ticketsData, error: ticketsError } = await supabase
         .from('tickets')
         .select('*')
         .eq('lottery_id', id)
         .order('ticket_number', { ascending: true });
 
-      if (ticketsError) throw ticketsError;
-      setTickets(ticketsData || []);
+      // 同时也从 lottery_entries 表获取 (某些夺宝使用这个表)
+      const { data: entriesData, error: entriesError } = await supabase
+        .from('lottery_entries')
+        .select('*')
+        .eq('lottery_id', id)
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true });
+
+      // 合并两种数据源 - 优先使用有数据的那个
+      let combinedTickets: any[] = [];
+      
+      if (ticketsData && ticketsData.length > 0) {
+        // 使用 tickets 表数据
+        combinedTickets = ticketsData.map(t => ({
+          id: t.id,
+          user_id: t.user_id,
+          lottery_id: t.lottery_id,
+          ticket_number: t.ticket_number,
+          is_winning: t.is_winning,
+          created_at: t.created_at
+        }));
+      } else if (entriesData && entriesData.length > 0) {
+        // 使用 lottery_entries 表数据
+        combinedTickets = entriesData.map(e => ({
+          id: e.id,
+          user_id: e.user_id,
+          lottery_id: e.lottery_id,
+          ticket_number: parseInt(String(e.numbers)) || Number(e.numbers) || 0, // 7位数参与码
+          is_winning: e.is_winning,
+          created_at: e.created_at
+        }));
+      }
+
+      console.log('[LotteryResult] Found tickets:', combinedTickets.length, 'from', ticketsData?.length ? 'tickets' : 'lottery_entries');
+      setTickets(combinedTickets as any || []);
 
       // 获取所有参与用户
-      const userIds = [...new Set(ticketsData?.map(t => t.user_id) || [])];
+      const userIds = [...new Set(combinedTickets?.map(t => t.user_id) || [])];
       
       if (userIds.length > 0) {
         const { data: usersData, error: usersError } = await supabase
@@ -90,7 +123,7 @@ const LotteryResultPage: React.FC = () => {
         // 组织参与者数据
         const participantsMap: { [key: string]: ParticipantWithTickets } = {};
         
-        ticketsData?.forEach(ticket => {
+        combinedTickets?.forEach(ticket => {
           const user = usersData?.find(u => u.id === ticket.user_id);
           if (!user) return;
 

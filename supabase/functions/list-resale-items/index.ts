@@ -12,47 +12,94 @@ serve(async (req) => {
   }
 
   try {
+    // 使用 service role key 以绕过 RLS
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const url = new URL(req.url)
-    const status = url.searchParams.get('status') || 'ACTIVE'
-    const limit = parseInt(url.searchParams.get('limit') || '20')
-    const offset = parseInt(url.searchParams.get('offset') || '0')
+    // 支持 GET 参数或 POST body
+    let status = 'ACTIVE'
+    let limit = 20
+    let offset = 0
+    let sortBy = 'latest'
 
-    // 查询转售商品列表
+    if (req.method === 'GET') {
+      const url = new URL(req.url)
+      status = url.searchParams.get('status') || 'ACTIVE'
+      limit = parseInt(url.searchParams.get('limit') || '20')
+      offset = parseInt(url.searchParams.get('offset') || '0')
+      sortBy = url.searchParams.get('sortBy') || 'latest'
+    } else if (req.method === 'POST') {
+      try {
+        const body = await req.json()
+        status = body.status || 'ACTIVE'
+        limit = body.limit || 20
+        offset = body.offset || 0
+        sortBy = body.sortBy || 'latest'
+      } catch (e) {
+        // 忽略 body 解析错误，使用默认值
+      }
+    }
+
+    console.log('[ListResale] Params:', { status, limit, offset, sortBy })
+
+    // 使用正确的 resales 表查询转售商品列表
     let query = supabaseClient
-      .from('resale_items')
+      .from('resales')
       .select(`
         *,
         lotteries (*),
-        resales (*),
-        seller:users!seller_id (
+        seller:users!resales_seller_id_fkey (
           id,
           telegram_username,
           first_name,
-          last_name
+          last_name,
+          avatar_url
+        ),
+        ticket:tickets!resales_ticket_id_fkey (
+          id,
+          ticket_number
         )
       `)
-      .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1)
 
-    if (status !== 'ALL') {
+    // 根据状态过滤
+    if (status === 'ACTIVE') {
+      query = query.eq('status', 'ACTIVE')
+    } else if (status !== 'ALL') {
       query = query.eq('status', status)
+    }
+
+    // 根据排序方式排序
+    switch (sortBy) {
+      case 'price_low':
+        query = query.order('resale_price', { ascending: true })
+        break
+      case 'price_high':
+        query = query.order('resale_price', { ascending: false })
+        break
+      case 'discount':
+        // 折扣最大 = 原价-售价 最大
+        query = query.order('created_at', { ascending: false }) // Supabase 不支持计算字段排序，前端处理
+        break
+      default:
+        query = query.order('created_at', { ascending: false })
     }
 
     const { data: resaleItems, error: resaleError } = await query
 
     if (resaleError) {
+      console.error('[ListResale] Query error:', resaleError)
       throw new Error('获取转售商品列表失败: ' + resaleError.message)
     }
+
+    console.log('[ListResale] Found items:', resaleItems?.length || 0)
 
     return new Response(
       JSON.stringify({
         success: true,
-        data: resaleItems,
+        data: resaleItems || [],
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -60,6 +107,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('[ListResale] Error:', error)
     return new Response(
       JSON.stringify({
         success: false,

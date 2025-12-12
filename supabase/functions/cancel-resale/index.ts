@@ -6,6 +6,50 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// 通用的 session 验证函数
+async function validateSession(sessionToken: string) {
+  if (!sessionToken) {
+    throw new Error('未授权：缺少认证令牌');
+  }
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('服务器配置错误');
+  }
+
+  const sessionResponse = await fetch(
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!sessionResponse.ok) {
+    throw new Error('验证会话失败');
+  }
+
+  const sessions = await sessionResponse.json();
+  
+  if (sessions.length === 0) {
+    throw new Error('未授权：会话不存在或已失效');
+  }
+
+  const session = sessions[0];
+  const expiresAt = new Date(session.expires_at);
+  
+  if (expiresAt < new Date()) {
+    throw new Error('未授权：会话已过期');
+  }
+
+  return { userId: session.user_id };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -14,28 +58,52 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const { resaleItemId } = await req.json()
+    const body = await req.json()
+    const { resale_item_id, session_token } = body
+
+    console.log('[CancelResale] Request:', { resale_item_id, session_token: session_token ? 'present' : 'missing' })
 
     // 验证用户身份
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !user) {
-      throw new Error('未授权')
+    let userId: string
+    
+    if (session_token) {
+      const { userId: validatedUserId } = await validateSession(session_token)
+      userId = validatedUserId
+    } else {
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        throw new Error('未授权：缺少认证信息')
+      }
+
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      )
+      if (authError || !user) {
+        throw new Error('未授权')
+      }
+      
+      const { data: userData } = await supabaseClient
+        .from('users')
+        .select('id')
+        .eq('telegram_id', user.id)
+        .single()
+      
+      if (!userData) {
+        throw new Error('用户不存在')
+      }
+      
+      userId = userData.id
     }
 
-    // 查询转售商品
+    // 查询转售商品 (使用 resales 表)
     const { data: resaleItem, error: resaleError } = await supabaseClient
-      .from('resale_items')
+      .from('resales')
       .select('*')
-      .eq('id', resaleItemId)
-      .eq('seller_id', user.id)
+      .eq('id', resale_item_id)
+      .eq('seller_id', userId)
       .single()
 
     if (resaleError || !resaleItem) {
@@ -49,23 +117,18 @@ serve(async (req) => {
 
     // 更新转售商品状态
     const { error: updateResaleError } = await supabaseClient
-      .from('resale_items')
-      .update({ status: 'CANCELLED' })
-      .eq('id', resaleItemId)
+      .from('resales')
+      .update({ 
+        status: 'CANCELLED',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', resale_item_id)
 
     if (updateResaleError) {
       throw new Error('取消转售失败: ' + updateResaleError.message)
     }
 
-    // 恢复奖品状态
-    const { error: updatePrizeError } = await supabaseClient
-      .from('prizes')
-      .update({ status: 'PENDING' })
-      .eq('id', resaleItem.prize_id)
-
-    if (updatePrizeError) {
-      throw new Error('恢复奖品状态失败: ' + updatePrizeError.message)
-    }
+    console.log('[CancelResale] Success:', resale_item_id)
 
     return new Response(
       JSON.stringify({
@@ -78,6 +141,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('[CancelResale] Error:', error)
     return new Response(
       JSON.stringify({
         success: false,

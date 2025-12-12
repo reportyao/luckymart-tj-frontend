@@ -57,18 +57,18 @@ const MyPrizesPage: React.FC = () => {
 	      const result = data as { success: boolean; data: any[]; error?: string };
 	
 	      if (result.success && result.data) {
-        // 转换数据格式
-	        const formattedPrizes: Prize[] = result.data.map((prize: any) => ({
-	          id: prize.id,
-	          lottery_id: prize.lottery_id,
-	          lottery_period: prize.lottery.period || '', // 从嵌套的 lottery 对象中获取
-	          lottery_title: prize.lottery.title, // 从嵌套的 lottery 对象中获取
-	          lottery_image: prize.lottery.image_url, // 从嵌套的 lottery 对象中获取
-	          winning_code: prize.winning_code,
-	          prize_value: prize.prize_value,
-	          status: prize.resale_listing ? 'RESOLD' : prize.shipping ? 'SHIPPING' : 'PENDING', // 根据是否存在 resale_listing 或 shipping 确定状态
-	          won_at: prize.won_at
-	        }));
+        // 转换数据格式 (安全访问嵌套对象)
+        const formattedPrizes: Prize[] = result.data.map((prize: any) => ({
+          id: prize.id,
+          lottery_id: prize.lottery_id,
+          lottery_period: prize.lottery?.period || prize.period || '',
+          lottery_title: prize.lottery?.title || prize.lottery?.title_i18n?.zh || prize.prize_name || '奖品',
+          lottery_image: prize.lottery?.image_url || prize.prize_image || '',
+          winning_code: prize.winning_code || '',
+          prize_value: prize.prize_value || 0,
+          status: prize.resale_listing ? 'RESOLD' : prize.shipping ? 'SHIPPING' : (prize.status || 'PENDING'),
+          won_at: prize.won_at || prize.created_at
+        }));
         setPrizes(formattedPrizes);
       } else {
         throw new Error(result.error || 'Failed to load prizes');

@@ -117,14 +117,16 @@ serve(async (req) => {
     // 7. 开始事务: 更新lottery状态、创建prize记录、发送通知
     const drawTime = new Date().toISOString();
 
-    // 更新lottery状态
+    // 更新lottery状态 - 使用 COMPLETED 状态确保前端能正确显示
     const { error: updateLotteryError } = await supabaseClient
       .from('lotteries')
       .update({
-        status: 'DRAWN',
+        status: 'COMPLETED', // 改为 COMPLETED 状态
         winning_numbers: [winningEntry.numbers], // 7位数参与码
+        winning_ticket_number: parseInt(winningEntry.numbers) || winningEntry.numbers, // 同时设置 winning_ticket_number
         winning_user_id: winningEntry.user_id,
         draw_time: drawTime,
+        actual_draw_time: drawTime,
         updated_at: drawTime,
         draw_algorithm_data: {
           algorithm: 'timestamp_sum',
@@ -136,6 +138,8 @@ serve(async (req) => {
         },
       })
       .eq('id', lotteryId);
+    
+    console.log('[AutoLotteryDraw] Updated lottery status to COMPLETED with draw_algorithm_data');
 
     if (updateLotteryError) {
       throw new Error(`Failed to update lottery: ${updateLotteryError.message}`);

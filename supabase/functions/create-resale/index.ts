@@ -6,6 +6,57 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// 通用的 session 验证函数
+async function validateSession(sessionToken: string) {
+  if (!sessionToken) {
+    throw new Error('未授权：缺少认证令牌');
+  }
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('服务器配置错误');
+  }
+
+  // 查询 user_sessions 表验证 session
+  const sessionResponse = await fetch(
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!sessionResponse.ok) {
+    throw new Error('验证会话失败');
+  }
+
+  const sessions = await sessionResponse.json();
+  
+  if (sessions.length === 0) {
+    throw new Error('未授权：会话不存在或已失效');
+  }
+
+  const session = sessions[0];
+
+  // 检查 session 是否过期
+  const expiresAt = new Date(session.expires_at);
+  const now = new Date();
+  
+  if (expiresAt < now) {
+    throw new Error('未授权：会话已过期');
+  }
+
+  return {
+    userId: session.user_id,
+    session: session
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -14,75 +65,117 @@ serve(async (req) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-      {
-        global: {
-          headers: { Authorization: req.headers.get('Authorization')! },
-        },
-      }
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    const { prizeId, price, description } = await req.json()
+    const body = await req.json()
+    const { ticket_id, price, session_token } = body
+
+    console.log('[CreateResale] Request:', { ticket_id, price, session_token: session_token ? 'present' : 'missing' })
 
     // 验证用户身份
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !user) {
-      throw new Error('未授权')
+    let userId: string
+    
+    if (session_token) {
+      const { userId: validatedUserId } = await validateSession(session_token)
+      userId = validatedUserId
+    } else {
+      // 兼容旧的认证方式
+      const authHeader = req.headers.get('Authorization')
+      if (!authHeader) {
+        throw new Error('未授权：缺少认证信息')
+      }
+
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(
+        authHeader.replace('Bearer ', '')
+      )
+      if (authError || !user) {
+        throw new Error('未授权')
+      }
+      
+      // 通过 telegram_id 找到用户
+      const { data: userData, error: userError } = await supabaseClient
+        .from('users')
+        .select('id')
+        .eq('telegram_id', user.id)
+        .single()
+      
+      if (userError || !userData) {
+        throw new Error('用户不存在')
+      }
+      
+      userId = userData.id
     }
 
-    // 查询奖品信息
-    const { data: prize, error: prizeError } = await supabaseClient
-      .from('prizes')
+    console.log('[CreateResale] Validated user:', userId)
+
+    if (!ticket_id || !price) {
+      throw new Error('缺少必要参数：ticket_id, price')
+    }
+
+    // 查询票据信息
+    const { data: ticket, error: ticketError } = await supabaseClient
+      .from('tickets')
       .select('*, lotteries(*)')
-      .eq('id', prizeId)
-      .eq('user_id', user.id)
+      .eq('id', ticket_id)
+      .eq('user_id', userId)
       .single()
 
-    if (prizeError || !prize) {
-      throw new Error('奖品不存在或不属于您')
+    // 如果 tickets 表没找到，尝试 lottery_entries 表
+    let lotteryEntry = null
+    if (ticketError || !ticket) {
+      const { data: entry, error: entryError } = await supabaseClient
+        .from('lottery_entries')
+        .select('*, lotteries(*)')
+        .eq('id', ticket_id)
+        .eq('user_id', userId)
+        .single()
+      
+      if (entryError || !entry) {
+        throw new Error('票据不存在或不属于您')
+      }
+      lotteryEntry = entry
     }
 
-    // 检查奖品状态
-    if (prize.status !== 'PENDING' && prize.status !== 'REJECTED') {
-      throw new Error('该奖品不能转售')
-    }
+    const ticketData = ticket || lotteryEntry
 
-    // 检查是否已经在转售中
+    // 检查是否已经在转售中 (使用 resales 表)
     const { data: existingResale } = await supabaseClient
-      .from('resale_items')
+      .from('resales')
       .select('id')
-      .eq('prize_id', prizeId)
+      .eq('ticket_id', ticket_id)
       .eq('status', 'ACTIVE')
-      .single()
+      .maybeSingle()
 
     if (existingResale) {
-      throw new Error('该奖品已在转售中')
+      throw new Error('该票据已在转售中')
     }
 
-    // 创建转售商品
+    // 计算原价
+    const originalPrice = ticketData.lotteries?.ticket_price || price
+
+    // 创建转售商品 (使用 resales 表)
     const { data: resaleItem, error: resaleError } = await supabaseClient
-      .from('resale_items')
+      .from('resales')
       .insert({
-        prize_id: prizeId,
-        seller_id: user.id,
-        lottery_id: prize.lottery_id,
-        original_price: prize.lotteries.ticket_price,
+        ticket_id: ticket_id,
+        seller_id: userId,
+        lottery_id: ticketData.lottery_id,
+        original_price: originalPrice,
         resale_price: price,
-        description: description,
         status: 'ACTIVE',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single()
 
     if (resaleError) {
+      console.error('[CreateResale] Create error:', resaleError)
       throw new Error('创建转售商品失败: ' + resaleError.message)
     }
 
-    // 更新奖品状态为转售中
-    await supabaseClient
-      .from('prizes')
-      .update({ status: 'RESELLING' })
-      .eq('id', prizeId)
+    console.log('[CreateResale] Created:', resaleItem.id)
 
     return new Response(
       JSON.stringify({
@@ -95,6 +188,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
+    console.error('[CreateResale] Error:', error)
     return new Response(
       JSON.stringify({
         success: false,
