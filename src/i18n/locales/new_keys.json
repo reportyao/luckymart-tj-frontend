@@ -1,0 +1,374 @@
+{
+  "zh": {
+    "errors": {
+      "pleaseLogin": "请先登录",
+      "insufficientBalance": "余额不足",
+      "insufficientLuckyCoins": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{balance}} 幸运币",
+      "exceedsLimit": "超过限购",
+      "failedToLoadWallet": "获取钱包信息失败",
+      "telegramConnectionFailed": "无法连接到 Telegram，请确保在 Telegram 中打开",
+      "anonymousUser": "匿名用户",
+      "failedToLoad": "加载失败"
+    },
+    "auth": {
+      "loginSuccess": "登录成功！",
+      "loginFailed": "登录失败，请重试",
+      "loggedOut": "已退出登录"
+    },
+    "myPrizes": {
+      "title": "我的奖品",
+      "statusPending": "待处理",
+      "statusShipping": "配送中",
+      "statusDelivered": "已送达",
+      "statusResold": "已转售",
+      "shippingRequestSuccess": "发货申请已提交",
+      "shippingRequestFailed": "提交失败,请重试",
+      "pleaseEnterRecipientName": "请输入收货人姓名",
+      "pleaseEnterAddress": "请输入详细地址",
+      "loadError": "加载失败",
+      "applyShipping": "申请发货",
+      "resell": "转售"
+    },
+    "deposit": {
+      "title": "充值",
+      "failedToLoadConfig": "获取支付配置失败",
+      "imageUploadSuccess": "图片上传成功",
+      "imageUploadFailed": "图片上传失败，请重试",
+      "pleaseUploadProof": "请上传充值凭证",
+      "submitFailed": "提交充值申请失败",
+      "uploading": "上传中..."
+    },
+    "withdraw": {
+      "title": "提现",
+      "minAmountError": "最小提现金额为 {{min}} TJS",
+      "maxAmountError": "单笔最大提现金额为 {{max}} TJS",
+      "incompleteBankInfo": "请填写完整的银行信息",
+      "submitSuccess": "提现申请已提交,预计1-3个工作日到账",
+      "submitFailed": "提交提现申请失败",
+      "minLabel": "最小 {{min}} TJS",
+      "bankExample": "例如: Amonatbank",
+      "enterAccountHolder": "请输入账户持有人姓名",
+      "enterAccountNumber": "请输入银行账号",
+      "confirm": "确认提现",
+      "enterAmount": "输入提现金额"
+    },
+    "orders": {
+      "purchaseTicket": "购买彩票",
+      "exchangeBalance": "余额兑换夺宝币",
+      "deposit": "钱包充值",
+      "withdrawal": "提现申请",
+      "depositLabel": "充值",
+      "withdrawalLabel": "提现",
+      "searchPlaceholder": "搜索订单号或商品名称..."
+    },
+    "profile": {
+      "resaleMarket": "转售市场",
+      "resaleMarketDesc": "购买转售商品",
+      "myTeam": "我的团队",
+      "myTeamDesc": "查看团队信息",
+      "prizeManagement": "中奖管理",
+      "prizeManagementDesc": "查看中奖记录",
+      "messages": "我的消息",
+      "messagesDesc": "查看消息通知",
+      "resaleHistory": "转售记录",
+      "resaleHistoryDesc": "查看转售历史"
+    },
+    "notifications": {
+      "congratulations": "恭喜中奖!",
+      "paymentSuccess": "支付成功",
+      "inviteReward": "邀请奖励到账",
+      "drawReminder": "开奖提醒",
+      "maintenanceNotice": "系统维护通知",
+      "securityTip": "安全提示"
+    },
+    "cities": {
+      "dushanbe": "杜尚别",
+      "khujand": "苦盏",
+      "kulob": "库洛布",
+      "qurghonteppa": "库尔干-图别"
+    },
+    "languages": {
+      "zh": "中文",
+      "zhFull": "简体中文",
+      "ru": "俄文",
+      "ruFull": "俄语",
+      "tg": "塔吉克文",
+      "tgFull": "塔吉克语"
+    },
+    "settings": {
+      "languageChangedToZh": "语言已切换为中文",
+      "languageChanged": "语言已切换",
+      "languageChangeFailed": "语言切换失败"
+    },
+    "debug": {
+      "pageLoaded": "调试页面已加载",
+      "styleSheetsFound": "找到 {{count}} 个样式表",
+      "stylesheet": "样式表 {{index}}",
+      "stylesheetCorsError": "样式表 {{index}}: 无法访问 (CORS)",
+      "cssLinksFound": "找到 {{count}} 个 CSS 链接",
+      "userLoggedIn": "用户已登录: ID={{id}}, UID={{uid}}",
+      "userNotLoggedIn": "用户未登录"
+    },
+    "bot": {
+      "loadFailed": "加载Bot数据失败",
+      "setting": "正在设置Bot...",
+      "setSuccess": "Bot设置成功！",
+      "setFailed": "Bot设置失败",
+      "enterChatId": "请输入Chat ID",
+      "sendingTest": "正在发送测试消息...",
+      "testSuccess": "测试消息发送成功！",
+      "testFailed": "发送测试消息失败",
+      "processingQueue": "正在处理通知队列...",
+      "processComplete": "处理完成：发送{{sent}}条，取消{{cancelled}}条，失败{{failed}}条",
+      "processFailed": "处理通知失败"
+    }
+  },
+  "ru": {
+    "errors": {
+      "pleaseLogin": "Пожалуйста, войдите",
+      "insufficientBalance": "Недостаточно средств",
+      "insufficientLuckyCoins": "Недостаточно монет удачи, требуется {{required}}, текущий баланс {{balance}}",
+      "exceedsLimit": "Превышен лимит",
+      "failedToLoadWallet": "Не удалось загрузить кошелек",
+      "telegramConnectionFailed": "Не удается подключиться к Telegram, пожалуйста, откройте в Telegram",
+      "anonymousUser": "Анонимный пользователь",
+      "failedToLoad": "Ошибка загрузки"
+    },
+    "auth": {
+      "loginSuccess": "Вход выполнен!",
+      "loginFailed": "Ошибка входа, попробуйте снова",
+      "loggedOut": "Вы вышли из системы"
+    },
+    "myPrizes": {
+      "title": "Мои призы",
+      "statusPending": "В ожидании",
+      "statusShipping": "Доставляется",
+      "statusDelivered": "Доставлено",
+      "statusResold": "Перепродано",
+      "shippingRequestSuccess": "Запрос на доставку отправлен",
+      "shippingRequestFailed": "Не удалось отправить",
+      "pleaseEnterRecipientName": "Введите имя получателя",
+      "pleaseEnterAddress": "Введите адрес доставки",
+      "loadError": "Ошибка загрузки",
+      "applyShipping": "Запросить доставку",
+      "resell": "Перепродать"
+    },
+    "deposit": {
+      "title": "Пополнение",
+      "failedToLoadConfig": "Ошибка загрузки конфигурации",
+      "imageUploadSuccess": "Изображение загружено",
+      "imageUploadFailed": "Ошибка загрузки изображения",
+      "pleaseUploadProof": "Загрузите подтверждение",
+      "submitFailed": "Ошибка отправки",
+      "uploading": "Загрузка..."
+    },
+    "withdraw": {
+      "title": "Вывод",
+      "minAmountError": "Минимальная сумма вывода {{min}} TJS",
+      "maxAmountError": "Максимальная сумма вывода {{max}} TJS",
+      "incompleteBankInfo": "Заполните банковские данные",
+      "submitSuccess": "Запрос отправлен, 1-3 рабочих дня",
+      "submitFailed": "Ошибка отправки запроса",
+      "minLabel": "Минимум {{min}} TJS",
+      "bankExample": "Например: Amonatbank",
+      "enterAccountHolder": "Введите имя владельца",
+      "enterAccountNumber": "Введите номер счета",
+      "confirm": "Подтвердить вывод",
+      "enterAmount": "Введите сумму"
+    },
+    "orders": {
+      "purchaseTicket": "Покупка билета",
+      "exchangeBalance": "Обмен баланса на монеты",
+      "deposit": "Пополнение кошелька",
+      "withdrawal": "Запрос на вывод",
+      "depositLabel": "Пополнение",
+      "withdrawalLabel": "Вывод",
+      "searchPlaceholder": "Поиск заказов..."
+    },
+    "profile": {
+      "resaleMarket": "Рынок перепродажи",
+      "resaleMarketDesc": "Покупка товаров",
+      "myTeam": "Моя команда",
+      "myTeamDesc": "Информация о команде",
+      "prizeManagement": "Управление призами",
+      "prizeManagementDesc": "Записи о выигрышах",
+      "messages": "Мои сообщения",
+      "messagesDesc": "Уведомления",
+      "resaleHistory": "История перепродаж",
+      "resaleHistoryDesc": "История перепродаж"
+    },
+    "notifications": {
+      "congratulations": "Поздравляем с выигрышем!",
+      "paymentSuccess": "Платеж успешен",
+      "inviteReward": "Бонус за приглашение",
+      "drawReminder": "Напоминание о розыгрыше",
+      "maintenanceNotice": "Уведомление о техобслуживании",
+      "securityTip": "Совет по безопасности"
+    },
+    "cities": {
+      "dushanbe": "Душанбе",
+      "khujand": "Худжанд",
+      "kulob": "Кулоб",
+      "qurghonteppa": "Курган-Тюбе"
+    },
+    "languages": {
+      "zh": "Китайский",
+      "zhFull": "Китайский (упрощенный)",
+      "ru": "Русский",
+      "ruFull": "Русский",
+      "tg": "Таджикский",
+      "tgFull": "Таджикский"
+    },
+    "settings": {
+      "languageChangedToZh": "Язык изменен на китайский",
+      "languageChanged": "Язык изменен",
+      "languageChangeFailed": "Ошибка изменения языка"
+    },
+    "debug": {
+      "pageLoaded": "Страница отладки загружена",
+      "styleSheetsFound": "Найдено {{count}} таблиц стилей",
+      "stylesheet": "Таблица стилей {{index}}",
+      "stylesheetCorsError": "Таблица стилей {{index}}: Ошибка CORS",
+      "cssLinksFound": "Найдено {{count}} CSS ссылок",
+      "userLoggedIn": "Пользователь вошел: ID={{id}}, UID={{uid}}",
+      "userNotLoggedIn": "Пользователь не вошел"
+    },
+    "bot": {
+      "loadFailed": "Ошибка загрузки данных бота",
+      "setting": "Настройка бота...",
+      "setSuccess": "Бот успешно настроен!",
+      "setFailed": "Ошибка настройки бота",
+      "enterChatId": "Введите Chat ID",
+      "sendingTest": "Отправка тестового сообщения...",
+      "testSuccess": "Тестовое сообщение отправлено!",
+      "testFailed": "Ошибка отправки сообщения",
+      "processingQueue": "Обработка очереди уведомлений...",
+      "processComplete": "Обработка завершена: отправлено {{sent}}, отменено {{cancelled}}, ошибок {{failed}}",
+      "processFailed": "Ошибка обработки уведомлений"
+    }
+  },
+  "tg": {
+    "errors": {
+      "pleaseLogin": "Лутфан ворид шавед",
+      "insufficientBalance": "Мавҷудӣ кофӣ нест",
+      "insufficientLuckyCoins": "Тангаҳои хушбахтӣ кофӣ нестанд, лозим аст {{required}}, мавҷудӣ {{balance}}",
+      "exceedsLimit": "Аз ҳад зиёд шуд",
+      "failedToLoadWallet": "Маълумоти ҳамён бор нашуд",
+      "telegramConnectionFailed": "Пайваст ба Telegram муяссар нест, лутфан дар Telegram кушоед",
+      "anonymousUser": "Корбари аноним",
+      "failedToLoad": "Хатогии боркунӣ"
+    },
+    "auth": {
+      "loginSuccess": "Воридшавӣ муваффақ!",
+      "loginFailed": "Хатои воридшавӣ",
+      "loggedOut": "Шумо баромадед"
+    },
+    "myPrizes": {
+      "title": "Мукофотҳои ман",
+      "statusPending": "Интизорӣ",
+      "statusShipping": "Дар роҳ",
+      "statusDelivered": "Расонида шуд",
+      "statusResold": "Дубора фурӯхта шуд",
+      "shippingRequestSuccess": "Дархости интиқол фиристода шуд",
+      "shippingRequestFailed": "Хатогӣ рух дод",
+      "pleaseEnterRecipientName": "Номи гирандаро ворид кунед",
+      "pleaseEnterAddress": "Суроғаи пурраро ворид кунед",
+      "loadError": "Хатогии боркунӣ",
+      "applyShipping": "Дархости интиқол",
+      "resell": "Дубора фурӯхтан"
+    },
+    "deposit": {
+      "title": "Пурзор кардан",
+      "failedToLoadConfig": "Хатои боркунии танзимот",
+      "imageUploadSuccess": "Расм бор шуд",
+      "imageUploadFailed": "Хатои боркунии расм",
+      "pleaseUploadProof": "Тасдиқномаро бор кунед",
+      "submitFailed": "Хатои фиристодан",
+      "uploading": "Бор шуда истодааст..."
+    },
+    "withdraw": {
+      "title": "Бароварда",
+      "minAmountError": "Маблағи ҳадди ақал {{min}} TJS",
+      "maxAmountError": "Маблағи ҳадди аксар {{max}} TJS",
+      "incompleteBankInfo": "Маълумоти бонкро пур кунед",
+      "submitSuccess": "Дархост фиристода шуд, 1-3 рӯзи корӣ",
+      "submitFailed": "Хатои фиристодани дархост",
+      "minLabel": "Ҳадди ақал {{min}} TJS",
+      "bankExample": "Мисол: Amonatbank",
+      "enterAccountHolder": "Номи соҳиби ҳисобро ворид кунед",
+      "enterAccountNumber": "Рақами ҳисобро ворид кунед",
+      "confirm": "Тасдиқи бароварда",
+      "enterAmount": "Маблағро ворид кунед"
+    },
+    "orders": {
+      "purchaseTicket": "Харидани чипта",
+      "exchangeBalance": "Табдили мавҷудӣ ба тангаҳо",
+      "deposit": "Пурзор кардани ҳамён",
+      "withdrawal": "Дархости бароварда",
+      "depositLabel": "Пурзор",
+      "withdrawalLabel": "Бароварда",
+      "searchPlaceholder": "Ҷустуҷӯи фармоишҳо..."
+    },
+    "profile": {
+      "resaleMarket": "Бозори дубора фурӯш",
+      "resaleMarketDesc": "Харидани мол",
+      "myTeam": "Дастаи ман",
+      "myTeamDesc": "Маълумоти даста",
+      "prizeManagement": "Идораи мукофотҳо",
+      "prizeManagementDesc": "Сабтҳои ғалаба",
+      "messages": "Паёмҳои ман",
+      "messagesDesc": "Хабарҳо",
+      "resaleHistory": "Таърихи дубора фурӯш",
+      "resaleHistoryDesc": "Таърихи дубора фурӯш"
+    },
+    "notifications": {
+      "congratulations": "Табрик бо ғалаба!",
+      "paymentSuccess": "Пардохт муваффақ",
+      "inviteReward": "Мукофоти даъват",
+      "drawReminder": "Ёдрасонии қуръакашӣ",
+      "maintenanceNotice": "Огоҳии таъмир",
+      "securityTip": "Маслиҳат оид ба бехатарӣ"
+    },
+    "cities": {
+      "dushanbe": "Душанбе",
+      "khujand": "Хуҷанд",
+      "kulob": "Кӯлоб",
+      "qurghonteppa": "Қӯрғонтеппа"
+    },
+    "languages": {
+      "zh": "Чинӣ",
+      "zhFull": "Чинӣ (соддашуда)",
+      "ru": "Русӣ",
+      "ruFull": "Русӣ",
+      "tg": "Тоҷикӣ",
+      "tgFull": "Тоҷикӣ"
+    },
+    "settings": {
+      "languageChangedToZh": "Забон ба чинӣ иваз шуд",
+      "languageChanged": "Забон иваз шуд",
+      "languageChangeFailed": "Хатои иваз кардани забон"
+    },
+    "debug": {
+      "pageLoaded": "Саҳифаи ислоҳ бор шуд",
+      "styleSheetsFound": "{{count}} ҷадвали услуб ёфт шуд",
+      "stylesheet": "Ҷадвали услуб {{index}}",
+      "stylesheetCorsError": "Ҷадвали услуб {{index}}: Хатои CORS",
+      "cssLinksFound": "{{count}} пайвандҳои CSS ёфт шуд",
+      "userLoggedIn": "Корбар ворид шуд: ID={{id}}, UID={{uid}}",
+      "userNotLoggedIn": "Корбар ворид нашуд"
+    },
+    "bot": {
+      "loadFailed": "Хатои боркунии маълумоти бот",
+      "setting": "Танзими бот...",
+      "setSuccess": "Бот муваффақона танзим шуд!",
+      "setFailed": "Хатои танзими бот",
+      "enterChatId": "Chat ID-ро ворид кунед",
+      "sendingTest": "Фиристодани паёми озмоишӣ...",
+      "testSuccess": "Паёми озмоишӣ фиристода шуд!",
+      "testFailed": "Хатои фиристодани паём",
+      "processingQueue": "Коркарди навбати хабарҳо...",
+      "processComplete": "Коркард анҷом ёфт: фиристода {{sent}}, бекор {{cancelled}}, хатоҳо {{failed}}",
+      "processFailed": "Хатои коркарди хабарҳо"
+    }
+  }
+}
