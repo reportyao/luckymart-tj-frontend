@@ -7,6 +7,17 @@ const corsHeaders = {
 };
 
 /**
+ * 生成 UUID v4
+ */
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+/**
  * 时间戳之和算法（7位数参与码版本）
  * 
  * 设计逻辑：
@@ -158,12 +169,17 @@ serve(async (req) => {
       console.error('Failed to update winning entry:', updateEntryError);
     }
 
-    // 创建 lottery_results 记录
+    // 创建 lottery_results 记录 - 修复: 使用正确的字段名
+    const lotteryResultId = generateUUID();
+    const winningTicketNumber = parseInt(winningEntry.numbers) || 0;
+    
     const { data: lotteryResult, error: resultError } = await supabaseClient
       .from('lottery_results')
       .insert({
+        id: lotteryResultId,
         lottery_id: lotteryId,
-        winning_number: winningEntry.numbers, // 7位数参与码
+        winner_id: winningEntry.user_id, // 修复: 添加 winner_id 字段
+        winner_ticket_number: winningTicketNumber, // 修复: 使用正确的字段名
         draw_time: drawTime,
         algorithm_data: {
           algorithm: 'timestamp_sum',
@@ -212,20 +228,20 @@ serve(async (req) => {
       console.error('Failed to create prize:', prizeError);
     }
 
-    // 发送中奖通知给中奖用户
+    // 发送中奖通知给中奖用户 - 修复: 使用正确的枚举值和添加必填字段
     try {
+      const notificationId = generateUUID();
       await supabaseClient.from('notifications').insert({
+        id: notificationId, // 修复: 添加 id 字段
         user_id: winningEntry.user_id,
-        type: 'LOTTERY_WIN',
+        type: 'LOTTERY_RESULT', // 修复: 使用存在的枚举值 (LOTTERY_RESULT 而不是 LOTTERY_WIN)
         title: '🎉 恭喜中奖！',
         content: `恭喜您在"${lottery.title}"夺宝中中奖！中奖码: ${winningEntry.numbers}`,
-        data: {
-          lottery_id: lotteryId,
-          prize_id: prize?.id,
-          winning_code: winningEntry.numbers,
-        },
+        related_id: lotteryId, // 修复: 使用 related_id 而不是 data
+        related_type: 'lottery',
         is_read: false,
         created_at: drawTime,
+        updated_at: drawTime,
       });
     } catch (notifError) {
       console.error('Failed to send notification:', notifError);
@@ -236,16 +252,16 @@ serve(async (req) => {
     const announcements = participantIds
       .filter((userId) => userId !== winningEntry.user_id)
       .map((userId) => ({
+        id: generateUUID(), // 修复: 添加 id 字段
         user_id: userId,
         type: 'LOTTERY_RESULT',
         title: '开奖结果公布',
         content: `"${lottery.title}"已开奖，中奖码: ${winningEntry.numbers}`,
-        data: {
-          lottery_id: lotteryId,
-          winning_code: winningEntry.numbers,
-        },
+        related_id: lotteryId, // 修复: 使用 related_id 而不是 data
+        related_type: 'lottery',
         is_read: false,
         created_at: drawTime,
+        updated_at: drawTime,
       }));
 
     if (announcements.length > 0) {
@@ -261,7 +277,7 @@ serve(async (req) => {
           winning_code: winningEntry.numbers,
           winner_user_id: winningEntry.user_id,
           prize_id: prize?.id,
-          lottery_result_id: lotteryResult?.id,
+          lottery_result_id: lotteryResult?.id || lotteryResultId,
           algorithm: 'timestamp_sum',
           timestamp_sum: result.timestampSum,
           formula: result.formula,
