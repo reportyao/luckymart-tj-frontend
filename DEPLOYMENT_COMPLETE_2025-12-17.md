@@ -349,7 +349,7 @@
 
 ## 🔗 Repository Links
 
-- **Frontend**: https://github.com/reportyao/luckymart-tj-frontend
+- **Frontend**: https://github.com/reportyao/tezbarakat-tj-frontend
   - Latest commit: `fccf698` - "feat: 完整的性能和多语言优化"
   - Status: ✅ Pushed successfully
 

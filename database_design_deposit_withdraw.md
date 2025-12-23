@@ -146,7 +146,7 @@ CREATE TABLE payment_config (
     "method": "ALIF_MOBI",
     "enabled": true,
     "account_number": "+992 XX XXX XX XX",
-    "account_name": "LuckyMart TJ",
+    "account_name": "TezBarakat TJ",
     "instructions": {
       "zh": "请转账到以下账号...",
       "ru": "Пожалуйста, переведите на следующий счет...",
@@ -293,7 +293,7 @@ INSERT INTO payment_config (config_key, config_type, config_data, is_enabled, so
   "method": "ALIF_MOBI",
   "enabled": true,
   "account_number": "+992 XX XXX XX XX",
-  "account_name": "LuckyMart TJ",
+  "account_name": "TezBarakat TJ",
   "instructions": {
     "zh": "请按照以下步骤完成充值:\n1. 打开Alif Mobi应用\n2. 转账到账号: +992 XX XXX XX XX\n3. 备注填写您的订单号\n4. 完成转账后上传截图",
     "ru": "Пожалуйста, выполните следующие шаги для пополнения:\n1. Откройте приложение Alif Mobi\n2. Переведите на счет: +992 XX XXX XX XX\n3. В примечании укажите номер заказа\n4. После перевода загрузите скриншот",
@@ -309,11 +309,11 @@ INSERT INTO payment_config (config_key, config_type, config_data, is_enabled, so
   "enabled": true,
   "bank_name": "Dushanbe City Bank",
   "account_number": "XXXXXXXXXXXXXXXX",
-  "account_name": "LuckyMart TJ LLC",
+  "account_name": "TezBarakat TJ LLC",
   "instructions": {
-    "zh": "请按照以下步骤完成充值:\n1. 通过银行转账\n2. 银行: Dushanbe City Bank\n3. 账号: XXXXXXXXXXXXXXXX\n4. 户名: LuckyMart TJ LLC\n5. 完成转账后上传截图",
-    "ru": "Пожалуйста, выполните следующие шаги для пополнения:\n1. Банковский перевод\n2. Банк: Dushanbe City Bank\n3. Счет: XXXXXXXXXXXXXXXX\n4. Получатель: LuckyMart TJ LLC\n5. После перевода загрузите скриншот",
-    "tg": "Лутфан барои пурра кардани ҳисоб қадамҳои зеринро иҷро кунед:\n1. Тавассути банк пул фиристед\n2. Банк: Dushanbe City Bank\n3. Ҳисоб: XXXXXXXXXXXXXXXX\n4. Гирандаи пул: LuckyMart TJ LLC\n5. Пас аз гузаронидан скриншот бор кунед"
+    "zh": "请按照以下步骤完成充值:\n1. 通过银行转账\n2. 银行: Dushanbe City Bank\n3. 账号: XXXXXXXXXXXXXXXX\n4. 户名: TezBarakat TJ LLC\n5. 完成转账后上传截图",
+    "ru": "Пожалуйста, выполните следующие шаги для пополнения:\n1. Банковский перевод\n2. Банк: Dushanbe City Bank\n3. Счет: XXXXXXXXXXXXXXXX\n4. Получатель: TezBarakat TJ LLC\n5. После перевода загрузите скриншот",
+    "tg": "Лутфан барои пурра кардани ҳисоб қадамҳои зеринро иҷро кунед:\n1. Тавассути банк пул фиристед\n2. Банк: Dushanbe City Bank\n3. Ҳисоб: XXXXXXXXXXXXXXXX\n4. Гирандаи пул: TezBarakat TJ LLC\n5. Пас аз гузаронидан скриншот бор кунед"
   },
   "min_amount": 50,
   "max_amount": 50000,

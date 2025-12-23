@@ -120,14 +120,14 @@ Admin:
 ### ✅ 6. Code Pushed to GitHub
 **Achievement**: All fixes synchronized to repositories
 
-**Frontend Repository**: `reportyao/luckymart-tj-frontend`
+**Frontend Repository**: `reportyao/tezbarakat-tj-frontend`
 ```
 Commits:
 - "fix: 全面修复转售市场、开奖验证数据和认证问题"
 - "docs: 添加完整的数据库映射、多语言修复计划和综合修复报告"
 
 Status: ✅ Pushed successfully
-URL: https://github.com/reportyao/luckymart-tj-frontend
+URL: https://github.com/reportyao/tezbarakat-tj-frontend
 ```
 
 **Admin Repository**: `reportyao/luckymart-tj-admin`
@@ -434,7 +434,7 @@ npm install @tanstack/react-query
 - [Supabase Setup](./SUPABASE_SETUP.md)
 
 ### Repositories
-- [Frontend](https://github.com/reportyao/luckymart-tj-frontend)
+- [Frontend](https://github.com/reportyao/tezbarakat-tj-frontend)
 - [Admin](https://github.com/reportyao/luckymart-tj-admin)
 
 ### Supabase

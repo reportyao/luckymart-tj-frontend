@@ -12,11 +12,11 @@
 
 ***
 
-# LuckyMart 管理后台功能补全开发文档（修订版）
+# TezBarakat 管理后台功能补全开发文档（修订版）
 
 **目标受众**：AI 开发工程师 / Manus AI
 **部署环境**：47.243.83.253 服务器
-**前端参考**：luckymart-tj-frontend（支持中文/俄语/塔吉克语三语言）
+**前端参考**：tezbarakat-tj-frontend（支持中文/俄语/塔吉克语三语言）
 **数据库**：Supabase (owyitxwxmxwbkqgzffdw.supabase.co)
 
 ***
@@ -293,7 +293,7 @@ CREATE TABLE payment_methods (
 │  │ [中文] [Русский] [Тоҷикӣ]             │   │
 │  │                                         │   │
 │  │ 银行名称: 中国工商银行                   │   │
-│  │ 账户名:   LuckyMart 收款账户            │   │
+│  │ 账户名:   TezBarakat 收款账户            │   │
 │  │ 账号:     6222 **** **** 1234           │   │
 │  │ 支行:     深圳南山支行                   │   │
 │  │ 转账备注: 请备注您的用户ID               │   │

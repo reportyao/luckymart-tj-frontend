@@ -80,7 +80,7 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user?.telegram_username || '一位用户'}在LuckyMart${t('showoff.won')}了!快来看看吧!`;
+    const text = `${showoff.user?.telegram_username || '一位用户'}在TezBarakat${t('showoff.won')}了!快来看看吧!`;
     const url = `${window.location.origin}/showoff/${showoff.id}`;
 
     if (navigator.share) {

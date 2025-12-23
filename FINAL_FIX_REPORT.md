@@ -1,4 +1,4 @@
-# LuckyMart 前端修复报告
+# TezBarakat 前端修复报告
 
 ## 🎯 任务完成情况
 
@@ -147,7 +147,7 @@ curl "https://owyitxwxmxwbkqgzffdw.supabase.co/rest/v1/lotteries?select=*&limit=
 ## 📞 联系信息
 
 如需进一步支持，请查看：
-- GitHub: https://github.com/reportyao/luckymart-tj-frontend
+- GitHub: https://github.com/reportyao/tezbarakat-tj-frontend
 - Supabase Dashboard: https://owyitxwxmxwbkqgzffdw.supabase.co
 
 ---

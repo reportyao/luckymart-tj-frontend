@@ -96,10 +96,10 @@ const MyPrizesPage: React.FC = () => {
 
   const getStatusBadge = (status: string) => {
     const badges = {
-      PENDING: { text: '待处理', color: 'bg-yellow-100 text-yellow-700' },
-      SHIPPING: { text: '配送中', color: 'bg-blue-100 text-blue-700' },
-      SHIPPED: { text: '已送达', color: 'bg-green-100 text-green-700' },
-      RESOLD: { text: '已转售', color: 'bg-gray-100 text-gray-700' }
+      PENDING: { text: t('myPrizes.statusPending'), color: 'bg-yellow-100 text-yellow-700' },
+      SHIPPING: { text: t('myPrizes.statusShipping'), color: 'bg-blue-100 text-blue-700' },
+      SHIPPED: { text: t('myPrizes.statusDelivered'), color: 'bg-green-100 text-green-700' },
+      RESOLD: { text: t('myPrizes.statusResold'), color: 'bg-gray-100 text-gray-700' }
     };
     const badge = badges[status as keyof typeof badges] || badges.PENDING;
     return (
@@ -289,11 +289,11 @@ const ShippingModal: React.FC<{
         throw new Error(result.error || 'Failed to submit shipping request');
       }
 
-      toast.success(t('myPrizes.shippingRequestSuccess') || '发货申请已提交');
+      toast.success(t('myPrizes.shippingRequestSuccess') || t('myPrizes.shippingRequestSuccess'));
       onSuccess();
     } catch (error: any) {
       console.error('Shipping request error:', error);
-      toast.error(error.message || t('myPrizes.shippingRequestError') || '提交失败,请重试');
+      toast.error(error.message || t('myPrizes.shippingRequestError') || t('myPrizes.shippingRequestFailed'));
     } finally {
       setIsSubmitting(false);
     }

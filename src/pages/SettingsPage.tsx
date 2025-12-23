@@ -11,7 +11,7 @@ import toast from 'react-hot-toast'
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate()
-  const { i18n, ready } = useTranslation()
+  const { i18n, t, ready } = useTranslation()
   const [currentLanguage, setCurrentLanguage] = useState<string>('zh')
   const [isLoading, setIsLoading] = useState(true)
 
@@ -42,19 +42,19 @@ const SettingsPage: React.FC = () => {
       
       // 根据语言显示不同的提示
       const messages: Record<string, string> = {
-        zh: '语言已切换为中文',
+        zh: t('settings.languageChangedToZh'),
         ru: 'Язык изменен на русский',
         tg: 'Забон ба тоҷикӣ иваз шуд'
       }
-      toast.success(messages[languageCode] || '语言已切换')
+      toast.success(messages[languageCode] || t('settings.languageChanged'))
       
       // 刷新页面以应用新语言
       setTimeout(() => {
         window.location.reload()
       }, 500)
     } catch (error) {
-      console.error('语言切换失败:', error)
-      toast.error('语言切换失败')
+      console.error(t('settings.languageChangeFailed') + ':', error)
+      toast.error(t('settings.languageChangeFailed'))
     }
   }
 

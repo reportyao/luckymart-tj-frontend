@@ -107,7 +107,7 @@ export default function WithdrawPage() {
         }, 2000)
       }
     } catch (error: any) {
-      console.error('提交提现申请失败:', error)
+      console.error(t('withdraw.submitFailed') + ':', error)
       alert(error.message || t('wallet.withdrawRequestFailed'))
     } finally {
       setSubmitting(false)

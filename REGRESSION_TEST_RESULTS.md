@@ -1,4 +1,4 @@
-# LuckyMart TJ Frontend - 功能回归测试报告
+# TezBarakat TJ Frontend - 功能回归测试报告
 
 **测试日期**: 2025-11-17  
 **项目版本**: 1.0.0  
@@ -363,8 +363,8 @@
 
 如有任何问题或建议，请通过以下方式联系：
 
-- **GitHub Issues**: https://github.com/reportyao/luckymart-tj-frontend/issues
-- **提交 Pull Request**: https://github.com/reportyao/luckymart-tj-frontend/pulls
+- **GitHub Issues**: https://github.com/reportyao/tezbarakat-tj-frontend/issues
+- **提交 Pull Request**: https://github.com/reportyao/tezbarakat-tj-frontend/pulls
 
 ---
 

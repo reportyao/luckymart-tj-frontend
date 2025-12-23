@@ -1,4 +1,4 @@
-# LuckyMart TJ 测试执行报告
+# TezBarakat TJ 测试执行报告
 
 **执行日期**: 2025-11-09  
 **执行人**: AI Assistant  
@@ -297,7 +297,7 @@ Commit: ba7a5ab
 
 - [全面测试方案](./COMPREHENSIVE_TEST_PLAN.md)
 - [测试检查清单](./TEST_CHECKLIST.md)
-- [产品需求文档](./LuckyMartTJ-产品需求文档-完整版-v7.0.md)
+- [产品需求文档](./TezBarakatTJ-产品需求文档-完整版-v7.0.md)
 - [Supabase设置文档](./SUPABASE_SETUP.md)
 - [管理后台集成文档](./ADMIN_INTEGRATION.md)
 

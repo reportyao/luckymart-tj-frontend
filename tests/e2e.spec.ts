@@ -9,7 +9,7 @@ const testUser = {
 }
 
 // 页面对象模式
-class LuckyMartPage {
+class TezBarakatPage {
   constructor(public page: Page) {}
 
   // 导航方法
@@ -136,15 +136,15 @@ class LuckyMartPage {
 }
 
 // 测试套件配置
-test.describe('LuckyMartTJ E2E 测试', () => {
+test.describe('TezBarakatTJ E2E 测试', () => {
   let page: Page
   let context: BrowserContext
-  let luckyMart: LuckyMartPage
+  let luckyMart: TezBarakatPage
 
   test.beforeEach(async ({ page: testPage, context: testContext }) => {
     page = testPage
     context = testContext
-    luckyMart = new LuckyMartPage(page)
+    luckyMart = new TezBarakatPage(page)
 
     // 设置 Telegram WebApp 环境
     await luckyMart.mockTelegramAuth()

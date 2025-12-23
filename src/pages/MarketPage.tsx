@@ -63,7 +63,7 @@ interface MarketListing {
 	      const result = data as { success: boolean; data: any[]; error?: string };
 	
 	      if (!result.success) {
-	        throw new Error(result.error || '获取转售列表失败');
+	        throw new Error(result.error || t('errors.failedToLoad'));
 	      }
 
       // 转换数据格式 (resales 表的字段映射)
@@ -73,7 +73,7 @@ interface MarketListing {
         seller_name: item.seller?.telegram_username || item.seller?.first_name || `User***${item.seller_id?.slice(-3) || '***'}`,
         lottery_entry_id: item.ticket_id,
         lottery_id: item.lottery_id,
-        lottery_title: item.lotteries?.title || item.lotteries?.title_i18n?.zh || '未知商品',
+        lottery_title: item.lotteries?.title || item.lotteries?.title_i18n?.zh || t('common.unknown'),
         lottery_image: item.lotteries?.image_url || '',
         ticket_numbers: item.ticket?.ticket_number?.toString() || '',
         original_price: item.original_price || 0,

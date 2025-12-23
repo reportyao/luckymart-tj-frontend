@@ -4,8 +4,8 @@ test.describe('Home Page', () => {
   test('should load home page successfully', async ({ page }) => {
     await page.goto('/');
     
-    // Check if page title contains LuckyMart
-    await expect(page).toHaveTitle(/LuckyMart/i);
+    // Check if page title contains TezBarakat
+    await expect(page).toHaveTitle(/TezBarakat/i);
   });
 
   test('should display navigation menu', async ({ page }) => {

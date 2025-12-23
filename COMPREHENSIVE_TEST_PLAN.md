@@ -1,4 +1,4 @@
-# LuckyMart 全面测试方案
+# TezBarakat 全面测试方案
 
 ## 📋 目录
 1. [测试概述](#测试概述)
@@ -15,7 +15,7 @@
 ## 测试概述
 
 ### 项目概况
-- **项目名称**: LuckyMart TJ Frontend
+- **项目名称**: TezBarakat TJ Frontend
 - **技术栈**: React 19 + TypeScript + Tailwind CSS 4 + tRPC + Supabase
 - **支持语言**: 中文、俄文、塔吉克语
 - **前端页面**: 36个
@@ -495,8 +495,8 @@
 
 ### 环境配置
 - **开发环境**: http://localhost:3000
-- **测试环境**: staging.luckymart.com
-- **生产环境**: luckymart.com
+- **测试环境**: staging.tezbarakat.com
+- **生产环境**: tezbarakat.com
 
 ---
 

@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
 import WebApp from '@twa-dev/sdk';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 import { useSupabase } from './SupabaseContext';
 import { UserProfile, Wallet } from '../lib/supabase';
 
@@ -68,6 +69,7 @@ interface UserProviderProps {
 }
 
 export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
+  const { t } = useTranslation();
   const { authService, walletService, supabase } = useSupabase();
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null); // 添加 profile 状态
@@ -83,7 +85,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setWallets(fetchedWallets);
     } catch (error) {
       console.error('Failed to fetch wallets:', error);
-      toast.error('获取钱包信息失败');
+      toast.error(t('errors.failedToLoadWallet'));
     }
   }, [walletService]);
 
@@ -188,7 +190,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       console.error('[Auth] 1. Not running in Telegram environment');
       console.error('[Auth] 2. Telegram SDK not loaded properly');
       console.error('[Auth] 3. Mini App not configured correctly');
-      toast.error('无法连接到 Telegram，请确保在 Telegram 中打开');
+      toast.error(t('errors.telegramConnectionFailed'));
       return;
     }
     try {
@@ -220,10 +222,10 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       if (user) {
         await fetchWallets(user.id);
       }
-      toast.success('登录成功！');
+      toast.success(t('auth.loginSuccess'));
     } catch (error: any) {
       console.error('Authentication failed:', error);
-      toast.error(error.message || '登录失败，请重试');
+      toast.error(error.message || t('auth.loginFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -285,7 +287,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     // 清除 localStorage 中的 session
     localStorage.removeItem('custom_session_token');
     localStorage.removeItem('custom_user');
-    toast.success('已退出登录');
+    toast.success(t('auth.loggedOut'));
   }, [authService]);
 
   const value: UserContextType = {

@@ -1,11 +1,11 @@
-# LuckyMart 管理后台集成指南
+# TezBarakat 管理后台集成指南
 
 本项目现已包含完整的用户前端和管理后台。
 
 ## 项目结构
 
 ```
-luckymart-tj-frontend/
+tezbarakat-tj-frontend/
 ├── src/
 │   ├── pages/              # 所有页面（用户页面 + 管理后台页面）
 │   ├── components/         # UI组件（包括DashboardLayout）
@@ -84,7 +84,7 @@ OAUTH_SERVER_URL=https://api.manus.im
 VITE_OAUTH_PORTAL_URL=https://portal.manus.im
 
 # 应用配置
-VITE_APP_TITLE=LuckyMart
+VITE_APP_TITLE=TezBarakat
 VITE_APP_LOGO=https://your-logo-url.com/logo.png
 
 # 数据库

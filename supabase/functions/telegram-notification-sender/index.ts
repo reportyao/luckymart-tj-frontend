@@ -72,11 +72,11 @@ const notificationTemplates = {
   // 推荐奖励通知
   referral_reward: {
     zh: (data: NotificationData) => 
-      `🎁 推荐奖励到账\n\n💰 奖励金额: +${data.referral_amount}元\n👥 来源: 好友邀请奖励\n\n感谢您推广LuckyMartTJ！`,
+      `🎁 推荐奖励到账\n\n💰 奖励金额: +${data.referral_amount}元\n👥 来源: 好友邀请奖励\n\n感谢您推广TezBarakatTJ！`,
     ru: (data: NotificationData) => 
-      `🎁 Реферальная награда получена\n\n💰 Размер награды: +${data.referral_amount} сом\n👥 Источник: Награда за приглашение друзей\n\nСпасибо за продвижение LuckyMartTJ!`,
+      `🎁 Реферальная награда получена\n\n💰 Размер награды: +${data.referral_amount} сом\n👥 Источник: Награда за приглашение друзей\n\nСпасибо за продвижение TezBarakatTJ!`,
     tg: (data: NotificationData) => 
-      `🎁 Ҷоизаи реферал дарёфт\n\n💰 Андозаи ҷоиза: +${data.referral_amount} сомонӣ\n👥 Манбаъ: Ҷоизаи таклифи дӯстон\n\nТашаккур барои таблиғи LuckyMartTJ!`
+      `🎁 Ҷоизаи реферал дарёфт\n\n💰 Андозаи ҷоиза: +${data.referral_amount} сомонӣ\n👥 Манбаъ: Ҷоизаи таклифи дӯстон\n\nТашаккур барои таблиғи TezBarakatTJ!`
   },
 
   // 系统通知

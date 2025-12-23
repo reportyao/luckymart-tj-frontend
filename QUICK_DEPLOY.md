@@ -5,7 +5,7 @@
 在服务器上运行以下命令：
 
 ```bash
-cd /home/root/webapp/luckymart-tj-frontend
+cd /home/root/webapp/tezbarakat-tj-frontend
 ./deploy.sh
 ```
 
@@ -16,7 +16,7 @@ cd /home/root/webapp/luckymart-tj-frontend
 1. ✅ 清理临时文件
 2. ✅ TypeScript 类型检查
 3. ✅ 构建前端
-4. ✅ 部署到 Nginx 目录 (`/var/www/luckymart-frontend`)
+4. ✅ 部署到 Nginx 目录 (`/var/www/tezbarakat-frontend`)
 5. ✅ 设置文件权限
 6. ✅ 重新加载 Nginx
 
@@ -40,18 +40,18 @@ pnpm run deploy
 ## 目录结构
 
 ```
-源代码目录：/home/root/webapp/luckymart-tj-frontend/
-Nginx 目录：/var/www/luckymart-frontend/
+源代码目录：/home/root/webapp/tezbarakat-tj-frontend/
+Nginx 目录：/var/www/tezbarakat-frontend/
 ```
 
 ## 验证部署
 
 ```bash
 # 检查文件是否存在
-ls -lh /var/www/luckymart-frontend/
+ls -lh /var/www/tezbarakat-frontend/
 
 # 查看 index.html
-head -20 /var/www/luckymart-frontend/index.html
+head -20 /var/www/tezbarakat-frontend/index.html
 
 # 检查 Nginx 状态
 systemctl status nginx
@@ -65,15 +65,15 @@ systemctl status nginx
 
 **解决**：
 ```bash
-cd /home/root/webapp/luckymart-tj-frontend
+cd /home/root/webapp/tezbarakat-tj-frontend
 ./deploy.sh
 ```
 
 ### 权限问题
 
 ```bash
-chown -R www-data:www-data /var/www/luckymart-frontend
-chmod -R 755 /var/www/luckymart-frontend
+chown -R www-data:www-data /var/www/tezbarakat-frontend
+chmod -R 755 /var/www/tezbarakat-frontend
 ```
 
 ### Nginx 错误

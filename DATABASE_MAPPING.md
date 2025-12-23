@@ -1,7 +1,7 @@
 # Database Mapping & Architecture Document
 
 > **Last Updated**: 2025-12-16
-> **Project**: LuckyMart Tajikistan
+> **Project**: TezBarakat Tajikistan
 > **Database**: Supabase PostgreSQL
 
 ## Executive Summary

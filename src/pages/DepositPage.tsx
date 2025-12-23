@@ -65,7 +65,7 @@ export default function DepositPage() {
         }
       }
     } catch (error) {
-      console.error('获取支付配置失败:', error)
+      console.error(t('deposit.failedToLoadConfig') + ':', error)
     } finally {
       setLoading(false)
     }
@@ -92,10 +92,10 @@ export default function DepositPage() {
       })
       
       // 显示成功提示
-      alert(t('wallet.imageUploadSuccess') || '图片上传成功')
+      alert(t('wallet.imageUploadSuccess') || t('deposit.imageUploadSuccess'))
     } catch (error) {
       console.error('[DepositPage] Image upload failed:', error)
-      alert(t('wallet.imageUploadFailed') || '图片上传失败，请重试')
+      alert(t('wallet.imageUploadFailed') || t('deposit.imageUploadFailed'))
     } finally {
       setUploading(false)
       // 清空 input，允许重新选择同一文件
@@ -127,7 +127,7 @@ export default function DepositPage() {
 
     // 验证是否上传了凭证
     if (!uploadedImages || uploadedImages.length === 0) {
-      alert(t('wallet.pleaseUploadProof') || '请上传充值凭证')
+      alert(t('wallet.pleaseUploadProof') || t('deposit.pleaseUploadProof'))
       return
     }
 
@@ -156,7 +156,7 @@ export default function DepositPage() {
         }, 2000)
       }
     } catch (error: any) {
-      console.error('提交充值申请失败:', error)
+      console.error(t('deposit.submitFailed') + ':', error)
       alert(error.message || t('wallet.depositRequestFailed'))
     } finally {
       setSubmitting(false)
@@ -310,7 +310,7 @@ export default function DepositPage() {
             {uploading ? (
               <>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-2"></div>
-                <span className="text-sm text-purple-600">{t('common.uploading') || '上传中...'}</span>
+                <span className="text-sm text-purple-600">{t('common.uploading') || t('deposit.uploading')}</span>
               </>
             ) : (
               <>

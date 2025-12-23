@@ -82,7 +82,7 @@ async function getBotInfo(botToken: string) {
 
 // 发送测试消息
 async function sendTestMessage(botToken: string, chatId: number) {
-  const testMessage = `🤖 LuckyMartTJ Bot 测试消息
+  const testMessage = `🤖 TezBarakatTJ Bot 测试消息
 
 ✅ Bot 已成功配置！
 🕐 时间: ${new Date().toLocaleString('zh-CN')}

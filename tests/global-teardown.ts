@@ -182,7 +182,7 @@ function generateHtmlReport(reportData: any) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuckyMartTJ E2E 测试报告</title>
+    <title>TezBarakatTJ E2E 测试报告</title>
     <style>
         body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -226,7 +226,7 @@ function generateHtmlReport(reportData: any) {
 </head>
 <body>
     <div class="container">
-        <h1>🎯 LuckyMartTJ E2E 测试报告</h1>
+        <h1>🎯 TezBarakatTJ E2E 测试报告</h1>
         <p class="timestamp">生成时间: ${new Date(reportData.timestamp).toLocaleString('zh-CN')}</p>
         
         <h2>📊 测试结果统计</h2>
@@ -382,7 +382,7 @@ async function sendTestNotifications() {
     // 例如: Slack, Discord, 邮件, 企业微信等
     
     const testSummary = {
-      project: 'LuckyMartTJ',
+      project: 'TezBarakatTJ',
       environment: process.env.NODE_ENV || 'test',
       timestamp: new Date().toISOString(),
       status: 'completed' // 可以是 'success', 'failed', 'completed'
@@ -411,13 +411,13 @@ async function sendSlackNotification(testSummary: any) {
     const fetch = (await import('node-fetch')).default
     
     const message = {
-      text: `🎯 LuckyMartTJ E2E测试完成`,
+      text: `🎯 TezBarakatTJ E2E测试完成`,
       blocks: [
         {
           type: 'header',
           text: {
             type: 'plain_text',
-            text: '🎯 LuckyMartTJ E2E测试报告'
+            text: '🎯 TezBarakatTJ E2E测试报告'
           }
         },
         {

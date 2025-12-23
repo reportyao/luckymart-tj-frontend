@@ -1,4 +1,4 @@
-# LuckyMart API 测试结果报告
+# TezBarakat API 测试结果报告
 
 ## 测试日期
 2025-11-16

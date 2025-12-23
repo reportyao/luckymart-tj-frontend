@@ -1,4 +1,4 @@
-# LuckyMart TJ Frontend - 部署指南
+# TezBarakat TJ Frontend - 部署指南
 
 ## 前后端分离部署
 
@@ -54,7 +54,7 @@ server {
     server_name yourdomain.com;
 
     location / {
-        root /var/www/luckymart-tj-frontend/dist;
+        root /var/www/tezbarakat-tj-frontend/dist;
         try_files $uri $uri/ /index.html;
     }
 

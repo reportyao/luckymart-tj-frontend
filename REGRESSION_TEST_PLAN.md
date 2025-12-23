@@ -1,4 +1,4 @@
-# LuckyMart TJ Frontend - 功能回归测试计划
+# TezBarakat TJ Frontend - 功能回归测试计划
 
 **测试日期**: 2025-11-17  
 **项目版本**: 1.0.0  

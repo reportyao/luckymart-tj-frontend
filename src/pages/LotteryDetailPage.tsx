@@ -156,7 +156,7 @@ const LotteryDetailPage: React.FC = () => {
   const handlePurchase = async () => {
     // 检查登录状态
     if (!user) {
-      toast.error(t('error.notLoggedIn') || '请先登录');
+      toast.error(t('error.notLoggedIn') || t('errors.pleaseLogin'));
       return;
     }
 
@@ -225,11 +225,11 @@ const LotteryDetailPage: React.FC = () => {
       console.error('Purchase failed:', error);
       
       // 处理特定错误
-      if (error.message?.includes('余额不足')) {
+      if (error.message?.includes(t('errors.insufficientBalance'))) {
         toast.error(t('wallet.insufficientBalance'));
-      } else if (error.message?.includes('已售罄')) {
+      } else if (error.message?.includes(t('lottery.soldOut'))) {
         toast.error(t('lottery.soldOut'));
-      } else if (error.message?.includes('超过限购')) {
+      } else if (error.message?.includes(t('errors.exceedsLimit'))) {
         toast.error(t('lottery.maxQuantityHint', { max: lottery.max_per_user }));
       } else {
         toast.error(error.message || t('error.purchaseFailed'));
@@ -483,7 +483,7 @@ const LotteryDetailPage: React.FC = () => {
                     <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
                       {showoff.user?.telegram_username ? showoff.user.telegram_username[0] : 'U'}
                     </div>
-                    <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || '匿名用户'}</p>
+                    <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || t('errors.anonymousUser')}</p>
                   </div>
                   <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
                   {showoff.images && showoff.images.length > 0 && (

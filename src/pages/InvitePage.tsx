@@ -94,13 +94,13 @@ const InvitePage: React.FC = () => {
   const copyInviteLink = () => {
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
-    toast.success('邀请链接已复制到剪贴板');
+    toast.success(t('invite.linkCopied'));
     setTimeout(() => setCopied(false), 2000);
   };
 
   const copyInviteCode = () => {
     navigator.clipboard.writeText(inviteCode);
-    toast.success('邀请码已复制到剪贴板');
+    toast.success(t('invite.codeCopied'));
   };
 
   const shareInvite = () => {
@@ -114,7 +114,7 @@ const InvitePage: React.FC = () => {
       }).then(() => {
         // 假设分享成功后，调用记录分享事件的函数
         handleShare();
-      }).catch(err => console.log('分享失败:', err));
+      }).catch(err => console.log(t('common.error') + ':', err));
     } else {
       copyInviteLink();
       handleShare(); // 如果不支持原生分享，复制链接后也记录一次

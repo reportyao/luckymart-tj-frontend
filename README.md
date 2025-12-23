@@ -1,4 +1,4 @@
-# LuckyMart TJ - Telegram Mini App 夺宝平台
+# TezBarakat TJ - Telegram Mini App 夺宝平台
 
 一个基于Telegram Mini App的社交夺宝平台前端项目。
 
@@ -172,7 +172,7 @@ MIT License
 ## 📞 联系方式
 
 - GitHub: [@reportyao](https://github.com/reportyao)
-- 项目地址: [luckymart-tj-frontend](https://github.com/reportyao/luckymart-tj-frontend)
+- 项目地址: [tezbarakat-tj-frontend](https://github.com/reportyao/tezbarakat-tj-frontend)
 
 ---
 

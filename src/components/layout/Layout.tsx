@@ -37,7 +37,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   <span className="text-white font-bold text-sm">LM</span>
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold text-gray-900">LuckyMart</h1>
+                  <h1 className="text-lg font-bold text-gray-900">TezBarakat</h1>
                   <p className="text-xs text-gray-500">社交夺宝平台</p>
                 </div>
               </div>
