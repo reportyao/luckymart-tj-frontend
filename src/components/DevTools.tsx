@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { switchTestUser, clearTestUser } from '../utils/mockTelegramWebApp';
 
 /**
@@ -6,6 +7,7 @@ import { switchTestUser, clearTestUser } from '../utils/mockTelegramWebApp';
  * 只在非 Telegram 环境中显示
  */
 export const DevTools: React.FC = () => {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [customUserId, setCustomUserId] = useState('');
 
@@ -26,7 +28,7 @@ export const DevTools: React.FC = () => {
   };
 
   const handleClearUser = () => {
-    if (window.confirm('确定要清除当前测试用户吗?')) {
+    if (window.confirm(t('dev.confirmClearUser'))) {
       clearTestUser();
     }
   };

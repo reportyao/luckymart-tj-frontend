@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
 import {
@@ -34,7 +35,7 @@ interface LotteryInfo {
 }
 
 const MyTicketsPage: React.FC = () => {
-
+  const { t } = useTranslation();
   const params = useParams();
   const navigate = useNavigate();
   const lotteryId = params.id;
@@ -87,7 +88,7 @@ const MyTicketsPage: React.FC = () => {
       setLottery(mockLottery);
       setTickets(mockTickets);
     } catch (error) {
-      toast.error('加载失败');
+      toast.error(t('error.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -99,7 +100,7 @@ const MyTicketsPage: React.FC = () => {
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
-    toast.success('中奖码已复制');
+    toast.success(t('lottery.winningCodeCopied'));
   };
 
   if (isLoading) {

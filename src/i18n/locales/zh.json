@@ -25,7 +25,9 @@
     "upload": "上传",
     "firstName": "名字",
     "lastName": "姓氏",
-    "unknown": "未知"
+    "unknown": "未知",
+    "user": "用户",
+    "aUser": "一位用户"
   },
   "nav": {
     "home": "首页",
@@ -141,7 +143,9 @@
     "verificationData": "验证数据",
     "timestampSum": "时间戳总和",
     "verificationFormula": "验证公式",
-    "verificationDataUnavailable": "验证数据暂不可用"
+    "verificationDataUnavailable": "验证数据暂不可用",
+    "insufficientBalance": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{current}} 幸运币",
+    "winningCodeCopied": "中奖码已复制"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -468,7 +472,8 @@
     "noPrizes": "暂无中奖记录",
     "noPrizesHint": "参与夺宝活动,中奖后即可晒单",
     "winningNumber": "中奖号码",
-    "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)"
+    "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)",
+    "prizeNotFound": "未找到选中的中奖记录"
   },
   "prize": {
     "prizeManagement": "中奖管理",
@@ -543,7 +548,9 @@
     "priceTooLowError": "售价不能低于原价的50%",
     "priceTooHighError": "售价不能高于原价的200%",
     "noResellableTickets": "暂无可转售的票券",
-    "buyToResellHint": "购买票券后可在此转售"
+    "buyToResellHint": "购买票券后可在此转售",
+    "unknownItem": "未知商品",
+    "createFailed": "发布转售失败"
   },
   "bot": {
     "botManagement": "Bot管理",
@@ -725,5 +732,8 @@
     "cssLinksFound": "找到 {{count}} 个 CSS 链接",
     "userLoggedIn": "用户已登录: ID={{id}}, UID={{uid}}",
     "userNotLoggedIn": "用户未登录"
+  },
+  "dev": {
+    "confirmClearUser": "确定要清除当前测试用户吗?"
   }
 }

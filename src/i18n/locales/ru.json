@@ -25,7 +25,9 @@
     "upload": "Загрузить",
     "firstName": "Имя",
     "lastName": "Фамилия",
-    "unknown": "Неизвестно"
+    "unknown": "Неизвестно",
+    "user": "Пользователь",
+    "aUser": "Один пользователь"
   },
   "nav": {
     "home": "Главная",
@@ -129,7 +131,9 @@
     "verificationData": "Данные для проверки",
     "timestampSum": "Сумма временных меток",
     "verificationFormula": "Формула проверки",
-    "verificationDataUnavailable": "Данные для проверки недоступны"
+    "verificationDataUnavailable": "Данные для проверки недоступны",
+    "insufficientBalance": "Недостаточно счастливых монет, требуется {{required}}, текущий баланс {{current}}",
+    "winningCodeCopied": "Выигрышный код скопирован"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",
@@ -447,7 +451,8 @@
     "contentPlaceholderLong": "Поделитесь своей радостью от выигрыша, расскажите о своих впечатлениях... (минимум 10 символов)",
     "noShowoffsYet": "Нет выигрышей",
     "viewAll": "Посмотреть все выигрыши",
-    "recentShowoffs": "Последние выигрыши"
+    "recentShowoffs": "Последние выигрыши",
+    "prizeNotFound": "Запись о выигрыше не найдена"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",
@@ -513,7 +518,9 @@
     "priceTooLowError": "Цена не может быть ниже 50% от исходной",
     "priceTooHighError": "Цена не может быть выше 200% от исходной",
     "noResellableTickets": "Нет билетов для перепродажи",
-    "buyToResellHint": "Купите билеты, чтобы перепродать их здесь"
+    "buyToResellHint": "Купите билеты, чтобы перепродать их здесь",
+    "unknownItem": "Неизвестный товар",
+    "createFailed": "Не удалось опубликовать перепродажу"
   },
   "bot": {
     "botManagement": "Управление ботом",
@@ -702,5 +709,8 @@
     "cssLinksFound": "Найдено {{count}} CSS ссылок",
     "userLoggedIn": "Пользователь вошел: ID={{id}}, UID={{uid}}",
     "userNotLoggedIn": "Пользователь не вошел"
+  },
+  "dev": {
+    "confirmClearUser": "Вы уверены, что хотите удалить текущего тестового пользователя?"
   }
 }

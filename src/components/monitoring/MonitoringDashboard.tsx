@@ -170,7 +170,7 @@ export function MonitoringDashboard() {
 
       setLastUpdate(new Date())
     } catch (error) {
-      console.error('获取监控数据失败:', error)
+      console.error('Failed to load monitoring data:', error)
     } finally {
       setIsLoading(false)
     }

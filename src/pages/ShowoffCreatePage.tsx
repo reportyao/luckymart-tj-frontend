@@ -139,7 +139,7 @@ const ShowoffCreatePage: React.FC = () => {
       // 获取选中的中奖记录
       const selectedLotteryData = winningLotteries.find(l => l.id === selectedLottery);
       if (!selectedLotteryData) {
-        toast.error('未找到选中的中奖记录');
+        toast.error(t('showoff.prizeNotFound'));
         return;
       }
 

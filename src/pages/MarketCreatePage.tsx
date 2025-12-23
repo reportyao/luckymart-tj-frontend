@@ -63,7 +63,7 @@ const MarketCreatePage: React.FC = () => {
       const formattedTickets: MyTicket[] = resellablePrizes.map((prize: any) => ({
         id: prize.id,
         lottery_id: prize.lottery_id,
-        lottery_title: prize.lotteries?.title || '未知商品',
+        lottery_title: prize.lotteries?.title || t('market.unknownItem'),
         lottery_image: prize.lotteries?.image_url || '',
         ticket_numbers: prize.ticket_numbers || '',
         purchase_price: prize.lotteries?.ticket_price || 0,
@@ -74,7 +74,7 @@ const MarketCreatePage: React.FC = () => {
 
       setMyTickets(formattedTickets);
     } catch (error: any) {
-      console.error('获取奖品列表失败:', error);
+      console.error('Failed to load prizes:', error);
       toast.error(error.message || t('error.networkError'));
       // 如果API失败，使用mock数据
       await new Promise(resolve => setTimeout(resolve, 500));

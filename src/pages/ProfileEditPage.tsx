@@ -42,7 +42,7 @@ const ProfileEditPage: React.FC = () => {
       toast.success(t('success.updateSuccess'))
       navigate(-1)
     } catch (error) {
-      console.error('保存失败:', error)
+      console.error('Save failed:', error)
       toast.error(t('error.validationError'))
     } finally {
       setIsSaving(false)

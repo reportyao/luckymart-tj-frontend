@@ -25,7 +25,9 @@
     "upload": "Боргирӣ",
     "firstName": "Ном",
     "lastName": "Насаб",
-    "unknown": "Номаълум"
+    "unknown": "Номаълум",
+    "user": "Корбар",
+    "aUser": "Як корбар"
   },
   "nav": {
     "home": "Асосӣ",
@@ -129,7 +131,9 @@
     "verificationData": "Маълумоти тасдиқӣ",
     "timestampSum": "Маҷмуи тамғоҳои вақт",
     "verificationFormula": "Формулаи тасдиқӣ",
-    "verificationDataUnavailable": "Маълумоти тасдиқӣ дастрас нест"
+    "verificationDataUnavailable": "Маълумоти тасдиқӣ дастрас нест",
+    "insufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
+    "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -447,7 +451,8 @@
     "contentPlaceholderLong": "Шодӣи худро аз бурд мубодила кунед, дар бораи эҳсосҳоятон нақл кунед... (ҳадди ақал 10 аломат)",
     "noShowoffsYet": "Намоишҳо нест",
     "viewAll": "Ҳамаи намоишҳоро дидан",
-    "recentShowoffs": "Намоишҳои охирӣ"
+    "recentShowoffs": "Намоишҳои охирӣ",
+    "prizeNotFound": "Сабти бурди интихобшуда ёфт нашуд"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",
@@ -513,7 +518,9 @@
     "priceTooLowError": "Нарх наметавонад аз 50% нархи аслӣ камтар бошад",
     "priceTooHighError": "Нарх наметавонад аз 200% нархи аслӣ зиёдтар бошад",
     "noResellableTickets": "Билетҳо барои фурӯш нестанд",
-    "buyToResellHint": "Билетҳоро харед, то дар ин ҷо фурӯшед"
+    "buyToResellHint": "Билетҳоро харед, то дар ин ҷо фурӯшед",
+    "unknownItem": "Мол номаълум",
+    "createFailed": "Нашр кардани дубора фурӯшӣ қобил нашуд"
   },
   "bot": {
     "botManagement": "Идораи бот",
@@ -702,5 +709,8 @@
     "cssLinksFound": "{{count}} пайвандҳои CSS ёфт шуд",
     "userLoggedIn": "Корбар ворид шуд: ID={{id}}, UID={{uid}}",
     "userNotLoggedIn": "Корбар ворид нашуд"
+  },
+  "dev": {
+    "confirmClearUser": "Шумо мутмаин ҳастед, ки мехоҳед корбари санҷиширо нест кунед?"
   }
 }

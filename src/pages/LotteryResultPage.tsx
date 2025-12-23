@@ -164,13 +164,13 @@ const LotteryResultPage: React.FC = () => {
     try {
       console.log('开始开奖:', id);
       await lotteryService.drawLottery(id);
-      console.log('开奖成功');
+      console.log('Draw successful');
       
       // 刷新数据
       await fetchLottery();
       toast.success(t('lottery.drawSuccess'));
     } catch (error: any) {
-      console.error('开奖失败:', error);
+      console.error('Draw failed:', error);
       toast.error(t('lottery.drawFailed'));
       
       // 即使失败也刷新，可能已经开奖了

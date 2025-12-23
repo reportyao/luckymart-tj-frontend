@@ -103,7 +103,7 @@ interface MarketListing {
 
       setListings(sorted);
     } catch (error: any) {
-      console.error('获取转售列表失败:', error);
+      console.error('Failed to load resale list:', error);
       toast.error(error.message || t('error.networkError'));
       // 如果API失败，使用mock数据
       await new Promise(resolve => setTimeout(resolve, 500));

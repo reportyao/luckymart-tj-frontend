@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 
 const languages = [
-  { code: 'zh', name: '中文', flag: '🇨🇳' },
+  { code: 'zh', name: '简体中文', flag: '🇨🇳' },
   { code: 'ru', name: 'Русский', flag: '🇷🇺' },
   { code: 'tg', name: 'Тоҷикӣ', flag: '🇹🇯' }
 ]

@@ -107,7 +107,7 @@ const HomePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
 	            <h2 className="text-xl font-bold mb-1">
-	              {t('home.welcome')}, {user.telegram_username || '用户'}! 👋
+	              {t('home.welcome')}, {user.telegram_username || t('common.user')}! 👋
 	            </h2>
             <p className="text-white/80 text-sm">
               {t('home.tryLuck')}

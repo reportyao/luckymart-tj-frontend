@@ -178,7 +178,7 @@ const LotteryDetailPage: React.FC = () => {
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
     
     if (luckyCoinsBalance < totalCost) {
-      toast.error(t('wallet.insufficientLuckyCoins') || `幸运币余额不足，需要 ${totalCost} 幸运币，当前余额 ${luckyCoinsBalance} 幸运币`);
+      toast.error(t('wallet.insufficientLuckyCoins') || `t('lottery.insufficientBalance', { required: totalCost, current: luckyCoinsBalance })`);
       return;
     }
 
@@ -380,11 +380,11 @@ const LotteryDetailPage: React.FC = () => {
                 try {
                   console.log('开始开奖:', id);
                   await lotteryService.drawLottery(id!);
-                  console.log('开奖成功');
+                  console.log('Draw successful');
                   // 刷新页面查看开奖结果
                   await fetchLottery();
                 } catch (error: any) {
-                  console.error('开奖失败:', error);
+                  console.error('Draw failed:', error);
                   // 即使开奖失败也刷新页面，可能已经开奖了
                   await fetchLottery();
                 }
