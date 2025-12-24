@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     }
 
     // 解析请求数据
-    const { lotteryId, quantity, paymentMethod } = await req.json();
+    const { lotteryId, quantity, paymentMethod, session_token } = await req.json();
 
     if (!lotteryId || !quantity || !paymentMethod) {
       throw new Error('Missing required parameters: lotteryId, quantity, paymentMethod');
@@ -32,12 +32,18 @@ Deno.serve(async (req) => {
     }
 
     // ✅ 使用自定义 session token 验证用户
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
+    // 优先从 body 获取，其次从 header 获取
+    let sessionToken = session_token;
+    if (!sessionToken) {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader) {
+        sessionToken = authHeader.replace('Bearer ', '');
+      }
     }
-
-    const sessionToken = authHeader.replace('Bearer ', '');
+    
+    if (!sessionToken) {
+      throw new Error('Missing session token');
+    }
 
     // ✅ 查询 user_sessions 表验证 token
     const sessionResponse = await fetch(

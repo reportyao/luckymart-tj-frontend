@@ -323,10 +323,8 @@ export const lotteryService: any = {
       body: {
         lotteryId,
         quantity: ticketCount,
-        paymentMethod: 'LUCKY_COIN' // 默认使用幸运币支付
-      },
-      headers: {
-        'Authorization': `Bearer ${sessionToken}`
+        paymentMethod: 'LUCKY_COIN', // 默认使用幸运币支付
+        session_token: sessionToken
       }
     });
 
