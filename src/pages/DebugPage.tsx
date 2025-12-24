@@ -125,11 +125,42 @@ export default function DebugPage() {
 
   const copyLogs = () => {
     const text = logs.map(log => `[${log.time}] ${log.type.toUpperCase()}: ${log.message}`).join('\n');
-    navigator.clipboard.writeText(text).then(() => {
-      alert('日志已复制到剪贴板！');
-    }).catch(() => {
-      alert('复制失败');
-    });
+    
+    // 尝试使用现代 Clipboard API
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        alert('日志已复制到剪贴板！');
+      }).catch((err) => {
+        console.error('复制失败:', err);
+        fallbackCopy(text);
+      });
+    } else {
+      // 降级方案：使用传统方法
+      fallbackCopy(text);
+    }
+  };
+
+  const fallbackCopy = (text: string) => {
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const successful = document.execCommand('copy');
+      if (successful) {
+        alert('日志已复制到剪贴板！');
+      } else {
+        alert('复制失败，请手动复制日志内容');
+      }
+    } catch (err) {
+      console.error('复制失败:', err);
+      alert('复制失败，请手动复制日志内容');
+    }
+    document.body.removeChild(textArea);
   };
 
   return (
