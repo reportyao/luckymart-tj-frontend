@@ -116,6 +116,37 @@ const HomePage: React.FC = () => {
         </div>
       </SafeMotion>
 
+      {/* 拼团和夺宝入口 */}
+      <div className="px-4 mt-6">
+        <div className="grid grid-cols-2 gap-4">
+          <Link
+            to="/group-buy"
+            className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                <UsersIcon className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold mb-1">{t('home.groupBuy')}</h3>
+              <p className="text-xs text-white/80 text-center">{t('home.groupBuyDesc')}</p>
+            </div>
+          </Link>
+
+          <Link
+            to="/lottery"
+            className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
+                <TrophyIcon className="w-8 h-8" />
+              </div>
+              <h3 className="text-lg font-bold mb-1">{t('home.lottery')}</h3>
+              <p className="text-xs text-white/80 text-center">{t('home.lotteryDesc')}</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+
 	      {/* 钱包卡片 */}
 	      <div className="px-4 mt-6">
 	        <ReferralBanner />

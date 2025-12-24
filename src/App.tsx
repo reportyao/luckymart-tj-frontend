@@ -32,6 +32,10 @@ const ExchangePage = lazy(() => import("./pages/ExchangePage"))
 const WithdrawPage = lazy(() => import("./pages/WithdrawPage"))
 const NotFoundPage = lazy(() => import("./pages/NotFoundPage"))
 const DebugPage = lazy(() => import("./pages/DebugPage"))
+const GroupBuyListPage = lazy(() => import("./pages/groupbuy/GroupBuyListPage"))
+const GroupBuyDetailPage = lazy(() => import("./pages/groupbuy/GroupBuyDetailPage"))
+const MyGroupBuysPage = lazy(() => import("./pages/groupbuy/MyGroupBuysPage"))
+const GroupBuyResultPage = lazy(() => import("./pages/groupbuy/GroupBuyResultPage"))
 
 function App() {
   return (
@@ -45,6 +49,10 @@ function App() {
               <Route path="/lottery" element={<LotteryPage />} />
               <Route path="/lottery/:id" element={<LotteryDetailPage />} />
               <Route path="/lottery/:id/result" element={<LotteryResultPage />} />
+              <Route path="/group-buy" element={<GroupBuyListPage />} />
+              <Route path="/group-buy/:productId" element={<GroupBuyDetailPage />} />
+              <Route path="/group-buy/result/:sessionId" element={<GroupBuyResultPage />} />
+              <Route path="/my-group-buys" element={<MyGroupBuysPage />} />
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/deposit" element={<DepositPage />} />
               <Route path="/wallet/deposit" element={<DepositPage />} />
