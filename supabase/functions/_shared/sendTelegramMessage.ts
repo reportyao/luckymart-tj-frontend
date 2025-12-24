@@ -42,19 +42,20 @@ async function getUserNotificationInfo(userId: string): Promise<{ chat_id: numbe
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
   )
 
+  // 使用 users 表替代已删除的 profiles 表
   const { data, error } = await supabase
-    .from('profiles')
-    .select('telegram_chat_id, preferred_language')
+    .from('users')
+    .select('telegram_id, preferred_language')
     .eq('id', userId)
     .single()
 
-  if (error || !data || !data.telegram_chat_id) {
+  if (error || !data || !data.telegram_id) {
     console.error(`Failed to get notification info for user ${userId}:`, error)
     return null
   }
 
   return {
-    chat_id: data.telegram_chat_id,
+    chat_id: parseInt(data.telegram_id) || 0, // telegram_id 作为 chat_id
     preferred_language: data.preferred_language || 'zh', // 默认中文
   }
 }

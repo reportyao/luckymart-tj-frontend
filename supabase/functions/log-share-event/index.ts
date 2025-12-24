@@ -41,20 +41,20 @@ serve(async (req) => {
 
     if (logError) throw logError
 
-    // 3. 如果是激活分享，更新 profiles 表中的分享计数
+    // 3. 如果是激活分享，更新 users 表中的分享计数（使用 users 表替代已删除的 profiles 表）
     if (share_type === 'activation') {
-      const { data: profile, error: profileError } = await supabaseClient
-        .from('profiles')
+      const { data: userData, error: userError } = await supabaseClient
+        .from('users')
         .select('activation_share_count')
         .eq('id', userId)
         .single()
 
-      if (profileError) throw profileError
+      if (userError) throw userError
 
-      const newCount = (profile.activation_share_count || 0) + 1
+      const newCount = (userData.activation_share_count || 0) + 1
 
       await supabaseClient
-        .from('profiles')
+        .from('users')
         .update({ activation_share_count: newCount })
         .eq('id', userId)
     }

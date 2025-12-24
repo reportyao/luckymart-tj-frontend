@@ -15,25 +15,25 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. 检查是否首次充值
-    const { data: userProfile, error: profileError } = await supabaseClient
-      .from('profiles')
+    // 1. 检查是否首次充值（使用 users 表替代已删除的 profiles 表）
+    const { data: userData, error: userError } = await supabaseClient
+      .from('users')
       .select('first_deposit_bonus_status')
       .eq('id', user_id)
       .single()
 
-    if (profileError) throw profileError
+    if (userError) throw userError
 
-    if (userProfile.first_deposit_bonus_status !== 'none') {
+    if (userData.first_deposit_bonus_status !== 'none') {
       return new Response(
         JSON.stringify({ success: true, message: 'Already received first deposit bonus' }),
         { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 200 }
       )
     }
 
-    // 2. 获取首充配置
+    // 2. 获取首充配置（使用 system_configs 表）
     const { data: config, error: configError } = await supabaseClient
-      .from('system_config')
+      .from('system_configs')
       .select('value')
       .eq('key', 'first_deposit_bonus')
       .single()
@@ -54,12 +54,12 @@ serve(async (req) => {
       )
     }
 
-    // 4. 发放待激活奖励
+    // 4. 发放待激活奖励（使用 users 表）
     const expireAt = new Date()
     expireAt.setDate(expireAt.getDate() + bonusConfig.expire_days)
 
     const { error: updateError } = await supabaseClient
-      .from('profiles')
+      .from('users')
       .update({
         first_deposit_bonus_amount: bonusConfig.bonus_amount,
         first_deposit_bonus_status: 'pending',

@@ -118,7 +118,7 @@ serve(async (req) => {
     // 查询转售商品信息 (使用 resales 表)
     const { data: resaleItem, error: resaleError } = await supabaseClient
       .from('resales')
-      .select('*, lotteries(*), ticket:tickets!resales_ticket_id_fkey(*)')
+      .select('*, lotteries(*)')
       .eq('id', resale_item_id)
       .single()
 
@@ -240,19 +240,19 @@ serve(async (req) => {
       throw new Error('更新转售商品状态失败: ' + updateResaleError.message)
     }
 
-    // 4. 转移票据所有权
+    // 4. 转移参与记录所有权（使用 lottery_entries 表）
     if (resaleItem.ticket_id) {
-      const { error: updateTicketError } = await supabaseClient
-        .from('tickets')
+      const { error: updateEntryError } = await supabaseClient
+        .from('lottery_entries')
         .update({
           user_id: userId,
           updated_at: new Date().toISOString(),
         })
         .eq('id', resaleItem.ticket_id)
 
-      if (updateTicketError) {
-        console.error('[PurchaseResale] Update ticket owner error:', updateTicketError)
-        // 不回滚，票据转移失败不影响交易
+      if (updateEntryError) {
+        console.error('[PurchaseResale] Update entry owner error:', updateEntryError)
+        // 不回滚，参与记录转移失败不影响交易
       }
     }
 
@@ -278,35 +278,7 @@ serve(async (req) => {
         description: `转售收入 (扣除${fee.toFixed(2)}TJS手续费)`,
       })
 
-    // 7. 记录通用交易表 (兼容)
-    await supabaseClient
-      .from('transactions')
-      .insert([
-        {
-          user_id: userId,
-          type: 'RESALE_PURCHASE',
-          amount: -resaleItem.resale_price,
-          currency: 'TJS',
-          status: 'COMPLETED',
-          balance_before: buyerBalanceBefore,
-          balance_after: buyerBalanceAfter,
-          related_id: resale_item_id,
-          related_type: 'resale',
-          notes: `购买转售商品: ${resaleItem.lotteries?.title || ''}`,
-        },
-        {
-          user_id: resaleItem.seller_id,
-          type: 'RESALE_INCOME',
-          amount: sellerAmount,
-          currency: 'TJS',
-          status: 'COMPLETED',
-          balance_before: sellerBalanceBefore,
-          balance_after: sellerBalanceAfter,
-          related_id: resale_item_id,
-          related_type: 'resale',
-          notes: `转售收入 (扣除5%手续费)`,
-        }
-      ])
+    // 交易记录已通过 wallet_transactions 表记录，不再使用已删除的 transactions 表
 
     console.log('[PurchaseResale] Success!')
 

@@ -113,31 +113,19 @@ serve(async (req) => {
       throw new Error('缺少必要参数：ticket_id, price')
     }
 
-    // 查询票据信息
-    const { data: ticket, error: ticketError } = await supabaseClient
-      .from('tickets')
+    // 查询参与记录信息（统一使用 lottery_entries 表）
+    const { data: entry, error: entryError } = await supabaseClient
+      .from('lottery_entries')
       .select('*, lotteries(*)')
       .eq('id', ticket_id)
       .eq('user_id', userId)
       .single()
-
-    // 如果 tickets 表没找到，尝试 lottery_entries 表
-    let lotteryEntry = null
-    if (ticketError || !ticket) {
-      const { data: entry, error: entryError } = await supabaseClient
-        .from('lottery_entries')
-        .select('*, lotteries(*)')
-        .eq('id', ticket_id)
-        .eq('user_id', userId)
-        .single()
-      
-      if (entryError || !entry) {
-        throw new Error('票据不存在或不属于您')
-      }
-      lotteryEntry = entry
+    
+    if (entryError || !entry) {
+      throw new Error('票据不存在或不属于您')
     }
 
-    const ticketData = ticket || lotteryEntry
+    const ticketData = entry
 
     // 检查是否已经在转售中 (使用 resales 表)
     const { data: existingResale } = await supabaseClient

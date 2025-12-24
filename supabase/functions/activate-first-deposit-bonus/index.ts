@@ -16,27 +16,27 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. 获取用户资料
-    const { data: userProfile, error: profileError } = await supabaseClient
-      .from('profiles')
+    // 1. 获取用户资料（使用 users 表替代已删除的 profiles 表）
+    const { data: userData, error: userError } = await supabaseClient
+      .from('users')
       .select('first_deposit_bonus_status, first_deposit_bonus_amount, first_deposit_bonus_expire_at, activation_share_count, activation_invite_count')
       .eq('id', user_id)
       .single()
 
-    if (profileError) throw profileError
+    if (userError) throw userError
 
     // 2. 检查状态和是否过期
-    if (userProfile.first_deposit_bonus_status !== 'pending') {
+    if (userData.first_deposit_bonus_status !== 'pending') {
       return new Response(
         JSON.stringify({ success: true, message: 'Bonus is not pending or already activated' }),
         { headers: { "Content-Type": "application/json", 'Access-Control-Allow-Origin': '*' }, status: 200 }
       )
     }
 
-    if (new Date(userProfile.first_deposit_bonus_expire_at) < new Date()) {
+    if (new Date(userData.first_deposit_bonus_expire_at) < new Date()) {
       // 标记为过期
       await supabaseClient
-        .from('profiles')
+        .from('users')
         .update({ first_deposit_bonus_status: 'expired' })
         .eq('id', user_id)
       
@@ -48,7 +48,7 @@ serve(async (req) => {
 
     // 3. 获取激活配置
     const { data: config, error: configError } = await supabaseClient
-      .from('system_config')
+      .from('system_configs')
       .select('value')
       .eq('key', 'first_deposit_bonus')
       .single()
@@ -64,14 +64,14 @@ serve(async (req) => {
     
     // 检查分享条件 (分享2群)
     if (bonusConfig.activation_methods.includes('share_2_groups')) {
-      if (userProfile.activation_share_count >= 2) {
+      if (userData.activation_share_count >= 2) {
         isActivated = true
       }
     }
 
     // 检查邀请条件 (邀请1人)
     if (bonusConfig.activation_methods.includes('invite_1_user')) {
-      if (userProfile.activation_invite_count >= 1) {
+      if (userData.activation_invite_count >= 1) {
         isActivated = true
       }
     }
@@ -84,7 +84,7 @@ serve(async (req) => {
     }
 
     // 5. 激活奖励：更新状态并增加夺宝币余额
-    const bonusAmount = userProfile.first_deposit_bonus_amount
+    const bonusAmount = userData.first_deposit_bonus_amount
 
     const { error: rpcError } = await supabaseClient.rpc('add_bonus_balance', {
       p_user_id: user_id,
@@ -99,7 +99,7 @@ serve(async (req) => {
     })
 	
     await supabaseClient
-      .from('profiles')
+      .from('users')
       .update({
         first_deposit_bonus_status: 'activated',
         updated_at: new Date().toISOString()

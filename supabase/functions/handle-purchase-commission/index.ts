@@ -16,9 +16,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. 获取佣金配置
+    // 1. 获取佣金配置（使用 system_configs 表）
     const { data: config } = await supabaseClient
-      .from('system_config')
+      .from('system_configs')
       .select('value')
       .eq('key', 'referral_commission_rates')
       .single()
@@ -26,22 +26,22 @@ serve(async (req) => {
     // 默认值：一级 3%，二级 1%，三级 0.5%
     const rates = config?.value || { level1: 0.03, level2: 0.01, level3: 0.005 }
 
-    // 2. 获取购买用户的推荐关系
-    const { data: userProfile, error: profileError } = await supabaseClient
-      .from('profiles')
+    // 2. 获取购买用户的推荐关系（使用 users 表替代已删除的 profiles 表）
+    const { data: userData, error: userError } = await supabaseClient
+      .from('users')
       .select('invited_by')
       .eq('id', user_id)
       .single()
 
-    if (profileError) throw profileError
+    if (userError) throw userError
 
-    if (!userProfile?.invited_by) {
+    if (!userData?.invited_by) {
       return new Response(JSON.stringify({ message: 'No referrer' }), { status: 200 })
     }
 
     // 3. 计算三级返佣
     const commissions = []
-    let currentUserId = userProfile.invited_by
+    let currentUserId = userData.invited_by
     let level = 1
 
     while (currentUserId && level <= 3) {
@@ -90,9 +90,9 @@ serve(async (req) => {
         level: level
       })
 
-      // 查找下一级
+      // 查找下一级（使用 users 表）
       const { data: nextUser, error: nextUserError } = await supabaseClient
-        .from('profiles')
+        .from('users')
         .select('invited_by')
         .eq('id', currentUserId)
         .single()

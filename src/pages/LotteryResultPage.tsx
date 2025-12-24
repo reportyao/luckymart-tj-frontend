@@ -66,14 +66,7 @@ const LotteryResultPage: React.FC = () => {
     if (!id) return;
 
     try {
-      // 首先尝试从 tickets 表获取
-      const { data: ticketsData, error: ticketsError } = await supabase
-        .from('tickets')
-        .select('*')
-        .eq('lottery_id', id)
-        .order('ticket_number', { ascending: true });
-
-      // 同时也从 lottery_entries 表获取 (某些夺宝使用这个表)
+      // 从 lottery_entries 表获取参与记录（统一使用此表）
       const { data: entriesData, error: entriesError } = await supabase
         .from('lottery_entries')
         .select('*')
@@ -81,32 +74,30 @@ const LotteryResultPage: React.FC = () => {
         .eq('status', 'ACTIVE')
         .order('created_at', { ascending: true });
 
-      // 合并两种数据源 - 优先使用有数据的那个
-      let combinedTickets: any[] = [];
-      
-      if (ticketsData && ticketsData.length > 0) {
-        // 使用 tickets 表数据
-        combinedTickets = ticketsData.map(t => ({
-          id: t.id,
-          user_id: t.user_id,
-          lottery_id: t.lottery_id,
-          ticket_number: t.ticket_number,
-          is_winning: t.is_winning,
-          created_at: t.created_at
-        }));
-      } else if (entriesData && entriesData.length > 0) {
-        // 使用 lottery_entries 表数据
-        combinedTickets = entriesData.map(e => ({
+      if (entriesError) throw entriesError;
+
+      // 转换为统一格式
+      const combinedTickets = (entriesData || []).map(e => {
+        // 解析 numbers 字段（可能是jsonb字符串或数字）
+        let ticketNumber: number;
+        if (typeof e.numbers === 'string') {
+          // 如果是带引号的字符串，去掉引号
+          ticketNumber = parseInt(e.numbers.replace(/"/g, '')) || 0;
+        } else {
+          ticketNumber = Number(e.numbers) || 0;
+        }
+        
+        return {
           id: e.id,
           user_id: e.user_id,
           lottery_id: e.lottery_id,
-          ticket_number: parseInt(String(e.numbers)) || Number(e.numbers) || 0, // 7位数参与码
+          ticket_number: ticketNumber, // 7位数参与码
           is_winning: e.is_winning,
           created_at: e.created_at
-        }));
-      }
+        };
+      });
 
-      console.log('[LotteryResult] Found tickets:', combinedTickets.length, 'from', ticketsData?.length ? 'tickets' : 'lottery_entries');
+      console.log('[LotteryResult] Found entries:', combinedTickets.length);
       setTickets(combinedTickets as any || []);
 
       // 获取所有参与用户
