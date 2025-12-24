@@ -106,7 +106,7 @@ serve(async (req) => {
 
     // 2. 获取一级好友 (referred_by_id = userId)
     const level1Response = await fetch(
-      `${supabaseUrl}/rest/v1/users?referred_by_id=eq.${userId}&select=id,telegram_username,avatar_url,created_at`,
+      `${supabaseUrl}/rest/v1/users?referred_by_id=eq.${userId}&select=id,telegram_username,first_name,last_name,avatar_url,created_at`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -127,7 +127,7 @@ serve(async (req) => {
     let level2Users: any[] = []
     if (level1Ids.length > 0) {
       const level2Response = await fetch(
-        `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level1Ids.join(',')})&select=id,telegram_username,avatar_url,created_at,referred_by_id`,
+        `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level1Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
         {
           headers: {
             'Authorization': `Bearer ${serviceRoleKey}`,
@@ -147,7 +147,7 @@ serve(async (req) => {
     let level3Users: any[] = []
     if (level2Ids.length > 0) {
       const level3Response = await fetch(
-        `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level2Ids.join(',')})&select=id,telegram_username,avatar_url,created_at,referred_by_id`,
+        `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level2Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
         {
           headers: {
             'Authorization': `Bearer ${serviceRoleKey}`,
@@ -171,9 +171,22 @@ serve(async (req) => {
         else if (level2Users.some((l2: any) => l2.id === u.id)) userLevel = 2
         else if (level3Users.some((l3: any) => l3.id === u.id)) userLevel = 3
 
+        // 构建显示名称：优先使用 first_name + last_name，其次 telegram_username，最后使用 User + ID
+        let displayName = '';
+        if (u.first_name || u.last_name) {
+          displayName = [u.first_name, u.last_name].filter(Boolean).join(' ');
+        } else if (u.telegram_username) {
+          displayName = u.telegram_username;
+        } else {
+          displayName = `User${u.id.slice(-4)}`;
+        }
+
         return {
           id: u.id,
-          username: u.telegram_username || `User${u.id.slice(-4)}`,
+          username: displayName,
+          telegram_username: u.telegram_username,
+          first_name: u.first_name,
+          last_name: u.last_name,
           avatar_url: u.avatar_url,
           created_at: u.created_at,
           level: userLevel,

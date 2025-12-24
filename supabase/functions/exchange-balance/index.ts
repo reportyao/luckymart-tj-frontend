@@ -221,21 +221,32 @@ serve(async (req) => {
       console.error('[Exchange] Create exchange record error:', recordError);
     }
 
-    // 创建钱包交易记录
+    // 创建钱包交易记录 (使用正确的枚举值 COIN_EXCHANGE)
+    const txId1 = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    const txId2 = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    
     await supabaseClient.from('wallet_transactions').insert([
       {
+        id: txId1,
         wallet_id: sourceWallet.id,
-        type: 'EXCHANGE_OUT',
+        type: 'COIN_EXCHANGE',
         amount: -amount,
+        balance_before: sourceBalanceBefore,
         balance_after: sourceWallet.balance - amount,
+        status: 'COMPLETED',
         description: `兑换${amount}TJS到幸运币`,
+        processed_at: new Date().toISOString(),
       },
       {
+        id: txId2,
         wallet_id: targetWallet.id,
-        type: 'EXCHANGE_IN',
+        type: 'COIN_EXCHANGE',
         amount: amount,
+        balance_before: targetBalanceBefore,
         balance_after: targetWallet.balance + amount,
+        status: 'COMPLETED',
         description: `从余额兑换${amount}TJS`,
+        processed_at: new Date().toISOString(),
       },
     ])
 

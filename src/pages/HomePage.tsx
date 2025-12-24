@@ -10,6 +10,7 @@ import { LotteryCard } from '../components/lottery/LotteryCard'
 import { SafeMotion } from '../components/SafeMotion'
 import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/react/24/outline'
 import ReferralBanner from '../components/ReferralBanner'
+import BannerCarousel from '../components/BannerCarousel'
 import toast from 'react-hot-toast'
 
 const HomePage: React.FC = () => {
@@ -107,7 +108,7 @@ const HomePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div>
 	            <h2 className="text-xl font-bold mb-1">
-	              {t('home.welcome')}, {user.telegram_username || t('common.user')}! 👋
+	              {t('home.welcome')}, {user.first_name || user.telegram_username || t('common.user')}! 👋
 	            </h2>
             <p className="text-white/80 text-sm">
               {t('home.tryLuck')}
@@ -152,48 +153,9 @@ const HomePage: React.FC = () => {
 	        <ReferralBanner />
       </div>
 
-      {/* 快速统计 */}
+      {/* Banner广告位 */}
       <div className="px-4 mt-6">
-        <div className="grid grid-cols-3 gap-4">
-          <SafeMotion
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl p-4 text-center shadow-sm"
-          >
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <TrophyIcon className="w-5 h-5 text-blue-600" />
-            </div>
-            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
-            <p className="text-xs text-gray-500">{t('home.winCount')}</p>
-          </SafeMotion>
-
-          <SafeMotion
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="bg-white rounded-xl p-4 text-center shadow-sm"
-          >
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <StarIcon className="w-5 h-5 text-green-600" />
-            </div>
-            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
-            <p className="text-xs text-gray-500">{t('home.participationCount')}</p>
-          </SafeMotion>
-
-          <SafeMotion
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl p-4 text-center shadow-sm"
-          >
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-2">
-              <UsersIcon className="w-5 h-5 text-purple-600" />
-            </div>
-            <p className="text-lg font-bold text-gray-900">{inviteStats?.total_invites || 0}</p>
-            <p className="text-xs text-gray-500">{t('home.inviteFriends')}</p>
-          </SafeMotion>
-        </div>
+        <BannerCarousel />
       </div>
 
 	      {/* 热门夺宝 */}
