@@ -43,7 +43,8 @@ const MarketCreatePage: React.FC = () => {
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
         {
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${localStorage.getItem('custom_session_token') || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
           },
         }
       );
@@ -162,7 +163,8 @@ const MarketCreatePage: React.FC = () => {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${localStorage.getItem('custom_session_token') || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
