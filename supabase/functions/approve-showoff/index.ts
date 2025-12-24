@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-id',
 }
 
 serve(async (req) => {
@@ -17,20 +17,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     )
 
-    // 获取当前用户
+    // 获取管理员认证
+    const adminId = req.headers.get('x-admin-id')
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
+    
+    let adminUserId: string | null = null
+    
+    // 方式1: 通过 x-admin-id 头部认证（管理后台使用）
+    if (adminId) {
+      const { data: adminUser, error: adminError } = await supabaseClient
+        .from('admin_users')
+        .select('id, status')
+        .eq('id', adminId)
+        .single()
+      
+      if (adminError || !adminUser || adminUser.status !== 'active') {
+        throw new Error('管理员认证失败')
+      }
+      adminUserId = adminUser.id
+    }
+    // 方式2: 通过 Supabase Auth token 认证（兼容旧方式）
+    else if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
+      
+      if (!userError && user) {
+        adminUserId = user.id
+      }
+    }
+    
+    if (!adminUserId) {
       throw new Error('未授权')
     }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-
-    if (userError || !user) {
-      throw new Error('未授权')
-    }
-
-    // TODO: 验证用户是否为管理员
 
     const { showoffId, action, rewardCoins, adminNote } = await req.json()
 

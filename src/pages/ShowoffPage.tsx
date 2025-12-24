@@ -8,10 +8,10 @@ import { ShowoffWithDetails } from '../lib/supabase';
 import {
   PhotoIcon,
   HeartIcon,
-
   ShareIcon,
   PlusIcon,
-  TrophyIcon
+  TrophyIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
@@ -219,6 +219,18 @@ const ShowoffPage: React.FC = () => {
 	                        />
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* 幸运币奖励显示 */}
+                {showoff.reward_coins && showoff.reward_coins > 0 && (
+                  <div className="px-4 pb-3">
+                    <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200">
+                      <SparklesIcon className="w-5 h-5 text-amber-500" />
+                      <span className="text-sm font-medium text-amber-700">
+                        {t('showoff.earnedCoins', { coins: showoff.reward_coins })}
+                      </span>
+                    </div>
                   </div>
                 )}
 

@@ -89,7 +89,12 @@ const WalletPage: React.FC = () => {
       'COIN_EXCHANGE': t('wallet.transactionType.coinExchange'),
       'MARKET_PURCHASE': t('wallet.transactionType.marketPurchase'),
       'MARKET_SALE': t('wallet.transactionType.marketSale'),
-      'ADMIN_ADJUSTMENT': t('wallet.transactionType.adminAdjustment')
+      'ADMIN_ADJUSTMENT': t('wallet.transactionType.adminAdjustment'),
+      'SHOWOFF_REWARD': t('wallet.transactionType.showoffReward'),
+      'FRIEND_CASHBACK': t('wallet.transactionType.friendCashback'),
+      'GROUP_BUY_PURCHASE': t('wallet.transactionType.groupBuyPurchase'),
+      'GROUP_BUY_REFUND': t('wallet.transactionType.groupBuyRefund'),
+      'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize')
     }
     return typeMap[type] || type
   }
@@ -110,11 +115,21 @@ const WalletPage: React.FC = () => {
       case 'WITHDRAWAL':
         return <ArrowUpIcon className="w-5 h-5 text-red-600" />
       case 'LOTTERY_PURCHASE':
+      case 'GROUP_BUY_PURCHASE':
         return <ArrowUpIcon className="w-5 h-5 text-orange-600" />
       case 'LOTTERY_PRIZE':
+      case 'GROUP_BUY_PRIZE':
         return <ArrowDownIcon className="w-5 h-5 text-green-600" />
+      case 'LOTTERY_REFUND':
+      case 'GROUP_BUY_REFUND':
+        return <ArrowDownIcon className="w-5 h-5 text-blue-600" />
       case 'COIN_EXCHANGE':
         return <ArrowPathIcon className="w-5 h-5 text-blue-600" />
+      case 'SHOWOFF_REWARD':
+        return <ArrowDownIcon className="w-5 h-5 text-yellow-600" />
+      case 'REFERRAL_BONUS':
+      case 'FRIEND_CASHBACK':
+        return <ArrowDownIcon className="w-5 h-5 text-purple-600" />
       default:
         return <ClockIcon className="w-5 h-5 text-gray-600" />
     }

@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-id',
 }
 
 /**
@@ -21,27 +21,45 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 获取用户信息
+    // 获取管理员认证
+    const adminId = req.headers.get('x-admin-id')
     const authHeader = req.headers.get('authorization')
-    if (!authHeader) {
-      throw new Error('No authorization header')
+    
+    let adminUserId: string | null = null
+    
+    // 方式1: 通过 x-admin-id 头部认证（管理后台使用）
+    if (adminId) {
+      const { data: adminUser, error: adminError } = await supabaseClient
+        .from('admin_users')
+        .select('id, status')
+        .eq('id', adminId)
+        .single()
+      
+      if (adminError || !adminUser || adminUser.status !== 'active') {
+        throw new Error('管理员认证失败')
+      }
+      adminUserId = adminUser.id
     }
-
-    const token = authHeader.replace('Bearer ', '')
-    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
-
-    if (authError || !user) {
-      throw new Error('Invalid token')
+    // 方式2: 通过 Supabase Auth token 认证（兼容旧方式）
+    else if (authHeader) {
+      const token = authHeader.replace('Bearer ', '')
+      const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token)
+      
+      if (!authError && user) {
+        // 检查是否是管理员
+        const { data: userData } = await supabaseClient
+          .from('users')
+          .select('role')
+          .eq('telegram_id', user.id)
+          .single()
+        
+        if (userData?.role === 'admin') {
+          adminUserId = user.id
+        }
+      }
     }
-
-    // 检查是否是管理员
-    const { data: userData, error: userError } = await supabaseClient
-      .from('users')
-      .select('role')
-      .eq('telegram_id', user.id)
-      .single()
-
-    if (userError || !userData || userData.role !== 'admin') {
+    
+    if (!adminUserId) {
       throw new Error('Unauthorized: Admin access required')
     }
 
@@ -93,7 +111,7 @@ serve(async (req) => {
         shipping_id: shippingId,
         status,
         description: adminNotes || `状态更新为: ${status}`,
-        operator_id: user.id,
+        operator_id: adminUserId,
         created_at: new Date().toISOString()
       })
 

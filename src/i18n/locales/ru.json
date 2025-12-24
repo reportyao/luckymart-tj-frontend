@@ -250,7 +250,12 @@
       "coinExchange": "Обмен баланса",
       "marketPurchase": "Покупка на рынке",
       "marketSale": "Продажа на рынке",
-      "adminAdjustment": "Корректировка администратора"
+      "adminAdjustment": "Корректировка администратора",
+      "showoffReward": "Награда за отзыв",
+      "friendCashback": "Кэшбэк от друга",
+      "groupBuyPurchase": "Участие в групповой покупке",
+      "groupBuyRefund": "Возврат за групповую покупку",
+      "groupBuyPrize": "Выигрыш в групповой покупке"
     },
     "transactionStatus": {
       "completed": "Завершено",
@@ -459,7 +464,8 @@
     "noShowoffsYet": "Нет выигрышей",
     "viewAll": "Посмотреть все выигрыши",
     "recentShowoffs": "Последние выигрыши",
-    "prizeNotFound": "Запись о выигрыше не найдена"
+    "prizeNotFound": "Запись о выигрыше не найдена",
+    "earnedCoins": "Получено {{coins}} счастливых монет"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",

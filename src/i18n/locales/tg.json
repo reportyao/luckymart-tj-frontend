@@ -250,7 +250,12 @@
       "coinExchange": "Ивази баланс",
       "marketPurchase": "Харид дар бозор",
       "marketSale": "Фурӯш дар бозор",
-      "adminAdjustment": "Танзими маъмур"
+      "adminAdjustment": "Танзими маъмур",
+      "showoffReward": "Мукофоти намоиш",
+      "friendCashback": "Баргашти пул аз дӯст",
+      "groupBuyPurchase": "Иштирок дар хариди гурӯҳӣ",
+      "groupBuyRefund": "Баргашти пул барои хариди гурӯҳӣ",
+      "groupBuyPrize": "Бурд дар хариди гурӯҳӣ"
     },
     "transactionStatus": {
       "completed": "Анҷом ёфт",
@@ -459,7 +464,8 @@
     "noShowoffsYet": "Намоишҳо нест",
     "viewAll": "Ҳамаи намоишҳоро дидан",
     "recentShowoffs": "Намоишҳои охирӣ",
-    "prizeNotFound": "Сабти бурди интихобшуда ёфт нашуд"
+    "prizeNotFound": "Сабти бурди интихобшуда ёфт нашуд",
+    "earnedCoins": "{{coins}} тангаи хушбахт гирифта шуд"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",

@@ -45,6 +45,7 @@ export type ShowoffWithDetails = Showoff & {
   is_liked: boolean;
   likes_count: number;
   lottery_title?: string;
+  reward_coins?: number;
 };
 
 
@@ -311,86 +312,63 @@ export const lotteryService: any = {
    * @param ticketCount 购买数量
    */
   async purchaseTickets(lotteryId: string, ticketCount: number, userId?: string): Promise<Order> {
-    // 如果没有传入 userId，则从 auth 中获取
-    let finalUserId = userId;
-    if (!finalUserId) {
-      const user = await authService.getCurrentUser();
-      if (!user) throw new Error('用户未登录');
-      finalUserId = user.id;
+    // 从 localStorage 获取 session token
+    const sessionToken = localStorage.getItem('custom_session_token');
+    if (!sessionToken) {
+      throw new Error('用户未登录');
     }
 
-    // 调用 Supabase 存储过程 place_lottery_order
-    const { data, error } = await supabase.rpc('place_lottery_order' as any, {
-      p_user_id: finalUserId,
-      p_lottery_id: lotteryId,
-      p_ticket_count: ticketCount
+    // 调用 lottery-purchase Edge Function
+    const { data, error } = await supabase.functions.invoke('lottery-purchase', {
+      body: {
+        lotteryId,
+        quantity: ticketCount,
+        paymentMethod: 'LUCKY_COIN' // 默认使用幸运币支付
+      },
+      headers: {
+        'Authorization': `Bearer ${sessionToken}`
+      }
     });
 
     if (error) {
       console.error('Lottery purchase failed:', error);
       throw new Error(`购买失败: ${error.message}`);
     }
-    
-    // 存储过程返回的是 order_id，我们需要获取完整的订单信息
-    const orderId = data as string;
-    const { data: orderData, error: orderError } = await supabase
-      .from('orders')
-      .select('*')
-      .eq('id', orderId)
-      .single();
 
-    if (orderError) {
-      console.error('Failed to fetch order details after purchase:', orderError);
-      throw new Error(`购买成功但获取订单详情失败: ${orderError.message}`);
+    if (data?.error) {
+      throw new Error(`购买失败: ${data.error}`);
     }
 
-    return orderData;
+    return data?.order || data;
   },
 
   /**
    * 获取用户的夺宝订单记录
    * @param userId 用户 ID
    */
-  async getLotteryResult(lotteryId: string): Promise<any> {
+    async getLotteryResult(lotteryId: string): Promise<any> {
     const { data, error } = await supabase
-	      .from('lottery_results')
+      .from('lottery_results')
       .select(
         `
-	          *,
-	          winner:tickets!lottery_results_winner_id_fkey (
-	            ticket_number,
-	            user_id,
-	            profiles:users (telegram_username, avatar_url)
-	          ),
-	          lottery:lotteries (
-	            title,
-	            image_url,
-	            ticket_price,
-	            currency,
-	            total_tickets,
-	            sold_tickets
-	          ),
-	          my_tickets:tickets!tickets_lottery_id_fkey (
-	            ticket_number,
-	            user_id
-	          )
+          *,
+          lottery:lotteries (
+            title,
+            image_url,
+            ticket_price,
+            currency,
+            total_tickets,
+            sold_tickets
+          )
         `
       )
-      .eq('lottery_id', lotteryId) // 修正：应使用 lottery_id
+      .eq('lottery_id', lotteryId)
       .single()
-
     if (error) {
       throw new Error(error.message)
     }
-
-		    // 确保 winner 字段是一个对象而不是数组
-		    const result = {
-		      ...data,
-		      winner: data.winner ? (data.winner as any)[0] : null
-		    }
-	
-		    return result
-	  },
+    return data
+  },
 
   /**
    * 执行开奖

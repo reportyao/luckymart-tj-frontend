@@ -261,7 +261,12 @@
       "coinExchange": "余额兑换",
       "marketPurchase": "市场购买",
       "marketSale": "市场出售",
-      "adminAdjustment": "管理员调整"
+      "adminAdjustment": "管理员调整",
+      "showoffReward": "晒单奖励",
+      "friendCashback": "好友消费返现",
+      "groupBuyPurchase": "参与拼团",
+      "groupBuyRefund": "拼团退款",
+      "groupBuyPrize": "拼团中奖"
     },
     "transactionStatus": {
       "completed": "已完成",
@@ -480,7 +485,8 @@
     "noPrizesHint": "参与夺宝活动,中奖后即可晒单",
     "winningNumber": "中奖号码",
     "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)",
-    "prizeNotFound": "未找到选中的中奖记录"
+    "prizeNotFound": "未找到选中的中奖记录",
+    "earnedCoins": "获得 {{coins}} 幸运币奖励"
   },
   "prize": {
     "prizeManagement": "中奖管理",
