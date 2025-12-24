@@ -29,19 +29,19 @@ serve(async (req) => {
     // 2. 获取购买用户的推荐关系（使用 users 表替代已删除的 profiles 表）
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
-      .select('invited_by')
+      .select('referred_by_id')
       .eq('id', user_id)
       .single()
 
     if (userError) throw userError
 
-    if (!userData?.invited_by) {
+    if (!userData?.referred_by_id) {
       return new Response(JSON.stringify({ message: 'No referrer' }), { status: 200 })
     }
 
     // 3. 计算三级返佣
     const commissions = []
-    let currentUserId = userData.invited_by
+    let currentUserId = userData.referred_by_id
     let level = 1
 
     while (currentUserId && level <= 3) {
@@ -93,13 +93,13 @@ serve(async (req) => {
       // 查找下一级（使用 users 表）
       const { data: nextUser, error: nextUserError } = await supabaseClient
         .from('users')
-        .select('invited_by')
+        .select('referred_by_id')
         .eq('id', currentUserId)
         .single()
 
       if (nextUserError) throw nextUserError
 
-      currentUserId = nextUser?.invited_by
+      currentUserId = nextUser?.referred_by_id
       level++
     }
 

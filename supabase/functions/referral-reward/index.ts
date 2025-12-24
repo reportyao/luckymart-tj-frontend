@@ -29,11 +29,11 @@ serve(async (req) => {
     // 获取用户信息
     const { data: user, error: userError } = await supabaseClient
       .from('users')
-      .select('invited_by')
+      .select('referred_by_id')
       .eq('id', user_id)
       .single()
 
-    if (userError || !user || !user.invited_by) {
+    if (userError || !user || !user.referred_by_id) {
       return new Response(
         JSON.stringify({ success: true, message: 'No referrer found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -54,7 +54,7 @@ serve(async (req) => {
     }> = []
 
     // 递归查找上级推荐人(最多3级)
-    let currentReferrerId = user.invited_by
+    let currentReferrerId = user.referred_by_id
     let level = 1
 
     while (currentReferrerId && level <= 3) {
@@ -69,11 +69,11 @@ serve(async (req) => {
       // 查找下一级推荐人
       const { data: referrer } = await supabaseClient
         .from('users')
-        .select('invited_by')
+        .select('referred_by_id')
         .eq('id', currentReferrerId)
         .single()
 
-      currentReferrerId = referrer?.invited_by
+      currentReferrerId = referrer?.referred_by_id
       level++
     }
 
