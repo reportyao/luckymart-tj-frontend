@@ -346,7 +346,7 @@ Deno.serve(async (req) => {
                             lottery_title: lottery.title,
                             winning_number: winningNumbers[0],
                             prize_amount: winnerInfo.prize_amount,
-                            ticket_number: entry.ticket_number
+                            ticket_number: entry.numbers // 7位数开奖码
                         },
                         priority: 1, // 高优先级
                         created_at: new Date().toISOString()
@@ -363,7 +363,7 @@ Deno.serve(async (req) => {
                             lottery_id: lotteryId,
                             lottery_title: lottery.title,
                             winning_number: winningNumbers[0],
-                            ticket_number: entry.ticket_number
+                            ticket_number: entry.numbers // 7位数开奖码
                         },
                         priority: 2, // 中等优先级
                         created_at: new Date().toISOString()

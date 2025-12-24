@@ -106,7 +106,7 @@ async function checkLotteryDrawReminders(supabase: any): Promise<number> {
         draw_time,
         lottery_entries(
           user_id,
-          ticket_number,
+          numbers,
           users(telegram_id)
         )
       `)
@@ -143,7 +143,7 @@ async function checkLotteryDrawReminders(supabase: any): Promise<number> {
                 data: {
                   lottery_id: lottery.id,
                   lottery_title: lottery.title,
-                  ticket_number: entry.ticket_number
+                  ticket_number: entry.numbers // 7位数开奖码
                 },
                 priority: 2
               });

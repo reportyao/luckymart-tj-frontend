@@ -12,12 +12,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { formatDateTime } from '../lib/utils';
+import { supabase } from '../lib/supabase';
+import { useUser } from '../contexts/UserContext';
 import toast from 'react-hot-toast';
 
 interface Ticket {
   id: string;
-  winning_code: string;
-  purchase_time: string;
+  numbers: string; // 7位数开奖码
+  created_at: string;
   is_winning: boolean;
 }
 
@@ -30,14 +32,15 @@ interface LotteryInfo {
   total_tickets: number;
   sold_tickets: number;
   status: string;
-  winning_code?: string;
-  winner_id?: string;
+  winning_numbers?: string[]; // 中奖号码数组
+  winning_user_id?: string;
 }
 
 const MyTicketsPage: React.FC = () => {
   const { t } = useTranslation();
   const params = useParams();
   const navigate = useNavigate();
+  const { user } = useUser();
   const lotteryId = params.id;
 
   const [lottery, setLottery] = useState<LotteryInfo | null>(null);
@@ -45,54 +48,60 @@ const MyTicketsPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadTickets = useCallback(async () => {
+    if (!lotteryId || !user?.id) {
+      setIsLoading(false);
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // TODO: 调用实际API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 获取夺宝信息
+      const { data: lotteryData, error: lotteryError } = await supabase
+        .from('lotteries')
+        .select('*')
+        .eq('id', lotteryId)
+        .single();
 
-      // 模拟数据
-      const mockLottery: LotteryInfo = {
-        id: lotteryId || '1',
-        period: '20250107001',
-        title: 'iPhone 15 Pro Max 256GB',
-        image_url: 'https://images.unsplash.com/photo-1696446702183-cbd0674e0c99?w=400',
-        ticket_price: 10,
-        total_tickets: 100,
-        sold_tickets: 100,
-        status: 'COMPLETED',
-        winning_code: 'LM-20250107001-00045',
-        winner_id: 'user123'
-      };
+      if (lotteryError) throw lotteryError;
 
-      const mockTickets: Ticket[] = [
-        {
-          id: '1',
-          winning_code: 'LM-20250107001-00012',
-          purchase_time: new Date().toISOString(),
-          is_winning: false
-        },
-        {
-          id: '2',
-          winning_code: 'LM-20250107001-00045',
-          purchase_time: new Date().toISOString(),
-          is_winning: true
-        },
-        {
-          id: '3',
-          winning_code: 'LM-20250107001-00078',
-          purchase_time: new Date().toISOString(),
-          is_winning: false
-        }
-      ];
+      // 获取用户的参与记录（lottery_entries表）
+      const { data: entriesData, error: entriesError } = await supabase
+        .from('lottery_entries')
+        .select('id, numbers, created_at, is_winning')
+        .eq('lottery_id', lotteryId)
+        .eq('user_id', user.id)
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true });
 
-      setLottery(mockLottery);
-      setTickets(mockTickets);
+      if (entriesError) throw entriesError;
+
+      setLottery({
+        id: lotteryData.id,
+        period: lotteryData.period || lotteryData.id.slice(0, 8),
+        title: lotteryData.title,
+        image_url: lotteryData.image_url,
+        ticket_price: lotteryData.ticket_price,
+        total_tickets: lotteryData.total_tickets,
+        sold_tickets: lotteryData.sold_tickets,
+        status: lotteryData.status,
+        winning_numbers: lotteryData.winning_numbers,
+        winning_user_id: lotteryData.winning_user_id,
+      });
+
+      setTickets(entriesData?.map(entry => ({
+        id: entry.id,
+        numbers: entry.numbers as string, // 7位数开奖码
+        created_at: entry.created_at,
+        is_winning: entry.is_winning || false,
+      })) || []);
+
     } catch (error) {
+      console.error('加载参与记录失败:', error);
       toast.error(t('error.loadFailed'));
     } finally {
       setIsLoading(false);
     }
-  }, [lotteryId]);
+  }, [lotteryId, user?.id, t]);
 
   useEffect(() => {
     loadTickets();
@@ -101,6 +110,12 @@ const MyTicketsPage: React.FC = () => {
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast.success(t('lottery.winningCodeCopied'));
+  };
+
+  // 格式化7位数开奖码显示
+  const formatWinningCode = (code: string) => {
+    // 确保是7位数
+    return code.padStart(7, '0');
   };
 
   if (isLoading) {
@@ -120,6 +135,7 @@ const MyTicketsPage: React.FC = () => {
   }
 
   const hasWinning = tickets.some(t => t.is_winning);
+  const winningCode = lottery.winning_numbers?.[0] || '';
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
@@ -132,7 +148,7 @@ const MyTicketsPage: React.FC = () => {
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold flex-1">我的中奖码</h1>
+          <h1 className="text-lg font-bold flex-1">我的参与码</h1>
           <TicketIcon className="w-6 h-6 text-blue-600" />
         </div>
       </div>
@@ -164,14 +180,14 @@ const MyTicketsPage: React.FC = () => {
             </div>
           </div>
 
-          {lottery.status === 'COMPLETED' && lottery.winning_code && (
+          {lottery.status === 'COMPLETED' && winningCode && (
             <div className="mt-4 pt-4 border-t">
               <div className="flex items-center justify-between p-4 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-xl">
                 <div className="flex items-center space-x-3">
                   <TrophyIcon className="w-6 h-6 text-yellow-600" />
                   <div>
                     <p className="text-xs text-gray-600">中奖码</p>
-                    <p className="text-lg font-bold text-yellow-700">{lottery.winning_code}</p>
+                    <p className="text-lg font-bold text-yellow-700 font-mono">{formatWinningCode(winningCode)}</p>
                   </div>
                 </div>
                 {hasWinning && (
@@ -189,7 +205,7 @@ const MyTicketsPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{tickets.length}</p>
-            <p className="text-sm text-gray-600 mt-1">我的中奖码</p>
+            <p className="text-sm text-gray-600 mt-1">我的参与码</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-yellow-600">{tickets.filter(t => t.is_winning).length}</p>
@@ -197,9 +213,9 @@ const MyTicketsPage: React.FC = () => {
           </div>
         </div>
 
-        {/* 中奖码列表 */}
+        {/* 参与码列表 */}
         <div className="space-y-3">
-          <h3 className="text-lg font-bold px-2">中奖码列表</h3>
+          <h3 className="text-lg font-bold px-2">参与码列表</h3>
           {tickets.map((ticket, index) => (
             <motion.div
               key={ticket.id}
@@ -217,7 +233,7 @@ const MyTicketsPage: React.FC = () => {
                     <span className={`text-lg font-mono font-bold ${
                       ticket.is_winning ? 'text-yellow-700' : 'text-gray-900'
                     }`}>
-                      {ticket.winning_code}
+                      {formatWinningCode(ticket.numbers)}
                     </span>
                     {ticket.is_winning && (
                       <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
@@ -227,11 +243,11 @@ const MyTicketsPage: React.FC = () => {
                   </div>
                   <div className="flex items-center space-x-2 text-xs text-gray-500">
                     <ClockIcon className="w-4 h-4" />
-                    <span>{formatDateTime(ticket.purchase_time)}</span>
+                    <span>{formatDateTime(ticket.created_at)}</span>
                   </div>
                 </div>
                 <button
-                  onClick={() => copyCode(ticket.winning_code)}
+                  onClick={() => copyCode(ticket.numbers)}
                   className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
                 >
                   复制

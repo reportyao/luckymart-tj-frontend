@@ -209,7 +209,12 @@ const LotteryResultPage: React.FC = () => {
 
   const isSoldOut = lottery.status === 'SOLD_OUT';
   const isCompleted = lottery.status === 'COMPLETED';
-  const winningTicketNumber = lottery.winning_ticket_number;
+  // 获取中奖号码 - 优先使用 winning_numbers 数组中的7位数开奖码
+  const winningTicketNumber = lottery.winning_numbers?.[0] 
+    ? (typeof lottery.winning_numbers[0] === 'string' 
+        ? parseInt(lottery.winning_numbers[0]) 
+        : lottery.winning_numbers[0])
+    : lottery.winning_ticket_number;
   const winningTicket = tickets.find(t => t.ticket_number === winningTicketNumber);
   const winningUser = participants.find(p => p.user.id === lottery.winning_user_id);
   const isCurrentUserWinner = currentUser?.id === lottery.winning_user_id;
@@ -426,7 +431,7 @@ const LotteryResultPage: React.FC = () => {
                   `}
                 >
                   <span className="break-all text-center leading-tight">
-                    {ticket.ticket_number}
+                    {String(ticket.ticket_number).padStart(7, '0')}
                   </span>
                 </motion.div>
               );
@@ -602,7 +607,7 @@ const LotteryResultPage: React.FC = () => {
                       }
                     `}
                   >
-                    <span className="break-all">#{ticket.ticket_number}</span>
+                    <span className="break-all">#{String(ticket.ticket_number).padStart(7, '0')}</span>
                   </div>
                 );
               })}

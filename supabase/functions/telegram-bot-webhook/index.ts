@@ -191,10 +191,9 @@ const commands: BotCommand[] = [
           .from('lottery_entries')
           .select(`
             id,
-            ticket_number,
+            numbers,
             status,
-            purchase_price,
-            lotteries(title, status, draw_time)
+            lotteries(title, status, draw_time, ticket_price)
           `)
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
@@ -220,9 +219,9 @@ const commands: BotCommand[] = [
         entries.forEach((entry, index) => {
           const statusEmoji = entry.status === 'WON' ? '🏆' : 
                              entry.status === 'LOST' ? '❌' : '⏳';
-          response += `${statusEmoji} #${entry.ticket_number}\n`;
+          response += `${statusEmoji} #${entry.numbers}\n`; // 7位数开奖码
           response += `📊 ${entry.lotteries.title}\n`;
-          response += `💰 ${entry.purchase_price}元\n\n`;
+          response += `💰 ${entry.lotteries?.ticket_price || 0}元\n\n`;
         });
 
         return response;
