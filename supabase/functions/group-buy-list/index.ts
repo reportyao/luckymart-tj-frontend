@@ -3,7 +3,35 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://owyitxwxmxwbkqgzffdw.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93eWl0eHd4bXh3YmtxZ3pmZmR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjQyMzg1MywiZXhwIjoyMDc3OTk5ODUzfQ.Yqu0OluUMtVC73H_bHC6nCqEtjllzhz2HfltbffF_HA';
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
+
+// Helper function to create response with CORS headers
+function createResponse(data: any, status: number = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
+
+// Helper function to ensure product data is properly formatted
+function mapProductToFrontend(product: any) {
+  return {
+    ...product,
+    // group_size is the database field name, keep it as is
+  };
+}
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const { type, product_id, session_id, user_id } = await req.json();
@@ -11,10 +39,7 @@ Deno.serve(async (req) => {
     if (type === 'product') {
       // 获取单个商品信息
       if (!product_id) {
-        return new Response(JSON.stringify({ success: false, error: 'Product ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: 'Product ID required' }, 400);
       }
 
       const { data: product, error } = await supabase
@@ -25,19 +50,10 @@ Deno.serve(async (req) => {
         .single();
 
       if (error) {
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: error.message }, 500);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, data: product }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return createResponse({ success: true, data: mapProductToFrontend(product) });
     } else if (type === 'products') {
       // 获取所有活跃的拼团商品
       const { data: products, error } = await supabase
@@ -47,10 +63,7 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: error.message }, 500);
       }
 
       // 为每个商品获取活跃的拼团会话数量
@@ -58,33 +71,24 @@ Deno.serve(async (req) => {
         products.map(async (product) => {
           const { data: sessions } = await supabase
             .from('group_buy_sessions')
-            .select('id, current_participants, max_participants, expires_at')
+            .select('id, current_participants, group_size, expires_at')
             .eq('product_id', product.id)
             .eq('status', 'ACTIVE')
             .gt('expires_at', new Date().toISOString());
 
           return {
-            ...product,
+            ...mapProductToFrontend(product),
             active_sessions: sessions || [],
             active_sessions_count: sessions?.length || 0,
           };
         })
       );
 
-      return new Response(
-        JSON.stringify({ success: true, data: productsWithSessions }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return createResponse({ success: true, data: productsWithSessions });
     } else if (type === 'sessions') {
       // 获取指定商品的所有活跃拼团会话
       if (!product_id) {
-        return new Response(JSON.stringify({ success: false, error: 'Product ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: 'Product ID required' }, 400);
       }
 
       const { data: sessions, error } = await supabase
@@ -100,26 +104,14 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: error.message }, 500);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, data: sessions }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return createResponse({ success: true, data: sessions });
     } else if (type === 'session-result') {
       // 获取拼团会话的开奖结果
       if (!session_id) {
-        return new Response(JSON.stringify({ success: false, error: 'Session ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: 'Session ID required' }, 400);
       }
 
       const { data: result, error: resultError } = await supabase
@@ -133,40 +125,55 @@ Deno.serve(async (req) => {
         .single();
 
       if (resultError) {
-        return new Response(JSON.stringify({ success: false, error: resultError.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: resultError.message }, 500);
       }
 
-      // 获取所有参与者
-      const { data: participants, error: participantsError } = await supabase
+      // 获取所有参与者订单
+      const { data: orders, error: ordersError } = await supabase
         .from('group_buy_orders')
-        .select('user_id, username, order_number, created_at')
+        .select('user_id, order_number, order_timestamp, created_at')
         .eq('session_id', session_id)
         .order('created_at', { ascending: true });
 
-      if (participantsError) {
-        return new Response(JSON.stringify({ success: false, error: participantsError.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+      if (ordersError) {
+        return createResponse({ success: false, error: ordersError.message }, 500);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, data: { ...result, participants } }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      // 获取参与者的用户信息
+      const userIds = orders?.map(o => o.user_id) || [];
+      const { data: users } = await supabase
+        .from('users')
+        .select('telegram_id, telegram_username, first_name, last_name')
+        .in('telegram_id', userIds);
+
+      // 合并用户信息到订单
+      const participants = orders?.map(order => {
+        const user = users?.find(u => u.telegram_id === order.user_id);
+        return {
+          user_id: order.user_id,
+          username: user?.telegram_username || user?.first_name || `User ${order.user_id.slice(-4)}`,
+          order_number: order.order_number,
+          created_at: order.created_at,
+        };
+      }) || [];
+
+      // 获取中奖者用户名
+      const winner = users?.find(u => u.telegram_id === result.winner_id);
+      const winnerUsername = winner?.telegram_username || winner?.first_name || `User ${result.winner_id?.slice(-4) || 'Unknown'}`;
+
+      return createResponse({ 
+        success: true, 
+        data: { 
+          ...result, 
+          winner_username: winnerUsername,
+          participants,
+          product: result.product ? mapProductToFrontend(result.product) : null,
+        } 
+      });
     } else if (type === 'my-orders') {
       // 获取用户的拼团订单
       if (!user_id) {
-        return new Response(JSON.stringify({ success: false, error: 'User ID required' }), {
-          status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: 'User ID required' }, 400);
       }
 
       const { data: orders, error } = await supabase
@@ -180,33 +187,21 @@ Deno.serve(async (req) => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        return new Response(JSON.stringify({ success: false, error: error.message }), {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        });
+        return createResponse({ success: false, error: error.message }, 500);
       }
 
-      return new Response(
-        JSON.stringify({ success: true, data: orders }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      // Map products to frontend format
+      const mappedOrders = orders?.map(order => ({
+        ...order,
+        product: order.product ? mapProductToFrontend(order.product) : null,
+      })) || [];
+
+      return createResponse({ success: true, data: mappedOrders });
     } else {
-      return new Response(JSON.stringify({ success: false, error: 'Invalid type parameter' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return createResponse({ success: false, error: 'Invalid type parameter' }, 400);
     }
   } catch (error) {
     console.error('Group buy list error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return createResponse({ success: false, error: error.message }, 500);
   }
 });

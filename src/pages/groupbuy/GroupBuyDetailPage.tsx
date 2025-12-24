@@ -19,7 +19,7 @@ interface GroupBuyProduct {
   image_url: string;
   original_price: number;
   price_per_person: number;
-  group_size: number;
+  group_size: number; // 数据库字段名
   timeout_hours: number;
   product_type: string;
 }

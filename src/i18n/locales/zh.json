@@ -27,7 +27,9 @@
     "lastName": "姓氏",
     "unknown": "未知",
     "user": "用户",
-    "aUser": "一位用户"
+    "aUser": "一位用户",
+    "processing": "处理中...",
+    "pleaseLogin": "请先登录"
   },
   "nav": {
     "home": "首页",
@@ -801,6 +803,27 @@
     "noResult": "未找到开奖结果",
     "drawResult": "开奖结果",
     "drawCompleted": "开奖完成",
-    "betterLuckNextTime": "下次一定有好运！"
+    "betterLuckNextTime": "下次一定有好运！",
+    "subtitle": "多人拼团，一人中奖",
+    "people": "人",
+    "activeGroups": "进行中的拼团",
+    "joinGroup": "加入拼团",
+    "startGroup": "开团",
+    "productNotFound": "商品不存在",
+    "joinExisting": "加入已有拼团",
+    "noActiveGroups": "暂无进行中的拼团",
+    "beFirst": "成为第一个开团的人",
+    "startNewGroup": "开新团",
+    "shareText": "快来和我一起拼团吧！",
+    "peopleGroup": "人团",
+    "hoursLimit": "小时限时",
+    "rules": {
+      "title": "拼团规则",
+      "rule1": "每人支付商品价格的1/N参与拼团",
+      "rule2": "限时内满员自动开奖",
+      "rule3": "随机抽取1人获得商品",
+      "rule4": "未中奖用户获得幸运币补偿"
+    },
+    "pleaseLogin": "请先登录"
   }
 }

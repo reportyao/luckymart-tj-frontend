@@ -11,13 +11,13 @@ interface GroupBuyProduct {
   image_url: string;
   original_price: number;
   price_per_person: number;
-  group_size: number;
+  group_size: number; // 数据库字段名
   timeout_hours: number;
   active_sessions_count: number;
   active_sessions: Array<{
     id: string;
     current_participants: number;
-    max_participants: number;
+    group_size: number; // 数据库字段名
     expires_at: string;
   }>;
 }
@@ -160,7 +160,7 @@ export default function GroupBuyListPage() {
                           className="flex-shrink-0 bg-orange-50 rounded-lg px-3 py-2 text-xs"
                         >
                           <div className="font-medium text-orange-600">
-                            {session.current_participants}/{session.max_participants}
+                            {session.current_participants}/{session.group_size}
                           </div>
                         </div>
                       ))}

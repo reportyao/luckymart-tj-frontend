@@ -18,9 +18,9 @@ interface GroupBuyResult {
   id: string;
   session_id: string;
   winner_id: string;
-  winner_username: string;
-  draw_time: string;
-  timestamp_sum: string;
+  winner_username: string | null;
+  created_at: string;
+  timestamp_sum: number;
   winning_index: number;
   session: {
     id: string;
@@ -197,9 +197,9 @@ export default function GroupBuyResultPage() {
             </div>
             <div>
               <p className="font-bold text-gray-800">{result.winner_username}</p>
-              <p className="text-sm text-gray-600">
-                {t('groupBuy.drawTime')}: {new Date(result.draw_time).toLocaleString()}
-              </p>
+                <p className="text-sm text-gray-600">
+                  {t('groupBuy.drawTime')}: {new Date(result.created_at).toLocaleString()}
+                </p>
             </div>
           </div>
         </div>

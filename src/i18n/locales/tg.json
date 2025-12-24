@@ -27,7 +27,9 @@
     "lastName": "Насаб",
     "unknown": "Номаълум",
     "user": "Корбар",
-    "aUser": "Як корбар"
+    "aUser": "Як корбар",
+    "processing": "Коркард...",
+    "pleaseLogin": "Лутфан ворид шавед"
   },
   "nav": {
     "home": "Асосӣ",
@@ -778,6 +780,27 @@
     "noResult": "Натиҷа ёфт нашуд",
     "drawResult": "Натиҷаи бозӣ",
     "drawCompleted": "Бозӣ анҷом ёфт",
-    "betterLuckNextTime": "Бори оянда бахт ба шумо!"
+    "betterLuckNextTime": "Бори оянда бахт ба шумо!",
+    "subtitle": "Хариди гурӯҳӣ, як ғолиб",
+    "people": "наф.",
+    "activeGroups": "Гурӯҳҳои фаъол",
+    "joinGroup": "Хамроҳ шудан",
+    "startGroup": "Сохтан",
+    "productNotFound": "Мол ёфт нашуд",
+    "joinExisting": "Ба гурӯҳ ҳамроҳ шудан",
+    "noActiveGroups": "Гурӯҳҳои фаъол нест",
+    "beFirst": "Аввалин бошед",
+    "startNewGroup": "Гурӯҳ сохтан",
+    "shareText": "Ба хариди гурӯҳӣ ҳамроҳ шавед!",
+    "peopleGroup": "наф. гурӯҳ",
+    "hoursLimit": "соат мӯҳлат",
+    "rules": {
+      "title": "Қоидаҳо",
+      "rule1": "Ҳар кас 1/N нарх мепардозад",
+      "rule2": "Бозӣ ҳангоми пур шудан",
+      "rule3": "1 ғолиб молро мегирад",
+      "rule4": "Дигарон — товони тангаҳо"
+    },
+    "pleaseLogin": "Лутфан ворид шавед"
   }
 }

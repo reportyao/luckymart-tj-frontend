@@ -24,7 +24,7 @@ interface GroupBuyOrder {
     session_code: string;
     status: string;
     current_participants: number;
-    max_participants: number;
+    group_size: number; // 数据库字段名
     expires_at: string;
     winner_id: string | null;
   };
@@ -222,7 +222,7 @@ export default function MyGroupBuysPage() {
                     <div className="flex items-center gap-2">
                       <Users className="w-4 h-4" />
                       <span>
-                        {order.session.current_participants}/{order.session.max_participants}
+                        {order.session.current_participants}/{order.session.group_size}
                       </span>
                     </div>
                     <div className="text-orange-600 font-bold">₽{order.amount}</div>
