@@ -6,10 +6,39 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '
 Deno.serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const url = new URL(req.url);
-    const type = url.searchParams.get('type') || 'products'; // products, sessions, my-orders
+    const { type, product_id, session_id, user_id } = await req.json();
 
-    if (type === 'products') {
+    if (type === 'product') {
+      // 获取单个商品信息
+      if (!product_id) {
+        return new Response(JSON.stringify({ success: false, error: 'Product ID required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: product, error } = await supabase
+        .from('group_buy_products')
+        .select('*')
+        .eq('id', product_id)
+        .eq('status', 'ACTIVE')
+        .single();
+
+      if (error) {
+        return new Response(JSON.stringify({ success: false, error: error.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, data: product }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+    } else if (type === 'products') {
       // 获取所有活跃的拼团商品
       const { data: products, error } = await supabase
         .from('group_buy_products')
@@ -51,8 +80,7 @@ Deno.serve(async (req) => {
       );
     } else if (type === 'sessions') {
       // 获取指定商品的所有活跃拼团会话
-      const productId = url.searchParams.get('product_id');
-      if (!productId) {
+      if (!product_id) {
         return new Response(JSON.stringify({ success: false, error: 'Product ID required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -66,7 +94,7 @@ Deno.serve(async (req) => {
           product:group_buy_products(*),
           orders:group_buy_orders(id, user_id, created_at)
         `)
-        .eq('product_id', productId)
+        .eq('product_id', product_id)
         .eq('status', 'ACTIVE')
         .gt('expires_at', new Date().toISOString())
         .order('created_at', { ascending: false });
@@ -85,10 +113,56 @@ Deno.serve(async (req) => {
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    } else if (type === 'session-result') {
+      // 获取拼团会话的开奖结果
+      if (!session_id) {
+        return new Response(JSON.stringify({ success: false, error: 'Session ID required' }), {
+          status: 400,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      const { data: result, error: resultError } = await supabase
+        .from('group_buy_results')
+        .select(`
+          *,
+          session:group_buy_sessions(*),
+          product:group_buy_products(*)
+        `)
+        .eq('session_id', session_id)
+        .single();
+
+      if (resultError) {
+        return new Response(JSON.stringify({ success: false, error: resultError.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      // 获取所有参与者
+      const { data: participants, error: participantsError } = await supabase
+        .from('group_buy_orders')
+        .select('user_id, username, order_number, created_at')
+        .eq('session_id', session_id)
+        .order('created_at', { ascending: true });
+
+      if (participantsError) {
+        return new Response(JSON.stringify({ success: false, error: participantsError.message }), {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true, data: { ...result, participants } }),
+        {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     } else if (type === 'my-orders') {
       // 获取用户的拼团订单
-      const userId = url.searchParams.get('user_id');
-      if (!userId) {
+      if (!user_id) {
         return new Response(JSON.stringify({ success: false, error: 'User ID required' }), {
           status: 400,
           headers: { 'Content-Type': 'application/json' },
@@ -102,7 +176,7 @@ Deno.serve(async (req) => {
           session:group_buy_sessions(*),
           product:group_buy_products(*)
         `)
-        .eq('user_id', userId)
+        .eq('user_id', user_id)
         .order('created_at', { ascending: false });
 
       if (error) {
