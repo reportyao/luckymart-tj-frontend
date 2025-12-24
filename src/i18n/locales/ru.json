@@ -230,6 +230,7 @@
     "withdrawRequestSubmitted": "Запрос на вывод отправлен",
     "pleaseUploadProof": "Пожалуйста, загрузите подтверждение платежа",
     "imageUploadFailed": "Не удалось загрузить изображение",
+    "imageUploadSuccess": "Изображение успешно загружено",
     "luckyCoin": "Монета удачи",
     "exchangeRules": "Правила обмена",
     "instantExchange": "Мгновенный обмен",

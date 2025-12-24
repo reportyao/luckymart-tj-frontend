@@ -241,6 +241,7 @@
     "withdrawRequestSubmitted": "提现申请已提交",
     "pleaseUploadProof": "请上传充值凭证",
     "imageUploadFailed": "图片上传失败",
+    "imageUploadSuccess": "图片上传成功",
     "luckyCoin": "幸运币",
     "exchangeRules": "兑换规则",
     "instantExchange": "即时兑换",

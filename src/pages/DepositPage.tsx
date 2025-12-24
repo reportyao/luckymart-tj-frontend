@@ -92,10 +92,10 @@ export default function DepositPage() {
       })
       
       // 显示成功提示
-      alert(t('wallet.imageUploadSuccess') || t('deposit.imageUploadSuccess'))
+      alert(t('deposit.imageUploadSuccess'))
     } catch (error) {
       console.error('[DepositPage] Image upload failed:', error)
-      alert(t('wallet.imageUploadFailed') || t('deposit.imageUploadFailed'))
+      alert(t('deposit.imageUploadFailed'))
     } finally {
       setUploading(false)
       // 清空 input，允许重新选择同一文件
