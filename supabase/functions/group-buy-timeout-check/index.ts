@@ -3,7 +3,27 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://owyitxwxmxwbkqgzffdw.supabase.co';
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im93eWl0eHd4bXh3YmtxZ3pmZmR3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MjQyMzg1MywiZXhwIjoyMDc3OTk5ODUzfQ.Yqu0OluUMtVC73H_bHC6nCqEtjllzhz2HfltbffF_HA';
 
+// CORS headers
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+};
+
+// Helper function to create response with CORS headers
+function createResponse(data: any, status: number = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...corsHeaders },
+  });
+}
+
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -15,20 +35,11 @@ Deno.serve(async (req) => {
       .lt('expires_at', new Date().toISOString());
 
     if (sessionsError) {
-      return new Response(JSON.stringify({ success: false, error: sessionsError.message }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return createResponse({ success: false, error: sessionsError.message }, 500);
     }
 
     if (!timeoutSessions || timeoutSessions.length === 0) {
-      return new Response(
-        JSON.stringify({ success: true, message: 'No timeout sessions found', processed: 0 }),
-        {
-          status: 200,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      return createResponse({ success: true, message: 'No timeout sessions found', processed: 0 });
     }
 
     let processedCount = 0;
@@ -53,45 +64,58 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // 给所有参与用户退款（退回余额）
+        // Refund all participants (return to wallet balance)
         for (const order of orders) {
-          // 获取用户当前余额
-          const { data: user } = await supabase
-            .from('users')
-            .select('balance')
-            .eq('telegram_id', order.user_id)
+          // Get user's wallet
+          const { data: wallet } = await supabase
+            .from('wallets')
+            .select('*')
+            .eq('user_id', order.user_id)
+            .eq('currency', 'TJS')
             .single();
 
-          if (user) {
-            const newBalance = (user.balance || 0) + order.amount;
+          if (wallet) {
+            const refundAmount = Number(order.amount);
+            const newBalance = Number(wallet.balance) + refundAmount;
 
-            // 更新用户余额
+            // Update wallet balance
             await supabase
-              .from('users')
-              .update({ balance: newBalance })
-              .eq('telegram_id', order.user_id);
+              .from('wallets')
+              .update({ 
+                balance: newBalance,
+                updated_at: new Date().toISOString(),
+                version: wallet.version + 1
+              })
+              .eq('id', wallet.id)
+              .eq('version', wallet.version);
 
-            // 记录钱包交易
+            // Create wallet transaction record
+            const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             await supabase.from('wallet_transactions').insert({
-              user_id: order.user_id,
-              type: 'GROUP_BUY_REFUND_BALANCE',
-              amount: order.amount,
+              id: transactionId,
+              wallet_id: wallet.id,
+              type: 'GROUP_BUY_TIMEOUT_REFUND',
+              amount: refundAmount,
+              balance_before: Number(wallet.balance),
               balance_after: newBalance,
-              description: `拼团超时退款`,
+              status: 'COMPLETED',
+              description: `拼团超时退款 - ${session.session_code}`,
               reference_id: order.id,
+              processed_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
             });
 
-            // 更新订单状态
+            // Update order status
             await supabase
               .from('group_buy_orders')
               .update({
                 status: 'REFUNDED',
-                refund_amount: order.amount,
+                refund_amount: refundAmount,
                 refunded_at: new Date().toISOString(),
               })
               .eq('id', order.id);
 
-            // 发送Telegram通知
+            // Send Telegram notification
             try {
               await supabase.functions.invoke('send-telegram-notification', {
                 body: {
@@ -99,7 +123,7 @@ Deno.serve(async (req) => {
                   type: 'GROUP_BUY_TIMEOUT',
                   data: {
                     session_code: session.session_code,
-                    refund_amount: order.amount,
+                    refund_amount: refundAmount,
                   },
                 },
               });
@@ -115,26 +139,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(
-      JSON.stringify({
-        success: true,
-        message: `Processed ${processedCount} timeout sessions`,
-        processed: processedCount,
-        total: timeoutSessions.length,
-      }),
-      {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return createResponse({
+      success: true,
+      message: `Processed ${processedCount} timeout sessions`,
+      processed: processedCount,
+      total: timeoutSessions.length,
+    });
   } catch (error) {
     console.error('Group buy timeout check error:', error);
-    return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return createResponse({ success: false, error: error.message }, 500);
   }
 });
