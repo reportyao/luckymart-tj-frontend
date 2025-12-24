@@ -57,9 +57,9 @@ serve(async (req) => {
           last_name,
           avatar_url
         ),
-        ticket:tickets!resales_ticket_id_fkey (
+        entry:lottery_entries!resales_ticket_id_fkey (
           id,
-          ticket_number
+          numbers
         )
       `)
       .range(offset, offset + limit - 1)
