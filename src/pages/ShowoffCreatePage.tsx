@@ -38,38 +38,76 @@ const ShowoffCreatePage: React.FC = () => {
   const fetchWinningLotteries = useCallback(async () => {
     setIsLoadingLotteries(true);
     try {
-      // TODO: 调用实际API获取中奖彩票
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // 1. 获取用户的所有中奖记录
+      const sessionToken = localStorage.getItem('session_token');
+      if (!sessionToken) {
+        throw new Error('未登录');
+      }
 
-      const mockLotteries: WinningLottery[] = [
+      const prizesResponse = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
         {
-          id: '1',
-          lottery_id: '6f40be8d-4ad8-4705-bedc-3efeb85e552a', // 真实的 lottery UUID
-          lottery_title: 'iPhone 15 Pro Max 256GB 夺宝',
-          prize_name: 'iPhone 15 Pro Max 256GB',
-          prize_image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400',
-          winning_number: '001',
-          draw_time: new Date().toISOString()
-        },
-        {
-          id: '2',
-          lottery_id: '3d600f86-e251-4bc5-9bd5-af40f07e8ac3', // 真实的 lottery UUID
-          lottery_title: 'MacBook Pro 14" M3 夺宝',
-          prize_name: 'MacBook Pro 14" M3',
-          prize_image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400',
-          winning_number: '015',
-          draw_time: new Date(Date.now() - 86400000).toISOString()
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ session_token: sessionToken }),
         }
-      ];
+      );
 
-      setWinningLotteries(mockLotteries);
+      if (!prizesResponse.ok) {
+        throw new Error('获取中奖记录失败');
+      }
+
+      const prizesData = await prizesResponse.json();
+      if (!prizesData.success) {
+        throw new Error(prizesData.error || '获取中奖记录失败');
+      }
+
+      const prizes = prizesData.data || [];
+
+      // 2. 获取已发布的晒单（通过 prize_id 关联）
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      
+      const showoffsResponse = await fetch(
+        `${supabaseUrl}/rest/v1/showoffs?user_id=eq.${user?.id}&select=prize_id`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+        }
+      );
+
+      const publishedShowoffs = showoffsResponse.ok ? await showoffsResponse.json() : [];
+      const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id));
+
+      // 3. 过滤掉已发布晒单的中奖记录，并按中奖时间从新到旧排序
+      const availablePrizes = prizes
+        .filter((prize: any) => !publishedPrizeIds.has(prize.id))
+        .sort((a: any, b: any) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime());
+
+      // 4. 转换为 WinningLottery 格式
+      const winningLotteries: WinningLottery[] = availablePrizes.map((prize: any) => ({
+        id: prize.id,
+        lottery_id: prize.lottery_id,
+        lottery_title: prize.lottery?.title?.zh || '未知夺宝',
+        prize_name: prize.lottery?.title?.zh || '未知奖品',
+        prize_image: prize.lottery?.image_url || 'https://via.placeholder.com/400',
+        winning_number: prize.winning_number || '',
+        draw_time: prize.won_at,
+      }));
+
+      setWinningLotteries(winningLotteries);
     } catch (error) {
       console.error('Failed to fetch winning lotteries:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoadingLotteries(false);
     }
-  }, [t]);
+  }, [t, user]);
 
   useEffect(() => {
     fetchWinningLotteries();
