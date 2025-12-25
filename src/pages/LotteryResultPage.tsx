@@ -349,12 +349,12 @@ const LotteryResultPage: React.FC = () => {
                 <div className="flex items-center justify-center gap-3 mt-4">
                   <img
                     src={winningUser.user.avatar_url || '/default-avatar.png'}
-                    alt={winningUser.user.telegram_username || 'Winner'}
+                    alt={winningUser.user.telegram_username || winningUser.user.first_name || 'Winner'}
                     className="w-12 h-12 rounded-full border-4 border-white"
                   />
                   <div className={`text-left ${isCurrentUserWinner ? 'text-white' : 'text-gray-900'}`}>
                     <p className="font-semibold">
-                      {winningUser.user.telegram_username || winningUser.user.telegram_id}
+                      {winningUser.user.telegram_username || winningUser.user.first_name || winningUser.user.telegram_id}
                     </p>
                     <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-600'}`}>
                       {t('lottery.winner')}
@@ -366,7 +366,7 @@ const LotteryResultPage: React.FC = () => {
 
             {lottery.draw_time && (
               <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-500'}`}>
-                {t('lottery.drawTime')}: {toTajikistanTime(lottery.draw_time)} (UTC+5)
+                {t('lottery.drawTime')}: {toTajikistanTime(lottery.draw_time)}
               </p>
             )}
           </motion.div>
@@ -383,31 +383,27 @@ const LotteryResultPage: React.FC = () => {
             <UserGroupIcon className="w-5 h-5" />
             {t('lottery.allParticipants')} ({participants.length})
           </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          <div className="flex flex-wrap gap-2">
             {participants.map((participant) => (
               <div
                 key={participant.user.id}
-                className={`flex flex-col items-center p-2 rounded-lg transition ${
-                  participant.user.id === lottery.winning_user_id
-                    ? 'bg-gradient-to-br from-yellow-100 to-orange-100 ring-2 ring-yellow-400'
-                    : 'bg-gray-50 hover:bg-gray-100'
-                }`}
+                className="flex flex-col items-center"
               >
                 <div className="relative">
                   <img
                     src={participant.user.avatar_url || '/default-avatar.png'}
-                    alt={participant.user.telegram_username || 'User'}
-                    className="w-10 h-10 rounded-full mb-1"
+                    alt={participant.user.telegram_username || participant.user.first_name || 'User'}
+                    className={`w-8 h-8 rounded-full ${participant.user.id === lottery.winning_user_id ? 'ring-2 ring-yellow-400' : ''}`}
                   />
                   {participant.user.id === lottery.winning_user_id && (
-                    <TrophyIcon className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-1" />
+                    <TrophyIcon className="w-4 h-4 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-0.5" />
                   )}
                 </div>
-                <p className="text-sm font-medium text-gray-900 text-center truncate w-full">
-                  {participant.user.telegram_username || participant.user.telegram_id}
+                <p className="text-xs text-gray-700 text-center truncate max-w-[60px]">
+                  {participant.user.telegram_username || participant.user.first_name || participant.user.telegram_id}
                 </p>
-                <p className="text-xs text-gray-500">
-                  {participant.ticketCount} {t('lottery.tickets')}
+                <p className="text-[10px] text-gray-400">
+                  {participant.ticketCount}{t('lottery.tickets')}
                 </p>
               </div>
             ))}
