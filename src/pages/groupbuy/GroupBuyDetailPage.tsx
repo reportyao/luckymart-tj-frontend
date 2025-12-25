@@ -194,9 +194,22 @@ export default function GroupBuyDetailPage() {
     if (!product) return;
 
     // Check balance from wallets - use BALANCE type wallet
-    const mainWallet = wallets.find((w) => w.type === 'BALANCE' || w.currency === 'TJS');
-    const balance = mainWallet?.balance || 0;
-    if (balance < product.price_per_person) {
+    console.log('[GroupBuy] Checking balance, wallets:', wallets);
+    const mainWallet = wallets.find((w) => w.type === 'BALANCE');
+    console.log('[GroupBuy] Main wallet:', mainWallet);
+    const balance = Number(mainWallet?.balance || 0);
+    const pricePerPerson = Number(product.price_per_person);
+    console.log('[GroupBuy] Balance:', balance, 'Price:', pricePerPerson);
+    
+    if (!mainWallet) {
+      // 如果没有找到钱包，尝试刷新钱包数据
+      console.log('[GroupBuy] Wallet not found, trying to refresh...');
+      alert(t('groupBuy.walletNotFound') || '钱包数据加载中，请稍后重试');
+      return;
+    }
+    
+    if (balance < pricePerPerson) {
+      console.log('[GroupBuy] Insufficient balance:', balance, '<', pricePerPerson);
       alert(t('groupBuy.insufficientBalance'));
       return;
     }
