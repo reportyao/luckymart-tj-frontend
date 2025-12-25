@@ -387,7 +387,7 @@ const LotteryResultPage: React.FC = () => {
             {participants.map((participant) => (
               <div
                 key={participant.user.id}
-                className={`flex flex-col items-center p-3 rounded-xl transition ${
+                className={`flex flex-col items-center p-2 rounded-lg transition ${
                   participant.user.id === lottery.winning_user_id
                     ? 'bg-gradient-to-br from-yellow-100 to-orange-100 ring-2 ring-yellow-400'
                     : 'bg-gray-50 hover:bg-gray-100'
@@ -397,7 +397,7 @@ const LotteryResultPage: React.FC = () => {
                   <img
                     src={participant.user.avatar_url || '/default-avatar.png'}
                     alt={participant.user.telegram_username || 'User'}
-                    className="w-12 h-12 rounded-full mb-2"
+                    className="w-10 h-10 rounded-full mb-1"
                   />
                   {participant.user.id === lottery.winning_user_id && (
                     <TrophyIcon className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-1" />
@@ -519,7 +519,7 @@ const LotteryResultPage: React.FC = () => {
                             <span className="text-gray-900 break-all">{timestampSum}</span>
                           </div>
                           <div className="flex flex-col py-1">
-                            <span className="text-gray-500 mb-1">{t('lottery.formula')}</span>
+                            <span className="text-gray-500 mb-1">验证公式</span>
                             <span className="text-blue-600 font-bold break-words">{formula}</span>
                           </div>
                         </>

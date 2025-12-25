@@ -33,12 +33,12 @@ export const BottomNavigation: React.FC = () => {
       icon: HomeIcon,
       activeIcon: HomeIconSolid,
     },
-    {
-      name: t('nav.lottery'),
-      path: '/lottery',
-      icon: SparklesIcon,
-      activeIcon: SparklesIconSolid,
-    },
+    // {
+    //   name: t('nav.lottery'),
+    //   path: '/lottery',
+    //   icon: SparklesIcon,
+    //   activeIcon: SparklesIconSolid,
+    // },
     {
       name: t('showoff.showoff'),
       path: '/showoff',
