@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { referralService, InviteStats, InvitedUser } from '../lib/supabase';
+import { referralService, InviteStats, InvitedUser, supabase } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -40,11 +40,42 @@ const InvitePage: React.FC = () => {
         return;
       }
 
-      // 使用抽象服务层获取数据
-      const statsData = await referralService.getInviteStats();
-      const invitedUsersData = await referralService.getInvitedUsers();
+      // 直接查询数据库获取邀请统计
+      const { data: referralsData, error: referralsError } = await supabase
+        .from('users')
+        .select('id, first_name, telegram_username, created_at')
+        .eq('invited_by', user.id);
 
-      setStats(statsData);
+      if (referralsError) throw referralsError;
+
+      // 计算统计数据
+      const totalInvited = referralsData?.length || 0;
+      
+      // 获取佣金数据
+      const { data: commissionsData } = await supabase
+        .from('commissions')
+        .select('amount')
+        .eq('user_id', user.id);
+
+      const totalEarnings = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
+
+      setStats({
+        total_invited: totalInvited,
+        total_earnings: totalEarnings,
+        pending_bonus: 0,
+        active_referrals: totalInvited,
+      });
+
+      // 转换邀请用户数据
+      const invitedUsersData: InvitedUser[] = referralsData?.map(u => ({
+        id: u.id,
+        name: u.first_name || u.telegram_username || 'Unknown',
+        joined_at: u.created_at,
+        status: 'active' as const,
+        total_spent: 0,
+        commission_earned: 0,
+      })) || [];
+
       setInvitedUsers(invitedUsersData);
     } catch (error) {
       console.error('Failed to fetch invite data:', error);
