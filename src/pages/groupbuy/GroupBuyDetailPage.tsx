@@ -38,7 +38,7 @@ interface GroupBuySession {
 }
 
 export default function GroupBuyDetailPage() {
-  const { id } = useParams();
+  const { productId: id } = useParams();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user, wallets } = useUser();
