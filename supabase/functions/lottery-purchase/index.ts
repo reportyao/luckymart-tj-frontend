@@ -368,35 +368,29 @@ Deno.serve(async (req) => {
       console.error('Failed to update lottery:', await updateLotteryResponse.text());
     }
 
-    // 处理推荐佣金（如果有推荐人）
+    // 处理推荐佣金（使用handle-purchase-commission进行三级分销）
     if (user.referred_by_id) {
-      const commissionRate = 0.05; // 5% 佣金
-      const commissionAmount = totalAmount * commissionRate;
-
-      const commissionData = {
-        user_id: user.referred_by_id,
-        from_user_id: userId,
-        level: 1,
-        type: 'LOTTERY_PURCHASE',
-        amount: commissionAmount,
-        rate: commissionRate,
-        source_amount: totalAmount,
-        related_order_id: order.id,
-        related_lottery_id: lotteryId,
-        status: 'PENDING',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-
-      await fetch(`${supabaseUrl}/rest/v1/commissions`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(commissionData),
-      });
+      try {
+        const commissionResponse = await fetch(`${supabaseUrl}/functions/v1/handle-purchase-commission`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            order_id: order.id,
+            user_id: userId,
+            order_amount: totalAmount
+          }),
+        });
+        
+        if (!commissionResponse.ok) {
+          console.error('Failed to process commission:', await commissionResponse.text());
+        }
+      } catch (commissionError) {
+        console.error('Commission processing error:', commissionError);
+        // 不阻断购买流程
+      }
     }
 
     // ✅ 如果售罄，异步调用售罄检测函数（用于触发定时开奖）

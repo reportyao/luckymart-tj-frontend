@@ -16,17 +16,24 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 1. 获取佣金配置（使用 system_configs 表）
-    const { data: config } = await supabaseClient
-      .from('system_configs')
-      .select('value')
-      .eq('key', 'referral_commission_rates')
-      .single()
+    // 1. 获取佣金配置（使用 commission_settings 表）
+    const { data: settings, error: settingsError } = await supabaseClient
+      .from('commission_settings')
+      .select('level, rate, is_active, trigger_condition, min_payout_amount')
+      .eq('is_active', true)
+      .order('level', { ascending: true })
     
-    // 默认值：一级 3%，二级 1%，三级 0.5%
-    const rates = config?.value || { level1: 0.03, level2: 0.01, level3: 0.005 }
+    if (settingsError) {
+      console.error('Failed to fetch commission settings:', settingsError)
+      throw settingsError
+    }
 
-    // 2. 获取购买用户的推荐关系（使用 users 表替代已删除的 profiles 表）
+    if (!settings || settings.length === 0) {
+      console.log('No active commission settings found')
+      return new Response(JSON.stringify({ message: 'No active commission settings' }), { status: 200 })
+    }
+
+    // 2. 获取购买用户的推荐关系
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
       .select('referred_by_id')
@@ -44,17 +51,31 @@ serve(async (req) => {
     let currentUserId = userData.referred_by_id
     let level = 1
 
-    while (currentUserId && level <= 3) {
-      const rateKey = `level${level}` as keyof typeof rates
-      const rate = rates[rateKey]
+    // 遍历每一级
+    for (const setting of settings) {
+      if (!currentUserId || level > 3) break
       
-      if (!rate) {
-        // 如果配置中没有该级别，则停止
-        break
-      }
+      // 检查是否有对应级别的配置
+      if (setting.level !== level) continue
 
-      const commissionAmount = (order_amount * rate).toFixed(2)
-      const commissionFloat = parseFloat(commissionAmount)
+      const rate = parseFloat(setting.rate)
+      const minPayoutAmount = parseFloat(setting.min_payout_amount || '0')
+      const commissionAmount = order_amount * rate
+      
+      // 检查是否达到最低发放金额
+      if (commissionAmount < minPayoutAmount) {
+        console.log(`Commission ${commissionAmount} below minimum ${minPayoutAmount} for level ${level}`)
+        // 继续查找下一级
+        const { data: nextUser } = await supabaseClient
+          .from('users')
+          .select('referred_by_id')
+          .eq('id', currentUserId)
+          .single()
+        
+        currentUserId = nextUser?.referred_by_id
+        level++
+        continue
+      }
 
       // 插入佣金记录
       const { data: commission, error: commissionError } = await supabaseClient
@@ -65,7 +86,7 @@ serve(async (req) => {
           level: level,
           commission_rate: rate,
           order_amount: order_amount,
-          commission_amount: commissionFloat,
+          commission_amount: commissionAmount,
           order_id: order_id,
           is_withdrawable: false, // 不可提现
           status: 'settled'
@@ -73,31 +94,46 @@ serve(async (req) => {
         .select()
         .single()
 
-      if (commissionError) throw commissionError
+      if (commissionError) {
+        console.error('Failed to insert commission:', commissionError)
+        throw commissionError
+      }
+      
       commissions.push(commission)
 
       // 更新上级用户的夺宝币余额（不可提现部分）
       const { error: rpcError } = await supabaseClient.rpc('add_bonus_balance', {
         p_user_id: currentUserId,
-        p_amount: commissionFloat
+        p_amount: commissionAmount
       })
 
-      if (rpcError) throw rpcError
+      if (rpcError) {
+        console.error('Failed to add bonus balance:', rpcError)
+        throw rpcError
+      }
 
       // 4. 推送 Telegram 消息
-      await sendTelegramMessage(currentUserId, 'commission_earned', {
-        amount: commissionFloat,
-        level: level
-      })
+      try {
+        await sendTelegramMessage(currentUserId, 'commission_earned', {
+          amount: commissionAmount,
+          level: level
+        })
+      } catch (msgError) {
+        console.error('Failed to send telegram message:', msgError)
+        // 不阻断流程
+      }
 
-      // 查找下一级（使用 users 表）
+      // 查找下一级
       const { data: nextUser, error: nextUserError } = await supabaseClient
         .from('users')
         .select('referred_by_id')
         .eq('id', currentUserId)
         .single()
 
-      if (nextUserError) throw nextUserError
+      if (nextUserError) {
+        console.error('Failed to fetch next user:', nextUserError)
+        break
+      }
 
       currentUserId = nextUser?.referred_by_id
       level++
