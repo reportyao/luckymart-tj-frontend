@@ -29,6 +29,23 @@ interface ParticipantWithTickets {
   ticketCount: number;
 }
 
+// 转换为塔吉克斯坦时区 (UTC+5)
+function toTajikistanTime(dateString: string): string {
+  const date = new Date(dateString);
+  // 塔吉克斯坦时区是 UTC+5
+  const tajikTime = new Date(date.getTime() + (5 * 60 * 60 * 1000));
+  
+  // 格式化为 YYYY-MM-DD HH:mm:ss
+  const year = tajikTime.getUTCFullYear();
+  const month = String(tajikTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(tajikTime.getUTCDate()).padStart(2, '0');
+  const hours = String(tajikTime.getUTCHours()).padStart(2, '0');
+  const minutes = String(tajikTime.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(tajikTime.getUTCSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
 const LotteryResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -300,7 +317,6 @@ const LotteryResultPage: React.FC = () => {
                 >
                   <CheckCircleIcon className="w-24 h-24 mx-auto mb-4" />
                 </motion.div>
-                <h2 className="text-3xl font-bold mb-2">🎉 {t('lottery.congratulations')} 🎉</h2>
                 <p className="text-xl mb-6">{t('lottery.itemIsYours')}</p>
               </>
             ) : (
@@ -315,7 +331,7 @@ const LotteryResultPage: React.FC = () => {
               <p className={`text-sm mb-2 ${isCurrentUserWinner ? 'text-white/80' : 'text-gray-600'}`}>
                 {t('lottery.winningNumber')}
               </p>
-              <div className="text-6xl font-bold mb-4">
+              <div className="text-5xl font-bold mb-4">
                 #{winningTicketNumber}
               </div>
               {winningUser && (
@@ -339,7 +355,7 @@ const LotteryResultPage: React.FC = () => {
 
             {lottery.draw_time && (
               <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-500'}`}>
-                {t('lottery.drawTime')}: {formatDateTime(lottery.draw_time)}
+                {t('lottery.drawTime')}: {toTajikistanTime(lottery.draw_time)} (UTC+5)
               </p>
             )}
           </motion.div>
@@ -387,7 +403,7 @@ const LotteryResultPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* 所有参与码 */}
+        {/* 所有参与码 - 移除外框，直接显示号码 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -398,33 +414,26 @@ const LotteryResultPage: React.FC = () => {
             <TicketIcon className="w-5 h-5" />
             {t('lottery.allTickets')} ({tickets.length})
           </h3>
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+          <div className="flex flex-wrap gap-2">
             {tickets.map((ticket) => {
               const isWinning = ticket.ticket_number === winningTicketNumber;
               const isMine = ticket.user_id === currentUser?.id;
-              const ticketStr = String(ticket.ticket_number);
-              const isLongNumber = ticketStr.length > 7;
               
               return (
-                <motion.div
+                <span
                   key={ticket.id}
-                  whileHover={{ scale: 1.05 }}
                   className={`
-                    aspect-square rounded-lg flex items-center justify-center font-semibold
-                    transition-all cursor-pointer p-1
-                    ${isLongNumber ? 'text-[10px]' : 'text-sm'}
+                    px-3 py-1 rounded-lg font-mono text-sm font-semibold
                     ${isWinning
-                      ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-white ring-4 ring-yellow-300 shadow-lg scale-110'
+                      ? 'bg-gradient-to-br from-yellow-400 to-orange-400 text-white ring-2 ring-yellow-300'
                       : isMine
-                      ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-300'
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                      ? 'bg-blue-100 text-blue-700'
+                      : 'bg-gray-100 text-gray-700'
                     }
                   `}
                 >
-                  <span className="break-all text-center leading-tight">
-                    {String(ticket.ticket_number).padStart(7, '0')}
-                  </span>
-                </motion.div>
+                  {String(ticket.ticket_number).padStart(7, '0')}
+                </span>
               );
             })}
           </div>
@@ -525,14 +534,15 @@ const LotteryResultPage: React.FC = () => {
                         : lottery.draw_algorithm_data;
                       
                       console.log('[LotteryResult] Algorithm data:', algorithmData);
-                      console.log('[LotteryResult] Winning ticket number:', winningTicketNumber);
+                      console.log('[LotteryResult] Found entries:', tickets.length);
                       
-                      const timestampSum = algorithmData.timestamp_sum || 0;
-                      const totalTickets = lottery.total_tickets || 100;
-                      const calculatedNumber = (timestampSum % totalTickets) + 1;
+                      const timestampSum = algorithmData.timestamp_sum || '0';
+                      const totalEntries = algorithmData.total_entries || tickets.length;
+                      const winningIndex = algorithmData.winning_index;
+                      const formula = algorithmData.formula;
                       
                       // 如果没有时间戳总和，显示不可用
-                      if (!timestampSum) {
+                      if (!timestampSum || timestampSum === '0') {
                         console.log('[LotteryResult] No timestamp_sum in algorithm data');
                         return (
                           <p className="text-gray-500 text-center py-2">
@@ -544,13 +554,17 @@ const LotteryResultPage: React.FC = () => {
                       return (
                         <>
                           <div className="flex justify-between items-center py-2 border-b border-gray-300">
+                            <span className="text-gray-600">{t('lottery.totalEntries')}:</span>
+                            <span className="text-gray-900 font-semibold">{totalEntries}</span>
+                          </div>
+                          <div className="flex justify-between items-center py-2 border-b border-gray-300">
                             <span className="text-gray-600">{t('lottery.timestampSum')}:</span>
-                            <span className="text-gray-900 font-semibold">{timestampSum.toLocaleString()}</span>
+                            <span className="text-gray-900 font-semibold break-all">{timestampSum}</span>
                           </div>
                           <div className="bg-white rounded-lg p-3 mt-2">
                             <p className="text-gray-600 mb-1">{t('lottery.verificationFormula')}:</p>
-                            <p className="text-gray-900 font-semibold break-all">
-                              {winningTicketNumber || calculatedNumber} = {timestampSum.toLocaleString()} % {totalTickets} + 1
+                            <p className="text-gray-900 font-semibold break-all text-xs">
+                              {formula || `${winningIndex} = ${timestampSum} % ${totalEntries}`}
                             </p>
                           </div>
                         </>
@@ -582,26 +596,20 @@ const LotteryResultPage: React.FC = () => {
               {t('lottery.myTickets')} ({myTickets.length})
             </h3>
             <div className="flex flex-wrap gap-2">
-              {myTickets.map((ticket) => {
-                const ticketStr = String(ticket.ticket_number);
-                const isLongNumber = ticketStr.length > 7;
-                
-                return (
-                  <div
-                    key={ticket.id}
-                    className={`
-                      px-3 py-2 rounded-lg font-semibold
-                      ${isLongNumber ? 'text-xs' : 'text-sm'}
-                      ${ticket.ticket_number === winningTicketNumber
-                        ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
-                        : 'bg-white text-blue-600'
-                      }
-                    `}
-                  >
-                    <span className="break-all">#{String(ticket.ticket_number).padStart(7, '0')}</span>
-                  </div>
-                );
-              })}
+              {myTickets.map((ticket) => (
+                <div
+                  key={ticket.id}
+                  className={`
+                    px-3 py-2 rounded-lg font-mono text-sm font-semibold
+                    ${ticket.ticket_number === winningTicketNumber
+                      ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
+                      : 'bg-white text-blue-600'
+                    }
+                  `}
+                >
+                  #{String(ticket.ticket_number).padStart(7, '0')}
+                </div>
+              ))}
             </div>
           </motion.div>
         )}
