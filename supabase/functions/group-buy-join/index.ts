@@ -135,7 +135,7 @@ Deno.serve(async (req) => {
         .from('group_buy_orders')
         .select('id')
         .eq('session_id', existingSession.id)
-        .eq('user_id', user.id)
+        .eq('user_id', user.telegram_id) // 使用 telegram_id 因为外键约束指向 users.telegram_id
         .single();
 
       if (existingOrder) {
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
       .insert({
         session_id: targetSession.id,
         product_id: product.id,
-        user_id: user.id,
+        user_id: user.telegram_id, // 使用 telegram_id 因为外键约束指向 users.telegram_id
         order_number: orderNumber,
         amount: pricePerPerson,
         payment_method: 'WALLET',
