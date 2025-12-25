@@ -31,17 +31,20 @@ interface ParticipantWithTickets {
 
 // 转换为塔吉克斯坦时区 (UTC+5)
 function toTajikistanTime(dateString: string): string {
+  if (!dateString) return '';
   const date = new Date(dateString);
-  // 塔吉克斯坦时区是 UTC+5
-  const tajikTime = new Date(date.getTime() + (5 * 60 * 60 * 1000));
   
-  // 格式化为 YYYY-MM-DD HH:mm:ss
-  const year = tajikTime.getUTCFullYear();
-  const month = String(tajikTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(tajikTime.getUTCDate()).padStart(2, '0');
-  const hours = String(tajikTime.getUTCHours()).padStart(2, '0');
-  const minutes = String(tajikTime.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(tajikTime.getUTCSeconds()).padStart(2, '0');
+  // 塔吉克斯坦时区是 UTC+5
+  // JavaScript 的 Date 对象会自动处理本地时区，我们需要将其转换为 UTC，然后加上 5 小时
+  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+  const tajikTime = new Date(utcTime + (5 * 60 * 60 * 1000));
+  
+  const year = tajikTime.getFullYear();
+  const month = String(tajikTime.getMonth() + 1).padStart(2, '0');
+  const day = String(tajikTime.getDate()).padStart(2, '0');
+  const hours = String(tajikTime.getHours()).padStart(2, '0');
+  const minutes = String(tajikTime.getMinutes()).padStart(2, '0');
+  const seconds = String(tajikTime.getSeconds()).padStart(2, '0');
   
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
@@ -171,8 +174,16 @@ const LotteryResultPage: React.FC = () => {
     setIsDrawing(true);
     try {
       console.log('开始开奖:', id);
-      await lotteryService.drawLottery(id);
-      console.log('Draw successful');
+      // 调用 Edge Function 进行开奖，而不是直接调用 RPC
+      const { data, error } = await supabase.functions.invoke('auto-lottery-draw', {
+        body: { lotteryId: id }
+      });
+      
+      if (error || !data?.success) {
+        throw new Error(error?.message || data?.error || 'Draw failed');
+      }
+      
+      console.log('Draw successful:', data);
       
       // 刷新数据
       await fetchLottery();
@@ -332,7 +343,7 @@ const LotteryResultPage: React.FC = () => {
                 {t('lottery.winningNumber')}
               </p>
               <div className="text-5xl font-bold mb-4">
-                #{winningTicketNumber}
+                #{String(winningTicketNumber).padStart(7, '0')}
               </div>
               {winningUser && (
                 <div className="flex items-center justify-center gap-3 mt-4">
@@ -439,67 +450,20 @@ const LotteryResultPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* 公平性说明 */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-2xl shadow-lg p-6"
-        >
-          <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-            <span className="text-green-600 mr-2">✅</span>
-            {t('lottery.fairnessTitle')}
-          </h3>
-          <div className="space-y-4">
-            {/* 问题1 */}
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold text-gray-800 flex items-center">
-                <span className="text-red-600 mr-2">❌</span>
-                {t('lottery.fairnessQuestion1')}
-              </p>
-              <p className="text-sm text-gray-600 mt-1 ml-6">
-                {t('lottery.fairnessAnswer1')}
-              </p>
-            </div>
-            
-            {/* 问题2 */}
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold text-gray-800 flex items-center">
-                <span className="text-red-600 mr-2">❌</span>
-                {t('lottery.fairnessQuestion2')}
-              </p>
-              <p className="text-sm text-gray-600 mt-1 ml-6">
-                {t('lottery.fairnessAnswer2')}
-              </p>
-            </div>
-            
-            {/* 问题3 */}
-            <div className="border-l-4 border-red-500 pl-4">
-              <p className="font-semibold text-gray-800 flex items-center">
-                <span className="text-red-600 mr-2">❌</span>
-                {t('lottery.fairnessQuestion3')}
-              </p>
-              <p className="text-sm text-gray-600 mt-1 ml-6">
-                {t('lottery.fairnessAnswer3')}
-              </p>
-            </div>
-            
-            {/* 问题4 */}
-            <div className="border-l-4 border-green-500 pl-4">
-              <p className="font-semibold text-gray-800 flex items-center">
-                <span className="text-green-600 mr-2">✅</span>
-                {t('lottery.fairnessQuestion4')}
-              </p>
-              <p className="text-sm text-gray-600 mt-1 ml-6">
-                {t('lottery.fairnessAnswer4')}
-              </p>
-            </div>
-          </div>
-
-          {/* 算法介绍和数据验证 */}
-          {isCompleted && (
-            <div className="mt-6 space-y-4">
-              {/* 算法介绍 */}
+        {/* 算法说明 & 验证数据 */}
+        {isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="space-y-4"
+          >
+            <div className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <CheckCircleIcon className="w-5 h-5 text-green-500" />
+                {t('lottery.fairnessVerification')}
+              </h3>
+              
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                 <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
                   <span className="text-blue-600 mr-2">📊</span>
@@ -519,58 +483,49 @@ const LotteryResultPage: React.FC = () => {
                 <div className="space-y-2 font-mono text-sm">
                   {(() => {
                     try {
-                      // 确保有算法数据
-                      if (!lottery.draw_algorithm_data) {
-                        console.log('[LotteryResult] No draw_algorithm_data');
+                      let algorithmData: any = lottery.draw_algorithm_data;
+                      if (typeof algorithmData === 'string') {
+                        try {
+                          algorithmData = JSON.parse(algorithmData);
+                        } catch (e) {
+                          console.error('Failed to parse algorithm data:', e);
+                        }
+                      }
+                      
+                      console.log('[LotteryResult] Algorithm data:', algorithmData);
+                      
+                      // 如果没有算法数据，显示不可用
+                      if (!algorithmData) {
                         return (
                           <p className="text-gray-500 text-center py-2">
                             {t('lottery.verificationDataUnavailable')}
                           </p>
                         );
                       }
-
-                      const algorithmData = typeof lottery.draw_algorithm_data === 'string'
-                        ? JSON.parse(lottery.draw_algorithm_data)
-                        : lottery.draw_algorithm_data;
-                      
-                      console.log('[LotteryResult] Algorithm data:', algorithmData);
-                      console.log('[LotteryResult] Found entries:', tickets.length);
                       
                       const timestampSum = algorithmData.timestamp_sum || '0';
-                      const totalEntries = algorithmData.total_entries || tickets.length;
+                      const totalEntries = algorithmData.total_entries || 0;
                       const winningIndex = algorithmData.winning_index;
                       const formula = algorithmData.formula;
                       
-                      // 如果没有时间戳总和，显示不可用
-                      if (!timestampSum || timestampSum === '0') {
-                        console.log('[LotteryResult] No timestamp_sum in algorithm data');
-                        return (
-                          <p className="text-gray-500 text-center py-2">
-                            {t('lottery.verificationDataUnavailable')}
-                          </p>
-                        );
-                      }
-                      
                       return (
                         <>
-                          <div className="flex justify-between items-center py-2 border-b border-gray-300">
-                            <span className="text-gray-600">{t('lottery.totalEntries')}:</span>
-                            <span className="text-gray-900 font-semibold">{totalEntries}</span>
+                          <div className="flex justify-between py-1 border-b border-gray-200">
+                            <span className="text-gray-500">{t('lottery.totalEntries')}</span>
+                            <span className="text-gray-900 font-bold">{totalEntries}</span>
                           </div>
-                          <div className="flex justify-between items-center py-2 border-b border-gray-300">
-                            <span className="text-gray-600">{t('lottery.timestampSum')}:</span>
-                            <span className="text-gray-900 font-semibold break-all">{timestampSum}</span>
+                          <div className="flex flex-col py-1 border-b border-gray-200">
+                            <span className="text-gray-500 mb-1">{t('lottery.timestampSum')}</span>
+                            <span className="text-gray-900 break-all">{timestampSum}</span>
                           </div>
-                          <div className="bg-white rounded-lg p-3 mt-2">
-                            <p className="text-gray-600 mb-1">{t('lottery.verificationFormula')}:</p>
-                            <p className="text-gray-900 font-semibold break-all text-xs">
-                              {formula || `${winningIndex} = ${timestampSum} % ${totalEntries}`}
-                            </p>
+                          <div className="flex flex-col py-1">
+                            <span className="text-gray-500 mb-1">{t('lottery.formula')}</span>
+                            <span className="text-blue-600 font-bold break-words">{formula}</span>
                           </div>
                         </>
                       );
                     } catch (e) {
-                      console.error('[LotteryResult] Error parsing algorithm data:', e);
+                      console.error('Error rendering algorithm data:', e);
                       return (
                         <p className="text-gray-500 text-center py-2">
                           {t('lottery.verificationDataUnavailable')}
@@ -580,36 +535,6 @@ const LotteryResultPage: React.FC = () => {
                   })()}
                 </div>
               </div>
-            </div>
-          )}
-        </motion.div>
-
-        {/* 我的参与码 */}
-        {myTickets.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl shadow-lg p-6"
-          >
-            <h3 className="text-lg font-bold text-gray-900 mb-4">
-              {t('lottery.myTickets')} ({myTickets.length})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {myTickets.map((ticket) => (
-                <div
-                  key={ticket.id}
-                  className={`
-                    px-3 py-2 rounded-lg font-mono text-sm font-semibold
-                    ${ticket.ticket_number === winningTicketNumber
-                      ? 'bg-gradient-to-r from-yellow-400 to-orange-400 text-white'
-                      : 'bg-white text-blue-600'
-                    }
-                  `}
-                >
-                  #{String(ticket.ticket_number).padStart(7, '0')}
-                </div>
-              ))}
             </div>
           </motion.div>
         )}
