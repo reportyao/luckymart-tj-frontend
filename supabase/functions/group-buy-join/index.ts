@@ -67,15 +67,16 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product out of stock' }, 400);
     }
 
-    // 2. Get user's wallet (use wallets table instead of users table)
+    // 2. Get user's BALANCE wallet (type='BALANCE' instead of currency='TJS')
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', user_id)
-      .eq('currency', 'TJS')
+      .eq('type', 'BALANCE')
       .single();
 
     if (walletError || !wallet) {
+      console.error('Wallet query error:', walletError, 'user_id:', user_id);
       return createResponse({ success: false, error: 'Wallet not found' }, 404);
     }
 
