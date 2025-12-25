@@ -38,21 +38,21 @@ const ShowoffCreatePage: React.FC = () => {
   const fetchWinningLotteries = useCallback(async () => {
     setIsLoadingLotteries(true);
     try {
-      // 1. 获取用户的所有中奖记录
-      const sessionToken = localStorage.getItem('session_token');
-      if (!sessionToken) {
+      if (!user?.id) {
         throw new Error('未登录');
       }
 
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+      // 1. 直接查询 prizes 表获取用户的中奖记录
       const prizesResponse = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
+        `${supabaseUrl}/rest/v1/prizes?user_id=eq.${user.id}&select=*&order=won_at.desc`,
         {
-          method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
           },
-          body: JSON.stringify({ session_token: sessionToken }),
         }
       );
 
@@ -60,17 +60,37 @@ const ShowoffCreatePage: React.FC = () => {
         throw new Error('获取中奖记录失败');
       }
 
-      const prizesData = await prizesResponse.json();
-      if (!prizesData.success) {
-        throw new Error(prizesData.error || '获取中奖记录失败');
+      const prizes = await prizesResponse.json();
+
+      // 获取关联的彩票信息
+      const lotteryIds = [...new Set(prizes.map((p: any) => p.lottery_id).filter(Boolean))];
+      let lotteriesMap: Record<string, any> = {};
+      
+      if (lotteryIds.length > 0) {
+        const lotteriesResponse = await fetch(
+          `${supabaseUrl}/rest/v1/lotteries?id=in.(${lotteryIds.join(',')})&select=id,title,image_url`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (lotteriesResponse.ok) {
+          const lotteriesData = await lotteriesResponse.json();
+          lotteriesData.forEach((l: any) => {
+            lotteriesMap[l.id] = l;
+          });
+        }
       }
 
-      const prizes = prizesData.data || [];
+      // 合并数据
+      const enrichedPrizes = prizes.map((prize: any) => ({
+        ...prize,
+        lottery: lotteriesMap[prize.lottery_id] || null,
+      }));
 
       // 2. 获取已发布的晒单（通过 prize_id 关联）
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-      
       const showoffsResponse = await fetch(
         `${supabaseUrl}/rest/v1/showoffs?user_id=eq.${user?.id}&select=prize_id`,
         {
@@ -85,7 +105,7 @@ const ShowoffCreatePage: React.FC = () => {
       const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id));
 
       // 3. 过滤掉已发布晒单的中奖记录，并按中奖时间从新到旧排序
-      const availablePrizes = prizes
+      const availablePrizes = enrichedPrizes
         .filter((prize: any) => !publishedPrizeIds.has(prize.id))
         .sort((a: any, b: any) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime());
 
