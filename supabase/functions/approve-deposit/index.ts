@@ -12,6 +12,8 @@ serve(async (req) => {
   }
 
   try {
+    console.log('=== approve-deposit 开始 ===')
+    
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -19,11 +21,11 @@ serve(async (req) => {
 
     // 获取管理员认证
     const adminId = req.headers.get('x-admin-id')
-    const authHeader = req.headers.get('Authorization')
+    console.log('x-admin-id:', adminId)
     
     let adminUserId: string | null = null
     
-    // 方式1: 通过 x-admin-id 头部认证（管理后台使用）
+    // 通过 x-admin-id 头部认证（管理后台使用）
     if (adminId) {
       // 验证管理员是否存在且有效
       const { data: adminUser, error: adminError } = await supabaseClient
@@ -32,19 +34,12 @@ serve(async (req) => {
         .eq('id', adminId)
         .single()
       
+      console.log('admin查询结果:', { adminUser, adminError })
+      
       if (adminError || !adminUser || adminUser.status !== 'active') {
         throw new Error('管理员认证失败')
       }
       adminUserId = adminUser.id
-    }
-    // 方式2: 通过 Supabase Auth token 认证（兼容旧方式）
-    else if (authHeader) {
-      const token = authHeader.replace('Bearer ', '')
-      const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token)
-      
-      if (!userError && user) {
-        adminUserId = user.id
-      }
     }
     
     if (!adminUserId) {
@@ -52,6 +47,7 @@ serve(async (req) => {
     }
 
     const { requestId, action, adminNote } = await req.json()
+    console.log('请求参数:', { requestId, action, adminNote })
 
     // 验证参数
     if (!requestId) {
@@ -69,6 +65,8 @@ serve(async (req) => {
       .eq('id', requestId)
       .single()
 
+    console.log('充值申请查询:', { depositRequest, requestError })
+
     if (requestError || !depositRequest) {
       throw new Error('未找到充值申请')
     }
@@ -79,25 +77,29 @@ serve(async (req) => {
     }
 
     // 更新申请状态
+    console.log('准备更新状态...')
     const { error: updateError } = await supabaseClient
       .from('deposit_requests')
       .update({
         status: action,
-        admin_id: adminUserId,
+        processed_by: adminUserId,
         admin_note: adminNote || null,
-        reviewed_at: new Date().toISOString(),
+        processed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', requestId)
 
+    console.log('更新状态结果:', { updateError })
+
     if (updateError) {
       console.error('更新申请状态失败:', updateError)
-      throw new Error('审核失败')
+      throw new Error(`审核失败: ${updateError.message}`)
     }
 
     // 如果审核通过,增加用户余额
     if (action === 'APPROVED') {
       // 获取用户余额钱包
+      console.log('查询用户钱包...')
       const { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
         .select('*')
@@ -106,37 +108,48 @@ serve(async (req) => {
         .eq('currency', depositRequest.currency)
         .single()
 
+      console.log('钱包查询结果:', { wallet, walletError })
+
       if (walletError || !wallet) {
-        throw new Error('未找到用户钱包')
+        throw new Error(`未找到用户钱包: ${walletError?.message}`)
       }
 
       // 更新钱包余额
+      console.log('更新钱包余额...')
+      const newBalance = Number(wallet.balance) + Number(depositRequest.amount)
+      const newTotalDeposits = Number(wallet.total_deposits || 0) + Number(depositRequest.amount)
+      
       const { error: updateWalletError } = await supabaseClient
         .from('wallets')
         .update({
-          balance: wallet.balance + depositRequest.amount,
-          total_deposits: wallet.total_deposits + depositRequest.amount,
+          balance: newBalance,
+          total_deposits: newTotalDeposits,
           updated_at: new Date().toISOString(),
         })
         .eq('id', wallet.id)
 
+      console.log('更新钱包结果:', { updateWalletError })
+
       if (updateWalletError) {
         console.error('更新钱包余额失败:', updateWalletError)
-        throw new Error('更新余额失败')
+        throw new Error(`更新余额失败: ${updateWalletError.message}`)
       }
 
       // 创建钱包交易记录
-      await supabaseClient.from('wallet_transactions').insert({
+      console.log('创建交易记录...')
+      const { error: txError } = await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
         type: 'DEPOSIT_APPROVED',
         amount: depositRequest.amount,
-        balance_after: wallet.balance + depositRequest.amount,
+        balance_after: newBalance,
         description: `充值审核通过 - 订单号: ${depositRequest.order_number}`,
         related_id: requestId,
       })
+      console.log('交易记录结果:', { txError })
 
       // 发送通知给用户
-      await supabaseClient.from('notifications').insert({
+      console.log('发送通知...')
+      const { error: notifyError } = await supabaseClient.from('notifications').insert({
         user_id: depositRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '充值成功',
@@ -144,6 +157,7 @@ serve(async (req) => {
         related_id: requestId,
         related_type: 'DEPOSIT_REQUEST',
       })
+      console.log('通知结果:', { notifyError })
     } else {
       // 审核拒绝,发送通知
       await supabaseClient.from('notifications').insert({
@@ -156,6 +170,7 @@ serve(async (req) => {
       })
     }
 
+    console.log('=== approve-deposit 成功 ===')
     return new Response(
       JSON.stringify({
         success: true,
