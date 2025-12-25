@@ -30,7 +30,7 @@ serve(async (req) => {
     const { data: referralsData, error: referralsError } = await supabase
       .from('users')
       .select('id, first_name, telegram_username, created_at')
-      .eq('invited_by', user_id)
+      .eq('referred_by_id', user_id)
 
     if (referralsError) {
       throw referralsError
