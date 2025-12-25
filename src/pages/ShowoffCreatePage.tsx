@@ -109,14 +109,14 @@ const ShowoffCreatePage: React.FC = () => {
         .filter((prize: any) => !publishedPrizeIds.has(prize.id))
         .sort((a: any, b: any) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime());
 
-      // 4. 转换为 WinningLottery 格式
+      // 4. 转换为 WinningLottery 格式 - 直接使用 prizes 表中的数据
       const winningLotteries: WinningLottery[] = availablePrizes.map((prize: any) => ({
         id: prize.id,
         lottery_id: prize.lottery_id,
-        lottery_title: prize.lottery?.title?.zh || '未知夺宝',
-        prize_name: prize.lottery?.title?.zh || '未知奖品',
-        prize_image: prize.lottery?.image_url || 'https://via.placeholder.com/400',
-        winning_number: prize.winning_number || '',
+        lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知夺宝',
+        prize_name: prize.prize_name || prize.lottery?.title?.zh || '未知奖品',
+        prize_image: prize.prize_image || prize.lottery?.image_url || 'https://via.placeholder.com/400',
+        winning_number: prize.winning_code || prize.winning_number || '',
         draw_time: prize.won_at,
       }));
 
