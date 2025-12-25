@@ -41,10 +41,11 @@ const InvitePage: React.FC = () => {
       }
 
       // 直接查询数据库获取邀请统计
-      const { data: referralsData, error: referralsError } = await supabase
+      const referralsQuery = supabase
         .from('users')
         .select('id, first_name, telegram_username, created_at')
-        .eq('invited_by', user.id) as { data: Array<{ id: string; first_name: string | null; telegram_username: string | null; created_at: string }> | null; error: any };
+        .eq('invited_by', user.id);
+      const { data: referralsData, error: referralsError } = await referralsQuery;
 
       if (referralsError) throw referralsError;
 
