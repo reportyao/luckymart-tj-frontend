@@ -60,18 +60,24 @@ const InvitePage: React.FC = () => {
       const totalEarnings = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
 
       setStats({
-        total_invited: totalInvited,
-        total_earnings: totalEarnings,
-        pending_bonus: 0,
-        active_referrals: totalInvited,
+        total_invites: totalInvited,
+        total_referrals: totalInvited,
+        level1_referrals: totalInvited,
+        level2_referrals: 0,
+        level3_referrals: 0,
+        total_commission: totalEarnings,
+        pending_commission: 0,
+        paid_commission: totalEarnings,
+        bonus_balance: 0,
       });
 
       // 转换邀请用户数据
       const invitedUsersData: InvitedUser[] = referralsData?.map(u => ({
         id: u.id,
-        name: u.first_name || u.telegram_username || 'Unknown',
-        joined_at: u.created_at,
-        status: 'active' as const,
+        telegram_username: u.telegram_username,
+        avatar_url: null,
+        created_at: u.created_at,
+        level: 1,
         total_spent: 0,
         commission_earned: 0,
       })) || [];
