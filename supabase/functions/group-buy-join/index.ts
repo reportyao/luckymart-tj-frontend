@@ -67,7 +67,7 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product out of stock' }, 400);
     }
 
-    // 2. Get user info to get telegram_id (for foreign key constraints)
+    // 2. Get user info
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, telegram_id')
@@ -130,12 +130,12 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: 'Session is full' }, 400);
       }
 
-      // Check if user already joined this session (use telegram_id for query)
+      // Check if user already joined this session
       const { data: existingOrder } = await supabase
         .from('group_buy_orders')
         .select('id')
         .eq('session_id', existingSession.id)
-        .eq('user_id', user.telegram_id)
+        .eq('user_id', user.id)
         .single();
 
       if (existingOrder) {
@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
 
       targetSession = existingSession;
     } else {
-      // 5. Create new session - use telegram_id for initiator_id (foreign key constraint)
+      // 5. Create new session
       const sessionCode = generateSessionCode();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + product.timeout_hours);
@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
           status: 'ACTIVE',
           current_participants: 0,
           max_participants: product.group_size,
-          initiator_id: user.telegram_id, // Use telegram_id
+          initiator_id: user.id,
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
         })
@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
         created_at: new Date().toISOString(),
       });
 
-    // 8. Create order - use telegram_id for user_id (foreign key constraint)
+    // 8. Create order
     const orderNumber = generateOrderNumber();
     const orderTimestamp = Date.now();
 
@@ -215,7 +215,7 @@ Deno.serve(async (req) => {
       .insert({
         session_id: targetSession.id,
         product_id: product.id,
-        user_id: user.telegram_id, // Use telegram_id instead of user_id
+        user_id: user.id,
         order_number: orderNumber,
         amount: pricePerPerson,
         payment_method: 'WALLET',
