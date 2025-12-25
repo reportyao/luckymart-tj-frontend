@@ -387,7 +387,7 @@ const LotteryResultPage: React.FC = () => {
             {participants.map((participant) => (
               <div
                 key={participant.user.id}
-                className={`flex flex-col items-center p-4 rounded-xl transition ${
+                className={`flex flex-col items-center p-3 rounded-xl transition ${
                   participant.user.id === lottery.winning_user_id
                     ? 'bg-gradient-to-br from-yellow-100 to-orange-100 ring-2 ring-yellow-400'
                     : 'bg-gray-50 hover:bg-gray-100'
@@ -397,7 +397,7 @@ const LotteryResultPage: React.FC = () => {
                   <img
                     src={participant.user.avatar_url || '/default-avatar.png'}
                     alt={participant.user.telegram_username || 'User'}
-                    className="w-16 h-16 rounded-full mb-2"
+                    className="w-12 h-12 rounded-full mb-2"
                   />
                   {participant.user.id === lottery.winning_user_id && (
                     <TrophyIcon className="w-6 h-6 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-1" />
@@ -461,7 +461,7 @@ const LotteryResultPage: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-lg p-6 space-y-6">
               <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
                 <CheckCircleIcon className="w-5 h-5 text-green-500" />
-                {t('lottery.fairnessVerification')}
+                {t('lottery.fairnessTitle')}
               </h3>
               
               <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
@@ -511,7 +511,7 @@ const LotteryResultPage: React.FC = () => {
                       return (
                         <>
                           <div className="flex justify-between py-1 border-b border-gray-200">
-                            <span className="text-gray-500">{t('lottery.totalEntries')}</span>
+                            <span className="text-gray-500">总参与条目</span>
                             <span className="text-gray-900 font-bold">{totalEntries}</span>
                           </div>
                           <div className="flex flex-col py-1 border-b border-gray-200">
