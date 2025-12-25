@@ -78,7 +78,7 @@ const WalletPage: React.FC = () => {
         amount: Number(d.amount),
         status: d.status === 'APPROVED' ? 'COMPLETED' : d.status,
         created_at: d.created_at,
-        description: d.notes || '充值',
+        description: (d as any).notes || d.admin_note || '充值',
         source: 'deposit_requests'
       })) : []
       
@@ -96,7 +96,7 @@ const WalletPage: React.FC = () => {
         amount: -Number(w.amount),
         status: w.status === 'APPROVED' ? 'COMPLETED' : w.status,
         created_at: w.created_at,
-        description: w.notes || '提现',
+        description: (w as any).notes || w.admin_note || '提现',
         source: 'withdrawal_requests'
       })) : []
       

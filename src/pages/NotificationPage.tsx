@@ -151,31 +151,42 @@ const NotificationPage: React.FC = () => {
       }
 
       // 5. 获取拼团开奖结果
-      const { data: groupBuyResults, error: groupBuyError } = await supabase
-        .from('group_buy_orders')
-        .select('*, session:group_buy_sessions(id, status, winner_id)')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (!groupBuyError && groupBuyResults) {
-        groupBuyResults.forEach(order => {
-          if (order.session?.status === 'SUCCESS') {
-            const isWinner = order.session.winner_id === user.id || order.session.winner_id === user.telegram_id;
-            allNotifications.push({
-              id: `groupbuy_${order.id}`,
-              user_id: user.id,
-              type: isWinner ? 'GROUP_BUY_WIN' : 'GROUP_BUY_LOSE',
-              title: isWinner ? '🎉 拼团中奖!' : '拼团未中奖',
-              content: isWinner ? '恭喜您在拼团中中奖!' : '很遗憾，本次拼团未中奖，已退还幸运币',
-              related_id: order.session_id,
-              related_type: 'group_buy',
-              is_read: true,
-              created_at: order.updated_at || order.created_at,
-              source: 'group_buy_orders'
-            });
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        
+        const groupBuyResponse = await fetch(
+          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,winner_id)&order=created_at.desc&limit=20`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
           }
-        });
+        );
+
+        if (groupBuyResponse.ok) {
+          const groupBuyResults = await groupBuyResponse.json();
+          groupBuyResults.forEach((order: any) => {
+            if (order.session?.status === 'SUCCESS') {
+              const isWinner = order.session.winner_id === user.id || order.session.winner_id === (user as any).telegram_id;
+              allNotifications.push({
+                id: `groupbuy_${order.id}`,
+                user_id: user.id,
+                type: isWinner ? 'GROUP_BUY_WIN' : 'GROUP_BUY_LOSE',
+                title: isWinner ? '🎉 拼团中奖!' : '拼团未中奖',
+                content: isWinner ? '恭喜您在拼团中中奖!' : '很遗憾，本次拼团未中奖，已退还幸运币',
+                related_id: order.session_id,
+                related_type: 'group_buy',
+                is_read: true,
+                created_at: order.updated_at || order.created_at,
+                source: 'group_buy_orders'
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to fetch group buy results:', e);
       }
 
       // 6. 按时间排序
