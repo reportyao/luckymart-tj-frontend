@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 
@@ -7,11 +8,15 @@ interface Banner {
   id: string;
   title: string;
   image_url: string;
+  image_url_zh: string | null;
+  image_url_ru: string | null;
+  image_url_tg: string | null;
   link_url: string | null;
   link_type: string;
 }
 
 const BannerCarousel: React.FC = () => {
+  const { i18n } = useTranslation();
   const [banners, setBanners] = useState<Banner[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -20,10 +25,9 @@ const BannerCarousel: React.FC = () => {
     const fetchBanners = async () => {
       try {
         const now = new Date().toISOString();
-        // 使用类型断言，因为 banners 表还没有在 TypeScript 类型定义中
         const { data, error } = await (supabase as any)
           .from('banners')
-          .select('id, title, image_url, link_url, link_type')
+          .select('id, title, image_url, image_url_zh, image_url_ru, image_url_tg, link_url, link_type')
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
 
@@ -58,6 +62,31 @@ const BannerCarousel: React.FC = () => {
     setCurrentIndex((prev) => (prev + 1) % banners.length);
   }, [banners.length]);
 
+  // 根据当前语言获取对应的Banner图片
+  const getLocalizedImageUrl = useCallback((banner: Banner): string => {
+    const lang = i18n.language;
+    
+    // 根据语言选择对应的图片
+    if (lang === 'zh' && banner.image_url_zh) {
+      return banner.image_url_zh;
+    }
+    if (lang === 'ru' && banner.image_url_ru) {
+      return banner.image_url_ru;
+    }
+    if (lang === 'tg' && banner.image_url_tg) {
+      return banner.image_url_tg;
+    }
+    
+    // Fallback: 按优先级尝试其他语言版本
+    // 优先使用中文版作为默认
+    if (banner.image_url_zh) return banner.image_url_zh;
+    if (banner.image_url_ru) return banner.image_url_ru;
+    if (banner.image_url_tg) return banner.image_url_tg;
+    
+    // 最后使用原始image_url
+    return banner.image_url;
+  }, [i18n.language]);
+
   if (isLoading) {
     return (
       <div className="relative h-40 bg-gray-200 rounded-2xl animate-pulse"></div>
@@ -69,11 +98,12 @@ const BannerCarousel: React.FC = () => {
   }
 
   const currentBanner = banners[currentIndex];
+  const currentImageUrl = getLocalizedImageUrl(currentBanner);
 
   const BannerContent = () => (
     <div className="relative h-40 overflow-hidden rounded-2xl">
       <img
-        src={currentBanner.image_url}
+        src={currentImageUrl}
         alt={currentBanner.title}
         className="w-full h-full object-cover"
         onError={(e) => {

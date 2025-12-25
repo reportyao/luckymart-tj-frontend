@@ -9,6 +9,7 @@ import {
   Clock,
   Share2,
   ChevronLeft,
+  ChevronRight,
   AlertCircle,
 } from 'lucide-react';
 
@@ -17,9 +18,10 @@ interface GroupBuyProduct {
   title: { zh: string; ru: string; tg: string };
   description: { zh: string; ru: string; tg: string };
   image_url: string;
+  images?: string[]; // 多图支持
   original_price: number;
   price_per_person: number;
-  group_size: number; // 数据库字段名
+  group_size: number;
   timeout_hours: number;
   product_type: string;
 }
@@ -35,6 +37,82 @@ interface GroupBuySession {
     user_id: string;
     created_at: string;
   }>;
+}
+
+// 图片轮播组件
+function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  if (!images || images.length === 0) {
+    return (
+      <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+        <span className="text-gray-400">No Image</span>
+      </div>
+    );
+  }
+
+  if (images.length === 1) {
+    return (
+      <img
+        src={images[0]}
+        alt={alt}
+        className="w-full h-64 object-cover"
+      />
+    );
+  }
+
+  const goToPrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const goToNext = () => {
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  return (
+    <div className="relative w-full h-64">
+      {/* Main Image */}
+      <img
+        src={images[currentIndex]}
+        alt={`${alt} - ${currentIndex + 1}`}
+        className="w-full h-full object-cover"
+      />
+      
+      {/* Navigation Arrows */}
+      <button
+        onClick={goToPrevious}
+        className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+      >
+        <ChevronLeft className="w-5 h-5" />
+      </button>
+      <button
+        onClick={goToNext}
+        className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors"
+      >
+        <ChevronRight className="w-5 h-5" />
+      </button>
+      
+      {/* Dots Indicator */}
+      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
+        {images.map((_, index) => (
+          <button
+            key={index}
+            onClick={() => setCurrentIndex(index)}
+            className={`w-2 h-2 rounded-full transition-all ${
+              index === currentIndex
+                ? 'bg-white w-4'
+                : 'bg-white/50 hover:bg-white/70'
+            }`}
+          />
+        ))}
+      </div>
+      
+      {/* Image Counter */}
+      <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+        {currentIndex + 1} / {images.length}
+      </div>
+    </div>
+  );
 }
 
 export default function GroupBuyDetailPage() {
@@ -98,8 +176,8 @@ export default function GroupBuyDetailPage() {
 
     if (!product) return;
 
-    // Check balance from wallets
-    const mainWallet = wallets.find((w) => w.currency === 'TJS');
+    // Check balance from wallets - use BALANCE type wallet
+    const mainWallet = wallets.find((w) => w.type === 'BALANCE' || w.currency === 'TJS');
     const balance = mainWallet?.balance || 0;
     if (balance < product.price_per_person) {
       alert(t('groupBuy.insufficientBalance'));
@@ -109,11 +187,12 @@ export default function GroupBuyDetailPage() {
     try {
       setJoining(true);
 
+      // Use user.id (UUID) instead of telegram_id for the API call
       const { data, error } = await supabase.functions.invoke('group-buy-join', {
         body: {
           product_id: product.id,
           session_id: sessionId || null,
-          user_id: user.telegram_id,
+          user_id: user.id, // Use UUID
         },
       });
 
@@ -165,6 +244,23 @@ export default function GroupBuyDetailPage() {
     return `${hours}${t('groupBuy.hours')} ${minutes}${t('groupBuy.minutes')}`;
   };
 
+  // 获取商品图片数组
+  const getProductImages = (): string[] => {
+    if (!product) return [];
+    
+    // 优先使用images数组
+    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+      return product.images;
+    }
+    
+    // 回退到单张图片
+    if (product.image_url) {
+      return [product.image_url];
+    }
+    
+    return [];
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
@@ -206,12 +302,11 @@ export default function GroupBuyDetailPage() {
         </button>
       </div>
 
-      {/* Product Image */}
+      {/* Product Image Carousel */}
       <div className="relative">
-        <img
-          src={product.image_url}
-          alt={getLocalizedText(product.title)}
-          className="w-full h-64 object-cover"
+        <ImageCarousel 
+          images={getProductImages()} 
+          alt={getLocalizedText(product.title)} 
         />
       </div>
 
