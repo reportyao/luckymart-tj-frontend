@@ -99,7 +99,7 @@ serve(async (req) => {
     }
 
     // 3. 检查是否已经开奖
-    if (lottery.status === 'DRAWN' || lottery.status === 'COMPLETED') {
+    if (lottery.status === 'COMPLETED') {
       throw new Error('Lottery already drawn');
     }
 

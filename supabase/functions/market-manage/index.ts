@@ -40,7 +40,7 @@ serve(async (req) => {
         }
 
         // 检查是否已开奖
-        if (entry.lottery.status === 'DRAWN') {
+        if (entry.lottery.status === 'COMPLETED') {
           return new Response(
             JSON.stringify({ error: 'Cannot sell tickets for drawn lotteries' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
