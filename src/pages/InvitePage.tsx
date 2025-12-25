@@ -40,50 +40,27 @@ const InvitePage: React.FC = () => {
         return;
       }
 
-      // 直接查询数据库获取邀请统计
-      const referralsQuery = supabase
-        .from('users')
-        .select('id, first_name, telegram_username, created_at')
-        .eq('invited_by', user.id);
-      const { data: referralsData, error: referralsError } = await referralsQuery;
-
-      if (referralsError) throw referralsError;
-
-      // 计算统计数据
-      const totalInvited = referralsData?.length || 0;
-      
-      // 获取佣金数据
-      const { data: commissionsData } = await supabase
-        .from('commissions')
-        .select('amount')
-        .eq('user_id', user.id);
-
-      const totalEarnings = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0;
-
-      setStats({
-        total_invites: totalInvited,
-        total_referrals: totalInvited,
-        level1_referrals: totalInvited,
-        level2_referrals: 0,
-        level3_referrals: 0,
-        total_commission: totalEarnings,
-        pending_commission: 0,
-        paid_commission: totalEarnings,
-        bonus_balance: 0,
+      // 使用Edge Function获取邀请数据
+      const { data, error } = await supabase.functions.invoke('get-invite-data', {
+        body: { user_id: user.id }
       });
 
-      // 转换邀请用户数据
-      const invitedUsersData: InvitedUser[] = referralsData?.map(u => ({
-        id: u.id,
-        telegram_username: u.telegram_username,
-        avatar_url: null,
-        created_at: u.created_at,
-        level: 1,
-        total_spent: 0,
-        commission_earned: 0,
-      })) || [];
+      if (error) throw error;
 
-      setInvitedUsers(invitedUsersData);
+      if (data) {
+        setStats(data.stats || {
+          total_invites: 0,
+          total_referrals: 0,
+          level1_referrals: 0,
+          level2_referrals: 0,
+          level3_referrals: 0,
+          total_commission: 0,
+          pending_commission: 0,
+          paid_commission: 0,
+          bonus_balance: 0,
+        });
+        setInvitedUsers(data.invited_users || []);
+      }
     } catch (error) {
       console.error('Failed to fetch invite data:', error);
       toast.error(t('error.networkError'));
