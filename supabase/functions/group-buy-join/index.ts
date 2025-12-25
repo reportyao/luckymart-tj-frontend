@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const { product_id, session_id, user_id } = await req.json();
+    const { product_id, session_id, session_code, user_id } = await req.json();
 
     // Validate required parameters
     if (!product_id || !user_id) {
@@ -105,15 +105,21 @@ Deno.serve(async (req) => {
 
     let targetSession = null;
 
-    // 4. If session_id is provided, try to join existing session
-    if (session_id) {
-      const { data: existingSession, error: sessionError } = await supabase
+    // 4. If session_id or session_code is provided, try to join existing session
+    if (session_id || session_code) {
+      let sessionQuery = supabase
         .from('group_buy_sessions')
         .select('*')
-        .eq('id', session_id)
         .eq('status', 'ACTIVE')
-        .gt('expires_at', new Date().toISOString())
-        .single();
+        .gt('expires_at', new Date().toISOString());
+      
+      if (session_id) {
+        sessionQuery = sessionQuery.eq('id', session_id);
+      } else if (session_code) {
+        sessionQuery = sessionQuery.eq('session_code', session_code);
+      }
+      
+      const { data: existingSession, error: sessionError } = await sessionQuery.single();
 
       if (sessionError || !existingSession) {
         return createResponse({ success: false, error: 'Session not found or expired' }, 404);
@@ -128,7 +134,7 @@ Deno.serve(async (req) => {
       const { data: existingOrder } = await supabase
         .from('group_buy_orders')
         .select('id')
-        .eq('session_id', session_id)
+        .eq('session_id', existingSession.id)
         .eq('user_id', user.telegram_id)
         .single();
 

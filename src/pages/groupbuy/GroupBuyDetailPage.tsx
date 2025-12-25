@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
@@ -32,10 +32,17 @@ interface GroupBuySession {
   current_participants: number;
   max_participants: number;
   expires_at: string;
+  initiator_id: string;
   orders: Array<{
     id: string;
     user_id: string;
     created_at: string;
+    users?: {
+      id: string;
+      telegram_id: string;
+      telegram_username: string | null;
+      avatar_url: string | null;
+    };
   }>;
 }
 
@@ -99,17 +106,15 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             key={index}
             onClick={() => setCurrentIndex(index)}
             className={`w-2 h-2 rounded-full transition-all ${
-              index === currentIndex
-                ? 'bg-white w-4'
-                : 'bg-white/50 hover:bg-white/70'
+              index === currentIndex ? 'bg-white w-4' : 'bg-white/50'
             }`}
           />
         ))}
       </div>
       
       {/* Image Counter */}
-      <div className="absolute top-3 right-3 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
-        {currentIndex + 1} / {images.length}
+      <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+        {currentIndex + 1}/{images.length}
       </div>
     </div>
   );
@@ -123,8 +128,8 @@ export default function GroupBuyDetailPage() {
   const [product, setProduct] = useState<GroupBuyProduct | null>(null);
   const [sessions, setSessions] = useState<GroupBuySession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joining, setJoining] = useState(false);
-  const [selectedSession, setSelectedSession] = useState<string | null>(null);
+  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null); // 修改：记录正在处理的session
+  const [userParticipatedSessions, setUserParticipatedSessions] = useState<Set<string>>(new Set()); // 新增：记录用户已参与的session
 
   useEffect(() => {
     if (id) {
@@ -149,8 +154,8 @@ export default function GroupBuyDetailPage() {
         setProduct(productResponse.data);
       }
 
-      // Fetch active sessions
-      const { data: sessionsData, error: sessionsError } = await supabase.functions.invoke(
+      // Fetch active sessions using Edge Function
+      const { data: sessionsResponse, error: sessionsError } = await supabase.functions.invoke(
         'group-buy-list',
         {
           body: { type: 'sessions', product_id: id },
@@ -158,9 +163,21 @@ export default function GroupBuyDetailPage() {
       );
 
       if (sessionsError) throw sessionsError;
-      if (sessionsData?.success) {
-        setSessions(sessionsData.data);
+      
+      const sessionsData = sessionsResponse?.success ? sessionsResponse.data : [];
+      
+      // 检查用户已参与的session
+      if (user && sessionsData && Array.isArray(sessionsData)) {
+        const participatedSet = new Set<string>();
+        sessionsData.forEach((session: any) => {
+          if (session.orders?.some((order: any) => order.user_id === user.telegram_id)) {
+            participatedSet.add(session.id);
+          }
+        });
+        setUserParticipatedSessions(participatedSet);
       }
+      
+      setSessions(sessionsData || []);
     } catch (error) {
       console.error('Failed to fetch data:', error);
     } finally {
@@ -185,15 +202,24 @@ export default function GroupBuyDetailPage() {
     }
 
     try {
-      setJoining(true);
+      setJoiningSessionId(sessionId || 'new'); // 修改：设置正在处理的session
 
-      // Use user.id (UUID) instead of telegram_id for the API call
+      // 修复：传递session_code而不是session_id
+      let requestBody: any = {
+        product_id: product.id,
+        user_id: user.id, // Use UUID
+      };
+
+      if (sessionId) {
+        // 查找session_code
+        const session = sessions.find(s => s.id === sessionId);
+        if (session) {
+          requestBody.session_code = session.session_code;
+        }
+      }
+
       const { data, error } = await supabase.functions.invoke('group-buy-join', {
-        body: {
-          product_id: product.id,
-          session_id: sessionId || null,
-          user_id: user.id, // Use UUID
-        },
+        body: requestBody,
       });
 
       if (error) throw error;
@@ -208,12 +234,12 @@ export default function GroupBuyDetailPage() {
       console.error('Failed to join group:', error);
       alert(error.message || t('groupBuy.joinFailed'));
     } finally {
-      setJoining(false);
+      setJoiningSessionId(null); // 修改：清除处理状态
     }
   };
 
-  const handleShare = (sessionId: string) => {
-    const shareUrl = `${window.location.origin}/group-buy/${product?.id}?session=${sessionId}`;
+  const handleShare = (sessionCode: string) => {
+    const shareUrl = `${window.location.origin}/group-buy/${product?.id}?code=${sessionCode}`;
     if (navigator.share) {
       navigator.share({
         title: getLocalizedText(product?.title),
@@ -259,6 +285,13 @@ export default function GroupBuyDetailPage() {
     }
     
     return [];
+  };
+
+  // 截断昵称显示
+  const truncateUsername = (username: string | null, maxLength: number = 10): string => {
+    if (!username) return 'User';
+    if (username.length <= maxLength) return username;
+    return username.substring(0, maxLength) + '...';
   };
 
   if (loading) {
@@ -353,41 +386,76 @@ export default function GroupBuyDetailPage() {
 
           {sessions.length > 0 ? (
             <div className="space-y-3">
-              {sessions.map((session) => (
-                <div
-                  key={session.id}
-                  className="bg-white border-2 border-orange-200 rounded-xl p-4"
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-orange-500" />
-                      <span className="font-bold text-gray-800">
-                        {session.current_participants}/{session.max_participants}
-                      </span>
+              {sessions.map((session) => {
+                const isParticipated = userParticipatedSessions.has(session.id);
+                const isProcessing = joiningSessionId === session.id;
+                
+                return (
+                  <div
+                    key={session.id}
+                    className="bg-white border-2 border-orange-200 rounded-xl p-4"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Users className="w-5 h-5 text-orange-500" />
+                        <span className="font-bold text-gray-800">
+                          {session.current_participants}/{session.max_participants}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-gray-600">
+                        <Clock className="w-4 h-4" />
+                        {calculateTimeLeft(session.expires_at)}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-gray-600">
-                      <Clock className="w-4 h-4" />
-                      {calculateTimeLeft(session.expires_at)}
-                    </div>
-                  </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleJoinGroup(session.id)}
-                      disabled={joining}
-                      className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-lg font-bold hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50"
-                    >
-                      {joining ? t('common.processing') : t('groupBuy.joinNow')}
-                    </button>
-                    <button
-                      onClick={() => handleShare(session.id)}
-                      className="px-4 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      <Share2 className="w-5 h-5" />
-                    </button>
+                    {/* 显示参与用户头像和昵称 */}
+                    {session.orders && session.orders.length > 0 && (
+                      <div className="flex items-center gap-2 mb-3 overflow-x-auto">
+                        {session.orders.map((order: any) => (
+                          <div key={order.id} className="flex items-center gap-1 bg-gray-50 rounded-full px-2 py-1">
+                            <img
+                              src={order.users?.avatar_url || '/default-avatar.png'}
+                              alt={order.users?.telegram_username || 'User'}
+                              className="w-6 h-6 rounded-full"
+                            />
+                            <span className="text-xs text-gray-600">
+                              {truncateUsername(order.users?.telegram_username)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      {isParticipated ? (
+                        <button
+                          onClick={() => handleShare(session.session_code)}
+                          className="flex-1 bg-gradient-to-r from-blue-500 to-purple-500 text-white py-2 rounded-lg font-bold hover:from-blue-600 hover:to-purple-600 transition-colors flex items-center justify-center gap-2"
+                        >
+                          <Share2 className="w-5 h-5" />
+                          {t('groupBuy.share')}
+                        </button>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleJoinGroup(session.id)}
+                            disabled={isProcessing}
+                            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-lg font-bold hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50"
+                          >
+                            {isProcessing ? t('common.processing') : t('groupBuy.joinNow')}
+                          </button>
+                          <button
+                            onClick={() => handleShare(session.session_code)}
+                            className="px-4 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                          >
+                            <Share2 className="w-5 h-5" />
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-8 bg-gray-50 rounded-xl">
@@ -400,22 +468,12 @@ export default function GroupBuyDetailPage() {
         {/* Start New Group Button */}
         <button
           onClick={() => handleJoinGroup()}
-          disabled={joining}
-          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50"
+          disabled={joiningSessionId === 'new'}
+          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
-          {joining ? t('common.processing') : t('groupBuy.startNewGroup')}
+          <ShoppingBag className="w-6 h-6" />
+          {joiningSessionId === 'new' ? t('common.processing') : t('groupBuy.startNewGroup')}
         </button>
-
-        {/* Rules */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-xl">
-          <h3 className="font-bold text-gray-800 mb-2">{t('groupBuy.rules.title')}</h3>
-          <ul className="text-sm text-gray-600 space-y-1">
-            <li>• {t('groupBuy.rules.rule1')}</li>
-            <li>• {t('groupBuy.rules.rule2')}</li>
-            <li>• {t('groupBuy.rules.rule3')}</li>
-            <li>• {t('groupBuy.rules.rule4')}</li>
-          </ul>
-        </div>
       </div>
     </div>
   );
