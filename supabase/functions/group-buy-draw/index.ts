@@ -119,12 +119,27 @@ Deno.serve(async (req) => {
     // 8. Refund non-winners (convert to Lucky Coins)
     for (const order of orders) {
       if (order.id !== winnerOrder.id) {
-        // Update user's lucky_coins balance
-        const { data: user } = await supabase
+        // Update user's lucky_coins balance - 同时支持 id 和 telegram_id
+        let user = null;
+        
+        // 先尝试用 id 查询（UUID）
+        const { data: userById } = await supabase
           .from('users')
-          .select('lucky_coins')
-          .eq('telegram_id', order.user_id)
+          .select('id, telegram_id, lucky_coins')
+          .eq('id', order.user_id)
           .single();
+        
+        if (userById) {
+          user = userById;
+        } else {
+          // 再尝试用 telegram_id 查询
+          const { data: userByTelegramId } = await supabase
+            .from('users')
+            .select('id, telegram_id, lucky_coins')
+            .eq('telegram_id', order.user_id)
+            .single();
+          user = userByTelegramId;
+        }
 
         if (user) {
           const refundAmount = Number(order.amount);
@@ -133,14 +148,14 @@ Deno.serve(async (req) => {
           await supabase
             .from('users')
             .update({ lucky_coins: newLuckyCoins })
-            .eq('telegram_id', order.user_id);
+            .eq('id', user.id);
 
-          // Get user's wallet for transaction record
+          // Get user's wallet for transaction record - 使用 type='BALANCE'
           const { data: wallet } = await supabase
             .from('wallets')
             .select('id')
-            .eq('user_id', order.user_id)
-            .eq('currency', 'TJS')
+            .eq('user_id', user.id)
+            .eq('type', 'BALANCE')
             .single();
 
           if (wallet) {

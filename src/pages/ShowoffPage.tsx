@@ -47,39 +47,90 @@ const ShowoffPage: React.FC = () => {
     setError(null);
 
     try {
-      // 调用 API 获取晒单，按发布时间排序
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
       
       const offset = pageNum * ITEMS_PER_PAGE;
       const limit = ITEMS_PER_PAGE;
 
-      const response = await fetch(
-        `${supabaseUrl}/rest/v1/showoffs?status=eq.APPROVED&select=*,user:users(id,telegram_username),lottery:lotteries(id,title,image_url)&order=created_at.desc&limit=${limit}&offset=${offset}`,
+      // 1. 先获取晒单数据（不使用关联查询）
+      const showoffsResponse = await fetch(
+        `${supabaseUrl}/rest/v1/showoffs?status=eq.APPROVED&select=*&order=created_at.desc&limit=${limit}&offset=${offset}`,
         {
           headers: {
             'Authorization': `Bearer ${supabaseKey}`,
             'apikey': supabaseKey,
           },
-          signal: AbortSignal.timeout(10000), // 10秒超时
+          signal: AbortSignal.timeout(10000),
         }
       );
 
-      if (!response.ok) {
+      if (!showoffsResponse.ok) {
         throw new Error('获取晒单失败');
       }
 
-      const data = await response.json();
+      const showoffsData = await showoffsResponse.json();
+
+      // 2. 获取所有用户ID和彩票ID
+      const userIds = [...new Set(showoffsData.map((s: any) => s.user_id).filter(Boolean))];
+      const lotteryIds = [...new Set(showoffsData.map((s: any) => s.lottery_id).filter(Boolean))];
+
+      // 3. 批量获取用户信息
+      let usersMap: Record<string, any> = {};
+      if (userIds.length > 0) {
+        const usersResponse = await fetch(
+          `${supabaseUrl}/rest/v1/users?id=in.(${userIds.join(',')})&select=id,telegram_username,first_name,avatar_url`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (usersResponse.ok) {
+          const usersData = await usersResponse.json();
+          usersData.forEach((u: any) => {
+            usersMap[u.id] = u;
+          });
+        }
+      }
+
+      // 4. 批量获取彩票信息
+      let lotteriesMap: Record<string, any> = {};
+      if (lotteryIds.length > 0) {
+        const lotteriesResponse = await fetch(
+          `${supabaseUrl}/rest/v1/lotteries?id=in.(${lotteryIds.join(',')})&select=id,title,image_url`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (lotteriesResponse.ok) {
+          const lotteriesData = await lotteriesResponse.json();
+          lotteriesData.forEach((l: any) => {
+            lotteriesMap[l.id] = l;
+          });
+        }
+      }
+
+      // 5. 合并数据
+      const enrichedData = showoffsData.map((showoff: any) => ({
+        ...showoff,
+        user: usersMap[showoff.user_id] || null,
+        lottery: lotteriesMap[showoff.lottery_id] || null,
+      }));
 
       // 如果是加载更多，追加到现有数据
       if (isLoadMore) {
-        setShowoffs(prev => [...prev, ...data]);
+        setShowoffs(prev => [...prev, ...enrichedData]);
       } else {
-        setShowoffs(data);
+        setShowoffs(enrichedData);
       }
 
       // 如果返回的数据少于每页数量，说明没有更多了
-      setHasMore(data.length === ITEMS_PER_PAGE);
+      setHasMore(showoffsData.length === ITEMS_PER_PAGE);
     } catch (error: any) {
       console.error('Error fetching showoffs:', error);
       setError(error.message || t('error.networkError'));

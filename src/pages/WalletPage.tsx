@@ -46,22 +46,83 @@ const WalletPage: React.FC = () => {
       // 获取用户的所有钱包 ID
       const walletIds = wallets.map(w => w.id)
       
-      if (walletIds.length === 0) {
-        setTransactions([])
-        return
+      // 1. 查询钱包交易记录
+      let walletTransactions: any[] = []
+      if (walletIds.length > 0) {
+        const { data: txData, error: txError } = await supabase
+          .from('wallet_transactions')
+          .select('*')
+          .in('wallet_id', walletIds)
+          .order('created_at', { ascending: false })
+          .limit(50)
+        
+        if (!txError && txData) {
+          walletTransactions = txData.map(tx => ({
+            ...tx,
+            source: 'wallet_transactions'
+          }))
+        }
       }
       
-      // 查询最近 20 条交易记录
-      const { data, error } = await supabase
-        .from('wallet_transactions')
+      // 2. 查询充值记录
+      const { data: depositData, error: depositError } = await supabase
+        .from('deposit_requests')
         .select('*')
-        .in('wallet_id', walletIds)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(20)
       
-      if (error) throw error
+      const depositTransactions = (!depositError && depositData) ? depositData.map(d => ({
+        id: d.id,
+        type: 'DEPOSIT',
+        amount: Number(d.amount),
+        status: d.status === 'APPROVED' ? 'COMPLETED' : d.status,
+        created_at: d.created_at,
+        description: d.notes || '充值',
+        source: 'deposit_requests'
+      })) : []
       
-      setTransactions(data || [])
+      // 3. 查询提现记录
+      const { data: withdrawData, error: withdrawError } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20)
+      
+      const withdrawTransactions = (!withdrawError && withdrawData) ? withdrawData.map(w => ({
+        id: w.id,
+        type: 'WITHDRAWAL',
+        amount: -Number(w.amount),
+        status: w.status === 'APPROVED' ? 'COMPLETED' : w.status,
+        created_at: w.created_at,
+        description: w.notes || '提现',
+        source: 'withdrawal_requests'
+      })) : []
+      
+      // 4. 合并并排序（按时间倒序）
+      const allTransactions = [
+        ...walletTransactions,
+        ...depositTransactions,
+        ...withdrawTransactions
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      
+      // 5. 去重（避免充值/提现同时在wallet_transactions和单独表中出现）
+      const seen = new Set<string>()
+      const uniqueTransactions = allTransactions.filter(tx => {
+        // 如果是充值/提现类型，优先使用单独表的数据
+        if (tx.source === 'wallet_transactions' && (tx.type === 'DEPOSIT' || tx.type === 'WITHDRAWAL')) {
+          // 检查是否已经有来自单独表的同类型记录
+          const key = `${tx.type}_${tx.amount}_${new Date(tx.created_at).toDateString()}`
+          if (seen.has(key)) {
+            return false
+          }
+          seen.add(key)
+        }
+        return true
+      })
+      
+      setTransactions(uniqueTransactions.slice(0, 30))
     } catch (error) {
       console.error('Failed to fetch transactions:', error)
       toast.error(t('error.networkError'))

@@ -66,12 +66,31 @@ Deno.serve(async (req) => {
 
         // Refund all participants (return to wallet balance)
         for (const order of orders) {
-          // Get user's wallet
+          // 先获取用户信息（同时支持 id 和 telegram_id）
+          let userId = order.user_id;
+          const { data: userById } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', order.user_id)
+            .single();
+          
+          if (!userById) {
+            const { data: userByTelegramId } = await supabase
+              .from('users')
+              .select('id')
+              .eq('telegram_id', order.user_id)
+              .single();
+            if (userByTelegramId) {
+              userId = userByTelegramId.id;
+            }
+          }
+
+          // Get user's wallet - 使用 type='BALANCE'
           const { data: wallet } = await supabase
             .from('wallets')
             .select('*')
-            .eq('user_id', order.user_id)
-            .eq('currency', 'TJS')
+            .eq('user_id', userId)
+            .eq('type', 'BALANCE')
             .single();
 
           if (wallet) {

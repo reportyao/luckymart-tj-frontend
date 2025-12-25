@@ -337,8 +337,23 @@ Deno.serve(async (req) => {
       }),
     });
 
-    // ✅ 更新彩票已售数量（关键：使用乐观锁防止并发问题）
+    // ✅ 更新彩票已售数量，并在售罄时同时更新状态和开奖时间（原子操作）
     const newSoldTickets = lottery.sold_tickets + quantity;
+    const isSoldOut = newSoldTickets >= lottery.total_tickets;
+    
+    // 准备更新数据
+    const updateData: any = {
+      sold_tickets: newSoldTickets,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // 如果售罄，同时更新状态和开奖时间
+    if (isSoldOut) {
+      const drawTime = new Date(Date.now() + 180 * 1000); // 180秒后开奖
+      updateData.status = 'SOLD_OUT';
+      updateData.draw_time = drawTime.toISOString();
+    }
+    
     const updateLotteryResponse = await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
       method: 'PATCH',
       headers: {
@@ -346,14 +361,11 @@ Deno.serve(async (req) => {
         'apikey': serviceRoleKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        sold_tickets: newSoldTickets,
-        updated_at: new Date().toISOString(),
-      }),
+      body: JSON.stringify(updateData),
     });
 
     if (!updateLotteryResponse.ok) {
-      console.error('Failed to update lottery sold_tickets');
+      console.error('Failed to update lottery:', await updateLotteryResponse.text());
     }
 
     // 处理推荐佣金（如果有推荐人）
@@ -387,25 +399,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ✅ 检查是否售罄，如果售罄则更新状态为 SOLD_OUT 并设置开奖时间
-    if (newSoldTickets >= lottery.total_tickets) {
-      const drawTime = new Date(Date.now() + 180 * 1000); // 180秒后开奖
-
-      await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          status: 'SOLD_OUT',
-          draw_time: drawTime.toISOString(),
-          updated_at: new Date().toISOString(),
-        }),
-      });
-
-      // 异步调用售罄检测函数（用于触发定时开奖）
+    // ✅ 如果售罄，异步调用售罄检测函数（用于触发定时开奖）
+    if (isSoldOut) {
       fetch(`${supabaseUrl}/functions/v1/check-lottery-sold-out`, {
         method: 'POST',
         headers: {
@@ -430,7 +425,7 @@ Deno.serve(async (req) => {
       lottery_entries: entries,
       participation_codes: newNumbers, // 返回分配的7位数参与码
       remaining_balance: newBalance,
-      is_sold_out: newSoldTickets >= lottery.total_tickets,
+      is_sold_out: isSoldOut,
     };
 
     return new Response(JSON.stringify({ data: result }), {

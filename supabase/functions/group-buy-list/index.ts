@@ -107,7 +107,50 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: error.message }, 500);
       }
 
-      return createResponse({ success: true, data: sessions });
+      // 获取所有参与者的用户信息
+      const allUserIds = new Set<string>();
+      sessions?.forEach((session: any) => {
+        session.orders?.forEach((order: any) => {
+          if (order.user_id) allUserIds.add(order.user_id);
+        });
+      });
+
+      // 查询用户信息（同时支持 id 和 telegram_id 匹配）
+      let usersMap: Record<string, any> = {};
+      if (allUserIds.size > 0) {
+        const userIdArray = Array.from(allUserIds);
+        
+        // 先尝试用 id 匹配（UUID）
+        const { data: usersByUuid } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('id', userIdArray);
+        
+        // 再尝试用 telegram_id 匹配
+        const { data: usersByTelegramId } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('telegram_id', userIdArray);
+        
+        // 合并结果
+        usersByUuid?.forEach((u: any) => {
+          usersMap[u.id] = u;
+        });
+        usersByTelegramId?.forEach((u: any) => {
+          usersMap[u.telegram_id] = u;
+        });
+      }
+
+      // 将用户信息添加到订单中
+      const sessionsWithUsers = sessions?.map((session: any) => ({
+        ...session,
+        orders: session.orders?.map((order: any) => ({
+          ...order,
+          users: usersMap[order.user_id] || null,
+        })),
+      }));
+
+      return createResponse({ success: true, data: sessionsWithUsers });
     } else if (type === 'session-result') {
       // 获取拼团会话的开奖结果
       if (!session_id) {

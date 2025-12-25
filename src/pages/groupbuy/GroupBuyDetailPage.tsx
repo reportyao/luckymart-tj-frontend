@@ -408,18 +408,21 @@ export default function GroupBuyDetailPage() {
                       </div>
                     </div>
 
-                    {/* 显示参与用户头像和昵称 */}
+                    {/* 显示参与用户头像和昵称 - 垂直布局 */}
                     {session.orders && session.orders.length > 0 && (
-                      <div className="flex items-center gap-2 mb-3 overflow-x-auto">
+                      <div className="flex justify-center gap-4 mb-3">
                         {session.orders.map((order: any) => (
-                          <div key={order.id} className="flex items-center gap-1 bg-gray-50 rounded-full px-2 py-1">
+                          <div key={order.id} className="flex flex-col items-center">
                             <img
-                              src={order.users?.avatar_url || '/default-avatar.png'}
-                              alt={order.users?.telegram_username || 'User'}
-                              className="w-6 h-6 rounded-full"
+                              src={order.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`}
+                              alt={order.users?.telegram_username || order.users?.first_name || 'User'}
+                              className="w-12 h-12 rounded-full border-2 border-orange-200 object-cover"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`;
+                              }}
                             />
-                            <span className="text-xs text-gray-600">
-                              {truncateUsername(order.users?.telegram_username)}
+                            <span className="text-xs text-gray-600 mt-1 max-w-[60px] truncate text-center">
+                              {order.users?.telegram_username || order.users?.first_name || `User ${order.user_id?.slice(-4) || ''}`}
                             </span>
                           </div>
                         ))}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
+import { useSupabase } from '../contexts/SupabaseContext';
 import {
   BellIcon,
   CheckIcon,
@@ -11,7 +12,9 @@ import {
   MegaphoneIcon,
   ShieldCheckIcon,
   TicketIcon,
-  ShoppingBagIcon
+  ShoppingBagIcon,
+  ArrowPathIcon,
+  UsersIcon
 } from '@heroicons/react/24/outline';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -19,109 +22,180 @@ import toast from 'react-hot-toast';
 interface Notification {
   id: string;
   user_id: string;
-  type: 'LOTTERY_RESULT' | 'LOTTERY_REMINDER' | 'PAYMENT_SUCCESS' | 'PAYMENT_FAILED' | 
-        'MARKET_SOLD' | 'MARKET_PURCHASED' | 'REFERRAL_REWARD' | 'SYSTEM_ANNOUNCEMENT' | 'ACCOUNT_SECURITY';
+  type: string;
   title: string;
   content: string;
   related_id?: string;
   related_type?: string;
   is_read: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+  source?: string;
 }
 
 const NotificationPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useUser();
+  const { supabase } = useSupabase();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [filteredNotifications, setFilteredNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');
 
   const fetchNotifications = useCallback(async () => {
+    if (!user) return;
+    
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取通知
-      // 这里使用mock数据
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockNotifications: Notification[] = [
-        {
-          id: '1',
-          user_id: user?.id || '',
-          type: 'LOTTERY_RESULT',
-          title: '恭喜中奖!',
-          content: '您在抽奖 "iPhone 15 Pro Max 夺宝" 中获得1等奖,奖金 500.00 TJS',
-          related_id: 'lottery1',
-          related_type: 'lottery',
-          is_read: false,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          user_id: user?.id || '',
-          type: 'PAYMENT_SUCCESS',
-          title: '支付成功',
-          content: '您的充值订单已完成,金额 100.00 TJS',
-          related_id: 'order1',
-          related_type: 'order',
-          is_read: false,
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          updated_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: '3',
-          user_id: user?.id || '',
-          type: 'REFERRAL_REWARD',
-          title: '邀请奖励到账',
-          content: '您的好友通过您的邀请码注册,您获得了 10.00 TJS 奖励',
-          is_read: true,
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          updated_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '4',
-          user_id: user?.id || '',
-          type: 'LOTTERY_REMINDER',
-          title: '开奖提醒',
-          content: '"MacBook Pro 夺宝" 将在1小时后开奖,您购买的号码: 015, 016',
-          related_id: 'lottery2',
-          related_type: 'lottery',
-          is_read: true,
-          created_at: new Date(Date.now() - 172800000).toISOString(),
-          updated_at: new Date(Date.now() - 172800000).toISOString()
-        },
-        {
-          id: '5',
-          user_id: user?.id || '',
-          type: 'SYSTEM_ANNOUNCEMENT',
-          title: '系统维护通知',
-          content: '系统将于今晚23:00-01:00进行维护升级,期间部分功能可能暂时无法使用',
-          is_read: true,
-          created_at: new Date(Date.now() - 259200000).toISOString(),
-          updated_at: new Date(Date.now() - 259200000).toISOString()
-        },
-        {
-          id: '6',
-          user_id: user?.id || '',
-          type: 'ACCOUNT_SECURITY',
-          title: '安全提示',
-          content: '检测到您的账户在新设备登录,如非本人操作请及时修改密码',
-          is_read: true,
-          created_at: new Date(Date.now() - 345600000).toISOString(),
-          updated_at: new Date(Date.now() - 345600000).toISOString()
-        }
-      ];
+      const allNotifications: Notification[] = [];
 
-      setNotifications(mockNotifications);
+      // 1. 获取 notifications 表的数据
+      const { data: notificationsData, error: notificationsError } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (!notificationsError && notificationsData) {
+        allNotifications.push(...notificationsData.map(n => ({
+          ...n,
+          source: 'notifications'
+        })));
+      }
+
+      // 2. 获取充值记录
+      const { data: depositData, error: depositError } = await supabase
+        .from('deposit_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!depositError && depositData) {
+        depositData.forEach(d => {
+          allNotifications.push({
+            id: `deposit_${d.id}`,
+            user_id: d.user_id,
+            type: 'DEPOSIT',
+            title: d.status === 'APPROVED' ? '充值成功' : d.status === 'REJECTED' ? '充值失败' : '充值处理中',
+            content: `充值金额: ${d.amount} TJS${d.status === 'PENDING' ? ' (待审核)' : ''}`,
+            related_id: d.id,
+            related_type: 'deposit',
+            is_read: d.status !== 'PENDING',
+            created_at: d.created_at,
+            source: 'deposit_requests'
+          });
+        });
+      }
+
+      // 3. 获取提现记录
+      const { data: withdrawData, error: withdrawError } = await supabase
+        .from('withdrawal_requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!withdrawError && withdrawData) {
+        withdrawData.forEach(w => {
+          allNotifications.push({
+            id: `withdraw_${w.id}`,
+            user_id: w.user_id,
+            type: 'WITHDRAWAL',
+            title: w.status === 'APPROVED' ? '提现成功' : w.status === 'REJECTED' ? '提现失败' : '提现处理中',
+            content: `提现金额: ${w.amount} TJS${w.status === 'PENDING' ? ' (待审核)' : ''}`,
+            related_id: w.id,
+            related_type: 'withdrawal',
+            is_read: w.status !== 'PENDING',
+            created_at: w.created_at,
+            source: 'withdrawal_requests'
+          });
+        });
+      }
+
+      // 4. 获取兑换记录
+      const { data: exchangeData, error: exchangeError } = await supabase
+        .from('wallet_transactions')
+        .select('*')
+        .eq('type', 'COIN_EXCHANGE')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      // 过滤当前用户的兑换记录
+      if (!exchangeError && exchangeData) {
+        // 需要通过 wallet_id 关联到用户
+        const { data: userWallets } = await supabase
+          .from('wallets')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        const walletIds = userWallets?.map(w => w.id) || [];
+        
+        exchangeData.forEach(e => {
+          if (walletIds.includes(e.wallet_id)) {
+            allNotifications.push({
+              id: `exchange_${e.id}`,
+              user_id: user.id,
+              type: 'COIN_EXCHANGE',
+              title: '幸运币兑换',
+              content: e.description || `兑换金额: ${Math.abs(e.amount)} TJS`,
+              related_id: e.id,
+              related_type: 'exchange',
+              is_read: true,
+              created_at: e.created_at,
+              source: 'wallet_transactions'
+            });
+          }
+        });
+      }
+
+      // 5. 获取拼团开奖结果
+      const { data: groupBuyResults, error: groupBuyError } = await supabase
+        .from('group_buy_orders')
+        .select('*, session:group_buy_sessions(id, status, winner_id)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (!groupBuyError && groupBuyResults) {
+        groupBuyResults.forEach(order => {
+          if (order.session?.status === 'SUCCESS') {
+            const isWinner = order.session.winner_id === user.id || order.session.winner_id === user.telegram_id;
+            allNotifications.push({
+              id: `groupbuy_${order.id}`,
+              user_id: user.id,
+              type: isWinner ? 'GROUP_BUY_WIN' : 'GROUP_BUY_LOSE',
+              title: isWinner ? '🎉 拼团中奖!' : '拼团未中奖',
+              content: isWinner ? '恭喜您在拼团中中奖!' : '很遗憾，本次拼团未中奖，已退还幸运币',
+              related_id: order.session_id,
+              related_type: 'group_buy',
+              is_read: true,
+              created_at: order.updated_at || order.created_at,
+              source: 'group_buy_orders'
+            });
+          }
+        });
+      }
+
+      // 6. 按时间排序
+      allNotifications.sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      // 7. 去重（基于 id）
+      const uniqueNotifications = allNotifications.filter((n, index, self) =>
+        index === self.findIndex(t => t.id === n.id)
+      );
+
+      setNotifications(uniqueNotifications.slice(0, 50));
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoading(false);
     }
-  }, [t, user?.id]);
+  }, [user, supabase, t]);
 
   const filterNotifications = useCallback(() => {
     let filtered = [...notifications];
@@ -145,7 +219,14 @@ const NotificationPage: React.FC = () => {
 
   const markAsRead = async (notificationId: string) => {
     try {
-      // TODO: 调用API标记为已读
+      // 只有 notifications 表的数据才能标记为已读
+      if (!notificationId.includes('_')) {
+        await supabase
+          .from('notifications')
+          .update({ is_read: true, read_at: new Date().toISOString() })
+          .eq('id', notificationId);
+      }
+      
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
@@ -158,7 +239,13 @@ const NotificationPage: React.FC = () => {
 
   const markAllAsRead = async () => {
     try {
-      // TODO: 调用API标记全部为已读
+      // 标记 notifications 表中所有未读为已读
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('user_id', user?.id)
+        .eq('is_read', false);
+      
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
       toast.success('全部标记为已读');
     } catch (error) {
@@ -169,7 +256,14 @@ const NotificationPage: React.FC = () => {
 
   const deleteNotification = async (notificationId: string) => {
     try {
-      // TODO: 调用API删除通知
+      // 只有 notifications 表的数据才能删除
+      if (!notificationId.includes('_')) {
+        await supabase
+          .from('notifications')
+          .delete()
+          .eq('id', notificationId);
+      }
+      
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
       toast.success('通知已删除');
     } catch (error) {
@@ -182,11 +276,15 @@ const NotificationPage: React.FC = () => {
     const iconClass = "w-6 h-6";
     switch (type) {
       case 'LOTTERY_RESULT':
+      case 'GROUP_BUY_WIN':
         return <TrophyIcon className={`${iconClass} text-yellow-600`} />;
       case 'LOTTERY_REMINDER':
         return <TicketIcon className={`${iconClass} text-blue-600`} />;
+      case 'DEPOSIT':
       case 'PAYMENT_SUCCESS':
         return <BanknotesIcon className={`${iconClass} text-green-600`} />;
+      case 'WITHDRAWAL':
+        return <BanknotesIcon className={`${iconClass} text-red-600`} />;
       case 'PAYMENT_FAILED':
         return <ExclamationTriangleIcon className={`${iconClass} text-red-600`} />;
       case 'MARKET_SOLD':
@@ -198,6 +296,10 @@ const NotificationPage: React.FC = () => {
         return <MegaphoneIcon className={`${iconClass} text-blue-600`} />;
       case 'ACCOUNT_SECURITY':
         return <ShieldCheckIcon className={`${iconClass} text-orange-600`} />;
+      case 'COIN_EXCHANGE':
+        return <ArrowPathIcon className={`${iconClass} text-blue-600`} />;
+      case 'GROUP_BUY_LOSE':
+        return <UsersIcon className={`${iconClass} text-gray-600`} />;
       default:
         return <BellIcon className={`${iconClass} text-gray-600`} />;
     }
@@ -206,11 +308,15 @@ const NotificationPage: React.FC = () => {
   const getNotificationBgColor = (type: string): string => {
     switch (type) {
       case 'LOTTERY_RESULT':
+      case 'GROUP_BUY_WIN':
         return 'bg-yellow-50';
       case 'LOTTERY_REMINDER':
         return 'bg-blue-50';
+      case 'DEPOSIT':
       case 'PAYMENT_SUCCESS':
         return 'bg-green-50';
+      case 'WITHDRAWAL':
+        return 'bg-red-50';
       case 'PAYMENT_FAILED':
         return 'bg-red-50';
       case 'MARKET_SOLD':
@@ -222,6 +328,10 @@ const NotificationPage: React.FC = () => {
         return 'bg-blue-50';
       case 'ACCOUNT_SECURITY':
         return 'bg-orange-50';
+      case 'COIN_EXCHANGE':
+        return 'bg-blue-50';
+      case 'GROUP_BUY_LOSE':
+        return 'bg-gray-50';
       default:
         return 'bg-gray-50';
     }
@@ -242,14 +352,22 @@ const NotificationPage: React.FC = () => {
               </span>
             )}
           </div>
-          {unreadCount > 0 && (
+          <div className="flex items-center space-x-2">
             <button
-              onClick={markAllAsRead}
-              className="text-sm font-medium text-blue-600 hover:text-blue-700"
+              onClick={fetchNotifications}
+              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition-colors"
             >
-              {t('notification.markAllRead')}
+              <ArrowPathIcon className={`w-5 h-5 text-gray-600 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-          )}
+            {unreadCount > 0 && (
+              <button
+                onClick={markAllAsRead}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700"
+              >
+                {t('notification.markAllRead')}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Filter Tabs */}
@@ -329,17 +447,14 @@ const NotificationPage: React.FC = () => {
                           <span>标记已读</span>
                         </button>
                       )}
-                      {notification.related_id && (
-                        <button className="text-xs font-medium text-gray-600 hover:text-gray-700">
-                          查看详情
+                      {!notification.id.includes('_') && (
+                        <button
+                          onClick={() => deleteNotification(notification.id)}
+                          className="text-xs font-medium text-red-600 hover:text-red-700"
+                        >
+                          删除
                         </button>
                       )}
-                      <button
-                        onClick={() => deleteNotification(notification.id)}
-                        className="text-xs font-medium text-red-600 hover:text-red-700"
-                      >
-                        删除
-                      </button>
                     </div>
                   </div>
                 </div>
