@@ -139,7 +139,7 @@ serve(async (req) => {
       console.log('创建交易记录...')
       const { error: txError } = await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
-        type: 'DEPOSIT_APPROVED',
+        type: 'DEPOSIT',
         amount: depositRequest.amount,
         balance_after: newBalance,
         description: `充值审核通过 - 订单号: ${depositRequest.order_number}`,

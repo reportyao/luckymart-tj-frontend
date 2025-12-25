@@ -254,7 +254,7 @@ serve(async (req) => {
       // 创建钱包交易记录
       await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
-        type: 'WITHDRAWAL_COMPLETED',
+        type: 'WITHDRAWAL',
         amount: -withdrawAmount,
         balance_after: newBalance,
         description: `提现完成 - 订单号: ${withdrawalRequest.order_number}`,

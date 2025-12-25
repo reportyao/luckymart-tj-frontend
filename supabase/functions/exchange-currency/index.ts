@@ -151,14 +151,14 @@ serve(async (req) => {
     await supabaseClient.from('wallet_transactions').insert([
       {
         wallet_id: sourceWallet.id,
-        type: 'EXCHANGE_OUT',
+        type: 'COIN_EXCHANGE',
         amount: -amount,
         balance_after: sourceWallet.balance - amount,
         description: `兑换${amount}${curr}到${targetType === 'LUCKY_COIN' ? '夺宝币' : '余额'}`,
       },
       {
         wallet_id: targetWallet.id,
-        type: 'EXCHANGE_IN',
+        type: 'COIN_EXCHANGE',
         amount: exchangedAmount,
         balance_after: targetWallet.balance + exchangedAmount,
         description: `从${sourceType === 'BALANCE' ? '余额' : '夺宝币'}兑换${exchangedAmount}${curr}`,

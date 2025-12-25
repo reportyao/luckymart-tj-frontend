@@ -240,7 +240,7 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           wallet_id: wallet.id,
-          type: 'WITHDRAWAL_PENDING',
+          type: 'WITHDRAWAL',
           amount: -withdrawAmount,
           balance_after: newBalance,
           description: `提现申请 - 订单号: ${orderNumber}`,
