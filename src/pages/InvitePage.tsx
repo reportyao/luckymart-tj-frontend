@@ -44,7 +44,7 @@ const InvitePage: React.FC = () => {
       const { data: referralsData, error: referralsError } = await supabase
         .from('users')
         .select('id, first_name, telegram_username, created_at')
-        .eq('invited_by', user.id);
+        .eq('invited_by', user.id) as { data: Array<{ id: string; first_name: string | null; telegram_username: string | null; created_at: string }> | null; error: any };
 
       if (referralsError) throw referralsError;
 
