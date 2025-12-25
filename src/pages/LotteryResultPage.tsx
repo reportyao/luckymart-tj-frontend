@@ -34,17 +34,17 @@ function toTajikistanTime(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   
-  // 塔吉克斯坦时区是 UTC+5
-  // JavaScript 的 Date 对象会自动处理本地时区，我们需要将其转换为 UTC，然后加上 5 小时
-  const utcTime = date.getTime() + (date.getTimezoneOffset() * 60000);
+  // 数据库存储的是 UTC 时间
+  // 塔吉克斯坦时区是 UTC+5，所以需要加上 5 小时
+  const utcTime = date.getTime();
   const tajikTime = new Date(utcTime + (5 * 60 * 60 * 1000));
   
-  const year = tajikTime.getFullYear();
-  const month = String(tajikTime.getMonth() + 1).padStart(2, '0');
-  const day = String(tajikTime.getDate()).padStart(2, '0');
-  const hours = String(tajikTime.getHours()).padStart(2, '0');
-  const minutes = String(tajikTime.getMinutes()).padStart(2, '0');
-  const seconds = String(tajikTime.getSeconds()).padStart(2, '0');
+  const year = tajikTime.getUTCFullYear();
+  const month = String(tajikTime.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(tajikTime.getUTCDate()).padStart(2, '0');
+  const hours = String(tajikTime.getUTCHours()).padStart(2, '0');
+  const minutes = String(tajikTime.getUTCMinutes()).padStart(2, '0');
+  const seconds = String(tajikTime.getUTCSeconds()).padStart(2, '0');
   
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
