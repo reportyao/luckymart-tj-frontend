@@ -95,8 +95,42 @@ serve(async (req) => {
       throw new Error('未找到用户钱包')
     }
 
+    const withdrawAmount = parseFloat(withdrawalRequest.amount)
+    const currentBalance = parseFloat(wallet.balance) || 0
+    const currentFrozenBalance = parseFloat(wallet.frozen_balance) || 0
+    const currentTotalWithdrawals = parseFloat(wallet.total_withdrawals) || 0
+
     if (action === 'APPROVED') {
-      // 审核通过
+      // 审核通过 - 如果余额没有被冻结，现在冻结它
+      let newBalance = currentBalance
+      let newFrozenBalance = currentFrozenBalance
+
+      // 检查是否需要冻结余额（兼容旧的没有冻结的提现请求）
+      if (currentFrozenBalance < withdrawAmount) {
+        // 需要从balance中冻结
+        const needToFreeze = withdrawAmount - currentFrozenBalance
+        if (currentBalance < needToFreeze) {
+          throw new Error(`余额不足，当前余额: ${currentBalance}`)
+        }
+        newBalance = currentBalance - needToFreeze
+        newFrozenBalance = withdrawAmount
+        
+        // 更新钱包余额
+        const { error: freezeError } = await supabaseClient
+          .from('wallets')
+          .update({
+            balance: newBalance,
+            frozen_balance: newFrozenBalance,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', wallet.id)
+
+        if (freezeError) {
+          console.error('冻结余额失败:', freezeError)
+          throw new Error('冻结余额失败')
+        }
+      }
+
       const { error: updateError } = await supabaseClient
         .from('withdrawal_requests')
         .update({
@@ -124,11 +158,14 @@ serve(async (req) => {
       })
     } else if (action === 'REJECTED') {
       // 审核拒绝,解冻余额
+      // 只解冻实际冻结的金额
+      const amountToUnfreeze = Math.min(currentFrozenBalance, withdrawAmount)
+      
       const { error: unfreezeError } = await supabaseClient
         .from('wallets')
         .update({
-          balance: wallet.balance + withdrawalRequest.amount,
-          frozen_balance: wallet.frozen_balance - withdrawalRequest.amount,
+          balance: currentBalance + amountToUnfreeze,
+          frozen_balance: Math.max(0, currentFrozenBalance - withdrawAmount),
           updated_at: new Date().toISOString(),
         })
         .eq('id', wallet.id)
@@ -164,18 +201,37 @@ serve(async (req) => {
         related_type: 'WITHDRAWAL_REQUEST',
       })
     } else if (action === 'COMPLETED') {
-      // 转账完成,扣除冻结余额
+      // 转账完成
+      // 计算需要从frozen_balance和balance中扣除的金额
+      let newFrozenBalance = currentFrozenBalance
+      let newBalance = currentBalance
+      
+      if (currentFrozenBalance >= withdrawAmount) {
+        // 冻结余额足够，只从冻结余额扣除
+        newFrozenBalance = currentFrozenBalance - withdrawAmount
+      } else {
+        // 冻结余额不足，需要从balance中扣除差额
+        const fromBalance = withdrawAmount - currentFrozenBalance
+        newFrozenBalance = 0
+        newBalance = currentBalance - fromBalance
+        
+        if (newBalance < 0) {
+          throw new Error(`余额不足，无法完成提现`)
+        }
+      }
+      
       const { error: deductError } = await supabaseClient
         .from('wallets')
         .update({
-          frozen_balance: wallet.frozen_balance - withdrawalRequest.amount,
-          total_withdrawals: wallet.total_withdrawals + withdrawalRequest.amount,
+          balance: newBalance,
+          frozen_balance: newFrozenBalance,
+          total_withdrawals: currentTotalWithdrawals + withdrawAmount,
           updated_at: new Date().toISOString(),
         })
         .eq('id', wallet.id)
 
       if (deductError) {
-        console.error('扣除冻结余额失败:', deductError)
+        console.error('扣除余额失败:', deductError)
         throw new Error('扣除余额失败')
       }
 
@@ -198,9 +254,9 @@ serve(async (req) => {
       // 创建钱包交易记录
       await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
-        type: 'WITHDRAWAL_APPROVED',
-        amount: -withdrawalRequest.amount,
-        balance_after: wallet.balance,
+        type: 'WITHDRAWAL_COMPLETED',
+        amount: -withdrawAmount,
+        balance_after: newBalance,
         description: `提现完成 - 订单号: ${withdrawalRequest.order_number}`,
         related_id: requestId,
       })
