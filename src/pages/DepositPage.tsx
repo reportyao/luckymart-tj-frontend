@@ -95,7 +95,9 @@ export default function DepositPage() {
       alert(t('deposit.imageUploadSuccess'))
     } catch (error) {
       console.error('[DepositPage] Image upload failed:', error)
-      alert(t('deposit.imageUploadFailed'))
+      // 显示更详细的错误信息
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      alert(`${t('deposit.imageUploadFailed')}: ${errorMessage}`)
     } finally {
       setUploading(false)
       // 清空 input，允许重新选择同一文件
