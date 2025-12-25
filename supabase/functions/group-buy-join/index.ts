@@ -67,7 +67,19 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product out of stock' }, 400);
     }
 
-    // 2. Get user's BALANCE wallet (type='BALANCE' instead of currency='TJS')
+    // 2. Get user info to get telegram_id (for foreign key constraints)
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, telegram_id')
+      .eq('id', user_id)
+      .single();
+
+    if (userError || !user) {
+      console.error('User query error:', userError, 'user_id:', user_id);
+      return createResponse({ success: false, error: 'User not found' }, 404);
+    }
+
+    // 3. Get user's BALANCE wallet (type='BALANCE')
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
@@ -93,7 +105,7 @@ Deno.serve(async (req) => {
 
     let targetSession = null;
 
-    // 3. If session_id is provided, try to join existing session
+    // 4. If session_id is provided, try to join existing session
     if (session_id) {
       const { data: existingSession, error: sessionError } = await supabase
         .from('group_buy_sessions')
@@ -112,12 +124,12 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: 'Session is full' }, 400);
       }
 
-      // Check if user already joined this session
+      // Check if user already joined this session (use telegram_id for query)
       const { data: existingOrder } = await supabase
         .from('group_buy_orders')
         .select('id')
         .eq('session_id', session_id)
-        .eq('user_id', user_id)
+        .eq('user_id', user.telegram_id)
         .single();
 
       if (existingOrder) {
@@ -126,7 +138,7 @@ Deno.serve(async (req) => {
 
       targetSession = existingSession;
     } else {
-      // 4. Create new session
+      // 5. Create new session - use telegram_id for initiator_id (foreign key constraint)
       const sessionCode = generateSessionCode();
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + product.timeout_hours);
@@ -139,7 +151,7 @@ Deno.serve(async (req) => {
           status: 'ACTIVE',
           current_participants: 0,
           max_participants: product.group_size,
-          initiator_id: user_id,
+          initiator_id: user.telegram_id, // Use telegram_id
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
         })
@@ -148,13 +160,13 @@ Deno.serve(async (req) => {
 
       if (createSessionError) {
         console.error('Failed to create session:', createSessionError);
-        return createResponse({ success: false, error: 'Failed to create session' }, 500);
+        return createResponse({ success: false, error: 'Failed to create session: ' + createSessionError.message }, 500);
       }
 
       targetSession = newSession;
     }
 
-    // 5. Deduct balance from wallet
+    // 6. Deduct balance from wallet
     const newBalance = Number(wallet.balance) - pricePerPerson;
     const { error: updateWalletError } = await supabase
       .from('wallets')
@@ -171,7 +183,7 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Failed to deduct balance, please try again' }, 500);
     }
 
-    // 6. Create wallet transaction record
+    // 7. Create wallet transaction record
     const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
     await supabase
       .from('wallet_transactions')
@@ -188,7 +200,7 @@ Deno.serve(async (req) => {
         created_at: new Date().toISOString(),
       });
 
-    // 7. Create order
+    // 8. Create order - use telegram_id for user_id (foreign key constraint)
     const orderNumber = generateOrderNumber();
     const orderTimestamp = Date.now();
 
@@ -197,7 +209,7 @@ Deno.serve(async (req) => {
       .insert({
         session_id: targetSession.id,
         product_id: product.id,
-        user_id: user_id,
+        user_id: user.telegram_id, // Use telegram_id instead of user_id
         order_number: orderNumber,
         amount: pricePerPerson,
         payment_method: 'WALLET',
@@ -217,10 +229,10 @@ Deno.serve(async (req) => {
           version: wallet.version + 2
         })
         .eq('id', wallet.id);
-      return createResponse({ success: false, error: 'Failed to create order' }, 500);
+      return createResponse({ success: false, error: 'Failed to create order: ' + createOrderError.message }, 500);
     }
 
-    // 8. Update session participant count
+    // 9. Update session participant count
     const newParticipantCount = targetSession.current_participants + 1;
     const { error: updateSessionError } = await supabase
       .from('group_buy_sessions')
@@ -234,7 +246,7 @@ Deno.serve(async (req) => {
       console.error('Failed to update session:', updateSessionError);
     }
 
-    // 9. Check if session is now full, trigger draw
+    // 10. Check if session is now full, trigger draw
     let drawResult = null;
     if (newParticipantCount >= targetSession.max_participants) {
       // Call draw function
