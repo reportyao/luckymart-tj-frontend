@@ -26,9 +26,10 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
       
       setTimeLeft(diff);
       
-      if (diff === 0 && !isEnded) {
+      if (diff <= 0 && !isEnded) {
         setIsEnded(true);
         if (onCountdownEnd) {
+          console.log('[CountdownTimer] Countdown ended, triggering onCountdownEnd');
           onCountdownEnd();
         }
       }
