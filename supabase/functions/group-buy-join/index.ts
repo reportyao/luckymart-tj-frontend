@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
           status: 'ACTIVE',
           current_participants: 0,
           max_participants: product.group_size,
-          initiator_id: user.id,
+          initiator_id: user.telegram_id,
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
         })
