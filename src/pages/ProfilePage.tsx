@@ -8,6 +8,7 @@ import {
   CogIcon,
   ShoppingBagIcon,
   ClipboardDocumentIcon,
+  ClipboardDocumentListIcon,
   ShareIcon,
   ChevronRightIcon,
   CheckCircleIcon,
@@ -64,11 +65,11 @@ const ProfilePage: React.FC = () => {
       action: () => navigate('/invite'),
     },
     {
-      icon: TrophyIcon,
-      title: t('prize.prizeManagement'),
-      subtitle: t('prize.viewPrizes'),
-      color: 'from-orange-500 to-orange-600',
-      action: () => navigate('/prizes'),
+      icon: ClipboardDocumentListIcon,
+      title: t('orders.title'),
+      subtitle: t('profile.viewOrders'),
+      color: 'from-purple-500 to-pink-600',
+      action: () => navigate('/orders-management'),
     },
   ]
 

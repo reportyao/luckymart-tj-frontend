@@ -27,6 +27,7 @@ const MarketPage = lazy(() => import("./pages/MarketPage"))
 const MarketCreatePage = lazy(() => import("./pages/MarketCreatePage"))
 const MyTicketsPage = lazy(() => import("./pages/MyTicketsPage"))
 const MyPrizesPage = lazy(() => import("./pages/MyPrizesPage"))
+const OrderManagementPage = lazy(() => import("./pages/OrderManagementPage"))
 const SettingsPage = lazy(() => import("./pages/SettingsPage"))
 const DepositPage = lazy(() => import("./pages/DepositPage"))
 const ExchangePage = lazy(() => import("./pages/ExchangePage"))
@@ -72,8 +73,9 @@ function App() {
               <Route path="/market" element={<MarketPage />} />
               <Route path="/market/create" element={<MarketCreatePage />} />
               <Route path="/my-tickets" element={<MyTicketsPage />} />
-              <Route path="/my-prizes" element={<MyPrizesPage />} />
-              <Route path="/prizes" element={<MyPrizesPage />} />
+              <Route path="/my-prizes" element={<OrderManagementPage />} />
+              <Route path="/prizes" element={<OrderManagementPage />} />
+              <Route path="/orders-management" element={<OrderManagementPage />} />
               <Route path="/showoff/my" element={<ShowoffPage />} />
               <Route path="/market/my-resales" element={<MarketPage />} />
               <Route path="/settings" element={<SettingsPage />} />
