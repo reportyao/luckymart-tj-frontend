@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
 
   try {
     // Get user_id from query parameters
-    const url = new URL(req.request.url);
+    const url = new URL(req.url);
     const userId = url.searchParams.get('user_id');
 
     if (!userId) {
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
         const encoder = new TextEncoder();
 
         // Send initial connection message
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\\n\\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'connected', timestamp: new Date().toISOString() })}\n\n`));
 
         // Create Supabase client
         const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
                   type: 'notification',
                   data: payload.new,
                   timestamp: new Date().toISOString()
-                })}\\n\\n`)
+                })}\n\n`)
               );
             }
           )
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
                   type: 'group_buy_update',
                   data: payload.new,
                   timestamp: new Date().toISOString()
-                })}\\n\\n`)
+                })}\n\n`)
               );
             }
           )
@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
                     currency: payload.new.currency,
                   },
                   timestamp: new Date().toISOString()
-                })}\\n\\n`)
+                })}\n\n`)
               );
             }
           )
@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
         // Send heartbeat every 30 seconds to keep connection alive
         const heartbeatInterval = setInterval(() => {
           try {
-            controller.enqueue(encoder.encode(`: heartbeat\\n\\n`));
+            controller.enqueue(encoder.encode(`: heartbeat\n\n`));
           } catch (error) {
             console.error('Heartbeat error:', error);
             clearInterval(heartbeatInterval);

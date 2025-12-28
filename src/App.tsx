@@ -6,6 +6,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { DebugFloatingButton } from "./components/debug/DebugFloatingButton"
 import { Layout } from "./components/layout/Layout"
 import { queryClient } from "./lib/react-query"
+import { RealtimeNotificationsProvider } from "./components/RealtimeNotificationsProvider"
 
 // 路由级别代码分割 - 懒加载页面组件
 const HomePage = lazy(() => import("./pages/HomePage"))
@@ -40,7 +41,8 @@ const GroupBuyResultPage = lazy(() => import("./pages/groupbuy/GroupBuyResultPag
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router>
+      <RealtimeNotificationsProvider>
+        <Router>
         <div className="App">
           <Layout>
             <Suspense fallback={<div>Loading...</div>}>
@@ -91,9 +93,10 @@ function App() {
         
         <DebugFloatingButton />
       </div>
-    </Router>
-    <ReactQueryDevtools initialIsOpen={false} />
-  </QueryClientProvider>
+        </Router>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </RealtimeNotificationsProvider>
+    </QueryClientProvider>
   )
 }
 

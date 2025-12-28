@@ -1,0 +1,168 @@
+import { useEffect, useRef, useState, useCallback } from 'react';
+import { supabase } from '@/lib/supabase';
+
+export interface RealtimeNotification {
+  type: 'connected' | 'notification' | 'group_buy_update' | 'balance_update' | 'heartbeat';
+  data?: any;
+  timestamp: string;
+}
+
+export interface UseRealtimeNotificationsOptions {
+  enabled?: boolean;
+  onNotification?: (notification: RealtimeNotification) => void;
+  onBalanceUpdate?: (balance: { balance: number; frozen_balance: number; currency: string }) => void;
+  onGroupBuyUpdate?: (session: any) => void;
+  onError?: (error: Error) => void;
+}
+
+export function useRealtimeNotifications(options: UseRealtimeNotificationsOptions = {}) {
+  const {
+    enabled = true,
+    onNotification,
+    onBalanceUpdate,
+    onGroupBuyUpdate,
+    onError
+  } = options;
+
+  const [isConnected, setIsConnected] = useState(false);
+  const [lastMessage, setLastMessage] = useState<RealtimeNotification | null>(null);
+  const eventSourceRef = useRef<EventSource | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectAttemptsRef = useRef(0);
+
+  const connect = useCallback(async () => {
+    if (!enabled) return;
+
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.warn('No user logged in, skipping realtime notifications');
+        return;
+      }
+
+      // Close existing connection
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+      }
+
+      // Get Supabase URL from environment
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('VITE_SUPABASE_URL not configured');
+      }
+
+      // Create SSE connection
+      const url = `${supabaseUrl}/functions/v1/realtime-notifications?user_id=${user.id}`;
+      const eventSource = new EventSource(url);
+
+      eventSource.onopen = () => {
+        console.log('Realtime notifications connected');
+        setIsConnected(true);
+        reconnectAttemptsRef.current = 0;
+      };
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data: RealtimeNotification = JSON.parse(event.data);
+          setLastMessage(data);
+
+          // Handle different notification types
+          switch (data.type) {
+            case 'connected':
+              console.log('SSE connection established');
+              break;
+
+            case 'notification':
+              console.log('New notification received:', data.data);
+              onNotification?.(data);
+              break;
+
+            case 'balance_update':
+              console.log('Balance updated:', data.data);
+              onBalanceUpdate?.(data.data);
+              break;
+
+            case 'group_buy_update':
+              console.log('Group buy session updated:', data.data);
+              onGroupBuyUpdate?.(data.data);
+              break;
+
+            case 'heartbeat':
+              // Heartbeat to keep connection alive
+              break;
+
+            default:
+              console.log('Unknown notification type:', data.type);
+          }
+        } catch (error) {
+          console.error('Error parsing SSE message:', error);
+        }
+      };
+
+      eventSource.onerror = (error) => {
+        console.error('SSE connection error:', error);
+        setIsConnected(false);
+        eventSource.close();
+
+        // Attempt to reconnect with exponential backoff
+        const maxAttempts = 5;
+        const baseDelay = 1000;
+        const maxDelay = 30000;
+
+        if (reconnectAttemptsRef.current < maxAttempts) {
+          const delay = Math.min(
+            baseDelay * Math.pow(2, reconnectAttemptsRef.current),
+            maxDelay
+          );
+
+          console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current + 1}/${maxAttempts})`);
+
+          reconnectTimeoutRef.current = setTimeout(() => {
+            reconnectAttemptsRef.current++;
+            connect();
+          }, delay);
+        } else {
+          console.error('Max reconnection attempts reached');
+          onError?.(new Error('Failed to establish realtime connection'));
+        }
+      };
+
+      eventSourceRef.current = eventSource;
+
+    } catch (error) {
+      console.error('Error connecting to realtime notifications:', error);
+      onError?.(error as Error);
+    }
+  }, [enabled, onNotification, onBalanceUpdate, onGroupBuyUpdate, onError]);
+
+  const disconnect = useCallback(() => {
+    if (eventSourceRef.current) {
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+    }
+
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    setIsConnected(false);
+  }, []);
+
+  // Connect on mount, disconnect on unmount
+  useEffect(() => {
+    connect();
+
+    return () => {
+      disconnect();
+    };
+  }, [connect, disconnect]);
+
+  return {
+    isConnected,
+    lastMessage,
+    reconnect: connect,
+    disconnect
+  };
+}
