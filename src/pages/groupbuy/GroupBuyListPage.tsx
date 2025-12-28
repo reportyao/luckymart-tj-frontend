@@ -73,21 +73,27 @@ export default function GroupBuyListPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <ShoppingBag className="w-7 h-7" />
           {t('groupBuy.title')}
         </h1>
-        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed">
-          <div className="font-semibold mb-2">{t('groupBuy.howItWorks.title')}</div>
-          <div className="space-y-1">
-            <div>{t('groupBuy.howItWorks.description')}</div>
+      </div>
+
+      {/* Rules Card */}
+      <div className="px-4 mt-4">
+        <div className="bg-white rounded-2xl shadow-md p-4 border border-gray-100">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-1 h-5 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
+            <h2 className="font-semibold text-gray-800">{t('groupBuy.howItWorks.title')}</h2>
+          </div>
+          <div className="space-y-2 text-sm text-gray-600">
             <div className="flex items-start gap-2">
-              <span>🎉</span>
+              <span className="text-lg">🎉</span>
               <span>{t('groupBuy.howItWorks.winner')}</span>
             </div>
             <div className="flex items-start gap-2">
-              <span>💰</span>
+              <span className="text-lg">💰</span>
               <span>{t('groupBuy.howItWorks.participants')}</span>
             </div>
           </div>

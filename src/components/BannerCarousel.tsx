@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+
 
 interface Banner {
   id: string;
@@ -54,14 +54,6 @@ const BannerCarousel: React.FC = () => {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  const goToPrevious = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + banners.length) % banners.length);
-  }, [banners.length]);
-
-  const goToNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % banners.length);
-  }, [banners.length]);
-
   // 根据当前语言获取对应的Banner图片
   const getLocalizedImageUrl = useCallback((banner: Banner): string => {
     const lang = i18n.language;
@@ -111,32 +103,6 @@ const BannerCarousel: React.FC = () => {
         }}
       />
 
-
-      {/* 导航按钮 */}
-      {banners.length > 1 && (
-        <>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goToPrevious();
-            }}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center transition-colors"
-          >
-            <ChevronLeftIcon className="w-5 h-5 text-white" />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goToNext();
-            }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/30 hover:bg-white/50 rounded-full flex items-center justify-center transition-colors"
-          >
-            <ChevronRightIcon className="w-5 h-5 text-white" />
-          </button>
-        </>
-      )}
 
       {/* 指示器 */}
       {banners.length > 1 && (
