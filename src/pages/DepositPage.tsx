@@ -72,8 +72,24 @@ export default function DepositPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[DepositPage] handleImageUpload triggered')
+    console.log('[DepositPage] Event target:', e.target)
+    console.log('[DepositPage] Event target files:', e.target.files)
+    
     const files = e.target.files
-    if (!files || files.length === 0) return
+    
+    // 详细的文件验证日志
+    if (!files) {
+      console.error('[DepositPage] No files object - e.target.files is null')
+      alert(t('deposit.noFileSelected') || '未选择文件，请重试')
+      return
+    }
+    
+    if (files.length === 0) {
+      console.error('[DepositPage] Files array is empty - files.length === 0')
+      alert(t('deposit.noFileSelected') || '未选择文件，请重试')
+      return
+    }
 
     try {
       setUploading(true)
@@ -82,8 +98,22 @@ export default function DepositPage() {
       const fileArray = Array.from(files)
       console.log('[DepositPage] Files to upload:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
       
+      // 验证文件类型
+      const invalidFiles = fileArray.filter(f => !f.type.startsWith('image/'))
+      if (invalidFiles.length > 0) {
+        console.error('[DepositPage] Invalid file types detected:', invalidFiles)
+        alert(t('deposit.invalidFileType') || '请选择图片文件')
+        setUploading(false)
+        e.target.value = ''
+        return
+      }
+      
       const urls = await uploadImages(fileArray, true, 'payment-proofs', 'deposits')
       console.log('[DepositPage] Upload successful, URLs:', urls)
+      
+      if (!urls || urls.length === 0) {
+        throw new Error('Upload returned empty URLs')
+      }
       
       setUploadedImages(prev => {
         const newImages = [...prev, ...urls]
@@ -92,12 +122,13 @@ export default function DepositPage() {
       })
       
       // 显示成功提示
-      alert(t('deposit.imageUploadSuccess'))
+      alert(t('deposit.imageUploadSuccess') || `成功上传 ${urls.length} 张图片`)
     } catch (error) {
       console.error('[DepositPage] Image upload failed:', error)
+      console.error('[DepositPage] Error stack:', error instanceof Error ? error.stack : 'No stack')
       // 显示更详细的错误信息
       const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`${t('deposit.imageUploadFailed')}: ${errorMessage}`)
+      alert(`${t('deposit.imageUploadFailed') || '图片上传失败'}: ${errorMessage}`)
     } finally {
       setUploading(false)
       // 清空 input，允许重新选择同一文件
@@ -304,7 +335,7 @@ export default function DepositPage() {
         {/* 上传凭证 */}
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.uploadProof')}</h2>
-          <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors ${
+          <label htmlFor="payment-proof-upload" className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors ${
             uploading 
               ? 'border-purple-500 bg-purple-50 cursor-wait' 
               : 'border-gray-300 cursor-pointer hover:border-purple-500'
@@ -327,6 +358,7 @@ export default function DepositPage() {
               onChange={handleImageUpload}
               disabled={uploading}
               className="hidden"
+              id="payment-proof-upload"
             />
           </label>
           {uploadedImages.length > 0 && (
