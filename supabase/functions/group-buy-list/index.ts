@@ -115,18 +115,29 @@ Deno.serve(async (req) => {
         });
       });
 
-      // Query user information
+      // 查询用户信息（同时支持 id 和 telegram_id 匹配）
       let usersMap: Record<string, any> = {};
       if (allUserIds.size > 0) {
         const userIdArray = Array.from(allUserIds);
         
-        const { data: users } = await supabase
+        // 先尝试用 id 匹配（UUID）
+        const { data: usersByUuid } = await supabase
           .from('users')
           .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
           .in('id', userIdArray);
         
-        users?.forEach((u: any) => {
+        // 再尝试用 telegram_id 匹配
+        const { data: usersByTelegramId } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('telegram_id', userIdArray);
+        
+        // 合并结果
+        usersByUuid?.forEach((u: any) => {
           usersMap[u.id] = u;
+        });
+        usersByTelegramId?.forEach((u: any) => {
+          usersMap[u.telegram_id] = u;
         });
       }
 
@@ -171,27 +182,27 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: ordersError.message }, 500);
       }
 
-      // Get participant user information
+      // 获取参与者的用户信息
       const userIds = orders?.map(o => o.user_id) || [];
       const { data: users } = await supabase
         .from('users')
-        .select('id, telegram_id, telegram_username, first_name, last_name')
-        .in('id', userIds);
+        .select('telegram_id, telegram_username, first_name, last_name')
+        .in('telegram_id', userIds);
 
-      // Merge user info into orders
+      // 合并用户信息到订单
       const participants = orders?.map(order => {
-        const user = users?.find(u => u.id === order.user_id);
+        const user = users?.find(u => u.telegram_id === order.user_id);
         return {
           user_id: order.user_id,
-          username: user?.telegram_username || user?.first_name || 'Unknown User',
+          username: user?.telegram_username || user?.first_name || `User ${order.user_id.slice(-4)}`,
           order_number: order.order_number,
           created_at: order.created_at,
         };
       }) || [];
 
-      // Get winner username
-      const winner = users?.find(u => u.id === result.winner_id);
-      const winnerUsername = winner?.telegram_username || winner?.first_name || 'Unknown Winner';
+      // 获取中奖者用户名
+      const winner = users?.find(u => u.telegram_id === result.winner_id);
+      const winnerUsername = winner?.telegram_username || winner?.first_name || `User ${result.winner_id?.slice(-4) || 'Unknown'}`;
 
       return createResponse({ 
         success: true, 
