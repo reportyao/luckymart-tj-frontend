@@ -3,6 +3,7 @@ import { motion } from "framer-motion"
 import { useUser } from "../../contexts/UserContext"
 import { cn } from "../../lib/utils"
 import { BottomNavigation } from "../navigation/BottomNavigation"
+import { useTranslation } from 'react-i18next'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -18,6 +19,7 @@ export const Layout: React.FC<LayoutProps> = ({
   showBottomNav = true
 }) => {
   const { user, telegramUser } = useUser()
+  const { t } = useTranslation()
 
   return (
     <div className={cn(
@@ -33,39 +35,23 @@ export const Layout: React.FC<LayoutProps> = ({
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-sm">LM</span>
-                </div>
+                <img 
+                  src="/tezbarakat-logo.png" 
+                  alt="TezBarakat Logo"
+                  className="w-10 h-10 object-contain"
+                />
                 <div>
                   <h1 className="text-lg font-bold text-gray-900">TezBarakat</h1>
-                  <p className="text-xs text-gray-500">社交积分商城平台</p>
+                  <p className="text-xs text-gray-500">{t('home.tagline')}</p>
                 </div>
               </div>
               
-              {user && (
-                <div className="flex items-center space-x-2">
-                  {telegramUser?.photo_url ? (
-                    <img 
-                      src={telegramUser.photo_url} 
-                      alt="Avatar"
-                      className="w-8 h-8 rounded-full"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 bg-gradient-to-r from-green-400 to-blue-500 rounded-full flex items-center justify-center">
-                      <span className="text-white text-xs font-medium">
-                        {(user as any).user_metadata?.first_name?.[0] || "U"}
-                      </span>
-                    </div>
-                  )}
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {(user as any).user_metadata?.first_name} {(user as any).user_metadata?.last_name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      ID: {(user as any).user_metadata?.referral_code}
-                    </p>
-                  </div>
-                </div>
+              {user && telegramUser?.photo_url && (
+                <img 
+                  src={telegramUser.photo_url} 
+                  alt="Avatar"
+                  className="w-10 h-10 rounded-full"
+                />
               )}
             </div>
           </div>

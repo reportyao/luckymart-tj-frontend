@@ -99,23 +99,10 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="pb-20">
-      {/* 欢迎横幅 */}
-      <SafeMotion
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 mx-4 mt-4 rounded-2xl"
-      >
-        <div className="flex items-center justify-between">
-          <div>
-	            <h2 className="text-xl font-bold mb-1">
-	              {t('home.welcome')}, {user.first_name || user.telegram_username || t('common.user')}! 👋
-	            </h2>
-            <p className="text-white/80 text-sm">
-              {t('home.tryLuck')}
-            </p>
-          </div>
-        </div>
-      </SafeMotion>
+      {/* Banner广告位 */}
+      <div className="px-4 mt-4">
+        <BannerCarousel />
+      </div>
 
       {/* 拼团和积分商城入口 */}
       <div className="px-4 mt-6">
@@ -148,15 +135,7 @@ const HomePage: React.FC = () => {
         </div>
       </div>
 
-	      {/* 钱包卡片 */}
-	      <div className="px-4 mt-6">
-	        <ReferralBanner />
-      </div>
-
-      {/* Banner广告位 */}
-      <div className="px-4 mt-6">
-        <BannerCarousel />
-      </div>
+	
 
 	      {/* 热门积分商城 */}
 	      <div className="px-4 mt-8">
