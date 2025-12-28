@@ -91,8 +91,9 @@ const ShowoffCreatePage: React.FC = () => {
       }));
 
       // 2. 获取已发布的晒单（通过 prize_id 关联）
+      // 只排除 APPROVED 和 PENDING 状态的晒单，REJECTED 状态的可以再次发布
       const showoffsResponse = await fetch(
-        `${supabaseUrl}/rest/v1/showoffs?user_id=eq.${user?.id}&select=prize_id`,
+        `${supabaseUrl}/rest/v1/showoffs?user_id=eq.${user?.id}&status=in.(APPROVED,PENDING)&select=prize_id`,
         {
           headers: {
             'Authorization': `Bearer ${supabaseKey}`,
@@ -102,9 +103,9 @@ const ShowoffCreatePage: React.FC = () => {
       );
 
       const publishedShowoffs = showoffsResponse.ok ? await showoffsResponse.json() : [];
-      const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id));
+      const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id).filter(Boolean));
 
-      // 3. 过滤掉已发布晒单的中奖记录，并按中奖时间从新到旧排序
+      // 3. 过滤掉已有 APPROVED 或 PENDING 晒单的中奖记录，并按中奖时间从新到旧排序
       const availablePrizes = enrichedPrizes
         .filter((prize: any) => !publishedPrizeIds.has(prize.id))
         .sort((a: any, b: any) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime());
@@ -203,7 +204,8 @@ const ShowoffCreatePage: React.FC = () => {
 
       // 调用晒单创建 API
       await showoffService.createShowoff({
-        lottery_id: selectedLotteryData.lottery_id, // 使用 lottery_id 而不是 id
+        prize_id: selectedLotteryData.id, // prize_id 是 prizes 表的 id
+        lottery_id: selectedLotteryData.lottery_id,
         content: content.trim(),
         images: images,
         user_id: user?.id, // 传入 user_id 避免 session 问题

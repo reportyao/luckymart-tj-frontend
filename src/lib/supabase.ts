@@ -765,6 +765,7 @@ export const referralService = {
    * 创建晒单
    */
   async createShowoff(params: {
+    prize_id?: string;
     lottery_id: string;
     content: string;
     images: string[];
@@ -781,6 +782,7 @@ export const referralService = {
       .from('showoffs')
       .insert({
         user_id: userId,
+        prize_id: params.prize_id,
         lottery_id: params.lottery_id,
         content: params.content,
         images: params.images,
