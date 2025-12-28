@@ -119,27 +119,12 @@ Deno.serve(async (req) => {
     // 8. Refund non-winners (convert to Lucky Coins)
     for (const order of orders) {
       if (order.id !== winnerOrder.id) {
-        // Update user's lucky_coins balance - 同时支持 id 和 telegram_id
-        let user = null;
-        
-        // 先尝试用 id 查询（UUID）
-        const { data: userById } = await supabase
+        // Get user information
+        const { data: user } = await supabase
           .from('users')
           .select('id, telegram_id, lucky_coins')
           .eq('id', order.user_id)
           .single();
-        
-        if (userById) {
-          user = userById;
-        } else {
-          // 再尝试用 telegram_id 查询
-          const { data: userByTelegramId } = await supabase
-            .from('users')
-            .select('id, telegram_id, lucky_coins')
-            .eq('telegram_id', order.user_id)
-            .single();
-          user = userByTelegramId;
-        }
 
         if (user) {
           const refundAmount = Number(order.amount);
@@ -221,13 +206,16 @@ Deno.serve(async (req) => {
       console.error('Failed to send win notification:', error);
     }
 
-    // 10. Update product sold quantity
-    await supabase
-      .from('group_buy_products')
-      .update({ 
-        sold_quantity: session.product_id ? 1 : 0 // Increment by 1 for each successful draw
-      })
-      .eq('id', session.product_id);
+    // 10. Update product sold quantity (increment by 1)
+    const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
+      product_id: session.product_id,
+      amount: 1
+    });
+    
+    if (incrementError) {
+      console.error('Failed to increment sold_quantity:', incrementError);
+      // Don't fail the whole draw, just log the error
+    }
 
     return createResponse({
       success: true,
