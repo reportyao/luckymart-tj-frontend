@@ -117,7 +117,7 @@ const HomePage: React.FC = () => {
         </div>
       </SafeMotion>
 
-      {/* 拼团和夺宝入口 */}
+      {/* 拼团和积分商城入口 */}
       <div className="px-4 mt-6">
         <div className="grid grid-cols-2 gap-4">
           <Link
@@ -158,7 +158,7 @@ const HomePage: React.FC = () => {
         <BannerCarousel />
       </div>
 
-	      {/* 热门夺宝 */}
+	      {/* 热门积分商城 */}
 	      <div className="px-4 mt-8">
 	        <div className="flex items-center justify-between mb-4">
 	          <h3 className="text-lg font-bold text-gray-900">{t('home.hotLotteries')}</h3>

@@ -134,7 +134,7 @@ curl "https://api.telegram.org/bot8074258399:AAG1WdyCJe4vphx9YB3B6z60nTE3dhBBP-Q
 
 ✅ 拼团中奖/未中奖通知将自动发送
 ✅ 充值/提现通知将自动发送
-✅ 夺宝中奖通知将自动发送(集成后)
+✅ 积分商城中奖通知将自动发送(集成后)
 
 ---
 

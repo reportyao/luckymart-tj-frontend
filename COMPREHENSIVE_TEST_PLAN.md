@@ -40,9 +40,9 @@
 |---------|--------|------|
 | Home | 首页展示 | P0 |
 | HomePage | 首页（备用） | P1 |
-| LotteryPage | 夺宝大厅 | P0 |
-| Lotteries | 夺宝列表 | P0 |
-| LotteryForm | 夺宝创建/编辑 | P1 |
+| LotteryPage | 积分商城大厅 | P0 |
+| Lotteries | 积分商城列表 | P0 |
+| LotteryForm | 积分商城创建/编辑 | P1 |
 | LotteryResultPage | 开奖结果 | P0 |
 | MyTicketsPage | 我的购票 | P0 |
 | MyPrizesPage | 我的中奖 | P0 |
@@ -126,22 +126,22 @@
 #### 测试用例
 | 用例ID | 测试项 | 预期结果 | 优先级 |
 |--------|--------|--------|------|
-| HOME-001 | 页面加载 | 显示欢迎信息和热门夺宝 | P0 |
-| HOME-002 | 推荐夺宝 | 显示至少3个热门夺宝 | P0 |
+| HOME-001 | 页面加载 | 显示欢迎信息和热门积分商城 | P0 |
+| HOME-002 | 推荐积分商城 | 显示至少3个热门积分商城 | P0 |
 | HOME-003 | 用户统计 | 显示用户的中奖数、参与数 | P0 |
 | HOME-004 | 导航菜单 | 所有菜单项可点击 | P0 |
 | HOME-005 | 响应式设计 | 在移动设备上正确显示 | P1 |
 
-### 2.3 夺宝功能
+### 2.3 积分商城功能
 
 #### 测试用例
 | 用例ID | 测试项 | 预期结果 | 优先级 |
 |--------|--------|--------|------|
-| LOTTERY-001 | 夺宝列表 | 显示所有活跃夺宝 | P0 |
+| LOTTERY-001 | 积分商城列表 | 显示所有活跃积分商城 | P0 |
 | LOTTERY-002 | 筛选功能 | 可按状态筛选（活跃/即将/已完成） | P0 |
-| LOTTERY-003 | 搜索功能 | 可按关键词搜索夺宝 | P0 |
+| LOTTERY-003 | 搜索功能 | 可按关键词搜索积分商城 | P0 |
 | LOTTERY-004 | 购票 | 成功购票并扣费 | P0 |
-| LOTTERY-005 | 查看详情 | 显示夺宝详细信息 | P0 |
+| LOTTERY-005 | 查看详情 | 显示积分商城详细信息 | P0 |
 | LOTTERY-006 | 开奖 | 随机选出中奖者 | P0 |
 | LOTTERY-007 | 查看结果 | 显示中奖号码和中奖者 | P0 |
 | LOTTERY-008 | 我的购票 | 显示用户购买的所有票 | P0 |
@@ -155,7 +155,7 @@
 | WALLET-001 | 余额显示 | 正确显示当前余额 | P0 |
 | WALLET-002 | 充值 | 成功提交充值申请 | P0 |
 | WALLET-003 | 提现 | 成功提交提现申请 | P0 |
-| WALLET-004 | 兑换 | 成功兑换幸运币 | P0 |
+| WALLET-004 | 兑换 | 成功兑换积分 | P0 |
 | WALLET-005 | 交易历史 | 显示所有交易记录 | P0 |
 | WALLET-006 | 交易筛选 | 可按类型筛选交易 | P1 |
 | WALLET-007 | 安全设置 | 可设置支付密码 | P1 |
@@ -273,24 +273,24 @@
 | USER-API-005 | 权限检查 | 非管理员返回403 | P0 |
 | USER-API-006 | 无效ID | 返回404错误 | P0 |
 
-### 3.3 夺宝接口
+### 3.3 积分商城接口
 
 #### 接口清单
 | 接口 | 方法 | 功能 | 测试用例 |
 |------|------|------|--------|
-| /api/trpc/lotteries.list | GET | 获取夺宝列表 | LOTTERY-API-001 |
-| /api/trpc/lotteries.getById | GET | 获取夺宝详情 | LOTTERY-API-002 |
-| /api/trpc/lotteries.create | POST | 创建夺宝 | LOTTERY-API-003 |
-| /api/trpc/lotteries.update | POST | 更新夺宝 | LOTTERY-API-004 |
+| /api/trpc/lotteries.list | GET | 获取积分商城列表 | LOTTERY-API-001 |
+| /api/trpc/lotteries.getById | GET | 获取积分商城详情 | LOTTERY-API-002 |
+| /api/trpc/lotteries.create | POST | 创建积分商城 | LOTTERY-API-003 |
+| /api/trpc/lotteries.update | POST | 更新积分商城 | LOTTERY-API-004 |
 | /api/trpc/lotteries.draw | POST | 执行开奖 | LOTTERY-API-005 |
 
 #### 测试用例
 | 用例ID | 测试项 | 预期结果 | 优先级 |
 |--------|--------|--------|------|
-| LOTTERY-API-001 | 获取列表 | 返回夺宝列表 | P0 |
-| LOTTERY-API-002 | 获取详情 | 返回完整夺宝信息 | P0 |
-| LOTTERY-API-003 | 创建夺宝 | 成功创建并返回ID | P0 |
-| LOTTERY-API-004 | 更新夺宝 | 成功更新信息 | P0 |
+| LOTTERY-API-001 | 获取列表 | 返回积分商城列表 | P0 |
+| LOTTERY-API-002 | 获取详情 | 返回完整积分商城信息 | P0 |
+| LOTTERY-API-003 | 创建积分商城 | 成功创建并返回ID | P0 |
+| LOTTERY-API-004 | 更新积分商城 | 成功更新信息 | P0 |
 | LOTTERY-API-005 | 开奖 | 随机选出中奖者 | P0 |
 | LOTTERY-API-006 | 参与 | 成功购票并扣费 | P0 |
 | LOTTERY-API-007 | 参数验证 | 无效参数返回400 | P0 |
@@ -304,7 +304,7 @@
 | /api/trpc/wallet.getTransactions | GET | 获取交易历史 | WALLET-API-002 |
 | /api/trpc/wallet.deposit | POST | 创建充值申请 | WALLET-API-003 |
 | /api/trpc/wallet.withdraw | POST | 创建提现申请 | WALLET-API-004 |
-| /api/trpc/wallet.exchange | POST | 兑换幸运币 | WALLET-API-005 |
+| /api/trpc/wallet.exchange | POST | 兑换积分 | WALLET-API-005 |
 
 #### 测试用例
 | 用例ID | 测试项 | 预期结果 | 优先级 |

@@ -30,7 +30,7 @@ serve(async (req) => {
       .select('*', { count: 'exact', head: true })
       .gte('created_at', today.toISOString())
 
-    // 获取活跃夺宝数
+    // 获取活跃积分商城数
     const { count: activeLotteries } = await supabaseClient
       .from('lotteries')
       .select('*', { count: 'exact', head: true })

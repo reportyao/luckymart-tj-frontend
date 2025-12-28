@@ -146,7 +146,7 @@ serve(async (req) => {
 
     if (targetError || !targetWallet) {
       console.error('[Exchange] Target wallet error:', targetError);
-      throw new Error('未找到幸运币钱包');
+      throw new Error('未找到积分钱包');
     }
 
     // 检查源钱包余额
@@ -195,7 +195,7 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', sourceWallet.id)
-      throw new Error('更新幸运币钱包失败');
+      throw new Error('更新积分钱包失败');
     }
 
     // 创建兑换记录
@@ -234,7 +234,7 @@ serve(async (req) => {
         balance_before: sourceBalanceBefore,
         balance_after: sourceWallet.balance - amount,
         status: 'COMPLETED',
-        description: `兑换${amount}TJS到幸运币`,
+        description: `兑换${amount}TJS到积分`,
         processed_at: new Date().toISOString(),
       },
       {

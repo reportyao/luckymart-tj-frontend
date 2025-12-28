@@ -55,7 +55,7 @@ const MyTicketsPage: React.FC = () => {
 
     setIsLoading(true);
     try {
-      // 获取夺宝信息
+      // 获取积分商城信息
       const { data: lotteryData, error: lotteryError } = await supabase
         .from('lotteries')
         .select('*')
@@ -129,7 +129,7 @@ const MyTicketsPage: React.FC = () => {
   if (!lottery) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">夺宝不存在</p>
+        <p className="text-gray-500">积分商城不存在</p>
       </div>
     );
   }
@@ -154,7 +154,7 @@ const MyTicketsPage: React.FC = () => {
       </div>
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* 夺宝信息卡片 */}
+        {/* 积分商城信息卡片 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex space-x-4">
             <LazyImage
@@ -260,7 +260,7 @@ const MyTicketsPage: React.FC = () => {
         {tickets.length === 0 && (
           <div className="text-center py-12">
             <TicketIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">您还没有购买此夺宝的彩票</p>
+            <p className="text-gray-500">您还没有购买此积分商城的彩票</p>
           </div>
         )}
       </div>

@@ -62,7 +62,7 @@ const LotteryResultPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
 
-  // 获取夺宝信息
+  // 获取积分商城信息
   const fetchLottery = useCallback(async () => {
     if (!id) return;
     
@@ -259,7 +259,7 @@ const LotteryResultPage: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* 夺宝信息卡片 */}
+        {/* 积分商城信息卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}

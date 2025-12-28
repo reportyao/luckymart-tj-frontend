@@ -23,7 +23,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   
   // 查找 TJS 货币的余额钱包
   const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
-  // 查找幸运币钱包
+  // 查找积分钱包
   const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
   
   const toggleShowBalance = () => {
@@ -92,7 +92,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
 
         </div>
 
-        {/* 幸运币钱包 */}
+        {/* 积分钱包 */}
         <div className="bg-white/20 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>

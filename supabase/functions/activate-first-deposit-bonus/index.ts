@@ -83,7 +83,7 @@ serve(async (req) => {
       )
     }
 
-    // 5. 激活奖励：更新状态并增加夺宝币余额
+    // 5. 激活奖励：更新状态并增加积分商城币余额
     const bonusAmount = userData.first_deposit_bonus_amount
 
     const { error: rpcError } = await supabaseClient.rpc('add_bonus_balance', {

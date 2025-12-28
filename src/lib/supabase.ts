@@ -234,11 +234,11 @@ export const authService = {
 };
 
 /**
- * 夺宝/产品服务
+ * 积分商城/产品服务
  */
 export const lotteryService: any = {
   /**
-   * 获取所有夺宝列表
+   * 获取所有积分商城列表
    */
   async getAllLotteries(): Promise<Lottery[]> {
     const { data, error } = await supabase
@@ -248,14 +248,14 @@ export const lotteryService: any = {
     
     if (error) {
       console.error('Failed to fetch all lotteries:', error);
-      throw new Error(`获取所有夺宝列表失败: ${error.message}`);
+      throw new Error(`获取所有积分商城列表失败: ${error.message}`);
     }
     return data;
   },
 
   /**
-   * 根据状态获取夺宝列表
-   * @param status 夺宝状态 (ACTIVE, DRAWN, CANCELLED)
+   * 根据状态获取积分商城列表
+   * @param status 积分商城状态 (ACTIVE, DRAWN, CANCELLED)
    */
   async getLotteriesByStatus(status: string): Promise<Lottery[]> {
     const { data, error } = await supabase
@@ -266,13 +266,13 @@ export const lotteryService: any = {
     
     if (error) {
       console.error(`Failed to fetch lotteries with status ${status}:`, error);
-      throw new Error(`获取夺宝列表失败: ${error.message}`);
+      throw new Error(`获取积分商城列表失败: ${error.message}`);
     }
     return data;
   },
 
   /**
-   * 获取所有活跃的夺宝列表
+   * 获取所有活跃的积分商城列表
    */
   async getActiveLotteries(): Promise<Lottery[]> {
     const { data, error } = await supabase
@@ -283,14 +283,14 @@ export const lotteryService: any = {
     
     if (error) {
       console.error('Failed to fetch lotteries:', error);
-      throw new Error(`获取夺宝列表失败: ${error.message}`);
+      throw new Error(`获取积分商城列表失败: ${error.message}`);
     }
     return data;
   },
 
   /**
-   * 获取单个夺宝详情
-   * @param lotteryId 夺宝 ID
+   * 获取单个积分商城详情
+   * @param lotteryId 积分商城 ID
    */
   async getLotteryDetails(lotteryId: string): Promise<Lottery | null> {
     const { data, error } = await supabase
@@ -301,14 +301,14 @@ export const lotteryService: any = {
 
     if (error && error.code !== 'PGRST116') { // PGRST116: No rows found
       console.error('Failed to fetch lottery details:', error);
-      throw new Error(`获取夺宝详情失败: ${error.message}`);
+      throw new Error(`获取积分商城详情失败: ${error.message}`);
     }
     return data;
   },
 
   /**
-   * 购买夺宝门票
-   * @param lotteryId 夺宝 ID
+   * 购买积分商城门票
+   * @param lotteryId 积分商城 ID
    * @param ticketCount 购买数量
    */
   async purchaseTickets(lotteryId: string, ticketCount: number, userId?: string): Promise<Order> {
@@ -323,7 +323,7 @@ export const lotteryService: any = {
       body: {
         lotteryId,
         quantity: ticketCount,
-        paymentMethod: 'LUCKY_COIN_WALLET', // 默认使用幸运币支付
+        paymentMethod: 'LUCKY_COIN_WALLET', // 默认使用积分支付
         session_token: sessionToken
       }
     });
@@ -341,7 +341,7 @@ export const lotteryService: any = {
   },
 
   /**
-   * 获取用户的夺宝订单记录
+   * 获取用户的积分商城订单记录
    * @param userId 用户 ID
    */
     async getLotteryResult(lotteryId: string): Promise<any> {
@@ -370,7 +370,7 @@ export const lotteryService: any = {
 
   /**
    * 执行开奖
-   * @param lotteryId 夺宝 ID
+   * @param lotteryId 积分商城 ID
    */
   async drawLottery(lotteryId: string): Promise<any> {
     const { data, error } = await supabase.rpc('draw_lottery' as any, {
@@ -446,7 +446,7 @@ export const walletService = {
 
   /**
    * 余额兑换（例如：佣金兑换为余额）
-   * 余额兑换（单向：余额 -> 夺宝币）
+   * 余额兑换（单向：余额 -> 积分商城币）
    * @param amount 兑换金额
    */
   async exchangeRealToBonus(amount: number): Promise<{ success: boolean; new_balance?: number }> {
@@ -628,7 +628,7 @@ export const referralService = {
       .in('id', userIds);
     const userMap = new Map(users?.map(u => [u.id, u]) || []);
 
-    // 3. 批量查询夺宝信息
+    // 3. 批量查询积分商城信息
     const lotteryIds = [...new Set(showoffs.map(s => s.lottery_id).filter(Boolean))];
     const { data: lotteries } = await supabase
       .from('lotteries')

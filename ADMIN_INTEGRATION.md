@@ -27,7 +27,7 @@ tezbarakat-tj-frontend/
 
 ### 用户前端功能
 - 首页 (HomePage)
-- 夺宝 (LotteryPage)
+- 积分商城 (LotteryPage)
 - 钱包 (WalletPage)
 - 订单 (OrderPage)
 - 晒单 (ShowoffPage)
@@ -40,7 +40,7 @@ tezbarakat-tj-frontend/
 ### 管理后台功能
 - **仪表板** (/admin/dashboard) - 统计数据和概览
 - **用户管理** (/admin/users) - 用户列表、详情、状态管理、余额调整
-- **夺宝管理** (/admin/lotteries) - 商品列表、创建/编辑、开奖管理
+- **积分商城管理** (/admin/lotteries) - 商品列表、创建/编辑、开奖管理
 - **订单管理** (/admin/orders) - 订单列表和详情
 - **充值审核** (/admin/deposit-review) - 充值申请审核
 - **提现审核** (/admin/withdrawal-review) - 提现申请审核
@@ -135,11 +135,11 @@ OWNER_OPEN_ID=your-open-id
 - `POST /api/trpc/users.updateStatus` - 更新用户状态
 - `POST /api/trpc/users.adjustBalance` - 调整用户余额
 
-### 夺宝管理
-- `GET /api/trpc/lotteries.list` - 获取夺宝列表
-- `GET /api/trpc/lotteries.getById` - 获取夺宝详情
-- `POST /api/trpc/lotteries.create` - 创建夺宝
-- `POST /api/trpc/lotteries.update` - 更新夺宝
+### 积分商城管理
+- `GET /api/trpc/lotteries.list` - 获取积分商城列表
+- `GET /api/trpc/lotteries.getById` - 获取积分商城详情
+- `POST /api/trpc/lotteries.create` - 创建积分商城
+- `POST /api/trpc/lotteries.update` - 更新积分商城
 - `POST /api/trpc/lotteries.draw` - 执行开奖
 
 ### 其他模块

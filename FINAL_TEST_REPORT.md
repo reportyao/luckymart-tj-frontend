@@ -107,7 +107,7 @@ npx eslint .
 #### 2. 页面路由 ✅
 测试的页面路由:
 - [x] `/` - 首页
-- [x] `/lottery` - 夺宝大厅
+- [x] `/lottery` - 积分商城大厅
 - [x] `/wallet` - 钱包
 - [x] `/profile` - 个人中心
 - [x] `/market` - 转售市场

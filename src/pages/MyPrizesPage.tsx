@@ -215,7 +215,7 @@ const MyPrizesPage: React.FC = () => {
               onClick={() => navigate('/lottery')}
               className="text-blue-600 font-medium hover:underline"
             >
-              去参与夺宝 →
+              去参与积分商城 →
             </button>
           </div>
         )}

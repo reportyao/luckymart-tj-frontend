@@ -100,9 +100,9 @@ serve(async (req) => {
       throw new Error('审核失败')
     }
 
-    // 如果批准且有奖励，给用户增加幸运币
+    // 如果批准且有奖励，给用户增加积分
     if (action === 'APPROVED' && rewardCoins && rewardCoins > 0) {
-      // 查询用户的幸运币钱包
+      // 查询用户的积分钱包
       const { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
         .select('*')
@@ -111,8 +111,8 @@ serve(async (req) => {
         .single()
 
       if (walletError || !wallet) {
-        console.error('查询幸运币钱包失败:', walletError)
-        throw new Error('未找到用户幸运币钱包')
+        console.error('查询积分钱包失败:', walletError)
+        throw new Error('未找到用户积分钱包')
       }
 
       // 更新钱包余额
@@ -126,8 +126,8 @@ serve(async (req) => {
         .eq('id', wallet.id)
 
       if (updateWalletError) {
-        console.error('更新幸运币余额失败:', updateWalletError)
-        throw new Error('更新幸运币余额失败')
+        console.error('更新积分余额失败:', updateWalletError)
+        throw new Error('更新积分余额失败')
       }
 
       // 创建交易记录
@@ -136,7 +136,7 @@ serve(async (req) => {
         type: 'SHOWOFF_REWARD',
         amount: rewardCoins,
         balance_after: newBalance,
-        description: `晒单审核通过奖励 - ${rewardCoins} 幸运币`,
+        description: `晒单审核通过奖励 - ${rewardCoins} 积分`,
         related_id: showoffId,
       })
 
@@ -145,7 +145,7 @@ serve(async (req) => {
         user_id: showoff.user_id,
         type: 'SHOWOFF_APPROVED',
         title: '晒单审核通过',
-        content: `您的晒单已审核通过，获得 ${rewardCoins} 幸运币奖励！`,
+        content: `您的晒单已审核通过，获得 ${rewardCoins} 积分奖励！`,
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })

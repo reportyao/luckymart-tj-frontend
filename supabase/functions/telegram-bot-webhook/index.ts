@@ -41,7 +41,7 @@ interface BotCommand {
 // 多语言消息模板
 const messages = {
   zh: {
-    welcome: "欢迎来到TezBarakatTJ！🎉\n\n这是您的专属夺宝平台，您可以：\n• 查看钱包余额\n• 参与精彩夺宝\n• 管理您的彩票\n• 获得专属推荐奖励\n\n输入 /help 查看所有可用命令。",
+    welcome: "欢迎来到TezBarakatTJ！🎉\n\n这是您的专属积分商城平台，您可以：\n• 查看钱包余额\n• 参与精彩积分商城\n• 管理您的彩票\n• 获得专属推荐奖励\n\n输入 /help 查看所有可用命令。",
     help: "🤖 可用命令：\n\n/start - 开始使用\n/help - 帮助信息\n/balance - 查看钱包余额\n/tickets - 查看我的彩票\n/history - 交易历史\n/withdraw - 提现申请\n/deposit - 充值说明\n/referral - 推广信息\n/language - 切换语言\n/support - 客服支持",
     balance_error: "无法获取钱包信息，请稍后重试。",
     user_not_found: "用户未找到，请先在小程序中完成注册。",
@@ -156,7 +156,7 @@ const commands: BotCommand[] = [
         const luckyCoinWallet = wallets.find(w => w.wallet_type === 'LUCKY_COIN')?.balance || 0;
 
         const balanceText = {
-          zh: `💰 您的钱包余额：\n\n💵 余额钱包：${balanceWallet} 元\n🍀 幸运币：${luckyCoinWallet} 枚\n\n点击打开小程序进行充值或交易 →`,
+          zh: `💰 您的钱包余额：\n\n💵 余额钱包：${balanceWallet} 元\n🍀 积分：${luckyCoinWallet} 枚\n\n点击打开小程序进行充值或交易 →`,
           ru: `💰 Ваш баланс кошелька:\n\n💵 Основной баланс: ${balanceWallet} сом\n🍀 Удачные монеты: ${luckyCoinWallet} шт\n\nНажмите, чтобы открыть мини-приложение для пополнения или торговли →`,
           tg: `💰 Боқимондаи ҳамёни шумо:\n\n💵 Боқимондаи асосӣ: ${balanceWallet} сомонӣ\n🍀 Тангаҳои бахт: ${luckyCoinWallet} дона\n\nБарои пурсозӣ ё савдо барномаи хурдро кушоед →`
         };
@@ -201,7 +201,7 @@ const commands: BotCommand[] = [
 
         if (!entries || entries.length === 0) {
           const noTicketsText = {
-            zh: "🎫 您暂时没有彩票\n\n立即打开小程序参与夺宝吧！",
+            zh: "🎫 您暂时没有彩票\n\n立即打开小程序参与积分商城吧！",
             ru: "🎫 У вас пока нет билетов\n\nОткройте мини-приложение, чтобы участвовать в розыгрышах!",
             tg: "🎫 Шумо ҳанӯз билет надоред\n\nБарои иштирок дар бахтозмоӣ барномаи хурдро кушоед!"
           };

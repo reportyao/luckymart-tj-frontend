@@ -61,7 +61,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
       // 刷新钱包余额
       await refreshWallets()
 
-      // 触发外部刷新，例如刷新夺宝列表
+      // 触发外部刷新，例如刷新积分商城列表
       onConfirm(lottery.id, quantity) 
     } catch (error: any) {
       console.error('Purchase failed:', error)

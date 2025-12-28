@@ -114,7 +114,7 @@ const ShowoffCreatePage: React.FC = () => {
       const winningLotteries: WinningLottery[] = availablePrizes.map((prize: any) => ({
         id: prize.id,
         lottery_id: prize.lottery_id,
-        lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知夺宝',
+        lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知积分商城',
         prize_name: prize.prize_name || prize.lottery?.title?.zh || '未知奖品',
         prize_image: prize.prize_image || prize.lottery?.image_url || 'https://via.placeholder.com/400',
         winning_number: prize.winning_code || prize.winning_number || '',

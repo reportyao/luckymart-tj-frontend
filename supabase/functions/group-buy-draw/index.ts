@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
               balance_before: 0, // Lucky coins, not wallet balance
               balance_after: newLuckyCoins,
               status: 'COMPLETED',
-              description: `拼团未中奖退款（转为幸运币）`,
+              description: `拼团未中奖退款（转为积分）`,
               reference_id: order.id,
               processed_at: new Date().toISOString(),
               created_at: new Date().toISOString(),

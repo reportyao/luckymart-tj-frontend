@@ -1,14 +1,14 @@
-# TezBarakat TJ - Telegram Mini App 夺宝平台
+# TezBarakat TJ - Telegram Mini App 积分商城平台
 
-一个基于Telegram Mini App的社交夺宝平台前端项目。
+一个基于Telegram Mini App的社交积分商城平台前端项目。
 
 ## 🎯 功能特性
 
 ### 核心功能
-- 🎲 **夺宝系统** - 完整的夺宝购买、开奖、中奖流程
-- 💰 **双钱包系统** - 余额钱包 + 夺宝币钱包
+- 🎲 **积分商城系统** - 完整的积分商城购买、开奖、中奖流程
+- 💰 **双钱包系统** - 余额钱包 + 积分商城币钱包
 - 💳 **充值提现** - 支持Alif Mobi、DC Bank等支付方式
-- 🔄 **余额兑换** - 余额与夺宝币1:1互相兑换
+- 🔄 **余额兑换** - 余额与积分商城币1:1互相兑换
 - 👥 **三级邀请** - 10%/5%/2%返佣机制
 - 🎁 **晒单系统** - 用户分享中奖喜悦
 - 🛒 **转售市场** - 中奖商品二次交易
@@ -39,7 +39,7 @@
 luckymart-tj/
 ├── src/
 │   ├── components/        # 组件
-│   │   ├── lottery/      # 夺宝相关组件
+│   │   ├── lottery/      # 积分商城相关组件
 │   │   ├── wallet/       # 钱包相关组件
 │   │   └── navigation/   # 导航组件
 │   ├── pages/            # 页面
@@ -127,8 +127,8 @@ VITE_TELEGRAM_BOT_USERNAME=your_bot_username
 主要数据表:
 - `users` - 用户信息
 - `wallets` - 钱包
-- `lotteries` - 夺宝商品
-- `lottery_entries` - 夺宝记录
+- `lotteries` - 积分商城商品
+- `lottery_entries` - 积分商城记录
 - `orders` - 订单
 - `deposit_requests` - 充值申请
 - `withdrawal_requests` - 提现申请

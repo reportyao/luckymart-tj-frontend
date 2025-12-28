@@ -64,7 +64,7 @@ Line 109: '安全提示' → t('notifications.securityTip')
 #### 5. **OrderPage.tsx** (Multiple order types)
 ```tsx
 Line 58: '购买彩票' → t('orders.purchaseTicket')
-Line 72: '余额兑换夺宝币' → t('orders.exchangeBalance')
+Line 72: '余额兑换积分商城币' → t('orders.exchangeBalance')
 Line 83: '钱包充值' → t('orders.deposit')
 Line 94: '购买彩票' → t('orders.purchaseTicket')
 Line 108: '提现申请' → t('orders.withdrawal')
@@ -90,7 +90,7 @@ Line 98: '查看转售历史' → t('profile.resaleHistoryDesc')
 #### 7. **LotteryDetailPage.tsx** (Error messages)
 ```tsx
 Line 159: '请先登录' → t('errors.pleaseLogin')
-Line 181: '幸运币余额不足，需要 ${totalCost} 幸运币，当前余额 ${luckyCoinsBalance} 幸运币' 
+Line 181: '积分余额不足，需要 ${totalCost} 积分，当前余额 ${luckyCoinsBalance} 积分' 
          → t('errors.insufficientLuckyCoins', {required, balance})
 Line 228: '余额不足' → t('errors.insufficientBalance')
 Line 230: '已售罄' → t('lottery.soldOut')
@@ -186,7 +186,7 @@ Line 57: '语言切换失败' → t('settings.languageChangeFailed')
 "errors": {
   "pleaseLogin": "请先登录 / Пожалуйста, войдите / Лутфан ворид шавед",
   "insufficientBalance": "余额不足 / Недостаточно средств / Мавҷудӣ кофӣ нест",
-  "insufficientLuckyCoins": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{balance}} 幸运币",
+  "insufficientLuckyCoins": "积分余额不足，需要 {{required}} 积分，当前余额 {{balance}} 积分",
   "exceedsLimit": "超过限购 / Превышен лимит / Аз ҳад зиёд шуд",
   "failedToLoadWallet": "获取钱包信息失败 / Не удалось загрузить кошелек / Маълумоти ҳамён бор нашуд",
   "telegramConnectionFailed": "无法连接到 Telegram，请确保在 Telegram 中打开",

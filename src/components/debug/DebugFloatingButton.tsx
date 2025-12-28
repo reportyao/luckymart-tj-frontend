@@ -601,7 +601,7 @@ export const DebugFloatingButton: React.FC = () => {
                   <div>Telegram ID: {telegramUser?.id || '无'}</div>
                   <div>用户名: {user?.telegram_username || telegramUser?.username || '无'}</div>
                   <div>余额: {(user as any)?.balance || 0}</div>
-                  <div>幸运币: {(user as any)?.lucky_coins || 0}</div>
+                  <div>积分: {(user as any)?.lucky_coins || 0}</div>
                 </div>
               </div>
 

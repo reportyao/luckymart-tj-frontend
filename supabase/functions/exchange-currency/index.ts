@@ -154,14 +154,14 @@ serve(async (req) => {
         type: 'COIN_EXCHANGE',
         amount: -amount,
         balance_after: sourceWallet.balance - amount,
-        description: `兑换${amount}${curr}到${targetType === 'LUCKY_COIN' ? '夺宝币' : '余额'}`,
+        description: `兑换${amount}${curr}到${targetType === 'LUCKY_COIN' ? '积分商城币' : '余额'}`,
       },
       {
         wallet_id: targetWallet.id,
         type: 'COIN_EXCHANGE',
         amount: exchangedAmount,
         balance_after: targetWallet.balance + exchangedAmount,
-        description: `从${sourceType === 'BALANCE' ? '余额' : '夺宝币'}兑换${exchangedAmount}${curr}`,
+        description: `从${sourceType === 'BALANCE' ? '余额' : '积分商城币'}兑换${exchangedAmount}${curr}`,
       },
     ])
 

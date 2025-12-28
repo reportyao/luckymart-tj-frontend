@@ -63,7 +63,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
    - updated_at (timestamp)
    ```
 
-2. **lotteries** - 夺宝商品表
+2. **lotteries** - 积分商城商品表
    ```sql
    - id (uuid, primary key)
    - title (text)

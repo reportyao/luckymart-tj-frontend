@@ -25,7 +25,7 @@ const LotteryPage: React.FC = () => {
   const loadLotteries = useCallback(async () => {
     try {
       setIsLoading(true)
-      // 根据 filter 获取不同状态的夺宝
+      // 根据 filter 获取不同状态的积分商城
       let data: Lottery[] = []
       if (filter === 'all') {
         data = await lotteryService.getAllLotteries()

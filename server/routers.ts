@@ -150,7 +150,7 @@ export const appRouter = router({
       }),
   }),
 
-  // 夺宝商品管理
+  // 积分商城商品管理
   lotteries: router({
     list: protectedProcedure
       .input(z.object({

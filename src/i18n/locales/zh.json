@@ -48,18 +48,18 @@
     "winCount": "中奖次数",
     "participationCount": "参与次数",
     "inviteFriends": "邀请好友",
-    "hotLotteries": "热门夺宝",
+    "hotLotteries": "热门积分商城",
     "viewAll": "查看全部",
-    "noLotteries": "暂无进行中的夺宝活动",
+    "noLotteries": "暂无进行中的积分商城活动",
     "stayTuned": "敬请期待更多精彩活动",
     "groupBuy": "拼团",
     "groupBuyDesc": "3人拼团，1人中奖",
-    "lottery": "夺宝",
-    "lotteryDesc": "幸运夺宝，人人有机会"
+    "lottery": "积分商城",
+    "lotteryDesc": "幸运积分商城，人人有机会"
   },
   "lottery": {
-    "hall": "夺宝大厅",
-    "searchPlaceholder": "搜索夺宝活动...",
+    "hall": "积分商城大厅",
+    "searchPlaceholder": "搜索积分商城活动...",
     "active": "进行中",
     "upcoming": "即将开始",
     "completed": "已完成",
@@ -101,7 +101,7 @@
     "noShowoffsYet": "暂无晒单",
     "won": "中奖了",
     "purchaseModalPlaceholder": "请输入购买数量",
-    "purchaseModalTitle": "购买夺宝券",
+    "purchaseModalTitle": "购买积分商城券",
     "confirmPurchase": "确认购买",
     "drawing_in": "开奖倒计时",
     "drawing_now": "正在开奖",
@@ -133,7 +133,7 @@
     "fairnessDesc2": "开奖过程完全透明，所有参与者和票据信息公开可查，任何人都可以验证开奖结果的公平性。",
     "fairnessDesc3": "每次开奖都是独立的，不受任何外部因素影响，保证结果的不可预测性。",
     "drawingPage": "开奖页面",
-    "notFound": "未找到夺宝活动",
+    "notFound": "未找到积分商城活动",
     "backToHall": "返回大厅",
     "period": "期号",
     "fairnessQuestion1": "用户能操纵时间戳吗？",
@@ -150,7 +150,7 @@
     "timestampSum": "时间戳总和",
     "verificationFormula": "验证公式",
     "verificationDataUnavailable": "验证数据暂不可用",
-    "insufficientBalance": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{current}} 幸运币",
+    "insufficientBalance": "积分余额不足，需要 {{required}} 积分，当前余额 {{current}} 积分",
     "winningCodeCopied": "中奖码已复制"
   },
   "fairness": {
@@ -174,7 +174,7 @@
   "wallet": {
     "myWallet": "我的钱包",
     "balance": "余额",
-    "luckyCoins": "幸运币",
+    "luckyCoins": "积分",
     "deposit": "充值",
     "withdraw": "提现",
     "exchange": "兑换",
@@ -192,7 +192,7 @@
     "exchangeSuccess": "兑换成功",
     "exchangeSuccessMessage": "兑换成功！余额已更新",
     "insufficientBalance": "余额不足",
-    "insufficientLuckyCoins": "幸运币余额不足",
+    "insufficientLuckyCoins": "积分余额不足",
     "depositSuccess": "充值成功",
     "withdrawSuccess": "提现成功",
     "pleaseSelectPaymentMethod": "请选择支付方式",
@@ -242,11 +242,11 @@
     "pleaseUploadProof": "请上传充值凭证",
     "imageUploadFailed": "图片上传失败",
     "imageUploadSuccess": "图片上传成功",
-    "luckyCoin": "幸运币",
+    "luckyCoin": "积分",
     "exchangeRules": "兑换规则",
     "instantExchange": "即时兑换",
     "noFee": "无手续费",
-    "oneWayExchange": "仅支持余额兑换幸运币，单向兑换",
+    "oneWayExchange": "仅支持余额兑换积分，单向兑换",
     "youWillGet": "您将获得",
     "quickAmount": "快捷金额",
     "confirmExchange": "确认兑换",
@@ -254,8 +254,8 @@
     "transactionType": {
       "deposit": "充值",
       "withdrawal": "提现",
-      "lotteryPurchase": "参与夺宝",
-      "lotteryRefund": "夺宝退款",
+      "lotteryPurchase": "参与积分商城",
+      "lotteryRefund": "积分商城退款",
       "lotteryPrize": "中奖奖金",
       "referralBonus": "推荐返佣",
       "coinExchange": "余额兑换",
@@ -410,7 +410,7 @@
   },
   "auth": {
     "welcome": "欢迎来到 TezBarakat",
-    "description": "塔吉克斯坦领先的社交夺宝平台",
+    "description": "塔吉克斯坦领先的社交积分商城平台",
     "loginWithTelegram": "通过 Telegram 登录",
     "guestMode": "游客模式",
     "pleaseLogin": "请通过 Telegram 访问此应用"
@@ -439,7 +439,7 @@
     "myShowoffs": "我的晒单",
     "createShowoff": "发布晒单",
     "uploadImages": "上传图片",
-    "selectLottery": "选择夺宝",
+    "selectLottery": "选择积分商城",
     "selectPrize": "选择奖品",
     "writeContent": "分享你的中奖故事",
     "contentPlaceholder": "描述你的中奖经历和感受...",
@@ -475,18 +475,18 @@
     "showoffSuccessPending": "晒单发布成功，等待审核",
     "selectWinningRecordError": "请选择中奖记录",
     "minContentLengthError": "晒单内容至少需要10个字",
-    "unknownLottery": "未知夺宝",
+    "unknownLottery": "未知积分商城",
     "beTheFirst": "暂无晒单",
     "publishNow": "立即发布",
     "publish": "发布",
     "selectPrizeRecord": "选择中奖记录",
     "content": "晒单内容",
     "noPrizes": "暂无中奖记录",
-    "noPrizesHint": "参与夺宝活动,中奖后即可晒单",
+    "noPrizesHint": "参与积分商城活动,中奖后即可晒单",
     "winningNumber": "中奖号码",
     "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)",
     "prizeNotFound": "未找到选中的中奖记录",
-    "earnedCoins": "获得 {{coins}} 幸运币奖励"
+    "earnedCoins": "获得 {{coins}} 积分奖励"
   },
   "prize": {
     "prizeManagement": "中奖管理",
@@ -501,7 +501,7 @@
     "viewResaleHistory": "查看转售历史",
     "myListings": "我的转售",
     "createListing": "发布转售",
-    "selectLottery": "选择夺宝",
+    "selectLottery": "选择积分商城",
     "selectPrize": "选择奖品",
     "askingPrice": "要价",
     "description": "描述",
@@ -637,7 +637,7 @@
     "level3Rate": "0.5%",
     "level3Desc": "二级好友邀请的用户",
     "totalRate": "总计：4.5%终身分成",
-    "nonWithdrawable": "⚠️ 佣金以夺宝币形式发放，仅用于参与夺宝，不可提现"
+    "nonWithdrawable": "⚠️ 佣金以积分商城币形式发放，仅用于参与积分商城，不可提现"
   },
   "firstDepositBonus": {
     "title": "🎁 激活您的 {{amount}} 索莫尼奖励",
@@ -652,12 +652,12 @@
   "share": {
     "buttonText": "分享到Telegram群组",
     "successMessage": "分享成功！进度已更新",
-    "shareText": "🎁 我在TezBarakat玩一元夺宝，邀请你也来试试！\n首充10索莫尼立得2.5索莫尼！\n使用我的邀请码：{{inviteCode}}"
+    "shareText": "🎁 我在TezBarakat玩一元积分商城，邀请你也来试试！\n首充10索莫尼立得2.5索莫尼！\n使用我的邀请码：{{inviteCode}}"
   },
   "errors": {
     "pleaseLogin": "请先登录",
     "insufficientBalance": "余额不足",
-    "insufficientLuckyCoins": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{balance}} 幸运币",
+    "insufficientLuckyCoins": "积分余额不足，需要 {{required}} 积分，当前余额 {{balance}} 积分",
     "exceedsLimit": "超过限购",
     "failedToLoadWallet": "获取钱包信息失败",
     "telegramConnectionFailed": "无法连接到 Telegram，请确保在 Telegram 中打开",
@@ -703,7 +703,7 @@
   },
   "orders": {
     "purchaseTicket": "购买彩票",
-    "exchangeBalance": "余额兑换夺宝币",
+    "exchangeBalance": "余额兑换积分商城币",
     "deposit": "钱包充值",
     "withdrawal": "提现申请",
     "depositLabel": "充值",
@@ -771,7 +771,7 @@
     "rule1": "3人成团，每人付商品价格的1/3",
     "rule2": "24小时内未满员自动退款",
     "rule3": "满员后随机开奖，1人中奖获得商品",
-    "rule4": "未中奖用户获得幸运币退款",
+    "rule4": "未中奖用户获得积分退款",
     "currentSession": "当前拼团",
     "waitingForMore": "等待更多人参与...",
     "sessionCode": "拼团编号",
@@ -782,7 +782,7 @@
     "congratulations": "恭喜中奖！",
     "youWon": "您是幸运儿！",
     "notWinning": "很遗憾，未中奖",
-    "refundedLuckyCoins": "已退还幸运币",
+    "refundedLuckyCoins": "已退还积分",
     "winner": "中奖者",
     "drawTime": "开奖时间",
     "orderNumber": "订单号",
@@ -831,7 +831,7 @@
       "rule1": "每人支付商品价格的1/N参与拼团",
       "rule2": "限时内满员自动开奖",
       "rule3": "随机抽取1人获得商品",
-      "rule4": "未中奖用户获得幸运币补偿"
+      "rule4": "未中奖用户获得积分补偿"
     },
     "pleaseLogin": "请先登录"
   }

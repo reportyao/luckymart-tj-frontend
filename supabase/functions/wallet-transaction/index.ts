@@ -328,7 +328,7 @@ async function handleWithdraw(supabaseUrl: string, serviceRoleKey: string, walle
     };
 }
 
-// 处理币种兑换（余额钱包 <-> 幸运币钱包）
+// 处理币种兑换（余额钱包 <-> 积分钱包）
 async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userId: string, sourceWallet: any, targetWalletType: string, currency: string, amount: number): Promise<any> {
     // 验证兑换规则
     if (sourceWallet.type === targetWalletType) {
@@ -429,7 +429,7 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         balance_before: sourceWallet.balance,
         balance_after: newSourceBalance,
         status: 'COMPLETED',
-        description: `兑换至${targetWalletType === 'BALANCE' ? '余额钱包' : '幸运币钱包'}`,
+        description: `兑换至${targetWalletType === 'BALANCE' ? '余额钱包' : '积分钱包'}`,
         processed_at: new Date().toISOString(),
         created_at: new Date().toISOString()
     };
@@ -442,7 +442,7 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         balance_before: targetWallet.balance,
         balance_after: newTargetBalance,
         status: 'COMPLETED',
-        description: `从${sourceWallet.type === 'BALANCE' ? '余额钱包' : '幸运币钱包'}兑换`,
+        description: `从${sourceWallet.type === 'BALANCE' ? '余额钱包' : '积分钱包'}兑换`,
         processed_at: new Date().toISOString(),
         created_at: new Date().toISOString()
     };

@@ -170,10 +170,10 @@ const LotteryDetailPage: React.FC = () => {
       return;
     }
 
-    // 计算需要的幸运币数量
+    // 计算需要的积分数量
     const totalCost = lottery.ticket_price * quantity;
     
-    // 检查幸运币余额
+    // 检查积分余额
     const luckyCoinsWallet = wallets.find(w => w.type === 'LUCKY_COIN');
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
     

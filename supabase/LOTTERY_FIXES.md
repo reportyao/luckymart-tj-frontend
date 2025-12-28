@@ -1,4 +1,4 @@
-# 夺宝流程修复说明
+# 积分商城流程修复说明
 
 ## 修复日期
 2025-11-26
@@ -67,7 +67,7 @@ if (new Date(session.expires_at) < new Date()) {
 
 ### 迁移脚本
 1. `20251126_wallet_functions.sql` - 钱包功能 RPC 函数
-   - `exchange_real_to_bonus_balance` - 余额兑换为幸运币
+   - `exchange_real_to_bonus_balance` - 余额兑换为积分
    - `approve_withdrawal_request` - 提现审批通过
    - `reject_withdrawal_request` - 提现审批拒绝
 
@@ -154,7 +154,7 @@ LIMIT 10;
 ## 完整流程
 
 ### 用户购买流程
-1. 用户进入夺宝详情页
+1. 用户进入积分商城详情页
 2. 选择购买数量
 3. 点击"立即参与"
 4. `lottery-purchase` 验证 session、扣款、创建记录
@@ -181,8 +181,8 @@ LIMIT 10;
 ## 测试建议
 
 ### 前端测试
-- [ ] 夺宝列表页显示正常
-- [ ] 夺宝详情页显示正常
+- [ ] 积分商城列表页显示正常
+- [ ] 积分商城详情页显示正常
 - [ ] 购买功能正常（扣款、创建记录）
 - [ ] 售罄后显示 180 秒倒计时
 - [ ] 倒计时颜色变化正常（蓝色 → 黄色 → 红色）
@@ -213,7 +213,7 @@ LIMIT 10;
 ## 相关文件
 
 ### 前端
-- `src/pages/LotteryDetailPage.tsx` - 夺宝详情页
+- `src/pages/LotteryDetailPage.tsx` - 积分商城详情页
 - `src/components/CountdownTimer.tsx` - 倒计时组件
 
 ### 后端

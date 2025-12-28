@@ -31,7 +31,7 @@
       },
       "groupBuyRefund": {
         "title": "拼团退款",
-        "description": "{{amount}} 幸运币已退回您的账户"
+        "description": "{{amount}} 积分已退回您的账户"
       },
       "deposit": {
         "title": "充值成功",
@@ -42,8 +42,8 @@
         "description": "您的提现已成功处理"
       },
       "lotteryWin": {
-        "title": "夺宝中奖!",
-        "description": "您在夺宝中赢得了 {{prize}}!"
+        "title": "积分商城中奖!",
+        "description": "您在积分商城中赢得了 {{prize}}!"
       }
     }
   },

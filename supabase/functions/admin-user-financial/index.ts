@@ -338,9 +338,9 @@ function getTransactionTypeName(type: string): string {
   const typeNames: Record<string, string> = {
     'DEPOSIT': '充值',
     'WITHDRAWAL': '提现',
-    'LOTTERY_PURCHASE': '夺宝消费',
-    'LOTTERY_REFUND': '夺宝退款',
-    'LOTTERY_PRIZE': '夺宝中奖',
+    'LOTTERY_PURCHASE': '积分商城消费',
+    'LOTTERY_REFUND': '积分商城退款',
+    'LOTTERY_PRIZE': '积分商城中奖',
     'REFERRAL_BONUS': '邀请奖励',
     'COIN_EXCHANGE': '币种兑换',
     'MARKET_PURCHASE': '市场购买',

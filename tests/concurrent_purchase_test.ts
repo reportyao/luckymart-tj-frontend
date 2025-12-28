@@ -16,14 +16,14 @@ const TEST_CONFIG = {
   remaining_tickets: 1,        // 剩余票数
 }
 
-// 创建测试夺宝
+// 创建测试积分商城
 async function createTestLottery() {
-  console.log('📝 创建测试夺宝...')
+  console.log('📝 创建测试积分商城...')
   
   const { data, error } = await supabase
     .from('lotteries')
     .insert({
-      title: '并发测试夺宝',
+      title: '并发测试积分商城',
       description: '用于测试并发购买',
       ticket_price: 10,
       total_tickets: 10,
@@ -39,10 +39,10 @@ async function createTestLottery() {
     .single()
   
   if (error) {
-    throw new Error(`创建测试夺宝失败: ${error.message}`)
+    throw new Error(`创建测试积分商城失败: ${error.message}`)
   }
   
-  console.log(`✅ 测试夺宝创建成功: ${data.id}`)
+  console.log(`✅ 测试积分商城创建成功: ${data.id}`)
   return data.id
 }
 
@@ -57,7 +57,7 @@ async function createTestUsers(count: number) {
       .from('profiles')
       .insert({
         username: `test_user_${i}`,
-        balance: 100,  // 每人100夺宝币
+        balance: 100,  // 每人100积分商城币
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -79,7 +79,7 @@ async function createTestUsers(count: number) {
 // 并发购买测试
 async function testConcurrentPurchase(lotteryId: string, users: any[]) {
   console.log('\n🚀 开始并发购买测试...')
-  console.log(`夺宝ID: ${lotteryId}`)
+  console.log(`积分商城ID: ${lotteryId}`)
   console.log(`并发用户数: ${users.length}`)
   console.log(`每人购买: ${TEST_CONFIG.tickets_to_purchase} 张票`)
   console.log(`剩余票数: ${TEST_CONFIG.remaining_tickets} 张`)
@@ -168,7 +168,7 @@ async function testConcurrentPurchase(lotteryId: string, users: any[]) {
   
   console.log(`\n数据库状态:`)
   console.log(`  已售票数: ${lottery?.sold_tickets}`)
-  console.log(`  夺宝状态: ${lottery?.status}`)
+  console.log(`  积分商城状态: ${lottery?.status}`)
   
   if (lottery?.sold_tickets === 10 && lottery?.status === 'SOLD_OUT') {
     console.log('✅ 数据库状态正确')
@@ -189,7 +189,7 @@ async function cleanup(lotteryId: string, userIds: string[]) {
   // 删除订单记录
   await supabase.from('orders').delete().eq('lottery_id', lotteryId)
   
-  // 删除夺宝
+  // 删除积分商城
   await supabase.from('lotteries').delete().eq('id', lotteryId)
   
   // 删除测试用户
@@ -206,7 +206,7 @@ async function main() {
   console.log('=' .repeat(60))
   
   try {
-    // 1. 创建测试夺宝
+    // 1. 创建测试积分商城
     const lotteryId = await createTestLottery()
     
     // 2. 创建测试用户

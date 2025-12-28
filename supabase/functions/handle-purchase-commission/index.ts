@@ -101,7 +101,7 @@ serve(async (req) => {
       
       commissions.push(commission)
 
-      // 更新上级用户的夺宝币余额（不可提现部分）
+      // 更新上级用户的积分商城币余额（不可提现部分）
       const { error: rpcError } = await supabaseClient.rpc('add_bonus_balance', {
         p_user_id: currentUserId,
         p_amount: commissionAmount

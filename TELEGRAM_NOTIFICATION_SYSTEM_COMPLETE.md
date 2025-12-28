@@ -14,7 +14,7 @@
 1. **Telegram通知系统** (🔴 高优先级)
    - ✅ 拼团中奖/未中奖通知
    - ✅ 充值/提现通知
-   - ✅ 夺宝中奖通知(模板已准备,待集成)
+   - ✅ 积分商城中奖通知(模板已准备,待集成)
    - ✅ 多语言支持(中文/俄语/塔吉克语)
 
 2. **实时通知推送** (🟡 中优先级)
@@ -66,9 +66,9 @@ POST /send-telegram-notification
 - `group_buy_win` - 拼团中奖
   - 包含: 商品名称/图片、拼团编号、中奖时间
 - `group_buy_refund` - 拼团未中奖退款
-  - 包含: 商品名称/图片、拼团编号、退款金额、幸运币余额
+  - 包含: 商品名称/图片、拼团编号、退款金额、积分余额
 - `group_buy_timeout` - 拼团超时
-  - 包含: 商品名称/图片、拼团编号、退款金额、幸运币余额
+  - 包含: 商品名称/图片、拼团编号、退款金额、积分余额
 
 #### 充值/提现通知
 - `wallet_deposit` - 充值成功
@@ -80,9 +80,9 @@ POST /send-telegram-notification
 - `wallet_withdraw_failed` - 提现失败 (新增)
   - 包含: 提现金额、失败原因、当前余额
 
-#### 夺宝通知 (已存在)
-- `lottery_win` - 夺宝中奖
-- `lottery_lost` - 夺宝未中奖
+#### 积分商城通知 (已存在)
+- `lottery_win` - 积分商城中奖
+- `lottery_lost` - 积分商城未中奖
 - `lottery_draw_soon` - 即将开奖提醒
 
 ---
@@ -334,7 +334,7 @@ eventSource.addEventListener('message', (e) => {
    - 否则通知无法发送
 
 ### 中优先级
-4. **夺宝开奖通知集成**
+4. **积分商城开奖通知集成**
    - 模板已准备
    - 需要找到lottery-draw函数并集成
 
@@ -394,7 +394,7 @@ eventSource.addEventListener('message', (e) => {
 3. 调试并部署realtime-notifications
 
 ### 短期计划
-4. 集成夺宝开奖通知
+4. 集成积分商城开奖通知
 5. 前端集成实时推送
 6. 进行端到端测试
 

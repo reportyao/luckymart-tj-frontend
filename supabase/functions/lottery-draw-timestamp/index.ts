@@ -54,7 +54,7 @@ serve(async (req) => {
 
     console.log(`开始开奖: lottery_id=${lottery_id}`)
 
-    // 1. 获取夺宝信息
+    // 1. 获取积分商城信息
     const { data: lottery, error: lotteryError } = await supabaseClient
       .from('lotteries')
       .select('*')
@@ -62,12 +62,12 @@ serve(async (req) => {
       .single()
 
     if (lotteryError || !lottery) {
-      throw new Error(`夺宝不存在: ${lotteryError?.message}`)
+      throw new Error(`积分商城不存在: ${lotteryError?.message}`)
     }
 
     // 检查状态
     if (lottery.status !== 'SOLD_OUT') {
-      throw new Error(`夺宝状态不正确,当前状态: ${lottery.status},需要 SOLD_OUT`)
+      throw new Error(`积分商城状态不正确,当前状态: ${lottery.status},需要 SOLD_OUT`)
     }
 
     // 2. 获取所有参与记录（使用 lottery_entries 表，按创建时间排序）
@@ -113,7 +113,7 @@ serve(async (req) => {
 
     const drawTime = new Date().toISOString()
 
-    // 6. 更新夺宝状态
+    // 6. 更新积分商城状态
     const { error: updateError } = await supabaseClient
       .from('lotteries')
       .update({
@@ -136,7 +136,7 @@ serve(async (req) => {
       .eq('id', lottery_id)
 
     if (updateError) {
-      throw new Error(`更新夺宝状态失败: ${updateError.message}`)
+      throw new Error(`更新积分商城状态失败: ${updateError.message}`)
     }
 
     // 7. 更新中奖参与记录
@@ -208,7 +208,7 @@ serve(async (req) => {
         user_id: winningEntry.user_id,
         type: 'LOTTERY_RESULT',
         title: '🎉 恭喜中奖！',
-        content: `恭喜您在"${lottery.title}"夺宝中中奖！中奖码: ${winningNumber}`,
+        content: `恭喜您在"${lottery.title}"积分商城中中奖！中奖码: ${winningNumber}`,
         related_id: lottery_id,
         related_type: 'lottery',
         is_read: false,

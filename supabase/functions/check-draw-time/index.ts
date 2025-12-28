@@ -1,6 +1,6 @@
-// 定时任务: 检查是否有到达开奖时间的夺宝
+// 定时任务: 检查是否有到达开奖时间的积分商城
 // 运行频率: 每分钟
-// 功能: 查找状态为 SOLD_OUT 且 draw_time <= NOW() 的夺宝,自动调用开奖函数
+// 功能: 查找状态为 SOLD_OUT 且 draw_time <= NOW() 的积分商城,自动调用开奖函数
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
@@ -35,9 +35,9 @@ serve(async (req) => {
     )
 
     const now = new Date().toISOString()
-    console.log(`[${now}] 开始检查待开奖的夺宝...`)
+    console.log(`[${now}] 开始检查待开奖的积分商城...`)
 
-    // 查找状态为 SOLD_OUT 且 draw_time <= NOW() 的夺宝
+    // 查找状态为 SOLD_OUT 且 draw_time <= NOW() 的积分商城
     const { data: lotteries, error: queryError } = await supabaseClient
       .from('lotteries')
       .select('id, title, draw_time, total_tickets, sold_tickets')
@@ -46,10 +46,10 @@ serve(async (req) => {
       .order('draw_time', { ascending: true })
 
     if (queryError) {
-      throw new Error(`查询夺宝失败: ${queryError.message}`)
+      throw new Error(`查询积分商城失败: ${queryError.message}`)
     }
 
-    console.log(`找到 ${lotteries?.length || 0} 个待开奖的夺宝`)
+    console.log(`找到 ${lotteries?.length || 0} 个待开奖的积分商城`)
 
     const drawResults = []
 

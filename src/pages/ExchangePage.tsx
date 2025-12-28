@@ -38,7 +38,7 @@ export default function ExchangePage() {
     try {
       setSubmitting(true)
 
-      // 调用 Edge Function 进行兑换（余额 → 幸运币）
+      // 调用 Edge Function 进行兑换（余额 → 积分）
       const result = await walletService.exchangeRealToBonus(amountNum)
       
       if (result.success) {
@@ -99,7 +99,7 @@ export default function ExchangePage() {
             </div>
           </div>
 
-          {/* 目标钱包（幸运币） */}
+          {/* 目标钱包（积分） */}
           <div className="bg-gradient-to-r from-pink-100 to-red-100 rounded-xl p-4">
             <div className="text-sm text-gray-600 mb-1">{t("wallet.luckyCoin")}</div>
             <div className="text-2xl font-bold text-pink-600">{luckyCoin.toFixed(2)}</div>

@@ -38,7 +38,7 @@ export const Layout: React.FC<LayoutProps> = ({
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-gray-900">TezBarakat</h1>
-                  <p className="text-xs text-gray-500">社交夺宝平台</p>
+                  <p className="text-xs text-gray-500">社交积分商城平台</p>
                 </div>
               </div>
               

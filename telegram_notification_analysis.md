@@ -51,7 +51,7 @@
 
 #### 已实现的通知类型
 
-**夺宝(Lottery)相关**:
+**积分商城(Lottery)相关**:
 - ✅ `lottery_win` - 中奖通知
 - ✅ `lottery_lost` - 未中奖通知
 - ✅ `lottery_draw_soon` - 即将开奖提醒
@@ -131,7 +131,7 @@
   - `commission_earned`
   - `purchase_success`
   - `first_deposit_bonus`
-- ⚠️ 功能有限,不支持拼团/夺宝/充值提现
+- ⚠️ 功能有限,不支持拼团/积分商城/充值提现
 
 ---
 
@@ -163,7 +163,7 @@
 ### Phase 2: 集成到业务流程
 1. 验证拼团开奖通知
 2. 验证充值/提现通知
-3. 验证夺宝开奖通知
+3. 验证积分商城开奖通知
 
 ### Phase 3: 实时推送
 1. 实现WebSocket/SSE服务

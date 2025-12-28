@@ -3,7 +3,7 @@
     "errors": {
       "pleaseLogin": "请先登录",
       "insufficientBalance": "余额不足",
-      "insufficientLuckyCoins": "幸运币余额不足，需要 {{required}} 幸运币，当前余额 {{balance}} 幸运币",
+      "insufficientLuckyCoins": "积分余额不足，需要 {{required}} 积分，当前余额 {{balance}} 积分",
       "exceedsLimit": "超过限购",
       "failedToLoadWallet": "获取钱包信息失败",
       "telegramConnectionFailed": "无法连接到 Telegram，请确保在 Telegram 中打开",
@@ -54,7 +54,7 @@
     },
     "orders": {
       "purchaseTicket": "购买彩票",
-      "exchangeBalance": "余额兑换夺宝币",
+      "exchangeBalance": "余额兑换积分商城币",
       "deposit": "钱包充值",
       "withdrawal": "提现申请",
       "depositLabel": "充值",

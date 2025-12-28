@@ -57,7 +57,7 @@ const OrderPage: React.FC = () => {
           currency: 'TJS',
           description: '购买彩票',
           lottery_id: 'lottery1',
-          lottery_title: 'iPhone 15 Pro Max 夺宝',
+          lottery_title: 'iPhone 15 Pro Max 积分商城',
           purchased_numbers: '001,002,003',
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -69,7 +69,7 @@ const OrderPage: React.FC = () => {
           status: 'COMPLETED',
           amount: 50.00,
           currency: 'TJS',
-          description: '余额兑换夺宝币',
+          description: '余额兑换积分商城币',
           created_at: new Date(Date.now() - 3600000).toISOString(),
           updated_at: new Date(Date.now() - 3600000).toISOString()
         },
@@ -93,7 +93,7 @@ const OrderPage: React.FC = () => {
           currency: 'TJS',
           description: '购买彩票',
           lottery_id: 'lottery2',
-          lottery_title: 'MacBook Pro 夺宝',
+          lottery_title: 'MacBook Pro 积分商城',
           purchased_numbers: '015,016',
           created_at: new Date(Date.now() - 172800000).toISOString(),
           updated_at: new Date(Date.now() - 172800000).toISOString()

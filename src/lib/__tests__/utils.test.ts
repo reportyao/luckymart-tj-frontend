@@ -115,7 +115,7 @@ describe('utils', () => {
   describe('getWalletTypeText', () => {
     it('should return correct wallet type text', () => {
       expect(getWalletTypeText('BALANCE')).toBe('余额');
-      expect(getWalletTypeText('LUCKY_COIN')).toBe('幸运币');
+      expect(getWalletTypeText('LUCKY_COIN')).toBe('积分');
     });
 
     it('should return original type for unknown type', () => {

@@ -93,7 +93,7 @@ export function getTimeRemainingText(endTime: string): string {
 export function getWalletTypeText(type: string): string {
   const typeMap: Record<string, string> = {
     'BALANCE': '余额',
-    'LUCKY_COIN': '幸运币'
+    'LUCKY_COIN': '积分'
   };
   return typeMap[type] || type;
 }
@@ -135,7 +135,7 @@ export function shareToTelegram(text: string, url?: string): void {
   window.open(telegramUrl, '_blank');
 }
 
-// 处理多语言 JSONB 字段，用于获取夺宝标题、描述等
+// 处理多语言 JSONB 字段，用于获取积分商城标题、描述等
 export function getLocalizedText(
   jsonb: Record<string, string> | null | undefined | any,
   language: string,

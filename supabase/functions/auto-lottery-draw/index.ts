@@ -82,7 +82,7 @@ serve(async (req) => {
       throw new Error('lottery_id is required');
     }
 
-    // 1. 获取夺宝商品信息
+    // 1. 获取积分商城商品信息
     const { data: lottery, error: lotteryError } = await supabaseClient
       .from('lotteries')
       .select('*')
@@ -236,7 +236,7 @@ serve(async (req) => {
         user_id: winningEntry.user_id,
         type: 'LOTTERY_RESULT', // 修复: 使用存在的枚举值 (LOTTERY_RESULT 而不是 LOTTERY_WIN)
         title: '🎉 恭喜中奖！',
-        content: `恭喜您在"${lottery.title}"夺宝中中奖！中奖码: ${winningEntry.numbers}`,
+        content: `恭喜您在"${lottery.title}"积分商城中中奖！中奖码: ${winningEntry.numbers}`,
         related_id: lotteryId, // 修复: 使用 related_id 而不是 data
         related_type: 'lottery',
         is_read: false,

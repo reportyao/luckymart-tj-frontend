@@ -369,7 +369,7 @@ const ShowoffPage: React.FC = () => {
                     </div>
                   )}
 
-                  {/* 幸运币奖励显示 */}
+                  {/* 积分奖励显示 */}
                   {showoff.reward_coins && showoff.reward_coins > 0 && (
                     <div className="px-4 pb-3">
                       <div className="flex items-center space-x-2 p-2 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200">

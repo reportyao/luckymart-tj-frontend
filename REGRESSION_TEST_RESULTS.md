@@ -41,7 +41,7 @@
 | 页面名称 | 路径 | 加载时间 | 状态 | 备注 |
 |---------|------|---------|------|------|
 | 首页 | `/` | 973ms | ✅ PASS | 快速加载 |
-| 夺宝列表 | `/lottery` | 1696ms | ✅ PASS | 正常 |
+| 积分商城列表 | `/lottery` | 1696ms | ✅ PASS | 正常 |
 | 钱包 | `/wallet` | 1670ms | ✅ PASS | 正常 |
 | 个人中心 | `/profile` | 2457ms | ✅ PASS | 需加载用户数据 |
 | Bot交互 | `/bot` | 1720ms | ✅ PASS | 正常 |
@@ -92,7 +92,7 @@
 |---------|------|------|---------|------|
 | Supabase Connection | 数据库连接 | ✅ PASS | < 100ms | 连接正常 |
 | Authentication API | 用户认证 | ✅ PASS | < 200ms | 认证成功 |
-| Lottery List API | 获取夺宝列表 | ✅ PASS | < 300ms | 数据完整 |
+| Lottery List API | 获取积分商城列表 | ✅ PASS | < 300ms | 数据完整 |
 | User Info API | 获取用户信息 | ✅ PASS | < 150ms | 信息正确 |
 | Wallet API | 获取钱包信息 | ✅ PASS | < 200ms | 余额正确 |
 | Order API | 获取订单列表 | ✅ PASS | < 250ms | 数据完整 |

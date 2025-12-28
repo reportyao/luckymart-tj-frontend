@@ -40,7 +40,7 @@ const notificationTemplates = {
   },
   lottery_lost: {
     zh: (data: NotificationData) => 
-      `😔 很遗憾未中奖\n\n🎫 彩票: ${data.lottery_title}\n🎯 开奖号码: ${data.winning_number}\n🎫 您的号码: ${data.ticket_number}\n\n不要气馁，继续参与更多夺宝！`,
+      `😔 很遗憾未中奖\n\n🎫 彩票: ${data.lottery_title}\n🎯 开奖号码: ${data.winning_number}\n🎫 您的号码: ${data.ticket_number}\n\n不要气馁，继续参与更多积分商城！`,
     ru: (data: NotificationData) => 
       `😔 К сожалению, вы не выиграли\n\n🎫 Лотерея: ${data.lottery_title}\n🎯 Выигрышный номер: ${data.winning_number}\n🎫 Ваш номер: ${data.ticket_number}\n\nНе расстраивайтесь, участвуйте в новых розыгрышах!`,
     tg: (data: NotificationData) => 
@@ -66,7 +66,7 @@ const notificationTemplates = {
   },
   group_buy_refund: {
     zh: (data: NotificationData) => 
-      `😔 很遗憾未中奖\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 幸运币\n💎 当前幸运币余额: ${data.lucky_coins_balance}\n\n不要气馁，继续参与更多拼团活动！`,
+      `😔 很遗憾未中奖\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 积分\n💎 当前积分余额: ${data.lucky_coins_balance}\n\n不要气馁，继续参与更多拼团活动！`,
     ru: (data: NotificationData) => 
       `😔 К сожалению, вы не выиграли\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Возврат: ${data.refund_amount} Lucky Coins\n💎 Текущий баланс: ${data.lucky_coins_balance}\n\nНе расстраивайтесь, участвуйте в новых групповых покупках!`,
     tg: (data: NotificationData) => 
@@ -74,7 +74,7 @@ const notificationTemplates = {
   },
   group_buy_timeout: {
     zh: (data: NotificationData) => 
-      `⏰ 拼团超时\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 幸运币\n💎 当前幸运币余额: ${data.lucky_coins_balance}\n\n拼团未能凑齐人数，参与金额已退回为幸运币。`,
+      `⏰ 拼团超时\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 积分\n💎 当前积分余额: ${data.lucky_coins_balance}\n\n拼团未能凑齐人数，参与金额已退回为积分。`,
     ru: (data: NotificationData) => 
       `⏰ Время истекло\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Возврат: ${data.refund_amount} Lucky Coins\n💎 Текущий баланс: ${data.lucky_coins_balance}\n\nГруппа не набралась, средства возвращены в виде Lucky Coins.`,
     tg: (data: NotificationData) => 
@@ -84,7 +84,7 @@ const notificationTemplates = {
   // 钱包相关通知
   wallet_deposit: {
     zh: (data: NotificationData) => 
-      `💰 充值成功\n\n💵 金额: +${data.transaction_amount}元\n🕒 时间: ${new Date().toLocaleString('zh-CN')}\n\n您的余额已更新，可以继续参与夺宝！`,
+      `💰 充值成功\n\n💵 金额: +${data.transaction_amount}元\n🕒 时间: ${new Date().toLocaleString('zh-CN')}\n\n您的余额已更新，可以继续参与积分商城！`,
     ru: (data: NotificationData) => 
       `💰 Пополнение успешно\n\n💵 Сумма: +${data.transaction_amount} сом\n🕒 Время: ${new Date().toLocaleString('ru-RU')}\n\nВаш баланс обновлен, можете продолжать участие в розыгрышах!`,
     tg: (data: NotificationData) => 
@@ -136,7 +136,7 @@ const notificationTemplates = {
   },
   system_update: {
     zh: () => 
-      `🆕 功能更新\n\n✨ 新增功能:\n• 优化夺宝体验\n• 提升转账速度\n• 增强安全防护\n\n立即体验新功能！`,
+      `🆕 功能更新\n\n✨ 新增功能:\n• 优化积分商城体验\n• 提升转账速度\n• 增强安全防护\n\n立即体验新功能！`,
     ru: () => 
       `🆕 Обновление функций\n\n✨ Новые возможности:\n• Улучшенный опыт розыгрышей\n• Повышенная скорость переводов\n• Усиленная защита\n\nОпробуйте новые функции прямо сейчас!`,
     tg: () => 

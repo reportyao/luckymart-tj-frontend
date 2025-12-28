@@ -183,9 +183,9 @@ test.describe('TezBarakatTJ E2E 测试', () => {
       await luckyMart.navigateToHome()
       await luckyMart.expectPageTitle('首页')
 
-      // 夺宝大厅
+      // 积分商城大厅
       await luckyMart.navigateToLottery()
-      await luckyMart.expectPageTitle('夺宝大厅')
+      await luckyMart.expectPageTitle('积分商城大厅')
 
       // 我的钱包
       await luckyMart.navigateToWallet()
@@ -207,7 +207,7 @@ test.describe('TezBarakatTJ E2E 测试', () => {
       await luckyMart.navigateToWallet()
       
       await page.goBack()
-      await luckyMart.expectPageTitle('夺宝大厅')
+      await luckyMart.expectPageTitle('积分商城大厅')
     })
   })
 
@@ -279,7 +279,7 @@ test.describe('TezBarakatTJ E2E 测试', () => {
     test('应该成功购买彩票', async () => {
       await luckyMart.navigateToWallet()
       
-      // 确保有足够的幸运币
+      // 确保有足够的积分
       await luckyMart.depositFunds(200)
       await luckyMart.exchangeCurrency(100, 'BALANCE', 'LUCKY_COIN')
       

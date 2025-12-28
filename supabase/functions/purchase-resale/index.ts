@@ -162,7 +162,7 @@ serve(async (req) => {
 
     // 检查余额
     if (buyerWallet.balance < resaleItem.resale_price) {
-      throw new Error('幸运币余额不足')
+      throw new Error('积分余额不足')
     }
 
     const buyerBalanceBefore = buyerWallet.balance
@@ -189,7 +189,7 @@ serve(async (req) => {
     const sellerBalanceAfter = sellerWallet.balance + sellerAmount
 
     // 开始事务处理
-    // 1. 扣除买家幸运币余额
+    // 1. 扣除买家积分余额
     const { error: deductError } = await supabaseClient
       .from('wallets')
       .update({ 
