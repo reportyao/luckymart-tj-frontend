@@ -156,6 +156,22 @@ serve(async (req) => {
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
+
+      // Send Telegram notification
+      try {
+        await supabaseClient.functions.invoke('send-telegram-notification', {
+          body: {
+            user_id: withdrawalRequest.user_id,
+            type: 'wallet_withdraw_pending',
+            data: {
+              transaction_amount: withdrawalRequest.amount,
+            },
+            priority: 2,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Telegram notification:', error);
+      }
     } else if (action === 'REJECTED') {
       // 审核拒绝,解冻余额
       // 只解冻实际冻结的金额
@@ -200,6 +216,24 @@ serve(async (req) => {
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
+
+      // Send Telegram notification
+      try {
+        await supabaseClient.functions.invoke('send-telegram-notification', {
+          body: {
+            user_id: withdrawalRequest.user_id,
+            type: 'wallet_withdraw_failed',
+            data: {
+              transaction_amount: withdrawalRequest.amount,
+              failure_reason: adminNote || '审核未通过',
+              current_balance: currentBalance + amountToUnfreeze,
+            },
+            priority: 2,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Telegram notification:', error);
+      }
     } else if (action === 'COMPLETED') {
       // 转账完成
       // 计算需要从frozen_balance和balance中扣除的金额
@@ -270,6 +304,23 @@ serve(async (req) => {
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
+
+      // Send Telegram notification
+      try {
+        await supabaseClient.functions.invoke('send-telegram-notification', {
+          body: {
+            user_id: withdrawalRequest.user_id,
+            type: 'wallet_withdraw_completed',
+            data: {
+              transaction_amount: withdrawalRequest.amount,
+              estimated_arrival: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' }),
+            },
+            priority: 2,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Telegram notification:', error);
+      }
     }
 
     return new Response(

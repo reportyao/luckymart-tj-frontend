@@ -136,13 +136,29 @@ Deno.serve(async (req) => {
 
             // Send Telegram notification
             try {
+              // Get product info and user's lucky coins balance
+              const { data: product } = await supabase
+                .from('group_buy_products')
+                .select('name, image_url')
+                .eq('id', session.product_id)
+                .single();
+
+              const { data: user } = await supabase
+                .from('users')
+                .select('lucky_coins')
+                .eq('telegram_id', order.user_id)
+                .single();
+
               await supabase.functions.invoke('send-telegram-notification', {
                 body: {
                   user_id: order.user_id,
-                  type: 'GROUP_BUY_TIMEOUT',
+                  type: 'group_buy_timeout',
                   data: {
+                    product_name: product?.name || 'Unknown Product',
+                    product_image: product?.image_url || '',
                     session_code: session.session_code,
                     refund_amount: refundAmount,
+                    lucky_coins_balance: Number(user?.lucky_coins || 0),
                   },
                 },
               });

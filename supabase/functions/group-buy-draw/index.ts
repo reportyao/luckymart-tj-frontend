@@ -189,13 +189,23 @@ Deno.serve(async (req) => {
 
         // Send Telegram notification (non-winner)
         try {
+          // Get product info for notification
+          const { data: product } = await supabase
+            .from('group_buy_products')
+            .select('name, image_url')
+            .eq('id', session.product_id)
+            .single();
+
           await supabase.functions.invoke('send-telegram-notification', {
             body: {
-              user_id: order.user_id,
-              type: 'GROUP_BUY_REFUND',
+              user_id: user.id,
+              type: 'group_buy_refund',
               data: {
+                product_name: product?.name || 'Unknown Product',
+                product_image: product?.image_url || '',
                 session_code: session.session_code,
-                amount: Number(order.amount),
+                refund_amount: Number(order.amount),
+                lucky_coins_balance: newLuckyCoins,
               },
             },
           });
@@ -207,13 +217,22 @@ Deno.serve(async (req) => {
 
     // 9. 发送中奖通知
     try {
+      // Get product info for notification
+      const { data: product } = await supabase
+        .from('group_buy_products')
+        .select('name, image_url')
+        .eq('id', session.product_id)
+        .single();
+
       await supabase.functions.invoke('send-telegram-notification', {
         body: {
           user_id: winnerOrder.user_id,
-          type: 'GROUP_BUY_WIN',
+          type: 'group_buy_win',
           data: {
+            product_name: product?.name || 'Unknown Product',
+            product_image: product?.image_url || '',
             session_code: session.session_code,
-            product_id: session.product_id,
+            won_at: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' }),
           },
         },
       });

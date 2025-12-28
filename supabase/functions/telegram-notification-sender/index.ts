@@ -13,6 +13,18 @@ interface NotificationData {
   transaction_type?: string;
   referral_amount?: number;
   ticket_number?: string;
+  // Group buy fields
+  product_name?: string;
+  product_image?: string;
+  session_code?: string;
+  refund_amount?: number;
+  lucky_coins_balance?: number;
+  won_at?: string;
+  // Withdrawal fields
+  withdrawal_method?: string;
+  estimated_arrival?: string;
+  failure_reason?: string;
+  current_balance?: number;
 }
 
 // 多语言通知模板
@@ -43,6 +55,32 @@ const notificationTemplates = {
       `⏰ Эслотдиҳӣ дар бораи бахтозмоии наздик\n\n🎫 ${data.lottery_title}\n🎫 Рақами шумо: ${data.ticket_number}\n⏱️ Баъд аз 10 дақиқа бахтозмоӣ\n\nБарои лаҳзаи ҳаяҷонангез омода шавед!`
   },
 
+  // 拼团相关通知
+  group_buy_win: {
+    zh: (data: NotificationData) => 
+      `🎉 恭喜中奖！\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n⏰ 中奖时间: ${data.won_at}\n\n请尽快填写收货地址，我们将为您发货！`,
+    ru: (data: NotificationData) => 
+      `🎉 Поздравляем с выигрышем!\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n⏰ Время выигрыша: ${data.won_at}\n\nПожалуйста, заполните адрес доставки как можно скорее!`,
+    tg: (data: NotificationData) => 
+      `🎉 Муборак бо бурдан!\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n⏰ Вақти бурдан: ${data.won_at}\n\nЛутфан суроғаи расонидани молро пур кунед!`
+  },
+  group_buy_refund: {
+    zh: (data: NotificationData) => 
+      `😔 很遗憾未中奖\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 幸运币\n💎 当前幸运币余额: ${data.lucky_coins_balance}\n\n不要气馁，继续参与更多拼团活动！`,
+    ru: (data: NotificationData) => 
+      `😔 К сожалению, вы не выиграли\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Возврат: ${data.refund_amount} Lucky Coins\n💎 Текущий баланс: ${data.lucky_coins_balance}\n\nНе расстраивайтесь, участвуйте в новых групповых покупках!`,
+    tg: (data: NotificationData) => 
+      `😔 Мутаассифона шумо набурдед\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n💰 Баргардонидан: ${data.refund_amount} Lucky Coins\n💎 Боқимондаи ҷорӣ: ${data.lucky_coins_balance}\n\nДилгир нашавед, дар харидҳои гурӯҳии нав иштирок кунед!`
+  },
+  group_buy_timeout: {
+    zh: (data: NotificationData) => 
+      `⏰ 拼团超时\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} 幸运币\n💎 当前幸运币余额: ${data.lucky_coins_balance}\n\n拼团未能凑齐人数，参与金额已退回为幸运币。`,
+    ru: (data: NotificationData) => 
+      `⏰ Время истекло\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Возврат: ${data.refund_amount} Lucky Coins\n💎 Текущий баланс: ${data.lucky_coins_balance}\n\nГруппа не набралась, средства возвращены в виде Lucky Coins.`,
+    tg: (data: NotificationData) => 
+      `⏰ Вақт тамом шуд\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n💰 Баргардонидан: ${data.refund_amount} Lucky Coins\n💎 Боқимондаи ҷорӣ: ${data.lucky_coins_balance}\n\nГурӯҳ пур нашуд, маблағ ба шакли Lucky Coins баргардонида шуд.`
+  },
+
   // 钱包相关通知
   wallet_deposit: {
     zh: (data: NotificationData) => 
@@ -62,11 +100,19 @@ const notificationTemplates = {
   },
   wallet_withdraw_completed: {
     zh: (data: NotificationData) => 
-      `✅ 提现完成\n\n💵 金额: ${data.transaction_amount}元\n✅ 状态: 已到账\n\n资金已成功转至您的账户！`,
+      `✅ 提现完成\n\n💵 金额: ${data.transaction_amount}元\n✅ 状态: 已到账\n⏰ 到账时间: ${data.estimated_arrival || '已到账'}\n\n资金已成功转至您的账户！`,
     ru: (data: NotificationData) => 
-      `✅ Вывод завершен\n\n💵 Сумма: ${data.transaction_amount} сом\n✅ Статус: Зачислено\n\nСредства успешно переведены на ваш счет!`,
+      `✅ Вывод завершен\n\n💵 Сумма: ${data.transaction_amount} сом\n✅ Статус: Зачислено\n⏰ Время зачисления: ${data.estimated_arrival || 'Зачислено'}\n\nСредства успешно переведены на ваш счет!`,
     tg: (data: NotificationData) => 
-      `✅ Баровардан анҷом ёфт\n\n💵 Маблағ: ${data.transaction_amount} сомонӣ\n✅ Ҳолат: Гузошта шуд\n\nМаблағ ба ҳисоби шумо муваффақият гузошта шуд!`
+      `✅ Баровардан анҷом ёфт\n\n💵 Маблағ: ${data.transaction_amount} сомонӣ\n✅ Ҳолат: Гузошта шуд\n⏰ Вақти гузоштан: ${data.estimated_arrival || 'Гузошта шуд'}\n\nМаблағ ба ҳисоби шумо муваффақият гузошта шуд!`
+  },
+  wallet_withdraw_failed: {
+    zh: (data: NotificationData) => 
+      `❌ 提现失败\n\n💵 金额: ${data.transaction_amount}元\n❌ 状态: 失败\n📝 失败原因: ${data.failure_reason}\n💰 当前余额: ${data.current_balance}元\n\n资金已退回您的余额钱包，请重新提交申请。`,
+    ru: (data: NotificationData) => 
+      `❌ Вывод не удался\n\n💵 Сумма: ${data.transaction_amount} сом\n❌ Статус: Не удалось\n📝 Причина: ${data.failure_reason}\n💰 Текущий баланс: ${data.current_balance} сом\n\nСредства возвращены на ваш баланс, пожалуйста, подайте заявку снова.`,
+    tg: (data: NotificationData) => 
+      `❌ Баровардан ноком\n\n💵 Маблағ: ${data.transaction_amount} сомонӣ\n❌ Ҳолат: Ноком\n📝 Сабаб: ${data.failure_reason}\n💰 Боқимондаи ҷорӣ: ${data.current_balance} сомонӣ\n\nМаблағ ба боқимондаи шумо баргардонида шуд, лутфан дархостро дубора пешниҳод кунед.`
   },
 
   // 推荐奖励通知

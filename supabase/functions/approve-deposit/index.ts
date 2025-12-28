@@ -158,6 +158,24 @@ serve(async (req) => {
         related_type: 'DEPOSIT_REQUEST',
       })
       console.log('通知结果:', { notifyError })
+
+      // Send Telegram notification
+      try {
+        await supabaseClient.functions.invoke('send-telegram-notification', {
+          body: {
+            user_id: depositRequest.user_id,
+            type: 'wallet_deposit',
+            data: {
+              transaction_amount: depositRequest.amount,
+              withdrawal_method: depositRequest.payment_method,
+              current_balance: newBalance,
+            },
+            priority: 2,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Telegram notification:', error);
+      }
     } else {
       // 审核拒绝,发送通知
       await supabaseClient.from('notifications').insert({
@@ -168,6 +186,24 @@ serve(async (req) => {
         related_id: requestId,
         related_type: 'DEPOSIT_REQUEST',
       })
+
+      // Send Telegram notification for rejection
+      try {
+        await supabaseClient.functions.invoke('send-telegram-notification', {
+          body: {
+            user_id: depositRequest.user_id,
+            type: 'wallet_withdraw_failed',
+            data: {
+              transaction_amount: depositRequest.amount,
+              failure_reason: adminNote || '审核未通过',
+              current_balance: 0, // Deposit rejection doesn't affect balance
+            },
+            priority: 2,
+          },
+        });
+      } catch (error) {
+        console.error('Failed to send Telegram notification:', error);
+      }
     }
 
     console.log('=== approve-deposit 成功 ===')
