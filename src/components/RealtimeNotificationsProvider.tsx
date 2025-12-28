@@ -42,7 +42,7 @@ export function RealtimeNotificationsProvider({ children }: RealtimeNotification
         break;
 
       case 'group_buy_refund':
-        toast.info(
+        toast(
           `${t('notifications.groupBuyRefund.title')}\n${t('notifications.groupBuyRefund.description', { 
             amount: data.data?.refund_amount 
           })}`
