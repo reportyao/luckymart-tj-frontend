@@ -309,9 +309,9 @@ export default function GroupBuyDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
@@ -320,13 +320,13 @@ export default function GroupBuyDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <AlertCircle className="w-16 h-16 text-gray-300 mx-auto mb-4" />
           <p className="text-gray-500">{t('groupBuy.productNotFound')}</p>
           <button
             onClick={() => navigate('/group-buy')}
-            className="mt-4 text-orange-500 hover:text-orange-600"
+            className="mt-4 text-purple-500 hover:text-purple-600"
           >
             {t('common.back')}
           </button>
@@ -336,12 +336,12 @@ export default function GroupBuyDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-4">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-4">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white hover:text-orange-100"
+          className="flex items-center gap-2 text-white hover:text-pink-100"
         >
           <ChevronLeft className="w-6 h-6" />
           {t('common.back')}
@@ -364,9 +364,9 @@ export default function GroupBuyDetailPage() {
         <p className="text-gray-600 mb-4">{getLocalizedText(product.description)}</p>
 
         {/* Price */}
-        <div className="bg-orange-50 rounded-2xl p-4 mb-6">
+        <div className="bg-purple-50 rounded-2xl p-4 mb-6">
           <div className="flex items-end gap-2 mb-2">
-            <div className="text-orange-600 font-bold text-3xl">
+            <div className="text-purple-600 font-bold text-3xl">
               ₽{product.price_per_person}
             </div>
             <div className="text-gray-400 line-through text-lg mb-1">
@@ -406,11 +406,11 @@ export default function GroupBuyDetailPage() {
                 return (
                   <div
                     key={session.id}
-                    className="bg-white border-2 border-orange-200 rounded-xl p-4"
+                    className="bg-white border-2 border-purple-200 rounded-xl p-4"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="flex items-center gap-2">
-                        <Users className="w-5 h-5 text-orange-500" />
+                        <Users className="w-5 h-5 text-purple-500" />
                         <span className="font-bold text-gray-800">
                           {session.current_participants}/{session.max_participants}
                         </span>
@@ -429,7 +429,7 @@ export default function GroupBuyDetailPage() {
                             <img
                               src={order.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`}
                               alt={order.users?.telegram_username || order.users?.first_name || 'User'}
-                              className="w-12 h-12 rounded-full border-2 border-orange-200 object-cover"
+                              className="w-12 h-12 rounded-full border-2 border-purple-200 object-cover"
                               onError={(e) => {
                                 (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`;
                               }}
@@ -456,7 +456,7 @@ export default function GroupBuyDetailPage() {
                           <button
                             onClick={() => handleJoinGroup(session.id)}
                             disabled={isProcessing}
-                            className="flex-1 bg-gradient-to-r from-orange-500 to-red-500 text-white py-2 rounded-lg font-bold hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50"
+                            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white py-2 rounded-lg font-bold hover:from-purple-600 hover:to-pink-600 transition-colors disabled:opacity-50"
                           >
                             {isProcessing ? t('common.processing') : t('groupBuy.joinNow')}
                           </button>
@@ -485,7 +485,7 @@ export default function GroupBuyDetailPage() {
         <button
           onClick={() => handleJoinGroup()}
           disabled={joiningSessionId === 'new'}
-          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-xl font-bold text-lg hover:from-orange-600 hover:to-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
           <ShoppingBag className="w-6 h-6" />
           {joiningSessionId === 'new' ? t('common.processing') : t('groupBuy.startNewGroup')}

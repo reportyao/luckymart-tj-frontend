@@ -109,7 +109,7 @@ const HomePage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <Link
             to="/group-buy"
-            className="bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
+            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
           >
             <div className="flex flex-col items-center">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">

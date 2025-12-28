@@ -122,9 +122,9 @@ export default function MyGroupBuysPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
@@ -132,12 +132,12 @@ export default function MyGroupBuysPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white hover:text-orange-100 mb-4"
+          className="flex items-center gap-2 text-white hover:text-pink-100 mb-4"
         >
           <ChevronLeft className="w-6 h-6" />
           {t('common.back')}
@@ -154,7 +154,7 @@ export default function MyGroupBuysPage() {
           onClick={() => setFilter('all')}
           className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
             filter === 'all'
-              ? 'bg-orange-500 text-white'
+              ? 'bg-purple-500 text-white'
               : 'bg-white text-gray-600 hover:bg-gray-50'
           }`}
         >
@@ -164,7 +164,7 @@ export default function MyGroupBuysPage() {
           onClick={() => setFilter('active')}
           className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
             filter === 'active'
-              ? 'bg-orange-500 text-white'
+              ? 'bg-purple-500 text-white'
               : 'bg-white text-gray-600 hover:bg-gray-50'
           }`}
         >
@@ -174,7 +174,7 @@ export default function MyGroupBuysPage() {
           onClick={() => setFilter('completed')}
           className={`flex-1 py-2 rounded-lg font-medium transition-colors ${
             filter === 'completed'
-              ? 'bg-orange-500 text-white'
+              ? 'bg-purple-500 text-white'
               : 'bg-white text-gray-600 hover:bg-gray-50'
           }`}
         >
@@ -190,7 +190,7 @@ export default function MyGroupBuysPage() {
             <p className="text-gray-500">{t('groupBuy.noOrders')}</p>
             <button
               onClick={() => navigate('/group-buy')}
-              className="mt-4 text-orange-500 hover:text-orange-600 font-medium"
+              className="mt-4 text-purple-500 hover:text-purple-600 font-medium"
             >
               {t('groupBuy.browseProducts')}
             </button>
@@ -225,7 +225,7 @@ export default function MyGroupBuysPage() {
                         {order.session.current_participants}/{order.session.group_size}
                       </span>
                     </div>
-                    <div className="text-orange-600 font-bold">₽{order.amount}</div>
+                    <div className="text-purple-600 font-bold">₽{order.amount}</div>
                   </div>
 
                   {/* Refund Info */}
@@ -241,7 +241,7 @@ export default function MyGroupBuysPage() {
                   {order.status === 'WON' && (
                     <button
                       onClick={() => navigate(`/group-buy/result/${order.session.id}`)}
-                      className="mt-2 text-sm text-orange-500 hover:text-orange-600 font-medium"
+                      className="mt-2 text-sm text-purple-500 hover:text-purple-600 font-medium"
                     >
                       {t('groupBuy.viewResult')} →
                     </button>

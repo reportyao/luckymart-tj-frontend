@@ -98,9 +98,9 @@ export default function GroupBuyResultPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
@@ -109,13 +109,13 @@ export default function GroupBuyResultPage() {
 
   if (!result) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
         <div className="text-center">
           <XCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">{t('groupBuy.noResult')}</p>
           <button
             onClick={() => navigate('/group-buy')}
-            className="mt-4 text-orange-500 hover:text-orange-600 font-medium"
+            className="mt-4 text-purple-500 hover:text-purple-600 font-medium"
           >
             {t('groupBuy.browseProducts')}
           </button>
@@ -125,12 +125,12 @@ export default function GroupBuyResultPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-red-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white hover:text-orange-100 mb-4"
+          className="flex items-center gap-2 text-white hover:text-pink-100 mb-4"
         >
           <ChevronLeft className="w-6 h-6" />
           {t('common.back')}
@@ -153,7 +153,7 @@ export default function GroupBuyResultPage() {
           </div>
         ) : (
           <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
-            <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <Trophy className="w-16 h-16 text-purple-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
               {t('groupBuy.drawCompleted')}
             </h2>
@@ -176,7 +176,7 @@ export default function GroupBuyResultPage() {
             </h3>
             <div className="flex items-center justify-between text-sm text-gray-600">
               <span>{t('groupBuy.pricePerPerson')}</span>
-              <span className="text-orange-600 font-bold">
+              <span className="text-purple-600 font-bold">
                 ₽{result.product.price_per_person}
               </span>
             </div>
@@ -209,7 +209,7 @@ export default function GroupBuyResultPage() {
       <div className="p-4">
         <div className="bg-white rounded-2xl shadow-md p-6">
           <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-orange-500" />
+            <Users className="w-5 h-5 text-purple-500" />
             {t('groupBuy.allParticipants')}
           </h3>
           <div className="space-y-3">
@@ -222,8 +222,8 @@ export default function GroupBuyResultPage() {
                     : 'bg-gray-50'
                 }`}
               >
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <span className="font-bold text-orange-600">{index + 1}</span>
+                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                  <span className="font-bold text-purple-600">{index + 1}</span>
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-gray-800">{participant.username}</p>
@@ -265,13 +265,13 @@ export default function GroupBuyResultPage() {
       <div className="p-4 space-y-3">
         <button
           onClick={() => navigate('/group-buy')}
-          className="w-full bg-gradient-to-r from-orange-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
+          className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
         >
           {t('groupBuy.browseProducts')}
         </button>
         <button
           onClick={() => navigate('/my-group-buys')}
-          className="w-full bg-white text-orange-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
+          className="w-full bg-white text-purple-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
         >
           {t('groupBuy.myGroups')}
         </button>
