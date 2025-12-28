@@ -116,60 +116,69 @@ Deno.serve(async (req) => {
       console.error('Failed to create result:', resultError);
     }
 
-    // 8. Refund non-winners (convert to Lucky Coins)
+    // 8. Refund non-winners (convert to Points/Lucky Coins)
     for (const order of orders) {
       if (order.id !== winnerOrder.id) {
-        // Update user's lucky_coins balance - 同时支持 id 和 telegram_id
-        let user = null;
+        // Get user info - 同时支持 id 和 telegram_id
+        let userId = order.user_id;
         
         // 先尝试用 id 查询（UUID）
         const { data: userById } = await supabase
           .from('users')
-          .select('id, telegram_id, lucky_coins')
+          .select('id')
           .eq('id', order.user_id)
           .single();
         
         if (userById) {
-          user = userById;
+          userId = userById.id;
         } else {
           // 再尝试用 telegram_id 查询
           const { data: userByTelegramId } = await supabase
             .from('users')
-            .select('id, telegram_id, lucky_coins')
+            .select('id')
             .eq('telegram_id', order.user_id)
             .single();
-          user = userByTelegramId;
+          if (userByTelegramId) {
+            userId = userByTelegramId.id;
+          }
         }
 
-        if (user) {
+        if (userId) {
           const refundAmount = Number(order.amount);
-          const newLuckyCoins = (Number(user.lucky_coins) || 0) + refundAmount;
           
-          await supabase
-            .from('users')
-            .update({ lucky_coins: newLuckyCoins })
-            .eq('id', user.id);
-
-          // Get user's wallet for transaction record - 使用 type='BALANCE'
-          const { data: wallet } = await supabase
+          // Get user's LUCKY_COIN wallet (积分钱包)
+          const { data: luckyWallet } = await supabase
             .from('wallets')
-            .select('id')
-            .eq('user_id', user.id)
-            .eq('type', 'BALANCE')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('type', 'LUCKY_COIN')
             .single();
 
-          if (wallet) {
+          if (luckyWallet) {
+            // Update LUCKY_COIN wallet balance (退积分)
+            const newBalance = Number(luckyWallet.balance) + refundAmount;
+            
+            await supabase
+              .from('wallets')
+              .update({ 
+                balance: newBalance,
+                updated_at: new Date().toISOString(),
+                version: luckyWallet.version + 1
+              })
+              .eq('id', luckyWallet.id)
+              .eq('version', luckyWallet.version);
+
             // Create wallet transaction record
             const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             await supabase.from('wallet_transactions').insert({
               id: transactionId,
-              wallet_id: wallet.id,
-              type: 'GROUP_BUY_REFUND',
+              wallet_id: luckyWallet.id,
+              type: 'GROUP_BUY_REFUND_TO_POINTS',
               amount: refundAmount,
-              balance_before: 0, // Lucky coins, not wallet balance
-              balance_after: newLuckyCoins,
+              balance_before: Number(luckyWallet.balance),
+              balance_after: newBalance,
               status: 'COMPLETED',
-              description: `拼团未中奖退款（转为积分）`,
+              description: `拼团未中奖退积分`,
               reference_id: order.id,
               processed_at: new Date().toISOString(),
               created_at: new Date().toISOString(),
@@ -196,16 +205,24 @@ Deno.serve(async (req) => {
             .eq('id', session.product_id)
             .single();
 
+          // Get updated lucky coins balance from wallet
+          const { data: updatedWallet } = await supabase
+            .from('wallets')
+            .select('balance')
+            .eq('user_id', userId)
+            .eq('type', 'LUCKY_COIN')
+            .single();
+
           await supabase.functions.invoke('send-telegram-notification', {
             body: {
-              user_id: user.id,
+              user_id: userId,
               type: 'group_buy_refund',
               data: {
                 product_name: product?.name || 'Unknown Product',
                 product_image: product?.image_url || '',
                 session_code: session.session_code,
                 refund_amount: Number(order.amount),
-                lucky_coins_balance: newLuckyCoins,
+                lucky_coins_balance: Number(updatedWallet?.balance || 0),
               },
             },
           });
