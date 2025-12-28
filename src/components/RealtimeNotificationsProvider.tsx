@@ -1,6 +1,6 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { useRealtimeNotifications, RealtimeNotification } from '@/hooks/useRealtimeNotifications';
-import { useToast } from '@/hooks/use-toast';
+import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
 interface RealtimeNotificationsContextType {
@@ -25,7 +25,7 @@ interface RealtimeNotificationsProviderProps {
 }
 
 export function RealtimeNotificationsProvider({ children }: RealtimeNotificationsProviderProps) {
-  const { toast } = useToast();
+  // Using react-hot-toast directly
   const { t } = useTranslation();
 
   const handleNotification = (notification: RealtimeNotification) => {
@@ -34,61 +34,49 @@ export function RealtimeNotificationsProvider({ children }: RealtimeNotification
     // Show toast notification based on type
     switch (data?.notification_type) {
       case 'group_buy_win':
-        toast({
-          title: t('notifications.groupBuyWin.title'),
-          description: t('notifications.groupBuyWin.description', { 
+        toast.success(
+          `${t('notifications.groupBuyWin.title')}\n${t('notifications.groupBuyWin.description', { 
             productName: data.data?.product_name 
-          }),
-          variant: 'default',
-        });
+          })}`
+        );
         break;
 
       case 'group_buy_refund':
-        toast({
-          title: t('notifications.groupBuyRefund.title'),
-          description: t('notifications.groupBuyRefund.description', { 
+        toast.info(
+          `${t('notifications.groupBuyRefund.title')}\n${t('notifications.groupBuyRefund.description', { 
             amount: data.data?.refund_amount 
-          }),
-          variant: 'default',
-        });
+          })}`
+        );
         break;
 
       case 'wallet_deposit':
-        toast({
-          title: t('notifications.deposit.title'),
-          description: t('notifications.deposit.description', { 
+        toast.success(
+          `${t('notifications.deposit.title')}\n${t('notifications.deposit.description', { 
             amount: data.data?.transaction_amount 
-          }),
-          variant: 'default',
-        });
+          })}`
+        );
         break;
 
       case 'wallet_withdraw_completed':
-        toast({
-          title: t('notifications.withdrawalCompleted.title'),
-          description: t('notifications.withdrawalCompleted.description'),
-          variant: 'default',
-        });
+        toast.success(
+          `${t('notifications.withdrawalCompleted.title')}\n${t('notifications.withdrawalCompleted.description')}`
+        );
         break;
 
       case 'lottery_win':
-        toast({
-          title: t('notifications.lotteryWin.title'),
-          description: t('notifications.lotteryWin.description', { 
+        toast.success(
+          `${t('notifications.lotteryWin.title')}\n${t('notifications.lotteryWin.description', { 
             prize: data.data?.prize_amount 
-          }),
-          variant: 'default',
-        });
+          })}`
+        );
         break;
 
       default:
         // Generic notification
         if (data?.title) {
-          toast({
-            title: data.title,
-            description: data.message,
-            variant: 'default',
-          });
+          toast(
+            `${data.title}\n${data.message}`
+          );
         }
     }
   };
