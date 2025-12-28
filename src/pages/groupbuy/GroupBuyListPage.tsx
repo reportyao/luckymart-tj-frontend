@@ -78,7 +78,20 @@ export default function GroupBuyListPage() {
           <ShoppingBag className="w-7 h-7" />
           {t('groupBuy.title')}
         </h1>
-        <p className="text-orange-100 mt-2">{t('groupBuy.subtitle')}</p>
+        <div className="mt-4 bg-white/10 backdrop-blur-sm rounded-xl p-4 text-sm leading-relaxed">
+          <div className="font-semibold mb-2">{t('groupBuy.howItWorks.title')}</div>
+          <div className="space-y-1">
+            <div>{t('groupBuy.howItWorks.description')}</div>
+            <div className="flex items-start gap-2">
+              <span>🎉</span>
+              <span>{t('groupBuy.howItWorks.winner')}</span>
+            </div>
+            <div className="flex items-start gap-2">
+              <span>💰</span>
+              <span>{t('groupBuy.howItWorks.participants')}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Products Grid */}
