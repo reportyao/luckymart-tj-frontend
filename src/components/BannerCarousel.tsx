@@ -110,10 +110,7 @@ const BannerCarousel: React.FC = () => {
           (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x320?text=Banner';
         }}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
-      <div className="absolute bottom-4 left-4 right-4">
-        <h3 className="text-white font-bold text-lg truncate">{currentBanner.title}</h3>
-      </div>
+
 
       {/* 导航按钮 */}
       {banners.length > 1 && (
