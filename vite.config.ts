@@ -30,19 +30,14 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: 'dist',
       sourcemap: false,
-      minify: 'terser',
-      assetsInlineLimit: 0,  // 强制每次构建生成新的文件名，防止缓存
-      terserOptions: {
-        compress: {
-          drop_console: false,  // 保留 console.log 以便调试
-          drop_debugger: true
-        }
-      },
+      minify: 'esbuild',  // Use esbuild instead of terser to avoid tree-shaking issues
+      assetsInlineLimit: 0,
       rollupOptions: {
         output: {
           manualChunks: {
             vendor: ['react', 'react-dom', 'react-router-dom'],
             supabase: ['@supabase/supabase-js'],
+            motion: ['framer-motion'],
           },
           chunkFileNames: 'assets/js/[name]-[hash].js',
           entryFileNames: 'assets/js/[name]-[hash].js',
@@ -63,6 +58,11 @@ export default defineConfig(({ mode }) => {
       alias: {
         "@": path.resolve(__dirname, "./src"),
       },
+    },
+    
+    // Optimize dependencies to prevent tree-shaking issues
+    optimizeDeps: {
+      include: ['framer-motion'],
     },
   }
 })
