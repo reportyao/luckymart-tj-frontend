@@ -8,7 +8,7 @@ import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { SafeMotion } from '../components/SafeMotion'
-import { ArrowRightIcon, StarIcon, TrophyIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline'
 import ReferralBanner from '../components/ReferralBanner'
 import BannerCarousel from '../components/BannerCarousel'
 import toast from 'react-hot-toast'
@@ -108,20 +108,37 @@ const HomePage: React.FC = () => {
         <BannerCarousel />
       </div>
 
-      {/* 积分商城入口 */}
+      {/* 功能入口 */}
       <div className="px-4 mt-6">
-        <Link
-          to="/lottery"
-          className="block bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
-        >
-          <div className="flex flex-col items-center">
-            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
-              <TrophyIcon className="w-8 h-8" />
+        <div className="grid grid-cols-2 gap-3">
+          {/* 拼团入口 */}
+          <Link
+            to="/group-buy"
+            className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mb-2">
+                <UserGroupIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">{t('home.groupBuy')}</h3>
+              <p className="text-xs text-gray-500 mt-1 text-center">{t('home.groupBuyDesc')}</p>
             </div>
-            <h3 className="text-lg font-bold mb-1">{t('home.lottery')}</h3>
-            <p className="text-xs text-white/80 text-center">{t('home.lotteryDesc')}</p>
-          </div>
-        </Link>
+          </Link>
+
+          {/* 积分商城入口 */}
+          <Link
+            to="/lottery"
+            className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
+          >
+            <div className="flex flex-col items-center">
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mb-2">
+                <TrophyIcon className="w-6 h-6 text-white" />
+              </div>
+              <h3 className="text-sm font-semibold text-gray-900">{t('home.lottery')}</h3>
+              <p className="text-xs text-gray-500 mt-1 text-center">{t('home.lotteryDesc')}</p>
+            </div>
+          </Link>
+        </div>
       </div>
 
 	

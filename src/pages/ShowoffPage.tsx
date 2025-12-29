@@ -303,40 +303,6 @@ const ShowoffPage: React.FC = () => {
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 py-6 sticky top-0 z-10">
-        <div className="flex items-center justify-between mb-4">
-          <h1 className="text-2xl font-bold text-gray-900">{t('showoff.showoffGallery')}</h1>
-          <button
-            onClick={handleCreateShowoff}
-            className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-all shadow-lg"
-          >
-            <PlusIcon className="w-5 h-5" />
-	            <span>{t('showoff.createShowoff')}</span>
-          </button>
-        </div>
-
-        {/* Filter Tabs */}
-        <div className="flex space-x-2">
-          {[
-            { key: 'all', label: t('showoff.all') },
-            { key: 'following', label: t('showoff.following') },
-            { key: 'popular', label: t('showoff.popular') }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                filter === tab.key
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </div>
 
       {/* Showoffs List */}
       <div className="px-4 py-4">
@@ -498,6 +464,16 @@ const ShowoffPage: React.FC = () => {
           </>
         )}
       </div>
+
+      {/* Floating Action Button (FAB) */}
+      <motion.button
+        onClick={handleCreateShowoff}
+        className="fixed right-6 bottom-24 w-14 h-14 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center z-50"
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.95 }}
+      >
+        <PlusIcon className="w-7 h-7" />
+      </motion.button>
     </div>
   );
 };

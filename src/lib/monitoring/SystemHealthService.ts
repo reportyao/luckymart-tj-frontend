@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { supabase } from '../supabase'
 
 interface HealthCheckResult {
   service: string
@@ -20,10 +20,7 @@ class SystemHealthService {
   private checkInterval?: NodeJS.Timeout
   
   constructor() {
-    this.supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    this.supabase = supabase
   }
 
   // 启动健康检查

@@ -7,12 +7,14 @@ import { getLocalizedText } from '../lib/utils'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, ClockIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { useUser } from '../contexts/UserContext'
+import { useNavigate } from 'react-router-dom'
 
 const LotteryPage: React.FC = () => {
   const { t, i18n } = useTranslation()
+  const navigate = useNavigate()
 
   const { lotteryService } = useSupabase()
   const [lotteries, setLotteries] = useState<Lottery[]>([])
@@ -83,46 +85,31 @@ const LotteryPage: React.FC = () => {
   }
 
   return (
-    <div className="p-4 pb-20">
-      {/* 页面标题 */}
-      <div className="bg-white border-b border-gray-100 px-4 py-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('lottery.hall')}</h1>
-        
-        {/* 搜索框 */}
-        <div className="relative">
-          <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder={t('lottery.searchPlaceholder')}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl border-0 focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
-          />
-        </div>
-      </div>
+    <div className="pb-20">
+      {/* 简洁的头部 - 只有两个小按钮 */}
+      <div className="bg-white border-b border-gray-100 px-4 py-3">
+        <div className="flex justify-end items-center space-x-2">
+          {/* 已结束按钮 */}
+          <button
+            onClick={() => setFilter('completed')}
+            className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              filter === 'completed'
+                ? 'bg-gray-900 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <ClockIcon className="w-4 h-4" />
+            <span>已结束</span>
+          </button>
 
-      {/* 筛选标签 */}
-      <div className="px-4 py-4 bg-white border-b border-gray-100">
-        <div className="flex space-x-2 overflow-x-auto">
-          {[
-            { key: 'all', label: t('common.all') },
-            { key: 'active', label: t('lottery.active') },
-            { key: 'upcoming', label: t('lottery.upcoming') },
-            { key: 'completed', label: t('lottery.completed') },
-            { key: 'drawResult', label: t('lottery.drawResult') }
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilter(tab.key as any)}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
-                filter === tab.key
-                  ? 'bg-blue-100 text-blue-600'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {/* 订单管理按钮 */}
+          <button
+            onClick={() => navigate('/lottery-orders')}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+          >
+            <ClipboardDocumentListIcon className="w-4 h-4" />
+            <span>订单管理</span>
+          </button>
         </div>
       </div>
 
