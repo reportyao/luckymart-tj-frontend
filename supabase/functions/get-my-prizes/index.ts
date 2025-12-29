@@ -104,26 +104,19 @@ serve(async (req) => {
       }
     }
 
-    console.log('[GetMyPrizes] Received request:', { 
-      method: req.method,
-      session_token: session_token ? 'present' : 'missing' 
-    });
-
     if (!session_token) {
       throw new Error('未授权：缺少 session_token');
     }
 
     // 验证用户 session
     const { userId } = await validateSession(session_token);
-    
-    console.log('[GetMyPrizes] User validated:', userId);
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // 获取用户的所有中奖记录
+    // 获取用户的所有中奖记录（修复：移除不存在的关联查询 resale_listing）
     const prizesResponse = await fetch(
-      `${supabaseUrl}/rest/v1/prizes?user_id=eq.${userId}&select=*,lotteries(*),shipping(*),resale_listing(*)&order=won_at.desc`,
+      `${supabaseUrl}/rest/v1/prizes?user_id=eq.${userId}&select=*&order=won_at.desc`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -141,7 +134,73 @@ serve(async (req) => {
 
     const prizes = await prizesResponse.json();
 
-    console.log('[GetMyPrizes] Success, found prizes:', prizes.length);
+    // 如果有奖品，获取关联的 lottery 信息
+    if (prizes.length > 0) {
+      const lotteryIds = [...new Set(prizes.map((p: any) => p.lottery_id))];
+      
+      const lotteriesResponse = await fetch(
+        `${supabaseUrl}/rest/v1/lotteries?id=in.(${lotteryIds.join(',')})&select=id,title,title_i18n,image_url,image_urls`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (lotteriesResponse.ok) {
+        const lotteries = await lotteriesResponse.json();
+        
+        // 合并 lottery 信息到 prizes
+        for (const prize of prizes) {
+          prize.lottery = lotteries.find((l: any) => l.id === prize.lottery_id) || null;
+        }
+      }
+
+      // 获取关联的 shipping 信息
+      const prizeIds = prizes.map((p: any) => p.id);
+      const shippingResponse = await fetch(
+        `${supabaseUrl}/rest/v1/shipping?prize_id=in.(${prizeIds.join(',')})&select=*`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (shippingResponse.ok) {
+        const shippings = await shippingResponse.json();
+        
+        // 合并 shipping 信息到 prizes
+        for (const prize of prizes) {
+          prize.shipping = shippings.find((s: any) => s.prize_id === prize.id) || null;
+        }
+      }
+
+      // 获取关联的 market_listings 信息（检查奖品是否已上架转售）
+      const marketResponse = await fetch(
+        `${supabaseUrl}/rest/v1/market_listings?entry_id=in.(${prizeIds.join(',')})&select=*`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (marketResponse.ok) {
+        const listings = await marketResponse.json();
+        
+        // 合并 market_listing 信息到 prizes
+        for (const prize of prizes) {
+          prize.market_listing = listings.find((l: any) => l.entry_id === prize.id) || null;
+        }
+      }
+    }
 
     return new Response(
       JSON.stringify({
