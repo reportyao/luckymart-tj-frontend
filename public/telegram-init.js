@@ -8,8 +8,11 @@
   
   console.log('[Telegram Init] Starting initialization...');
   
-  // 等待 Telegram WebApp SDK 加载
-  function waitForTelegram(callback, maxAttempts = 50) {
+  // 标记初始化已开始
+  window.__TELEGRAM_INIT_STARTED__ = true;
+  
+  // 等待 Telegram WebApp SDK 加载 - 减少等待时间
+  function waitForTelegram(callback, maxAttempts = 15) {
     let attempts = 0;
     
     const checkTelegram = setInterval(() => {
@@ -18,10 +21,12 @@
       if (window.Telegram && window.Telegram.WebApp) {
         clearInterval(checkTelegram);
         console.log('[Telegram Init] SDK loaded successfully');
+        window.__TELEGRAM_SDK_LOADED__ = true;
         callback(window.Telegram.WebApp);
       } else if (attempts >= maxAttempts) {
         clearInterval(checkTelegram);
-        console.error('[Telegram Init] SDK failed to load after', maxAttempts, 'attempts');
+        console.warn('[Telegram Init] SDK not available (not in Telegram environment)');
+        window.__TELEGRAM_SDK_LOADED__ = false;
         callback(null);
       }
     }, 100);
@@ -29,46 +34,27 @@
   
   // 初始化 Telegram WebApp
   waitForTelegram(function(WebApp) {
+    // 标记初始化完成
+    window.__TELEGRAM_INIT_COMPLETE__ = true;
+    
     if (!WebApp) {
-      console.error('[Telegram Init] Telegram WebApp not available');
+      console.log('[Telegram Init] Running in browser mode');
       return;
     }
     
     try {
-      // 调用 ready() 通知 Telegram 应用已准备好
       WebApp.ready();
-      console.log('[Telegram Init] WebApp.ready() called');
-      
-      // 展开应用到全屏
       WebApp.expand();
-      console.log('[Telegram Init] WebApp.expand() called');
       
-      // 设置头部颜色
       if (WebApp.setHeaderColor) {
         WebApp.setHeaderColor('bg_color');
-        console.log('[Telegram Init] Header color set');
       }
       
-      // 设置底部栏颜色
       if (WebApp.setBottomBarColor) {
         WebApp.setBottomBarColor('#ffffff');
-        console.log('[Telegram Init] Bottom bar color set');
       }
       
-      // 打印调试信息
-      console.log('[Telegram Init] Platform:', WebApp.platform);
-      console.log('[Telegram Init] Version:', WebApp.version);
-      console.log('[Telegram Init] initData available:', !!WebApp.initData);
-      console.log('[Telegram Init] initData length:', WebApp.initData ? WebApp.initData.length : 0);
-      
-      if (WebApp.initDataUnsafe) {
-        console.log('[Telegram Init] User:', WebApp.initDataUnsafe.user);
-        console.log('[Telegram Init] Start param:', WebApp.initDataUnsafe.start_param);
-      }
-      
-      // 存储到全局变量供调试使用
       window.__TELEGRAM_WEB_APP__ = WebApp;
-      
       console.log('[Telegram Init] Initialization complete');
       
     } catch (error) {

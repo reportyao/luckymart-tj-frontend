@@ -41,7 +41,11 @@ export default function GroupBuyListPage() {
 
       if (error) throw error;
       if (data?.success) {
-        setProducts(data.data);
+        // 按创建时间从新到旧排序
+        const sortedProducts = [...data.data].sort((a: any, b: any) => {
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        });
+        setProducts(sortedProducts);
       }
     } catch (error) {
       console.error('Failed to fetch products:', error);
@@ -121,9 +125,7 @@ export default function GroupBuyListPage() {
                   alt={getLocalizedText(product.title)}
                   className="w-full h-48 object-cover"
                 />
-                <div className="absolute top-3 left-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
-                  {calculateDiscount(product.original_price, product.price_per_person)}% OFF
-                </div>
+
                 {product.active_sessions_count > 0 && (
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">
                     <Users className="w-4 h-4" />

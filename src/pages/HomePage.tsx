@@ -25,7 +25,11 @@ const HomePage: React.FC = () => {
     try {
       setIsLoadingLotteries(true)
       const data = await lotteryService.getActiveLotteries()
-      setLotteries(data)
+      // 按创建时间从新到旧排序
+      const sortedLotteries = [...data].sort((a, b) => {
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+      setLotteries(sortedLotteries)
     } catch (error: any) {
       console.error('Failed to load lotteries:', error)
       toast.error(t('error.networkError'))

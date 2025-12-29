@@ -93,16 +93,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             </div>
           </div>
         )}
-        
-        {/* 状态标签 */}
-        <div className="absolute top-3 right-3">
-          <span className={cn(
-            "px-2 py-1 rounded-full text-xs font-medium",
-            getLotteryStatusColor(lottery.status)
-          )}>
-            {getLotteryStatusText(lottery.status)}
-          </span>
-        </div>
+
       </div>
 
       <div className="p-4">

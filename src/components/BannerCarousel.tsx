@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-
 
 interface Banner {
   id: string;
@@ -15,16 +14,62 @@ interface Banner {
   link_type: string;
 }
 
+// 缓存 banner 数据，避免每次组件挂载都重新请求
+let cachedBanners: Banner[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5分钟缓存
+
 const BannerCarousel: React.FC = () => {
   const { i18n } = useTranslation();
-  const [banners, setBanners] = useState<Banner[]>([]);
+  const [banners, setBanners] = useState<Banner[]>(cachedBanners || []);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!cachedBanners);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const preloadedRef = useRef<boolean>(false);
+
+  // 根据当前语言获取对应的Banner图片
+  const getLocalizedImageUrl = useCallback((banner: Banner): string => {
+    const lang = i18n.language;
+    
+    if (lang === 'zh' && banner.image_url_zh) return banner.image_url_zh;
+    if (lang === 'ru' && banner.image_url_ru) return banner.image_url_ru;
+    if (lang === 'tg' && banner.image_url_tg) return banner.image_url_tg;
+    
+    // Fallback
+    if (banner.image_url_zh) return banner.image_url_zh;
+    if (banner.image_url_ru) return banner.image_url_ru;
+    if (banner.image_url_tg) return banner.image_url_tg;
+    
+    return banner.image_url;
+  }, [i18n.language]);
+
+  // 预加载所有图片
+  const preloadImages = useCallback((bannerList: Banner[]) => {
+    if (preloadedRef.current) return;
+    preloadedRef.current = true;
+    
+    bannerList.forEach((banner) => {
+      const imageUrl = getLocalizedImageUrl(banner);
+      const img = new Image();
+      img.onload = () => {
+        setLoadedImages(prev => new Set(prev).add(imageUrl));
+      };
+      img.src = imageUrl;
+    });
+  }, [getLocalizedImageUrl]);
 
   useEffect(() => {
     const fetchBanners = async () => {
+      // 检查缓存是否有效
+      const now = Date.now();
+      if (cachedBanners && (now - cacheTimestamp) < CACHE_DURATION) {
+        setBanners(cachedBanners);
+        setIsLoading(false);
+        preloadImages(cachedBanners);
+        return;
+      }
+
       try {
-        const now = new Date().toISOString();
         const { data, error } = await (supabase as any)
           .from('banners')
           .select('id, title, image_url, image_url_zh, image_url_ru, image_url_tg, link_url, link_type')
@@ -32,7 +77,12 @@ const BannerCarousel: React.FC = () => {
           .order('sort_order', { ascending: true });
 
         if (error) throw error;
-        setBanners(data || []);
+        
+        const bannerData = data || [];
+        cachedBanners = bannerData;
+        cacheTimestamp = now;
+        setBanners(bannerData);
+        preloadImages(bannerData);
       } catch (error) {
         console.error('Failed to fetch banners:', error);
       } finally {
@@ -41,7 +91,7 @@ const BannerCarousel: React.FC = () => {
     };
 
     fetchBanners();
-  }, []);
+  }, [preloadImages]);
 
   // 自动轮播
   useEffect(() => {
@@ -54,30 +104,10 @@ const BannerCarousel: React.FC = () => {
     return () => clearInterval(interval);
   }, [banners.length]);
 
-  // 根据当前语言获取对应的Banner图片
-  const getLocalizedImageUrl = useCallback((banner: Banner): string => {
-    const lang = i18n.language;
-    
-    // 根据语言选择对应的图片
-    if (lang === 'zh' && banner.image_url_zh) {
-      return banner.image_url_zh;
-    }
-    if (lang === 'ru' && banner.image_url_ru) {
-      return banner.image_url_ru;
-    }
-    if (lang === 'tg' && banner.image_url_tg) {
-      return banner.image_url_tg;
-    }
-    
-    // Fallback: 按优先级尝试其他语言版本
-    // 优先使用中文版作为默认
-    if (banner.image_url_zh) return banner.image_url_zh;
-    if (banner.image_url_ru) return banner.image_url_ru;
-    if (banner.image_url_tg) return banner.image_url_tg;
-    
-    // 最后使用原始image_url
-    return banner.image_url;
-  }, [i18n.language]);
+  // 预计算所有图片URL
+  const imageUrls = useMemo(() => {
+    return banners.map(banner => getLocalizedImageUrl(banner));
+  }, [banners, getLocalizedImageUrl]);
 
   if (isLoading) {
     return (
@@ -90,19 +120,25 @@ const BannerCarousel: React.FC = () => {
   }
 
   const currentBanner = banners[currentIndex];
-  const currentImageUrl = getLocalizedImageUrl(currentBanner);
+  const currentImageUrl = imageUrls[currentIndex];
 
   const BannerContent = () => (
     <div className="relative h-40 overflow-hidden rounded-2xl">
-      <img
-        src={currentImageUrl}
-        alt={currentBanner.title}
-        className="w-full h-full object-cover"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x320?text=Banner';
-        }}
-      />
-
+      {/* 渲染所有图片，通过 opacity 控制显示 */}
+      {banners.map((banner, index) => (
+        <img
+          key={banner.id}
+          src={imageUrls[index]}
+          alt={banner.title}
+          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
+            index === currentIndex ? 'opacity-100' : 'opacity-0'
+          }`}
+          loading={index === 0 ? 'eager' : 'lazy'}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x320?text=Banner';
+          }}
+        />
+      ))}
 
       {/* 指示器 */}
       {banners.length > 1 && (
