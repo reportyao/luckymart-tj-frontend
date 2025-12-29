@@ -8,7 +8,7 @@ import { PurchaseModal } from '../components/lottery/PurchaseModal'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { SafeMotion } from '../components/SafeMotion'
-import { ArrowRightIcon, StarIcon, TrophyIcon, UsersIcon } from '@heroicons/react/24/outline'
+import { ArrowRightIcon, StarIcon, TrophyIcon } from '@heroicons/react/24/outline'
 import ReferralBanner from '../components/ReferralBanner'
 import BannerCarousel from '../components/BannerCarousel'
 import toast from 'react-hot-toast'
@@ -108,35 +108,20 @@ const HomePage: React.FC = () => {
         <BannerCarousel />
       </div>
 
-      {/* 拼团和积分商城入口 */}
+      {/* 积分商城入口 */}
       <div className="px-4 mt-6">
-        <div className="grid grid-cols-2 gap-4">
-          <Link
-            to="/group-buy"
-            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                <UsersIcon className="w-8 h-8" />
-              </div>
-              <h3 className="text-lg font-bold mb-1">{t('home.groupBuy')}</h3>
-              <p className="text-xs text-white/80 text-center">{t('home.groupBuyDesc')}</p>
+        <Link
+          to="/lottery"
+          className="block bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
+        >
+          <div className="flex flex-col items-center">
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
+              <TrophyIcon className="w-8 h-8" />
             </div>
-          </Link>
-
-          <Link
-            to="/lottery"
-            className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mb-3">
-                <TrophyIcon className="w-8 h-8" />
-              </div>
-              <h3 className="text-lg font-bold mb-1">{t('home.lottery')}</h3>
-              <p className="text-xs text-white/80 text-center">{t('home.lotteryDesc')}</p>
-            </div>
-          </Link>
-        </div>
+            <h3 className="text-lg font-bold mb-1">{t('home.lottery')}</h3>
+            <p className="text-xs text-white/80 text-center">{t('home.lotteryDesc')}</p>
+          </div>
+        </Link>
       </div>
 
 	
