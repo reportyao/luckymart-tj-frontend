@@ -1,5 +1,4 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback } from 'react';
-import WebApp from '@twa-dev/sdk';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from './SupabaseContext';
@@ -14,29 +13,46 @@ declare global {
   }
 }
 
+// 安全地获取 Telegram WebApp，避免在非 Telegram 环境下报错
+const getWebApp = () => {
+  try {
+    if (typeof window !== 'undefined' && window.Telegram && window.Telegram.WebApp) {
+      return window.Telegram.WebApp;
+    }
+  } catch (e) {
+    console.warn('[Telegram] Failed to access WebApp:', e);
+  }
+  // 返回一个安全的模拟对象
+  return {
+    initData: '',
+    initDataUnsafe: {},
+    ready: () => {},
+    expand: () => {},
+  };
+};
+
 // 合并 Supabase auth user 和 profile
 export type User = UserProfile & { 
   email?: string;
   telegram_username?: string;
   is_verified?: boolean;
   kyc_level?: string;
-  invite_code?: string; // 添加缺失的 invite_code 字段
+  invite_code?: string;
 };
 
 interface UserContextType {
   user: User | null;
-  profile: UserProfile | null; // 添加 profile 字段
+  profile: UserProfile | null;
   wallets: Wallet[];
   isLoading: boolean;
   isAuthenticated: boolean;
   telegramUser: any;
-  sessionToken: string | null; // 添加 sessionToken
+  sessionToken: string | null;
   authenticate: () => Promise<void>;
   refreshWallets: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
-// 创建一个默认值，确保 Context 永远不会是 undefined
 const defaultContextValue: UserContextType = {
   user: null,
   profile: null,
@@ -72,12 +88,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const { t } = useTranslation();
   const { authService, walletService, supabase } = useSupabase();
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<UserProfile | null>(null); // 添加 profile 状态
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   const [wallets, setWallets] = useState<Wallet[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [telegramUser] = useState<any>(null);
-  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false); // 记录是否已尝试认证
-  const [sessionToken, setSessionToken] = useState<string | null>(null); // 添加 sessionToken 状态
+  const [hasAttemptedAuth, setHasAttemptedAuth] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   const fetchWallets = useCallback(async (userId: string) => {
     try {
@@ -85,7 +101,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       setWallets(fetchedWallets);
     } catch (error) {
       console.error('Failed to fetch wallets:', error);
-      toast.error(t('errors.failedToLoadWallet'));
     }
   }, [walletService]);
 
@@ -93,7 +108,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
       
-      // 检查 localStorage 中是否有 session token
       const storedToken = localStorage.getItem('custom_session_token');
       const storedUser = localStorage.getItem('custom_user');
       
@@ -101,9 +115,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.log('[Session] Found stored session, validating...');
         const parsedUser = JSON.parse(storedUser);
         
-        // 验证 session token 是否有效
         try {
-          // 使用 fetch 直接调用 Supabase REST API 避免类型错误
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           
@@ -131,7 +143,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           
           const sessionData = sessions[0];
           
-          // 检查 session 是否过期
           const expiresAt = new Date(sessionData.expires_at);
           if (expiresAt < new Date()) {
             console.log('[Session] Session expired, clearing...');
@@ -147,7 +158,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           setUser(parsedUser as User);
           setSessionToken(storedToken);
           
-          // 获取 profile
           const { data: profileData, error: profileError } = await supabase
             .from('users')
             .select('*')
@@ -180,22 +190,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   }, [fetchWallets, supabase]);
 
   const authenticate = useCallback(async () => {
+    const WebApp = getWebApp();
+    
     console.log('[Auth] Starting authentication...');
     console.log('[Auth] WebApp.initData:', WebApp.initData ? `${WebApp.initData.substring(0, 50)}...` : 'null');
-    console.log('[Auth] WebApp.initDataUnsafe:', WebApp.initDataUnsafe);
     
     if (!WebApp.initData) {
       console.error('[Auth] Telegram initData is not available');
-      console.error('[Auth] This usually means:');
-      console.error('[Auth] 1. Not running in Telegram environment');
-      console.error('[Auth] 2. Telegram SDK not loaded properly');
-      console.error('[Auth] 3. Mini App not configured correctly');
-      toast.error(t('errors.telegramConnectionFailed'));
       return;
     }
+    
     try {
       setIsLoading(true);
-      const startParam = WebApp.initDataUnsafe.start_param;
+      const startParam = WebApp.initDataUnsafe?.start_param;
       console.log('[Auth] Calling authenticateWithTelegram...');
       const result = await authService.authenticateWithTelegram(WebApp.initData, startParam);
       console.log('[Auth] Authentication result:', result);
@@ -204,19 +211,11 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       setUser(user as User);
       
-      // 保存 session token
       if (session && session.token) {
         console.log('[Auth] Saving session token to localStorage');
-        console.log('[Auth] Session token:', session.token);
-        console.log('[Auth] Session expires_at:', session.expires_at);
         setSessionToken(session.token);
         localStorage.setItem('custom_session_token', session.token);
         localStorage.setItem('custom_user', JSON.stringify(user));
-        console.log('[Auth] Verification - localStorage token:', localStorage.getItem('custom_session_token'));
-      } else {
-        console.error('[Auth] No session token in response');
-        console.error('[Auth] Session object:', session);
-        console.error('[Auth] Full result:', result);
       }
       
       if (user) {
@@ -229,7 +228,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [authService, fetchWallets]);
+  }, [authService, fetchWallets, t]);
 
   useEffect(() => {
     checkSession();
@@ -246,16 +245,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   // 自动认证：如果有 initData 但没有用户，尝试自动登录
   useEffect(() => {
     const autoAuthenticate = async () => {
-      console.log('[Auto Auth] Checking authentication state...');
-      console.log('[Auto Auth] Has initData:', !!WebApp.initData);
-      console.log('[Auto Auth] Has user:', !!user);
-      console.log('[Auto Auth] Has sessionToken state:', !!sessionToken);
-      console.log('[Auto Auth] Is loading:', isLoading);
-      console.log('[Auto Auth] Has attempted:', hasAttemptedAuth);
+      const WebApp = getWebApp();
       
-      // 等待 checkSession 完成
       if (isLoading) {
-        console.log('[Auto Auth] Waiting for checkSession to complete...');
         return;
       }
       
@@ -264,8 +256,6 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.log('[Auto Auth] No user or session, attempting authentication...');
         setHasAttemptedAuth(true);
         await authenticate();
-      } else {
-        console.log('[Auto Auth] Skipping authentication');
       }
     };
 
@@ -281,23 +271,22 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
   const logout = useCallback(async () => {
     await authService.signOut();
     setUser(null);
-    setProfile(null); // 登出时清空 profile
+    setProfile(null);
     setWallets([]);
     setSessionToken(null);
-    // 清除 localStorage 中的 session
     localStorage.removeItem('custom_session_token');
     localStorage.removeItem('custom_user');
     toast.success(t('auth.loggedOut'));
-  }, [authService]);
+  }, [authService, t]);
 
   const value: UserContextType = {
     user,
-    profile, // 暴露 profile
+    profile,
     wallets,
     isLoading,
     isAuthenticated: !!user,
     telegramUser,
-    sessionToken, // 暴露 sessionToken
+    sessionToken,
     authenticate,
     refreshWallets,
     logout,
