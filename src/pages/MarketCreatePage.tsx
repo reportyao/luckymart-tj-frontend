@@ -64,12 +64,12 @@ const MarketCreatePage: React.FC = () => {
       const formattedTickets: MyTicket[] = resellablePrizes.map((prize: any) => ({
         id: prize.id,
         lottery_id: prize.lottery_id,
-        lottery_title: prize.lotteries?.title || t('market.unknownItem'),
-        lottery_image: prize.lotteries?.image_url || '',
-        ticket_numbers: prize.ticket_numbers || '',
-        purchase_price: prize.lotteries?.ticket_price || 0,
+        lottery_title: prize.lottery?.title || prize.prize_name || t('market.unknownItem'),
+        lottery_image: prize.lottery?.image_url || prize.prize_image || '',
+        ticket_numbers: prize.winning_code || '',
+        purchase_price: prize.lottery?.ticket_price || prize.prize_value || 0,
         currency: 'TJS',
-        draw_time: prize.lotteries?.end_time || new Date().toISOString(),
+        draw_time: prize.lottery?.end_time || new Date().toISOString(),
         status: 'ACTIVE',
       }));
 
