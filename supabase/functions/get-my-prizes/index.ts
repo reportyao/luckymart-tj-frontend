@@ -81,6 +81,7 @@ async function validateSession(sessionToken: string) {
 
 /**
  * 获取用户的所有中奖记录
+ * 支持 GET 和 POST 请求
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -88,11 +89,25 @@ serve(async (req) => {
   }
 
   try {
-    // 从 body 中获取 session_token
-    const body = await req.json()
-    const { session_token } = body
+    let session_token: string | null = null;
 
-    console.log('[GetMyPrizes] Received request:', { session_token: session_token ? 'present' : 'missing' });
+    // 支持 GET 和 POST 请求
+    if (req.method === 'POST') {
+      // 从 body 中获取 session_token
+      const body = await req.json();
+      session_token = body.session_token;
+    } else {
+      // 从 Authorization header 中获取 session_token
+      const authHeader = req.headers.get('Authorization');
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        session_token = authHeader.replace('Bearer ', '');
+      }
+    }
+
+    console.log('[GetMyPrizes] Received request:', { 
+      method: req.method,
+      session_token: session_token ? 'present' : 'missing' 
+    });
 
     if (!session_token) {
       throw new Error('未授权：缺少 session_token');
@@ -108,7 +123,7 @@ serve(async (req) => {
 
     // 获取用户的所有中奖记录
     const prizesResponse = await fetch(
-      `${supabaseUrl}/rest/v1/prizes?user_id=eq.${userId}&select=*,lottery:lotteries(*),shipping(*),resale_listing(*)&order=won_at.desc`,
+      `${supabaseUrl}/rest/v1/prizes?user_id=eq.${userId}&select=*,lotteries(*),shipping(*),resale_listing(*)&order=won_at.desc`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,

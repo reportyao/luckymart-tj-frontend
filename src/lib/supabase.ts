@@ -244,7 +244,7 @@ export const lotteryService: any = {
     const { data, error } = await supabase
       .from('lotteries')
       .select('*')
-      .order('start_time', { ascending: true });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Failed to fetch all lotteries:', error);
@@ -262,7 +262,7 @@ export const lotteryService: any = {
       .from('lotteries')
       .select('*')
       .eq('status', status as LotteryStatus)
-      .order('start_time', { ascending: true });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error(`Failed to fetch lotteries with status ${status}:`, error);
@@ -279,7 +279,7 @@ export const lotteryService: any = {
       .from('lotteries')
       .select('*')
       .in('status', ['ACTIVE' as LotteryStatus]) // 仅获取 ACTIVE 状态的
-      .order('start_time', { ascending: true });
+      .order('created_at', { ascending: false });
     
     if (error) {
       console.error('Failed to fetch lotteries:', error);
