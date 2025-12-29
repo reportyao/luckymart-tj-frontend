@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
@@ -21,19 +21,73 @@ import toast from 'react-hot-toast';
 
 const ITEMS_PER_PAGE = 10;
 
+// 全局缓存，避免每次切换 tab 都重新加载
+interface ShowoffCache {
+  data: ShowoffWithDetails[];
+  timestamp: number;
+  filter: string;
+  hasMore: boolean;
+  page: number;
+}
+let showoffCache: ShowoffCache | null = null;
+const CACHE_DURATION = 2 * 60 * 1000; // 2分钟缓存
+
 const ShowoffPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
   const { showoffService } = useSupabase();
 
-  const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 从缓存初始化状态
+  const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>(() => {
+    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+      return showoffCache.data;
+    }
+    return [];
+  });
+  const [isLoading, setIsLoading] = useState(() => {
+    // 如果有有效缓存，不显示加载状态
+    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+      return false;
+    }
+    return true;
+  });
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<'all' | 'following' | 'popular'>('all');
-  const [page, setPage] = useState(0);
+  const [filter, setFilter] = useState<'all' | 'following' | 'popular'>(() => {
+    // 从缓存恢复 filter
+    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+      return showoffCache.filter as any;
+    }
+    return 'all';
+  });
+  const [page, setPage] = useState(() => {
+    // 从缓存恢复 page
+    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+      return showoffCache.page;
+    }
+    return 0;
+  });
+  const [hasMore, setHasMore] = useState(() => {
+    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+      return showoffCache.hasMore;
+    }
+    return true;
+  });
+  
+  // 缓存数据更新
+  useEffect(() => {
+    if (showoffs.length > 0) {
+      showoffCache = {
+        data: showoffs,
+        timestamp: Date.now(),
+        filter,
+        hasMore,
+        page,
+      };
+    }
+  }, [showoffs, filter, hasMore, page]);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -148,12 +202,22 @@ const ShowoffPage: React.FC = () => {
   }, [t]);
 
   useEffect(() => {
+    // 检查缓存是否有效且 filter 匹配
+    const now = Date.now();
+    if (showoffCache && 
+        (now - showoffCache.timestamp) < CACHE_DURATION && 
+        showoffCache.filter === filter &&
+        showoffCache.data.length > 0) {
+      // 缓存有效，跳过加载
+      return;
+    }
+    
     // 重置状态并加载第一页
     setPage(0);
     setShowoffs([]);
     setHasMore(true);
     fetchShowoffs(0, false);
-  }, [filter]);
+  }, [filter, fetchShowoffs]);
 
   // 无限滚动加载
   useEffect(() => {

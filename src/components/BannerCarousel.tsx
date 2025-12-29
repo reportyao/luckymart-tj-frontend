@@ -24,8 +24,9 @@ const BannerCarousel: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>(cachedBanners || []);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(!cachedBanners);
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
+  const [imagesLoaded, setImagesLoaded] = useState(false);
   const preloadedRef = useRef<boolean>(false);
+  const loadedCountRef = useRef<number>(0);
 
   // 根据当前语言获取对应的Banner图片
   const getLocalizedImageUrl = useCallback((banner: Banner): string => {
@@ -45,17 +46,34 @@ const BannerCarousel: React.FC = () => {
 
   // 预加载所有图片
   const preloadImages = useCallback((bannerList: Banner[]) => {
-    if (preloadedRef.current) return;
+    if (preloadedRef.current || bannerList.length === 0) return;
     preloadedRef.current = true;
+    loadedCountRef.current = 0;
+    
+    const totalImages = bannerList.length;
     
     bannerList.forEach((banner) => {
       const imageUrl = getLocalizedImageUrl(banner);
       const img = new Image();
       img.onload = () => {
-        setLoadedImages(prev => new Set(prev).add(imageUrl));
+        loadedCountRef.current += 1;
+        if (loadedCountRef.current >= totalImages) {
+          setImagesLoaded(true);
+        }
+      };
+      img.onerror = () => {
+        loadedCountRef.current += 1;
+        if (loadedCountRef.current >= totalImages) {
+          setImagesLoaded(true);
+        }
       };
       img.src = imageUrl;
     });
+    
+    // 超时后强制显示
+    setTimeout(() => {
+      setImagesLoaded(true);
+    }, 3000);
   }, [getLocalizedImageUrl]);
 
   useEffect(() => {
@@ -95,14 +113,14 @@ const BannerCarousel: React.FC = () => {
 
   // 自动轮播
   useEffect(() => {
-    if (banners.length <= 1) return;
+    if (banners.length <= 1 || !imagesLoaded) return;
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % banners.length);
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [banners.length]);
+  }, [banners.length, imagesLoaded]);
 
   // 预计算所有图片URL
   const imageUrls = useMemo(() => {
@@ -120,29 +138,42 @@ const BannerCarousel: React.FC = () => {
   }
 
   const currentBanner = banners[currentIndex];
-  const currentImageUrl = imageUrls[currentIndex];
 
   const BannerContent = () => (
-    <div className="relative h-40 overflow-hidden rounded-2xl">
-      {/* 渲染所有图片，通过 opacity 控制显示 */}
-      {banners.map((banner, index) => (
-        <img
-          key={banner.id}
-          src={imageUrls[index]}
-          alt={banner.title}
-          className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
-            index === currentIndex ? 'opacity-100' : 'opacity-0'
-          }`}
-          loading={index === 0 ? 'eager' : 'lazy'}
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x320?text=Banner';
-          }}
-        />
-      ))}
+    <div className="relative h-40 overflow-hidden rounded-2xl bg-gray-100">
+      {/* 渲染所有图片，通过 opacity 和 transform 控制平滑过渡 */}
+      {banners.map((banner, index) => {
+        const isActive = index === currentIndex;
+        return (
+          <div
+            key={banner.id}
+            className="absolute inset-0 w-full h-full"
+            style={{
+              opacity: isActive ? 1 : 0,
+              transform: isActive ? 'scale(1)' : 'scale(1.02)',
+              transition: 'opacity 700ms ease-in-out, transform 700ms ease-in-out',
+              zIndex: isActive ? 1 : 0,
+            }}
+          >
+            <img
+              src={imageUrls[index]}
+              alt={banner.title}
+              className="w-full h-full object-cover"
+              style={{
+                opacity: imagesLoaded ? 1 : 0,
+                transition: 'opacity 300ms ease-in-out',
+              }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x320?text=Banner';
+              }}
+            />
+          </div>
+        );
+      })}
 
       {/* 指示器 */}
       {banners.length > 1 && (
-        <div className="absolute bottom-2 right-4 flex space-x-1">
+        <div className="absolute bottom-2 right-4 flex space-x-1.5 z-10">
           {banners.map((_, index) => (
             <button
               key={index}
@@ -151,9 +182,11 @@ const BannerCarousel: React.FC = () => {
                 e.stopPropagation();
                 setCurrentIndex(index);
               }}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? 'bg-white' : 'bg-white/50'
-              }`}
+              className="w-2 h-2 rounded-full transition-all duration-300"
+              style={{
+                backgroundColor: index === currentIndex ? 'white' : 'rgba(255,255,255,0.5)',
+                transform: index === currentIndex ? 'scale(1.2)' : 'scale(1)',
+              }}
             />
           ))}
         </div>
