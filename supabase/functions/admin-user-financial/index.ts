@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-admin-id',
 }
 
 serve(async (req) => {
@@ -36,19 +36,18 @@ serve(async (req) => {
     }
 
     // 记录管理员操作日志
-    const authHeader = req.headers.get('Authorization')
-    if (authHeader) {
-      const token = authHeader.replace('Bearer ', '')
-      const { data: { user: adminUser } } = await supabaseClient.auth.getUser(token)
-      
-      if (adminUser) {
+    const adminId = req.headers.get('X-Admin-Id')
+    if (adminId) {
+      try {
         await supabaseClient.from('admin_logs').insert({
-          admin_id: adminUser.id,
+          admin_id: adminId,
           action: `VIEW_USER_FINANCIAL_${action.toUpperCase()}`,
           target_type: 'user',
           target_id: userId,
           details: { period, page, pageSize, transactionType, status, startDate, endDate }
         })
+      } catch (logError) {
+        console.error('Failed to log admin action:', logError)
       }
     }
 
