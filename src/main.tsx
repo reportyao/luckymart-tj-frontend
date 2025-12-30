@@ -9,6 +9,18 @@ import './index.css';
 import App from './App';
 import { UserProvider } from './contexts/UserContext';
 import { SupabaseProvider } from './contexts/SupabaseContext';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5分钟内数据被认为是新鲜的
+      gcTime: 1000 * 60 * 30, // 30分钟后清除缓存
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 // 设置全局错误处理和警告抑制
 setupGlobalErrorHandlers();
@@ -18,15 +30,17 @@ suppressKnownWarnings();
 function AppWrapper() {
   return (
     <StrictMode>
-      <I18nextProvider i18n={i18n}>
-        <ErrorBoundary>
-          <SupabaseProvider>
-            <UserProvider>
-              <App />
-            </UserProvider>
-          </SupabaseProvider>
-        </ErrorBoundary>
-      </I18nextProvider>
+      <QueryClientProvider client={queryClient}>
+        <I18nextProvider i18n={i18n}>
+          <ErrorBoundary>
+            <SupabaseProvider>
+              <UserProvider>
+                <App />
+              </UserProvider>
+            </SupabaseProvider>
+          </ErrorBoundary>
+        </I18nextProvider>
+      </QueryClientProvider>
     </StrictMode>
   );
 }

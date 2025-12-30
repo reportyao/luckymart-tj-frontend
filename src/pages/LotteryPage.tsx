@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 
 import { Lottery } from '../lib/supabase'
 import { getLocalizedText } from '../lib/utils'
@@ -15,54 +16,40 @@ import { useNavigate } from 'react-router-dom'
 const LotteryPage: React.FC = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-
   const { lotteryService } = useSupabase()
-  const [lotteries, setLotteries] = useState<Lottery[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const { refreshWallets } = useUser()
+
   const [searchQuery, setSearchQuery] = useState('')
-  // 默认选择"进行中"
   const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed' | 'drawResult'>('active')
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
   const [isRulesModalOpen, setIsRulesModalOpen] = useState(false)
 
-  const loadLotteries = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      // 根据 filter 获取不同状态的积分商城
-      let data: Lottery[] = []
+  // 使用 React Query 获取数据
+  const { data: lotteries = [], isLoading, refetch } = useQuery<Lottery[]>({
+    queryKey: ['lotteries', filter],
+    queryFn: async () => {
       if (filter === 'all') {
-        data = await lotteryService.getAllLotteries()
+        return await lotteryService.getAllLotteries()
       } else if (filter === 'drawResult') {
-        data = await lotteryService.getLotteriesByStatus('COMPLETED' as any)
+        return await lotteryService.getLotteriesByStatus('COMPLETED' as any)
       } else {
-        data = await lotteryService.getLotteriesByStatus(filter.toUpperCase())
+        return await lotteryService.getLotteriesByStatus(filter.toUpperCase() as any)
       }
-      setLotteries(data)
-    } catch (error: any) {
-      console.error('Failed to load lotteries:', error)
-      toast.error(t('error.networkError'))
-    } finally {
-      setIsLoading(false)
-    }
-  }, [t, filter, lotteryService])
-
-  useEffect(() => {
-    loadLotteries()
-  }, [loadLotteries, filter])
-
-  const filteredLotteries = lotteries.filter(lottery => {
-    // 适配多语言内容展示
-    const titleText = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title;
-    
-    const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase())
-    
-    if (filter === 'all') return matchesSearch
-    if (filter === 'drawResult') return matchesSearch && lottery.status === 'COMPLETED'
-    return matchesSearch && lottery.status === filter.toUpperCase()
+    },
+    staleTime: 1000 * 60 * 2, // 2分钟内数据被认为是新鲜的
   })
 
-  const { refreshWallets } = useUser()
+  const filteredLotteries = useMemo(() => {
+    return lotteries.filter(lottery => {
+      const titleText = getLocalizedText(lottery.name_i18n as Record<string, string> | null, i18n.language) || lottery.title;
+      const matchesSearch = titleText.toLowerCase().includes(searchQuery.toLowerCase())
+      
+      if (filter === 'all') return matchesSearch
+      if (filter === 'drawResult') return matchesSearch && lottery.status === 'COMPLETED'
+      return matchesSearch && lottery.status === filter.toUpperCase()
+    })
+  }, [lotteries, searchQuery, filter, i18n.language])
 
   const handlePurchaseLottery = (lottery: Lottery) => {
     setSelectedLottery(lottery)
@@ -70,107 +57,106 @@ const LotteryPage: React.FC = () => {
   }
 
   const handlePurchaseConfirm = async (lotteryId: string, quantity: number) => {
-    // 实际购买逻辑
     try {
       await lotteryService.purchaseTickets(lotteryId, quantity)
       toast.success(t('lottery.purchaseSuccess'))
-      // 刷新列表
-      await loadLotteries()
+      refetch()
       await refreshWallets()
     } catch (error: any) {
       toast.error(error.message || t('error.networkError'))
     } finally {
-      // 关闭模态框
       setIsPurchaseModalOpen(false)
       setSelectedLottery(null)
     }
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 min-h-screen bg-gray-50">
       {/* 简洁的头部 - 四个按钮 */}
-      <div className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="flex justify-between items-center">
+      <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
+        <div className="flex justify-between items-center max-w-2xl mx-auto">
           {/* 规则说明按钮 - 左侧 */}
           <button
             onClick={() => setIsRulesModalOpen(true)}
             className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all"
           >
             <InformationCircleIcon className="w-4 h-4" />
-            <span>{t('lottery.rulesButton')}</span>
+            <span className="hidden xs:inline">{t('lottery.rulesButton')}</span>
           </button>
 
           {/* 右侧按钮组 */}
           <div className="flex items-center space-x-2">
-            {/* 进行中按钮 */}
             <button
               onClick={() => setFilter('active')}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                filter === 'active'
-                  ? 'bg-green-600 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                filter === 'active' ? 'bg-green-600 text-white shadow-md shadow-green-100' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <PlayIcon className="w-4 h-4" />
               <span>{t('lottery.ongoing')}</span>
             </button>
 
-            {/* 已结束按钮 */}
             <button
               onClick={() => setFilter('completed')}
               className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                filter === 'completed'
-                  ? 'bg-gray-900 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                filter === 'completed' ? 'bg-gray-900 text-white shadow-md shadow-gray-200' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               <ClockIcon className="w-4 h-4" />
               <span>{t('lottery.ended')}</span>
             </button>
 
-            {/* 订单管理按钮 */}
             <button
               onClick={() => navigate('/orders')}
               className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
             >
               <ClipboardDocumentListIcon className="w-4 h-4" />
-              <span>{t('lottery.orderManagement')}</span>
+              <span className="hidden xs:inline">{t('lottery.orderManagement')}</span>
             </button>
           </div>
         </div>
       </div>
 
       {/* 彩票列表 */}
-      <div className="px-4 py-4">
+      <div className="px-4 py-4 max-w-2xl mx-auto">
         {isLoading ? (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
-                <div className="h-32 bg-gray-200 rounded-xl mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3 mb-2"></div>
-                <div className="h-8 bg-gray-200 rounded"></div>
+              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse shadow-sm">
+                <div className="h-40 bg-gray-100 rounded-xl mb-4"></div>
+                <div className="h-5 bg-gray-100 rounded w-3/4 mb-3"></div>
+                <div className="h-4 bg-gray-100 rounded w-1/2 mb-4"></div>
+                <div className="h-10 bg-gray-100 rounded-xl"></div>
               </div>
             ))}
           </div>
         ) : (
           <div className="space-y-4">
-            {filteredLotteries.map((lottery) => (
-              <LotteryCard
-                key={lottery.id}
-                lottery={lottery}
-                onPurchase={handlePurchaseLottery}
-              />
-            ))}
+            <AnimatePresence mode="popLayout">
+              {filteredLotteries.map((lottery) => (
+                <motion.div
+                  key={lottery.id}
+                  layout
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                >
+                  <LotteryCard
+                    lottery={lottery}
+                    onPurchase={handlePurchaseLottery}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
 
             {filteredLotteries.length === 0 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-white rounded-2xl p-8 text-center"
+                className="bg-white rounded-3xl p-12 text-center shadow-sm"
               >
-                <AdjustmentsHorizontalIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                <p className="text-gray-500">{t('home.noLotteries')}</p>
+                <AdjustmentsHorizontalIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+                <p className="text-gray-500 font-medium">{t('home.noLotteries')}</p>
                 <p className="text-sm text-gray-400 mt-1">{t('home.stayTuned')}</p>
               </motion.div>
             )}
@@ -187,79 +173,95 @@ const LotteryPage: React.FC = () => {
       />
 
       {/* 规则说明弹窗 */}
-      {isRulesModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-xl"
-          >
-            {/* 弹窗头部 */}
-            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold flex items-center gap-2">
-                <InformationCircleIcon className="w-6 h-6" />
-                {t('lottery.rulesTitle')}
-              </h3>
-              <button
-                onClick={() => setIsRulesModalOpen(false)}
-                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
-              >
-                <XMarkIcon className="w-6 h-6" />
-              </button>
-            </div>
-
-            {/* 弹窗内容 */}
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
-              {/* 参与方式 */}
-              <div className="mb-6">
-                <h4 className="text-purple-600 font-bold text-base mb-2">
-                  {t('lottery.rulesParticipation')}
-                </h4>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {t('lottery.rulesParticipationDesc')}
-                </p>
+      <AnimatePresence>
+        {isRulesModalOpen && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl w-full max-w-md max-h-[85vh] overflow-hidden shadow-2xl"
+            >
+              {/* 弹窗头部 */}
+              <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-5 flex items-center justify-between">
+                <h3 className="text-xl font-black flex items-center gap-2">
+                  <InformationCircleIcon className="w-7 h-7" />
+                  {t('lottery.rulesTitle')}
+                </h3>
+                <button
+                  onClick={() => setIsRulesModalOpen(false)}
+                  className="p-2 hover:bg-white/20 rounded-xl transition-colors"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
               </div>
 
-              {/* 开奖机制 */}
-              <div className="mb-6">
-                <h4 className="text-purple-600 font-bold text-base mb-2">
-                  {t('lottery.rulesDraw')}
-                </h4>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {t('lottery.rulesDrawDesc')}
-                </p>
-              </div>
+              {/* 弹窗内容 */}
+              <div className="p-6 overflow-y-auto max-h-[calc(85vh-88px)]">
+                <div className="space-y-8">
+                  {/* 参与方式 */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-6 bg-purple-600 rounded-full"></div>
+                      <h4 className="text-gray-900 font-black text-lg">
+                        {t('lottery.rulesParticipation')}
+                      </h4>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed pl-3.5">
+                      {t('lottery.rulesParticipationDesc')}
+                    </p>
+                  </section>
 
-              {/* 领奖与核销 */}
-              <div className="mb-6">
-                <h4 className="text-purple-600 font-bold text-base mb-2">
-                  {t('lottery.rulesClaim')}
-                </h4>
-                <div className="space-y-2">
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesClaimPrize')}
-                  </p>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesPickup')}
-                  </p>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesExpiry')}
-                  </p>
+                  {/* 开奖机制 */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-6 bg-pink-600 rounded-full"></div>
+                      <h4 className="text-gray-900 font-black text-lg">
+                        {t('lottery.rulesDraw')}
+                      </h4>
+                    </div>
+                    <p className="text-gray-600 text-sm leading-relaxed pl-3.5">
+                      {t('lottery.rulesDrawDesc')}
+                    </p>
+                  </section>
+
+                  {/* 领奖与核销 */}
+                  <section>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-1.5 h-6 bg-orange-500 rounded-full"></div>
+                      <h4 className="text-gray-900 font-black text-lg">
+                        {t('lottery.rulesClaim')}
+                      </h4>
+                    </div>
+                    <div className="space-y-3 pl-3.5">
+                      <div className="flex gap-3">
+                        <div className="mt-1.5 w-1.5 h-1.5 bg-orange-400 rounded-full flex-shrink-0"></div>
+                        <p className="text-gray-600 text-sm leading-relaxed">{t('lottery.rulesClaimPrize')}</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="mt-1.5 w-1.5 h-1.5 bg-orange-400 rounded-full flex-shrink-0"></div>
+                        <p className="text-gray-600 text-sm leading-relaxed">{t('lottery.rulesPickup')}</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="mt-1.5 w-1.5 h-1.5 bg-orange-400 rounded-full flex-shrink-0"></div>
+                        <p className="text-gray-600 text-sm leading-relaxed">{t('lottery.rulesExpiry')}</p>
+                      </div>
+                    </div>
+                  </section>
                 </div>
-              </div>
 
-              {/* 关闭按钮 */}
-              <button
-                onClick={() => setIsRulesModalOpen(false)}
-                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors"
-              >
-                {t('common.confirm')}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+                {/* 关闭按钮 */}
+                <button
+                  onClick={() => setIsRulesModalOpen(false)}
+                  className="w-full mt-10 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold shadow-lg shadow-purple-100 active:scale-[0.98] transition-all"
+                >
+                  {t('common.confirm')}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
