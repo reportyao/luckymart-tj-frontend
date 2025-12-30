@@ -65,7 +65,7 @@ function App() {
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/bot" element={<BotPage />} />
               <Route path="/monitoring" element={<MonitoringPage />} />
-              <Route path="/orders" element={<OrderPage />} />
+              <Route path="/orders" element={<OrderManagementPage />} />
               <Route path="/notifications" element={<NotificationPage />} />
               <Route path="/invite" element={<InvitePage />} />
               <Route path="/showoff" element={<ShowoffPage />} />

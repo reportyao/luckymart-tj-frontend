@@ -1559,6 +1559,13 @@ export type Database = {
           user_id: string
           winning_code: string
           won_at: string
+          pickup_code: string | null
+          pickup_point_id: string | null
+          pickup_status: string | null
+          expires_at: string | null
+          claimed_at: string | null
+          picked_up_at: string | null
+          picked_up_by: string | null
         }
         Insert: {
           algorithm_data?: Json | null
@@ -1575,6 +1582,13 @@ export type Database = {
           user_id: string
           winning_code: string
           won_at?: string
+          pickup_code?: string | null
+          pickup_point_id?: string | null
+          pickup_status?: string | null
+          expires_at?: string | null
+          claimed_at?: string | null
+          picked_up_at?: string | null
+          picked_up_by?: string | null
         }
         Update: {
           algorithm_data?: Json | null
@@ -1591,6 +1605,13 @@ export type Database = {
           user_id?: string
           winning_code?: string
           won_at?: string
+          pickup_code?: string | null
+          pickup_point_id?: string | null
+          pickup_status?: string | null
+          expires_at?: string | null
+          claimed_at?: string | null
+          picked_up_at?: string | null
+          picked_up_by?: string | null
         }
         Relationships: []
       }

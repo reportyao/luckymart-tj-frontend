@@ -140,7 +140,10 @@
     "verificationFormula": "Формула проверки",
     "verificationDataUnavailable": "Данные для проверки недоступны",
     "insufficientBalance": "Недостаточно бонусов, требуется {{required}}, текущий баланс {{current}}",
-    "winningCodeCopied": "Выигрышный код скопирован"
+    "winningCodeCopied": "Выигрышный код скопирован",
+    "ongoing": "В процессе",
+    "ended": "Завершено",
+    "orderManagement": "Управление заказами"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",
@@ -664,7 +667,13 @@
     "imageUploadFailed": "Ошибка загрузки изображения",
     "pleaseUploadProof": "Загрузите подтверждение",
     "submitFailed": "Ошибка отправки",
-    "uploading": "Загрузка..."
+    "uploading": "Загрузка...",
+    "compressing": "Сжатие...",
+    "uploadSuccess": "Успешно загружено!",
+    "uploadFailed": "Ошибка загрузки, попробуйте снова",
+    "uploadedImages": "Загружено",
+    "supportedFormats": "Поддерживаются JPG, PNG, WebP",
+    "invalidFileType": "Выберите файл изображения"
   },
   "withdraw": {
     "title": "Вывод",

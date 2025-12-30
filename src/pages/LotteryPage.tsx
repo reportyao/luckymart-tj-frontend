@@ -7,7 +7,7 @@ import { getLocalizedText } from '../lib/utils'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
-import { MagnifyingGlassIcon, AdjustmentsHorizontalIcon, ClockIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline'
+import { AdjustmentsHorizontalIcon, ClockIcon, ClipboardDocumentListIcon, PlayIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { useUser } from '../contexts/UserContext'
 import { useNavigate } from 'react-router-dom'
@@ -20,7 +20,8 @@ const LotteryPage: React.FC = () => {
   const [lotteries, setLotteries] = useState<Lottery[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed' | 'drawResult'>('all')
+  // 默认选择"进行中"
+  const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed' | 'drawResult'>('active')
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
 
@@ -86,9 +87,22 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="pb-20">
-      {/* 简洁的头部 - 只有两个小按钮 */}
+      {/* 简洁的头部 - 三个按钮 */}
       <div className="bg-white border-b border-gray-100 px-4 py-3">
         <div className="flex justify-end items-center space-x-2">
+          {/* 进行中按钮 */}
+          <button
+            onClick={() => setFilter('active')}
+            className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              filter === 'active'
+                ? 'bg-green-600 text-white'
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <PlayIcon className="w-4 h-4" />
+            <span>{t('lottery.ongoing')}</span>
+          </button>
+
           {/* 已结束按钮 */}
           <button
             onClick={() => setFilter('completed')}
@@ -99,7 +113,7 @@ const LotteryPage: React.FC = () => {
             }`}
           >
             <ClockIcon className="w-4 h-4" />
-            <span>已结束</span>
+            <span>{t('lottery.ended')}</span>
           </button>
 
           {/* 订单管理按钮 */}
@@ -108,7 +122,7 @@ const LotteryPage: React.FC = () => {
             className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
           >
             <ClipboardDocumentListIcon className="w-4 h-4" />
-            <span>订单管理</span>
+            <span>{t('lottery.orderManagement')}</span>
           </button>
         </div>
       </div>

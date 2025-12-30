@@ -9,7 +9,9 @@ import {
   TicketIcon,
   SparklesIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  GiftIcon,
+  MapPinIcon
 } from '@heroicons/react/24/outline';
 import { formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -27,6 +29,14 @@ interface ParticipantWithTickets {
   user: User;
   tickets: number[];
   ticketCount: number;
+}
+
+interface PrizeInfo {
+  id: string;
+  pickup_code?: string;
+  pickup_status?: string;
+  expires_at?: string;
+  pickup_point?: any;
 }
 
 // 转换为塔吉克斯坦时区 (UTC+5)
@@ -52,15 +62,29 @@ function toTajikistanTime(dateString: string): string {
 const LotteryResultPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { supabase } = useSupabase();
-  const { user: currentUser } = useUser();
+  const { user: currentUser, sessionToken } = useUser();
   
   const [lottery, setLottery] = useState<Lottery | null>(null);
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [participants, setParticipants] = useState<ParticipantWithTickets[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
+  
+  // 领取相关状态
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [prizeInfo, setPrizeInfo] = useState<PrizeInfo | null>(null);
+  const [pickupPoints, setPickupPoints] = useState<any[]>([]);
+  const [selectedPointId, setSelectedPointId] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 获取本地化文本
+  const getLocalText = (text: any): string => {
+    if (!text) return '';
+    if (typeof text === 'string') return text;
+    return text[i18n.language] || text.zh || text.ru || text.tg || '';
+  };
 
   // 获取积分商城信息
   const fetchLottery = useCallback(async () => {
@@ -157,6 +181,64 @@ const LotteryResultPage: React.FC = () => {
     }
   }, [id, supabase]);
 
+  // 获取用户的奖品信息
+  const fetchPrizeInfo = useCallback(async () => {
+    if (!id || !currentUser) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('prizes')
+        .select(`
+          id,
+          pickup_code,
+          pickup_status,
+          expires_at,
+          pickup_point_id
+        `)
+        .eq('lottery_id', id)
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (!error && data) {
+        // 如果有自提点ID，获取自提点信息
+        let pickupPoint = null;
+        if (data.pickup_point_id) {
+          const { data: pointData } = await supabase
+            .from('pickup_points')
+            .select('id, name, name_i18n, address, address_i18n, contact_phone')
+            .eq('id', data.pickup_point_id)
+            .single();
+          pickupPoint = pointData;
+        }
+        setPrizeInfo({
+          id: data.id,
+          pickup_code: data.pickup_code || undefined,
+          pickup_status: data.pickup_status || undefined,
+          expires_at: data.expires_at || undefined,
+          pickup_point: pickupPoint
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch prize info:', error);
+    }
+  }, [id, currentUser, supabase]);
+
+  // 加载自提点列表
+  const loadPickupPoints = useCallback(async () => {
+    const { data, error } = await supabase
+      .from('pickup_points')
+      .select('*')
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: true });
+
+    if (!error && data) {
+      setPickupPoints(data);
+      if (data.length > 0) {
+        setSelectedPointId(data[0].id);
+      }
+    }
+  }, [supabase]);
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -166,6 +248,14 @@ const LotteryResultPage: React.FC = () => {
 
     loadData();
   }, [fetchLottery, fetchTicketsAndParticipants]);
+
+  // 当确认是中奖用户时，获取奖品信息
+  useEffect(() => {
+    if (lottery?.winning_user_id === currentUser?.id) {
+      fetchPrizeInfo();
+      loadPickupPoints();
+    }
+  }, [lottery, currentUser, fetchPrizeInfo, loadPickupPoints]);
 
   // 倒计时结束后执行开奖
   const handleDrawLottery = async () => {
@@ -196,6 +286,56 @@ const LotteryResultPage: React.FC = () => {
       await fetchLottery();
     } finally {
       setIsDrawing(false);
+    }
+  };
+
+  // 处理领取奖品
+  const handleClaimPrize = () => {
+    // 如果已经领取过，直接跳转到订单管理页面
+    if (prizeInfo?.pickup_code) {
+      navigate('/orders');
+      return;
+    }
+    setShowClaimModal(true);
+  };
+
+  // 提交领取请求
+  const handleSubmitClaim = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!prizeInfo || !sessionToken) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-prize', {
+        body: {
+          session_token: sessionToken,
+          prize_id: prizeInfo.id,
+          order_type: 'lottery',
+          pickup_point_id: selectedPointId,
+        }
+      });
+
+      if (error) throw error;
+
+      const result = data as { success: boolean; error?: string; data?: any };
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to claim prize');
+      }
+
+      toast.success(t('orders.claimSuccess'));
+      setShowClaimModal(false);
+      
+      // 刷新奖品信息
+      await fetchPrizeInfo();
+      
+      // 跳转到订单管理页面
+      navigate('/orders');
+    } catch (error: any) {
+      console.error('Claim prize error:', error);
+      toast.error(error.message || t('orders.claimError'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -238,6 +378,10 @@ const LotteryResultPage: React.FC = () => {
   const winningUser = participants.find(p => p.user.id === lottery.winning_user_id);
   const isCurrentUserWinner = currentUser?.id === lottery.winning_user_id;
   const myTickets = tickets.filter(t => t.user_id === currentUser?.id);
+
+  // 判断是否需要领取
+  const needsClaim = isCurrentUserWinner && prizeInfo && !prizeInfo.pickup_code;
+  const hasClaimed = isCurrentUserWinner && prizeInfo?.pickup_code;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 pb-20">
@@ -296,57 +440,61 @@ const LotteryResultPage: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-2xl shadow-lg p-8 text-center text-white"
           >
-            <SparklesIcon className="w-16 h-16 mx-auto mb-4 animate-pulse" />
-            <h3 className="text-2xl font-bold mb-4">{t('lottery.drawingCountdown')}</h3>
-            <CountdownTimer
-              drawTime={lottery.draw_time}
+            <h3 className="text-2xl font-bold mb-4">{t('lottery.drawCountdown')}</h3>
+            <CountdownTimer 
+              drawTime={lottery.draw_time} 
               onCountdownEnd={handleDrawLottery}
             />
             {isDrawing && (
-              <p className="mt-4 text-sm animate-pulse">{t('lottery.drawing')}...</p>
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>{t('lottery.drawing')}</span>
+              </div>
             )}
           </motion.div>
         )}
 
-        {/* 开奖结果 */}
-        {isCompleted && winningTicketNumber && (
+        {/* 中奖结果 */}
+        {isCompleted && (
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className={`rounded-2xl shadow-lg p-8 text-center ${
-              isCurrentUserWinner
-                ? 'bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 text-white'
+              isCurrentUserWinner 
+                ? 'bg-gradient-to-br from-yellow-400 via-orange-400 to-red-400 text-white' 
                 : 'bg-white'
             }`}
           >
-            {isCurrentUserWinner ? (
-              <>
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', duration: 0.6 }}
-                >
-                  <CheckCircleIcon className="w-24 h-24 mx-auto mb-4" />
-                </motion.div>
-                <p className="text-xl mb-6">{t('lottery.itemIsYours')}</p>
-              </>
-            ) : (
-              <>
-                <XCircleIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{t('lottery.notThisTime')}</h2>
-                <p className="text-gray-600 mb-6">{t('lottery.nextTimeForSure')}</p>
-              </>
-            )}
+            <div className="mb-6">
+              {isCurrentUserWinner ? (
+                <TrophyIcon className="w-20 h-20 mx-auto text-white animate-bounce" />
+              ) : (
+                <CheckCircleIcon className="w-20 h-20 mx-auto text-green-500" />
+              )}
+            </div>
 
-            <div className="bg-white/20 backdrop-blur rounded-xl p-6 mb-4">
-              <p className={`text-sm mb-2 ${isCurrentUserWinner ? 'text-white/80' : 'text-gray-600'}`}>
+            <h3 className={`text-2xl font-bold mb-4 ${isCurrentUserWinner ? 'text-white' : 'text-gray-900'}`}>
+              {isCurrentUserWinner ? t('lottery.youWon') : t('lottery.drawCompleted')}
+            </h3>
+
+            {/* 中奖号码 */}
+            <div className={`inline-block px-6 py-3 rounded-xl mb-6 ${
+              isCurrentUserWinner ? 'bg-white/20' : 'bg-gradient-to-r from-yellow-100 to-orange-100'
+            }`}>
+              <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-600'}`}>
                 {t('lottery.winningNumber')}
               </p>
-              <div className="text-5xl font-bold mb-4">
-                #{String(winningTicketNumber).padStart(7, '0')}
-              </div>
+              <p className={`text-3xl font-bold font-mono ${isCurrentUserWinner ? 'text-white' : 'text-orange-600'}`}>
+                {String(winningTicketNumber).padStart(7, '0')}
+              </p>
+            </div>
+
+            {/* 中奖用户 */}
+            <div className="flex items-center justify-center gap-3 mb-4">
               {winningUser && (
-                <div className="flex items-center justify-center gap-3 mt-4">
+                <div className={`flex items-center gap-3 px-4 py-2 rounded-xl ${
+                  isCurrentUserWinner ? 'bg-white/20' : 'bg-gray-100'
+                }`}>
                   <img
                     src={winningUser.user.avatar_url || '/default-avatar.png'}
                     alt={winningUser.user.telegram_username || winningUser.user.first_name || 'Winner'}
@@ -373,13 +521,36 @@ const LotteryResultPage: React.FC = () => {
             {/* 中奖用户的领取按钮 */}
             {isCurrentUserWinner && (
               <div className="mt-6">
-                <button
-                  onClick={() => navigate('/orders')}
-                  className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
-                >
-                  <TrophyIcon className="w-6 h-6" />
-                  {t('orders.claimNow')}
-                </button>
+                {needsClaim ? (
+                  <button
+                    onClick={handleClaimPrize}
+                    className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <GiftIcon className="w-6 h-6" />
+                    {t('orders.claimNow')}
+                  </button>
+                ) : hasClaimed ? (
+                  <div className="space-y-3">
+                    <div className="bg-white/20 rounded-xl p-4">
+                      <p className="text-sm text-white/80 mb-1">{t('orders.pickupCode')}</p>
+                      <p className="text-3xl font-bold font-mono text-white">{prizeInfo?.pickup_code}</p>
+                    </div>
+                    <button
+                      onClick={() => navigate('/orders')}
+                      className="w-full bg-white text-orange-500 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    >
+                      {t('orders.title')}
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={handleClaimPrize}
+                    className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                  >
+                    <TrophyIcon className="w-6 h-6" />
+                    {t('orders.claimNow')}
+                  </button>
+                )}
               </div>
             )}
           </motion.div>
@@ -548,6 +719,84 @@ const LotteryResultPage: React.FC = () => {
           </motion.div>
         )}
       </div>
+
+      {/* 领取弹窗 */}
+      <AnimatePresence>
+        {showClaimModal && prizeInfo && (
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg"
+            >
+              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
+                <h3 className="text-lg font-bold">{t('orders.confirmClaim')}</h3>
+                <button
+                  onClick={() => setShowClaimModal(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitClaim} className="p-6 space-y-4">
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <GiftIcon className="w-6 h-6 text-purple-600" />
+                    <h4 className="font-bold text-gray-800">{getLocalizedText(lottery.title_i18n, i18n.language)}</h4>
+                  </div>
+                  <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('orders.selectPickupPoint')} *
+                  </label>
+                  <select
+                    value={selectedPointId}
+                    onChange={(e) => setSelectedPointId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  >
+                    {pickupPoints.map((point) => (
+                      <option key={point.id} value={point.id}>
+                        {getLocalText(point.name_i18n)} - {getLocalText(point.address_i18n)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
+                  <p className="font-medium mb-1">{t('orders.claimNotice')}</p>
+                  <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li>{t('orders.claimNotice1')}</li>
+                    <li>{t('orders.claimNotice2')}</li>
+                    <li>{t('orders.claimNotice3')}</li>
+                  </ul>
+                </div>
+
+                <div className="pt-4 flex space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowClaimModal(false)}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                  >
+                    {t('common.cancel')}
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? t('common.submitting') : t('common.confirm')}
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

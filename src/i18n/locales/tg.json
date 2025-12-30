@@ -140,7 +140,10 @@
     "verificationFormula": "Формулаи тасдиқӣ",
     "verificationDataUnavailable": "Маълумоти тасдиқӣ дастрас нест",
     "insufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
-    "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд"
+    "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд",
+    "ongoing": "Дар ҷараён",
+    "ended": "Анҷом ёфта",
+    "orderManagement": "Идораи фармоишҳо"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -669,7 +672,13 @@
     "imageUploadFailed": "Хатои боркунии расм",
     "pleaseUploadProof": "Тасдиқномаро бор кунед",
     "submitFailed": "Хатои фиристодан",
-    "uploading": "Бор шуда истодааст..."
+    "uploading": "Бор шуда истодааст...",
+    "compressing": "Фишурдан...",
+    "uploadSuccess": "Бомуваффақият бор шуд!",
+    "uploadFailed": "Хатои боркунӣ, дубора кӯшиш кунед",
+    "uploadedImages": "Бор шуда",
+    "supportedFormats": "JPG, PNG, WebP дастгирӣ мешавад",
+    "invalidFileType": "Файли расмро интихоб кунед"
   },
   "withdraw": {
     "title": "Бароварда",

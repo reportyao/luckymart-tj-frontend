@@ -152,7 +152,10 @@
     "verificationFormula": "验证公式",
     "verificationDataUnavailable": "验证数据暂不可用",
     "insufficientBalance": "积分余额不足，需要 {{required}} 积分，当前余额 {{current}} 积分",
-    "winningCodeCopied": "中奖码已复制"
+    "winningCodeCopied": "中奖码已复制",
+    "ongoing": "进行中",
+    "ended": "已结束",
+    "orderManagement": "订单管理"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -687,7 +690,13 @@
     "imageUploadFailed": "图片上传失败，请重试",
     "pleaseUploadProof": "请上传充值凭证",
     "submitFailed": "提交充值申请失败",
-    "uploading": "上传中..."
+    "uploading": "上传中...",
+    "compressing": "压缩中...",
+    "uploadSuccess": "上传成功！",
+    "uploadFailed": "上传失败，请重试",
+    "uploadedImages": "已上传",
+    "supportedFormats": "支持 JPG、PNG、WebP 格式",
+    "invalidFileType": "请选择图片文件"
   },
   "withdraw": {
     "title": "提现",

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
@@ -6,7 +6,7 @@ import { useUser } from '../contexts/UserContext'
 // Note: This page uses Edge Functions directly, which is acceptable for this level of abstraction.
 // In a larger application, these could also be moved to the service layer.
 import { uploadImages } from '../lib/uploadImage'
-import { ArrowLeft, Upload, CheckCircle2 } from 'lucide-react'
+import { ArrowLeft, Upload, CheckCircle2, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import { formatCurrency } from '../lib/utils'
 
 interface PaymentConfig {
@@ -42,8 +42,11 @@ export default function DepositPage() {
   const [paymentReference, setPaymentReference] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStatus, setUploadStatus] = useState<'idle' | 'compressing' | 'uploading' | 'success' | 'error'>('idle')
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     fetchPaymentConfigs()
@@ -73,47 +76,57 @@ export default function DepositPage() {
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     console.log('[DepositPage] handleImageUpload triggered')
-    console.log('[DepositPage] Event target:', e.target)
-    console.log('[DepositPage] Event target files:', e.target.files)
     
     const files = e.target.files
     
-    // 详细的文件验证日志
-    if (!files) {
-      console.error('[DepositPage] No files object - e.target.files is null')
-      alert(t('deposit.noFileSelected') || '未选择文件，请重试')
+    if (!files || files.length === 0) {
+      console.error('[DepositPage] No files selected')
       return
     }
+
+    const fileArray = Array.from(files)
+    console.log('[DepositPage] Files to upload:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
     
-    if (files.length === 0) {
-      console.error('[DepositPage] Files array is empty - files.length === 0')
-      alert(t('deposit.noFileSelected') || '未选择文件，请重试')
+    // 验证文件类型
+    const invalidFiles = fileArray.filter(f => !f.type.startsWith('image/'))
+    if (invalidFiles.length > 0) {
+      console.error('[DepositPage] Invalid file types detected:', invalidFiles)
+      alert(t('deposit.invalidFileType') || '请选择图片文件')
+      e.target.value = ''
       return
     }
 
     try {
       setUploading(true)
-      console.log('[DepositPage] Starting image upload, file count:', files.length)
+      setUploadStatus('compressing')
+      setUploadProgress(10)
       
-      const fileArray = Array.from(files)
-      console.log('[DepositPage] Files to upload:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
+      // 模拟压缩进度
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev < 30) return prev + 5
+          return prev
+        })
+      }, 200)
       
-      // 验证文件类型
-      const invalidFiles = fileArray.filter(f => !f.type.startsWith('image/'))
-      if (invalidFiles.length > 0) {
-        console.error('[DepositPage] Invalid file types detected:', invalidFiles)
-        alert(t('deposit.invalidFileType') || '请选择图片文件')
-        setUploading(false)
-        e.target.value = ''
-        return
-      }
+      // 开始上传
+      setTimeout(() => {
+        setUploadStatus('uploading')
+        setUploadProgress(40)
+      }, 500)
       
       const urls = await uploadImages(fileArray, true, 'payment-proofs', 'deposits')
+      
+      clearInterval(progressInterval)
+      
       console.log('[DepositPage] Upload successful, URLs:', urls)
       
       if (!urls || urls.length === 0) {
         throw new Error('Upload returned empty URLs')
       }
+      
+      setUploadProgress(100)
+      setUploadStatus('success')
       
       setUploadedImages(prev => {
         const newImages = [...prev, ...urls]
@@ -121,18 +134,37 @@ export default function DepositPage() {
         return newImages
       })
       
-      // 显示成功提示
-      alert(t('deposit.imageUploadSuccess') || `成功上传 ${urls.length} 张图片`)
+      // 延迟重置状态
+      setTimeout(() => {
+        setUploadStatus('idle')
+        setUploadProgress(0)
+      }, 1500)
+      
     } catch (error) {
       console.error('[DepositPage] Image upload failed:', error)
-      console.error('[DepositPage] Error stack:', error instanceof Error ? error.stack : 'No stack')
-      // 显示更详细的错误信息
+      setUploadStatus('error')
+      setUploadProgress(0)
+      
       const errorMessage = error instanceof Error ? error.message : String(error)
       alert(`${t('deposit.imageUploadFailed') || '图片上传失败'}: ${errorMessage}`)
+      
+      setTimeout(() => {
+        setUploadStatus('idle')
+      }, 2000)
     } finally {
       setUploading(false)
       // 清空 input，允许重新选择同一文件
       e.target.value = ''
+    }
+  }
+
+  const handleRemoveImage = (index: number) => {
+    setUploadedImages(prev => prev.filter((_, i) => i !== index))
+  }
+
+  const handleUploadClick = () => {
+    if (!uploading && fileInputRef.current) {
+      fileInputRef.current.click()
     }
   }
 
@@ -335,37 +367,96 @@ export default function DepositPage() {
         {/* 上传凭证 */}
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.uploadProof')}</h2>
-          <label htmlFor="payment-proof-upload" className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-colors ${
-            uploading 
-              ? 'border-purple-500 bg-purple-50 cursor-wait' 
-              : 'border-gray-300 cursor-pointer hover:border-purple-500'
-          }`}>
+          
+          {/* 上传区域 */}
+          <div 
+            onClick={handleUploadClick}
+            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all cursor-pointer ${
+              uploading 
+                ? 'border-purple-500 bg-purple-50' 
+                : uploadStatus === 'error'
+                ? 'border-red-500 bg-red-50'
+                : uploadStatus === 'success'
+                ? 'border-green-500 bg-green-50'
+                : 'border-gray-300 hover:border-purple-500 hover:bg-purple-50'
+            }`}
+          >
             {uploading ? (
-              <>
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mb-2"></div>
-                <span className="text-sm text-purple-600">{t('common.uploading') || t('deposit.uploading')}</span>
-              </>
+              <div className="flex flex-col items-center">
+                <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-2" />
+                <span className="text-sm text-purple-600 font-medium">
+                  {uploadStatus === 'compressing' && (t('deposit.compressing') || '压缩中...')}
+                  {uploadStatus === 'uploading' && (t('deposit.uploading') || '上传中...')}
+                </span>
+                {/* 进度条 */}
+                <div className="w-48 h-2 bg-purple-200 rounded-full mt-2 overflow-hidden">
+                  <div 
+                    className="h-full bg-purple-600 rounded-full transition-all duration-300"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <span className="text-xs text-purple-500 mt-1">{uploadProgress}%</span>
+              </div>
+            ) : uploadStatus === 'success' ? (
+              <div className="flex flex-col items-center">
+                <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
+                <span className="text-sm text-green-600 font-medium">
+                  {t('deposit.uploadSuccess') || '上传成功！'}
+                </span>
+              </div>
+            ) : uploadStatus === 'error' ? (
+              <div className="flex flex-col items-center">
+                <X className="w-8 h-8 text-red-500 mb-2" />
+                <span className="text-sm text-red-600 font-medium">
+                  {t('deposit.uploadFailed') || '上传失败，请重试'}
+                </span>
+              </div>
             ) : (
               <>
                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
                 <span className="text-sm text-gray-600">{t('wallet.clickToUpload')}</span>
+                <span className="text-xs text-gray-400 mt-1">{t('deposit.supportedFormats') || '支持 JPG、PNG、WebP 格式'}</span>
               </>
             )}
             <input
+              ref={fileInputRef}
               type="file"
               accept="image/*"
               multiple
               onChange={handleImageUpload}
               disabled={uploading}
               className="hidden"
-              id="payment-proof-upload"
             />
-          </label>
+          </div>
+          
+          {/* 已上传的图片预览 */}
           {uploadedImages.length > 0 && (
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              {uploadedImages.map((img, idx) => (
-                <img key={idx} src={img} alt="proof" className="w-full h-24 object-cover rounded-lg" />
-              ))}
+            <div className="mt-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">
+                  {t('deposit.uploadedImages') || '已上传'} ({uploadedImages.length})
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {uploadedImages.map((img, idx) => (
+                  <div key={idx} className="relative group">
+                    <img 
+                      src={img} 
+                      alt={`proof-${idx}`} 
+                      className="w-full h-24 object-cover rounded-lg border border-gray-200" 
+                    />
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleRemoveImage(idx)
+                      }}
+                      className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -373,10 +464,17 @@ export default function DepositPage() {
         {/* 提交按钮 */}
         <button
           onClick={handleSubmit}
-          disabled={submitting}
-          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50"
+          disabled={submitting || uploading}
+          className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-4 rounded-xl font-bold text-lg disabled:opacity-50 flex items-center justify-center"
         >
-          {submitting ? t('common.submitting') : t('wallet.submitDepositRequest')}
+          {submitting ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              {t('common.submitting')}
+            </>
+          ) : (
+            t('wallet.submitDepositRequest')
+          )}
         </button>
       </div>
     </div>
