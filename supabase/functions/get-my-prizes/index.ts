@@ -97,11 +97,17 @@ serve(async (req) => {
       // 从 body 中获取 session_token
       const body = await req.json();
       session_token = body.session_token;
-    } else {
-      // 从 Authorization header 中获取 session_token
+    } 
+    
+    // 如果 POST body 中没有，或者请求是 GET，则尝试从 Authorization header 获取
+    if (!session_token) {
       const authHeader = req.headers.get('Authorization');
       if (authHeader && authHeader.startsWith('Bearer ')) {
-        session_token = authHeader.replace('Bearer ', '');
+        const token = authHeader.replace('Bearer ', '');
+        // 只有当 token 不是 anon key 时才使用它作为 session_token
+        if (token !== Deno.env.get('SUPABASE_ANON_KEY')) {
+          session_token = token;
+        }
       }
     }
 
