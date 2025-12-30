@@ -163,7 +163,46 @@ serve(async (req) => {
       } else if (groupBuyOrders) {
         console.log('[GetMyOrders] Found group buy orders:', groupBuyOrders.length);
         
+        // 获取用户中奖的拼团结果（用于获取提货信息）
+        const { data: groupBuyResults, error: resultsError } = await supabase
+          .from('group_buy_results')
+          .select(`
+            id,
+            session_id,
+            winner_id,
+            pickup_code,
+            pickup_status,
+            pickup_point_id,
+            expires_at,
+            claimed_at,
+            picked_up_at,
+            pickup_point:pickup_points(
+              id,
+              name,
+              name_i18n,
+              address,
+              address_i18n,
+              contact_phone
+            )
+          `)
+          .eq('winner_id', telegramId);
+
+        if (resultsError) {
+          console.error('[GetMyOrders] Group buy results error:', resultsError);
+        }
+
+        // 创建 session_id 到 result 的映射
+        const resultsMap = new Map();
+        if (groupBuyResults) {
+          groupBuyResults.forEach((result: any) => {
+            resultsMap.set(result.session_id, result);
+          });
+        }
+        
         groupBuyOrders.forEach((order: any) => {
+          // 查找对应的中奖结果
+          const result = resultsMap.get(order.session_id);
+          
           orders.push({
             id: order.id,
             order_type: 'group_buy',
@@ -182,8 +221,16 @@ serve(async (req) => {
             session_code: order.session?.session_code || '',
             current_participants: order.session?.current_participants || 0,
             group_size: order.session?.group_size || 3,
-            expires_at: order.session?.expires_at || null,
+            expires_at: result?.expires_at || order.session?.expires_at || null,
             session_id: order.session_id,
+            // 自提信息（仅中奖者有）
+            pickup_code: result?.pickup_code || null,
+            pickup_status: order.status === 'WON' ? (result?.pickup_status || 'PENDING_CLAIM') : null,
+            pickup_point: result?.pickup_point || null,
+            claimed_at: result?.claimed_at || null,
+            picked_up_at: result?.picked_up_at || null,
+            // 拼团结果ID（用于领取操作）
+            result_id: result?.id || null,
           });
         });
       }

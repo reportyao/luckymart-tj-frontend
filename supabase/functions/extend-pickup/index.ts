@@ -41,6 +41,7 @@ async function validateSession(sessionToken: string) {
   }
 
   const session = sessions[0];
+
   const expiresAt = new Date(session.expires_at);
   const now = new Date();
   
@@ -79,6 +80,9 @@ async function validateSession(sessionToken: string) {
 
 /**
  * 延长提货码有效期
+ * 支持两种类型：
+ * - lottery: 积分商城中奖（prizes表）
+ * - group_buy: 拼团中奖（group_buy_results表）
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -104,9 +108,9 @@ serve(async (req) => {
     }
 
     // 验证用户 session
-    const { userId } = await validateSession(session_token);
+    const { userId, telegramId } = await validateSession(session_token);
     
-    console.log('[ExtendPickup] User validated:', { userId });
+    console.log('[ExtendPickup] User validated:', { userId, telegramId });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -118,21 +122,36 @@ serve(async (req) => {
       },
     });
 
-    // 确定要更新的表
-    const tableName = order_type === 'group_buy' ? 'group_buy_results' : 'prizes';
+    let prize: any = null;
+    let tableName: string;
+    let userIdField: string;
+    let userIdValue: string;
+
+    // 根据order_type确定表名和用户ID字段
+    if (order_type === 'group_buy') {
+      tableName = 'group_buy_results';
+      userIdField = 'winner_id';
+      userIdValue = telegramId; // 拼团使用telegram_id
+    } else {
+      tableName = 'prizes';
+      userIdField = 'user_id';
+      userIdValue = userId; // 积分商城使用users.id
+    }
 
     // 1. 验证奖品是否属于该用户
-    const { data: prize, error: prizeError } = await supabase
+    const { data: prizeData, error: prizeError } = await supabase
       .from(tableName)
       .select('*')
       .eq('id', prize_id)
-      .eq('user_id', userId)
+      .eq(userIdField, userIdValue)
       .single();
 
-    if (prizeError || !prize) {
+    if (prizeError || !prizeData) {
       console.error('[ExtendPickup] Prize not found:', prizeError);
       throw new Error('奖品不存在或不属于您');
     }
+
+    prize = prizeData;
 
     // 2. 检查是否已经提货
     if (prize.pickup_status === 'PICKED_UP') {
@@ -177,7 +196,7 @@ serve(async (req) => {
         pickup_code: prize.pickup_code,
         pickup_point_id: prize.pickup_point_id,
         operation_type: 'EXTEND',
-        notes: `用户申请延期，新过期时间：${newExpiresAt.toISOString()}`,
+        notes: `用户申请延期${order_type === 'group_buy' ? '拼团' : '积分商城'}奖品，新过期时间：${newExpiresAt.toISOString()}`,
       });
 
     if (logError) {

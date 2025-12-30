@@ -179,14 +179,13 @@ const OrderManagementPageNew: React.FC = () => {
     // 原有状态映射
     const statusMap: Record<string, { text: string; color: string }> = {
       // 拼团状态
-      'PENDING': { text: t('orders.statusGrouping'), color: 'bg-blue-100 text-blue-700' },
+      'PENDING': { text: order.order_type === 'group_buy' ? t('orders.statusGrouping') : t('orders.statusWaiting'), color: 'bg-blue-100 text-blue-700' },
       'ACTIVE': { text: t('orders.statusGrouping'), color: 'bg-blue-100 text-blue-700' },
       'WON': { text: t('orders.statusCongratulations'), color: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700' },
       'LOST': { text: t('orders.statusFinished'), color: 'bg-gray-100 text-gray-700' },
       'REFUNDED': { text: t('orders.statusRefunded'), color: 'bg-orange-100 text-orange-700' },
       'EXPIRED': { text: t('orders.statusFinished'), color: 'bg-gray-100 text-gray-700' },
       // 抽奖状态
-      'PENDING': { text: t('orders.statusWaiting'), color: 'bg-blue-100 text-blue-700' },
       'SHIPPING': { text: t('orders.statusShipping'), color: 'bg-blue-100 text-blue-700' },
       'SHIPPED': { text: t('orders.statusShipped'), color: 'bg-green-100 text-green-700' },
       'RESOLD': { text: t('orders.statusResold'), color: 'bg-purple-100 text-purple-700' },
@@ -593,7 +592,7 @@ const ClaimPrizeModal: React.FC<{
     return text[i18n.language] || text.zh || text.ru || text.tg || '';
   };
 
-  useEffect(() => {
+   useEffect(() => {
     // 加载自提点列表
     const loadPickupPoints = async () => {
       const { data, error } = await supabase
@@ -601,7 +600,6 @@ const ClaimPrizeModal: React.FC<{
         .select('*')
         .eq('status', 'ACTIVE')
         .order('created_at', { ascending: true });
-
       if (!error && data) {
         setPickupPoints(data);
         if (data.length > 0) {
@@ -609,9 +607,8 @@ const ClaimPrizeModal: React.FC<{
         }
       }
     };
-
     loadPickupPoints();
-  }, [supabase]);
+  }, [supabase]);;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

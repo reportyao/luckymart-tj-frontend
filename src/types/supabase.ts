@@ -2888,6 +2888,156 @@ export type Database = {
         }
         Relationships: []
       }
+      pickup_points: {
+        Row: {
+          id: string
+          name: string
+          name_i18n: Json | null
+          address: string
+          address_i18n: Json | null
+          latitude: number | null
+          longitude: number | null
+          contact_phone: string | null
+          contact_person: string | null
+          business_hours: Json | null
+          status: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          name_i18n?: Json | null
+          address: string
+          address_i18n?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          contact_phone?: string | null
+          contact_person?: string | null
+          business_hours?: Json | null
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          name_i18n?: Json | null
+          address?: string
+          address_i18n?: Json | null
+          latitude?: number | null
+          longitude?: number | null
+          contact_phone?: string | null
+          contact_person?: string | null
+          business_hours?: Json | null
+          status?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      pickup_logs: {
+        Row: {
+          id: string
+          prize_id: string
+          pickup_code: string
+          pickup_point_id: string | null
+          operator_id: string | null
+          operation_type: string
+          notes: string | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          prize_id: string
+          pickup_code: string
+          pickup_point_id?: string | null
+          operator_id?: string | null
+          operation_type: string
+          notes?: string | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          prize_id?: string
+          pickup_code?: string
+          pickup_point_id?: string | null
+          operator_id?: string | null
+          operation_type?: string
+          notes?: string | null
+          created_at?: string | null
+        }
+        Relationships: []
+      }
+      group_buy_results: {
+        Row: {
+          id: string
+          session_id: string
+          product_id: string
+          winner_id: string
+          winner_order_id: string
+          total_participants: number
+          timestamp_sum: number
+          winning_index: number
+          algorithm_data: Json | null
+          shipping_status: string | null
+          shipping_info: Json | null
+          created_at: string | null
+          updated_at: string | null
+          pickup_code: string | null
+          pickup_point_id: string | null
+          pickup_status: string | null
+          expires_at: string | null
+          claimed_at: string | null
+          picked_up_at: string | null
+          picked_up_by: string | null
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          product_id: string
+          winner_id: string
+          winner_order_id: string
+          total_participants: number
+          timestamp_sum: number
+          winning_index: number
+          algorithm_data?: Json | null
+          shipping_status?: string | null
+          shipping_info?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+          pickup_code?: string | null
+          pickup_point_id?: string | null
+          pickup_status?: string | null
+          expires_at?: string | null
+          claimed_at?: string | null
+          picked_up_at?: string | null
+          picked_up_by?: string | null
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          product_id?: string
+          winner_id?: string
+          winner_order_id?: string
+          total_participants?: number
+          timestamp_sum?: number
+          winning_index?: number
+          algorithm_data?: Json | null
+          shipping_status?: string | null
+          shipping_info?: Json | null
+          created_at?: string | null
+          updated_at?: string | null
+          pickup_code?: string | null
+          pickup_point_id?: string | null
+          pickup_status?: string | null
+          expires_at?: string | null
+          claimed_at?: string | null
+          picked_up_at?: string | null
+          picked_up_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -41,6 +41,7 @@ async function validateSession(sessionToken: string) {
   }
 
   const session = sessions[0];
+
   const expiresAt = new Date(session.expires_at);
   const now = new Date();
   
@@ -86,14 +87,21 @@ async function generatePickupCode(supabase: any): Promise<string> {
     // 生成6位随机数字
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // 检查是否已存在
-    const { data: existing } = await supabase
+    // 检查是否在prizes表中已存在
+    const { data: existingPrize } = await supabase
       .from('prizes')
       .select('id')
       .eq('pickup_code', code)
       .single();
     
-    if (!existing) {
+    // 检查是否在group_buy_results表中已存在
+    const { data: existingGroupBuy } = await supabase
+      .from('group_buy_results')
+      .select('id')
+      .eq('pickup_code', code)
+      .single();
+    
+    if (!existingPrize && !existingGroupBuy) {
       return code;
     }
     
@@ -105,6 +113,9 @@ async function generatePickupCode(supabase: any): Promise<string> {
 
 /**
  * 用户确认领取奖品，生成提货码
+ * 支持两种类型：
+ * - lottery: 积分商城中奖（prizes表）
+ * - group_buy: 拼团中奖（group_buy_results表）
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -131,9 +142,9 @@ serve(async (req) => {
     }
 
     // 验证用户 session
-    const { userId } = await validateSession(session_token);
+    const { userId, telegramId } = await validateSession(session_token);
     
-    console.log('[ClaimPrize] User validated:', { userId });
+    console.log('[ClaimPrize] User validated:', { userId, telegramId });
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
@@ -145,21 +156,36 @@ serve(async (req) => {
       },
     });
 
-    // 确定要更新的表
-    const tableName = order_type === 'group_buy' ? 'group_buy_results' : 'prizes';
+    let prize: any = null;
+    let tableName: string;
+    let userIdField: string;
+    let userIdValue: string;
+
+    // 根据order_type确定表名和用户ID字段
+    if (order_type === 'group_buy') {
+      tableName = 'group_buy_results';
+      userIdField = 'winner_id';
+      userIdValue = telegramId; // 拼团使用telegram_id
+    } else {
+      tableName = 'prizes';
+      userIdField = 'user_id';
+      userIdValue = userId; // 积分商城使用users.id
+    }
 
     // 1. 验证奖品是否属于该用户
-    const { data: prize, error: prizeError } = await supabase
+    const { data: prizeData, error: prizeError } = await supabase
       .from(tableName)
       .select('*')
       .eq('id', prize_id)
-      .eq('user_id', userId)
+      .eq(userIdField, userIdValue)
       .single();
 
-    if (prizeError || !prize) {
+    if (prizeError || !prizeData) {
       console.error('[ClaimPrize] Prize not found:', prizeError);
       throw new Error('奖品不存在或不属于您');
     }
+
+    prize = prizeData;
 
     // 2. 检查是否已经领取过
     if (prize.pickup_code) {
@@ -170,6 +196,7 @@ serve(async (req) => {
           data: {
             pickup_code: prize.pickup_code,
             expires_at: prize.expires_at,
+            pickup_point_id: prize.pickup_point_id,
             message: '您已领取过该奖品'
           }
         }),
@@ -180,20 +207,42 @@ serve(async (req) => {
       );
     }
 
-    // 3. 生成提货码
+    // 3. 检查状态是否允许领取
+    if (prize.pickup_status && prize.pickup_status !== 'PENDING_CLAIM') {
+      throw new Error('该奖品当前状态不允许领取');
+    }
+
+    // 4. 验证自提点是否存在
+    if (pickup_point_id) {
+      const { data: pickupPoint, error: pointError } = await supabase
+        .from('pickup_points')
+        .select('id, status')
+        .eq('id', pickup_point_id)
+        .single();
+
+      if (pointError || !pickupPoint) {
+        throw new Error('自提点不存在');
+      }
+
+      if (pickupPoint.status !== 'ACTIVE') {
+        throw new Error('该自提点当前不可用');
+      }
+    }
+
+    // 5. 生成提货码
     const pickupCode = await generatePickupCode(supabase);
     
-    // 4. 设置过期时间（30天后）
+    // 6. 设置过期时间（30天后）
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    // 5. 更新奖品记录
+    // 7. 更新奖品记录
     const { data: updatedPrize, error: updateError } = await supabase
       .from(tableName)
       .update({
         pickup_code: pickupCode,
         pickup_status: 'PENDING_PICKUP',
-        pickup_point_id: pickup_point_id,
+        pickup_point_id: pickup_point_id || null,
         expires_at: expiresAt.toISOString(),
         claimed_at: new Date().toISOString(),
       })
@@ -206,20 +255,31 @@ serve(async (req) => {
       throw new Error('更新奖品状态失败');
     }
 
-    // 6. 记录操作日志
+    // 8. 记录操作日志
     const { error: logError } = await supabase
       .from('pickup_logs')
       .insert({
         prize_id: prize_id,
         pickup_code: pickupCode,
-        pickup_point_id: pickup_point_id,
+        pickup_point_id: pickup_point_id || null,
         operation_type: 'CLAIM',
-        notes: `用户确认领取奖品，生成提货码`,
+        notes: `用户确认领取${order_type === 'group_buy' ? '拼团' : '积分商城'}奖品，生成提货码`,
       });
 
     if (logError) {
       console.error('[ClaimPrize] Log error:', logError);
       // 不影响主流程，继续
+    }
+
+    // 9. 获取自提点详情（如果有）
+    let pickupPointDetails = null;
+    if (pickup_point_id) {
+      const { data: pointData } = await supabase
+        .from('pickup_points')
+        .select('id, name, name_i18n, address, address_i18n, contact_phone, business_hours')
+        .eq('id', pickup_point_id)
+        .single();
+      pickupPointDetails = pointData;
     }
 
     console.log('[ClaimPrize] Success:', { pickupCode, expiresAt });
@@ -231,6 +291,8 @@ serve(async (req) => {
           pickup_code: pickupCode,
           expires_at: expiresAt.toISOString(),
           pickup_point_id: pickup_point_id,
+          pickup_point: pickupPointDetails,
+          claimed_at: new Date().toISOString(),
         }
       }),
       {
