@@ -124,6 +124,7 @@ serve(async (req) => {
 
     // 1. 获取拼团订单
     if (!order_type || order_type === 'all' || order_type === 'group_buy') {
+      // 拼团订单表中的 user_id 存储的是 telegram_id (text类型)
       console.log('[GetMyOrders] Fetching group buy orders for telegramId:', telegramId);
       
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
@@ -238,6 +239,7 @@ serve(async (req) => {
 
     // 2. 获取抽奖中奖记录(积分商城)
     if (!order_type || order_type === 'all' || order_type === 'lottery') {
+      // prizes 表中的 user_id 存储的是 users 表的 id (uuid类型)
       console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId);
       
       const { data: prizes, error: prizesError } = await supabase
@@ -278,7 +280,7 @@ serve(async (req) => {
         .eq('user_id', userId)
         .order('won_at', { ascending: false });
 
-      if (prizesError) {
+    if (prizesError) {
         console.error('[GetMyOrders] Prizes error:', prizesError);
       } else if (prizes) {
         console.log('[GetMyOrders] Found prizes:', prizes.length);
@@ -326,9 +328,6 @@ serve(async (req) => {
         });
       }
     }
-
-    // 3. 不再获取积分兑换记录（已排除）
-    // Exchange records are now excluded from order management page
 
     // 按时间排序
     orders.sort((a, b) => {
