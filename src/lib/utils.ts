@@ -10,21 +10,17 @@ export function formatCurrency(currency: string, amount: number): string {
   return `${currency} ${amount.toFixed(2)}`;
 }
 
-// 日期时间格式化（显示塔吉克斯坦时间 UTC+5）
+// 日期时间格式化（显示用户本地时间）
 export function formatDateTime(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   
-  // 塔吉克斯坦时区是 UTC+5
-  // 将UTC时间转换为塔吉克斯坦时间
-  const utcTime = date.getTime();
-  const tajikTime = new Date(utcTime + (5 * 60 * 60 * 1000));
-  
-  const year = tajikTime.getUTCFullYear();
-  const month = String(tajikTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(tajikTime.getUTCDate()).padStart(2, '0');
-  const hours = String(tajikTime.getUTCHours()).padStart(2, '0');
-  const minutes = String(tajikTime.getUTCMinutes()).padStart(2, '0');
+  // 使用用户本地时区显示时间
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
   return `${year}-${month}-${day} ${hours}:${minutes}`;
 }
 

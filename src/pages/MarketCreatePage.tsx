@@ -39,13 +39,19 @@ const MarketCreatePage: React.FC = () => {
     setIsLoadingTickets(true);
     try {
       // 调用API获取我的奖品(可转售的)
+      const sessionToken = localStorage.getItem('custom_session_token');
+      if (!sessionToken) {
+        throw new Error('请先登录');
+      }
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
         {
+          method: 'POST',
           headers: {
             'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${localStorage.getItem('custom_session_token') || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'Content-Type': 'application/json',
           },
+          body: JSON.stringify({ session_token: sessionToken }),
         }
       );
 

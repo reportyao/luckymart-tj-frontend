@@ -143,7 +143,8 @@
     "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд",
     "ongoing": "Дар ҷараён",
     "ended": "Анҷом ёфта",
-    "orderManagement": "Идораи фармоишҳо"
+    "orderManagement": "Идораи фармоишҳо",
+    "drawCompleted": "Бозӣ анҷом ёфт"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -769,8 +770,16 @@
     "claimError": "Хатогӣ, аз нав кӯшиш кунед",
     "confirmExtend": "Тасдиқи тамдид",
     "extendDescription": "Муҳлатро 30 рӯз тамдид кунем?",
-    "extendSuccess": "Муҳлат 30 рӯз тамдид шуд",
-    "extendError": "Хатогии тамдид"
+    "extendSuccess": "Мӯҳлат 30 рӯз тамдид шуд",
+    "extendError": "Хатогии тамдид",
+    "pickupPointAddress": "Суроғаи нуқтаи гирифтан",
+    "pickupPointPhone": "Телефони тамос",
+    "alreadyPickedUp": "Мол гирифта шуд",
+    "pickedUpSuccess": "Шумо молро муваффақ гирифтед",
+    "expiresIn": "Вақти боқимонда",
+    "days": "рӯз",
+    "hours": "соат",
+    "expired": "Ба охир расид"
   },
   "notifications": {
     "congratulations": "Табрик бо ғалаба!",

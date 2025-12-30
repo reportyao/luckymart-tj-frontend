@@ -239,14 +239,17 @@ serve(async (req) => {
 
     // 2. 获取抽奖中奖记录(积分商城)
     if (!order_type || order_type === 'all' || order_type === 'lottery') {
-      // prizes 表中的 user_id 存储的是 users 表的 id (uuid类型)
-      console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId);
+      // prizes 表中的 user_id 可能存储的是 users 表的 id (uuid类型) 或 telegram_id (text类型)
+      // 需要同时查询两种情况
+      console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId, 'and telegramId:', telegramId);
       
-      const { data: prizes, error: prizesError } = await supabase
+      // 先用 userId (UUID) 查询
+      const { data: prizesByUserId, error: prizesError1 } = await supabase
         .from('prizes')
         .select(`
           id,
           lottery_id,
+          user_id,
           winning_code,
           prize_value,
           status,
@@ -279,6 +282,57 @@ serve(async (req) => {
         `)
         .eq('user_id', userId)
         .order('won_at', { ascending: false });
+
+      // 再用 telegramId 查询（兼容旧数据）
+      const { data: prizesByTelegramId, error: prizesError2 } = await supabase
+        .from('prizes')
+        .select(`
+          id,
+          lottery_id,
+          user_id,
+          winning_code,
+          prize_value,
+          status,
+          won_at,
+          created_at,
+          pickup_code,
+          pickup_status,
+          pickup_point_id,
+          expires_at,
+          claimed_at,
+          picked_up_at,
+          lottery:lotteries(
+            id,
+            title,
+            title_i18n,
+            image_url,
+            period,
+            ticket_price
+          ),
+          shipping(*),
+          resale_listing(*),
+          pickup_point:pickup_points(
+            id,
+            name,
+            name_i18n,
+            address,
+            address_i18n,
+            contact_phone
+          )
+        `)
+        .eq('user_id', telegramId)
+        .order('won_at', { ascending: false });
+
+      // 合并两个查询结果，去重
+      const allPrizes = [...(prizesByUserId || []), ...(prizesByTelegramId || [])];
+      const prizeIds = new Set();
+      const prizes = allPrizes.filter((prize: any) => {
+        if (prizeIds.has(prize.id)) return false;
+        prizeIds.add(prize.id);
+        return true;
+      });
+      
+      const prizesError = prizesError1 && prizesError2 ? prizesError1 : null;
 
     if (prizesError) {
         console.error('[GetMyOrders] Prizes error:', prizesError);

@@ -37,24 +37,21 @@ interface PrizeInfo {
   pickup_status?: string;
   expires_at?: string;
   pickup_point?: any;
+  picked_up_at?: string;
 }
 
-// 转换为塔吉克斯坦时区 (UTC+5)
-function toTajikistanTime(dateString: string): string {
+// 转换为用户本地时间
+function toLocalTime(dateString: string): string {
   if (!dateString) return '';
   const date = new Date(dateString);
   
-  // 数据库存储的是 UTC 时间
-  // 塔吉克斯坦时区是 UTC+5，所以需要加上 5 小时
-  const utcTime = date.getTime();
-  const tajikTime = new Date(utcTime + (5 * 60 * 60 * 1000));
-  
-  const year = tajikTime.getUTCFullYear();
-  const month = String(tajikTime.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(tajikTime.getUTCDate()).padStart(2, '0');
-  const hours = String(tajikTime.getUTCHours()).padStart(2, '0');
-  const minutes = String(tajikTime.getUTCMinutes()).padStart(2, '0');
-  const seconds = String(tajikTime.getUTCSeconds()).padStart(2, '0');
+  // 使用用户本地时区显示时间
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
   
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
@@ -193,7 +190,8 @@ const LotteryResultPage: React.FC = () => {
           pickup_code,
           pickup_status,
           expires_at,
-          pickup_point_id
+          pickup_point_id,
+          picked_up_at
         `)
         .eq('lottery_id', id)
         .eq('user_id', currentUser.id)
@@ -215,7 +213,8 @@ const LotteryResultPage: React.FC = () => {
           pickup_code: data.pickup_code || undefined,
           pickup_status: data.pickup_status || undefined,
           expires_at: data.expires_at || undefined,
-          pickup_point: pickupPoint
+          pickup_point: pickupPoint,
+          picked_up_at: (data as any).picked_up_at || undefined
         });
       }
     } catch (error) {
@@ -382,6 +381,20 @@ const LotteryResultPage: React.FC = () => {
   // 判断是否需要领取
   const needsClaim = isCurrentUserWinner && prizeInfo && !prizeInfo.pickup_code;
   const hasClaimed = isCurrentUserWinner && prizeInfo?.pickup_code;
+  const isPickedUp = prizeInfo?.pickup_status === 'PICKED_UP' || prizeInfo?.picked_up_at;
+  
+  // 计算剩余时间
+  const getRemainingTime = () => {
+    if (!prizeInfo?.expires_at) return null;
+    const now = new Date();
+    const expiresAt = new Date(prizeInfo.expires_at);
+    const diffMs = expiresAt.getTime() - now.getTime();
+    if (diffMs <= 0) return { expired: true, days: 0, hours: 0 };
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    return { expired: false, days, hours };
+  };
+  const remainingTime = getRemainingTime();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 pb-20">
@@ -514,14 +527,30 @@ const LotteryResultPage: React.FC = () => {
 
             {lottery.draw_time && (
               <p className={`text-sm ${isCurrentUserWinner ? 'text-white/70' : 'text-gray-500'}`}>
-                {t('lottery.drawTime')}: {toTajikistanTime(lottery.draw_time)}
+                {t('lottery.drawTime')}: {toLocalTime(lottery.draw_time)}
               </p>
             )}
             
             {/* 中奖用户的领取按钮 */}
             {isCurrentUserWinner && (
               <div className="mt-6">
-                {needsClaim ? (
+                {isPickedUp ? (
+                  // 已核销取货状态
+                  <div className="space-y-3">
+                    <div className="bg-green-500/30 rounded-xl p-4 border border-green-300">
+                      <div className="flex items-center gap-2 mb-2">
+                        <CheckCircleIcon className="w-6 h-6 text-green-200" />
+                        <p className="text-lg font-bold text-white">{t('orders.alreadyPickedUp')}</p>
+                      </div>
+                      <p className="text-sm text-white/80">{t('orders.pickedUpSuccess')}</p>
+                      {prizeInfo?.picked_up_at && (
+                        <p className="text-xs text-white/60 mt-2">
+                          {t('orders.pickedUpAt')}: {toLocalTime(prizeInfo.picked_up_at)}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ) : needsClaim ? (
                   <button
                     onClick={handleClaimPrize}
                     className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
@@ -531,10 +560,53 @@ const LotteryResultPage: React.FC = () => {
                   </button>
                 ) : hasClaimed ? (
                   <div className="space-y-3">
+                    {/* 提货码 */}
                     <div className="bg-white/20 rounded-xl p-4">
                       <p className="text-sm text-white/80 mb-1">{t('orders.pickupCode')}</p>
                       <p className="text-3xl font-bold font-mono text-white">{prizeInfo?.pickup_code}</p>
                     </div>
+                    
+                    {/* 自提点地址 */}
+                    {prizeInfo?.pickup_point && (
+                      <div className="bg-white/10 rounded-xl p-4">
+                        <div className="flex items-start gap-2">
+                          <MapPinIcon className="w-5 h-5 text-white/80 mt-0.5 flex-shrink-0" />
+                          <div>
+                            <p className="text-sm text-white/80 mb-1">{t('orders.pickupPointAddress')}</p>
+                            <p className="text-white font-medium">
+                              {getLocalText(prizeInfo.pickup_point.name_i18n) || prizeInfo.pickup_point.name}
+                            </p>
+                            <p className="text-sm text-white/70 mt-1">
+                              {getLocalText(prizeInfo.pickup_point.address_i18n) || prizeInfo.pickup_point.address}
+                            </p>
+                            {prizeInfo.pickup_point.contact_phone && (
+                              <p className="text-sm text-white/70 mt-1">
+                                {t('orders.pickupPointPhone')}: {prizeInfo.pickup_point.contact_phone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* 剩余时间 */}
+                    {remainingTime && (
+                      <div className="bg-white/10 rounded-xl p-3">
+                        <p className="text-sm text-white/80">
+                          {remainingTime.expired ? (
+                            <span className="text-red-300">{t('orders.expired')}</span>
+                          ) : (
+                            <>
+                              {t('orders.expiresIn')}: 
+                              <span className="font-bold text-white ml-1">
+                                {remainingTime.days} {t('orders.days')} {remainingTime.hours} {t('orders.hours')}
+                              </span>
+                            </>
+                          )}
+                        </p>
+                      </div>
+                    )}
+                    
                     <button
                       onClick={() => navigate('/orders')}
                       className="w-full bg-white text-orange-500 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"

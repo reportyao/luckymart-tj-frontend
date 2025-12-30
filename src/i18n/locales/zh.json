@@ -155,7 +155,8 @@
     "winningCodeCopied": "中奖码已复制",
     "ongoing": "进行中",
     "ended": "已结束",
-    "orderManagement": "订单管理"
+    "orderManagement": "订单管理",
+    "drawCompleted": "开奖完成"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -788,7 +789,15 @@
     "confirmExtend": "确认延期",
     "extendDescription": "将为您延长30天提货期限，是否确认？",
     "extendSuccess": "延期成功！有效期已延长30天",
-    "extendError": "延期失败，请重试"
+    "extendError": "延期失败，请重试",
+    "pickupPointAddress": "自提点地址",
+    "pickupPointPhone": "联系电话",
+    "alreadyPickedUp": "已核销取货",
+    "pickedUpSuccess": "您已成功取货",
+    "expiresIn": "剩余时间",
+    "days": "天",
+    "hours": "小时",
+    "expired": "已过期"
   },
   "notifications": {
     "congratulations": "恭喜中奖!",
