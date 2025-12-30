@@ -300,7 +300,7 @@ const ShippingModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[60] p-4">
       <motion.div
         initial={{ opacity: 0, y: 100 }}
         animate={{ opacity: 1, y: 0 }}

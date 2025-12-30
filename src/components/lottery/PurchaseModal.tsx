@@ -88,7 +88,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/50 z-50"
+            className="fixed inset-0 bg-black/50 z-[60]"
           />
 
           {/* 对话框 */}

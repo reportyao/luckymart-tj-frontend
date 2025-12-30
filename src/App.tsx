@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react"
+import { Suspense } from "react"
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { QueryClientProvider } from "@tanstack/react-query"
@@ -8,36 +8,36 @@ import { Layout } from "./components/layout/Layout"
 import { queryClient } from "./lib/react-query"
 import { RealtimeNotificationsProvider } from "./components/RealtimeNotificationsProvider"
 
-// 路由级别代码分割 - 懒加载页面组件
-const HomePage = lazy(() => import("./pages/HomePage"))
-const LotteryPage = lazy(() => import("./pages/LotteryPage"))
-const LotteryDetailPage = lazy(() => import("./pages/LotteryDetailPage"))
-const LotteryResultPage = lazy(() => import("./pages/LotteryResultPage"))
-const WalletPage = lazy(() => import("./pages/WalletPage"))
-const ProfilePage = lazy(() => import("./pages/ProfilePage"))
-const ProfileEditPage = lazy(() => import("./pages/ProfileEditPage"))
-const BotPage = lazy(() => import("./pages/BotPage"))
-const MonitoringPage = lazy(() => import("./pages/MonitoringPage"))
-const OrderPage = lazy(() => import("./pages/OrderPage"))
-const NotificationPage = lazy(() => import("./pages/NotificationPage"))
-const InvitePage = lazy(() => import("./pages/InvitePage"))
-const ShowoffPage = lazy(() => import("./pages/ShowoffPage"))
-const ShowoffCreatePage = lazy(() => import("./pages/ShowoffCreatePage"))
-const MarketPage = lazy(() => import("./pages/MarketPage"))
-const MarketCreatePage = lazy(() => import("./pages/MarketCreatePage"))
-const MyTicketsPage = lazy(() => import("./pages/MyTicketsPage"))
-const MyPrizesPage = lazy(() => import("./pages/MyPrizesPage"))
-const OrderManagementPage = lazy(() => import("./pages/OrderManagementPage"))
-const SettingsPage = lazy(() => import("./pages/SettingsPage"))
-const DepositPage = lazy(() => import("./pages/DepositPage"))
-const ExchangePage = lazy(() => import("./pages/ExchangePage"))
-const WithdrawPage = lazy(() => import("./pages/WithdrawPage"))
-const NotFoundPage = lazy(() => import("./pages/NotFoundPage"))
-const DebugPage = lazy(() => import("./pages/DebugPage"))
-const GroupBuyListPage = lazy(() => import("./pages/groupbuy/GroupBuyListPage"))
-const GroupBuyDetailPage = lazy(() => import("./pages/groupbuy/GroupBuyDetailPage"))
-const MyGroupBuysPage = lazy(() => import("./pages/groupbuy/MyGroupBuysPage"))
-const GroupBuyResultPage = lazy(() => import("./pages/groupbuy/GroupBuyResultPage"))
+// 静态导入所有页面组件（移除懒加载以提高页面切换速度）
+import HomePage from "./pages/HomePage"
+import LotteryPage from "./pages/LotteryPage"
+import LotteryDetailPage from "./pages/LotteryDetailPage"
+import LotteryResultPage from "./pages/LotteryResultPage"
+import WalletPage from "./pages/WalletPage"
+import ProfilePage from "./pages/ProfilePage"
+import ProfileEditPage from "./pages/ProfileEditPage"
+import BotPage from "./pages/BotPage"
+import MonitoringPage from "./pages/MonitoringPage"
+import OrderPage from "./pages/OrderPage"
+import NotificationPage from "./pages/NotificationPage"
+import InvitePage from "./pages/InvitePage"
+import ShowoffPage from "./pages/ShowoffPage"
+import ShowoffCreatePage from "./pages/ShowoffCreatePage"
+import MarketPage from "./pages/MarketPage"
+import MarketCreatePage from "./pages/MarketCreatePage"
+import MyTicketsPage from "./pages/MyTicketsPage"
+import MyPrizesPage from "./pages/MyPrizesPage"
+import OrderManagementPage from "./pages/OrderManagementPage"
+import SettingsPage from "./pages/SettingsPage"
+import DepositPage from "./pages/DepositPage"
+import ExchangePage from "./pages/ExchangePage"
+import WithdrawPage from "./pages/WithdrawPage"
+import NotFoundPage from "./pages/NotFoundPage"
+import DebugPage from "./pages/DebugPage"
+import GroupBuyListPage from "./pages/groupbuy/GroupBuyListPage"
+import GroupBuyDetailPage from "./pages/groupbuy/GroupBuyDetailPage"
+import MyGroupBuysPage from "./pages/groupbuy/MyGroupBuysPage"
+import GroupBuyResultPage from "./pages/groupbuy/GroupBuyResultPage"
 
 function App() {
   return (
@@ -46,8 +46,7 @@ function App() {
         <Router>
         <div className="App">
           <Layout>
-            <Suspense fallback={<div>Loading...</div>}>
-              <Routes>
+            <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/lottery" element={<LotteryPage />} />
               <Route path="/lottery/:id" element={<LotteryDetailPage />} />
@@ -83,8 +82,7 @@ function App() {
               <Route path="/profile/edit" element={<ProfileEditPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
-          </Suspense>
-        </Layout>
+          </Layout>
         
         <Toaster
           position="top-center"
