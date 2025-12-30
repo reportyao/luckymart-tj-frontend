@@ -124,7 +124,6 @@ serve(async (req) => {
 
     // 1. 获取拼团订单
     if (!order_type || order_type === 'all' || order_type === 'group_buy') {
-      // 拼团订单表中的 user_id 存储的是 telegram_id (text类型)
       console.log('[GetMyOrders] Fetching group buy orders for telegramId:', telegramId);
       
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
@@ -139,70 +138,65 @@ serve(async (req) => {
           order_number,
           order_timestamp,
           refund_lucky_coins,
-          created_at,
-          session:group_buy_sessions(
-            id,
-            session_code,
-            status,
-            current_participants,
-            group_size,
-            expires_at
-          ),
-          product:group_buy_products(
-            id,
-            title,
-            image_url,
-            original_price,
-            price_per_person
-          )
+          created_at
         `)
         .eq('user_id', telegramId)
         .order('created_at', { ascending: false });
 
       if (groupBuyError) {
         console.error('[GetMyOrders] Group buy orders error:', groupBuyError);
-      } else if (groupBuyOrders) {
+      } else if (groupBuyOrders && groupBuyOrders.length > 0) {
         console.log('[GetMyOrders] Found group buy orders:', groupBuyOrders.length);
         
-        // 获取用户中奖的拼团结果（用于获取提货信息）
-        const { data: groupBuyResults, error: resultsError } = await supabase
+        // 获取所有相关的 session_ids 和 product_ids
+        const sessionIds = [...new Set(groupBuyOrders.map(o => o.session_id))];
+        const productIds = [...new Set(groupBuyOrders.map(o => o.product_id))];
+        
+        // 批量查询 sessions
+        const { data: sessions } = await supabase
+          .from('group_buy_sessions')
+          .select('id, session_code, status, current_participants, group_size, expires_at')
+          .in('id', sessionIds);
+        
+        // 批量查询 products
+        const { data: products } = await supabase
+          .from('group_buy_products')
+          .select('id, title, image_url, original_price, price_per_person')
+          .in('id', productIds);
+        
+        // 批量查询中奖结果
+        const { data: groupBuyResults } = await supabase
           .from('group_buy_results')
           .select(`
-            id,
-            session_id,
-            winner_id,
-            pickup_code,
-            pickup_status,
-            pickup_point_id,
-            expires_at,
-            claimed_at,
-            picked_up_at,
-            pickup_point:pickup_points(
-              id,
-              name,
-              name_i18n,
-              address,
-              address_i18n,
-              contact_phone
-            )
+            id, session_id, winner_id, pickup_code, pickup_status, 
+            pickup_point_id, expires_at, claimed_at, picked_up_at
           `)
           .eq('winner_id', telegramId);
-
-        if (resultsError) {
-          console.error('[GetMyOrders] Group buy results error:', resultsError);
-        }
-
-        // 创建 session_id 到 result 的映射
-        const resultsMap = new Map();
-        if (groupBuyResults) {
-          groupBuyResults.forEach((result: any) => {
-            resultsMap.set(result.session_id, result);
-          });
+        
+        // 如果有中奖结果，批量查询自提点
+        let pickupPoints: any[] = [];
+        if (groupBuyResults && groupBuyResults.length > 0) {
+          const pickupPointIds = [...new Set(groupBuyResults.filter(r => r.pickup_point_id).map(r => r.pickup_point_id))];
+          if (pickupPointIds.length > 0) {
+            const { data: points } = await supabase
+              .from('pickup_points')
+              .select('id, name, name_i18n, address, address_i18n, contact_phone')
+              .in('id', pickupPointIds);
+            pickupPoints = points || [];
+          }
         }
         
+        // 创建映射
+        const sessionsMap = new Map((sessions || []).map(s => [s.id, s]));
+        const productsMap = new Map((products || []).map(p => [p.id, p]));
+        const resultsMap = new Map((groupBuyResults || []).map(r => [r.session_id, r]));
+        const pickupPointsMap = new Map(pickupPoints.map(p => [p.id, p]));
+        
         groupBuyOrders.forEach((order: any) => {
-          // 查找对应的中奖结果
+          const session = sessionsMap.get(order.session_id);
+          const product = productsMap.get(order.product_id);
           const result = resultsMap.get(order.session_id);
+          const pickupPoint = result?.pickup_point_id ? pickupPointsMap.get(result.pickup_point_id) : null;
           
           orders.push({
             id: order.id,
@@ -212,39 +206,33 @@ serve(async (req) => {
             status: order.status,
             refund_lucky_coins: order.refund_lucky_coins,
             created_at: order.created_at,
-            // 商品信息
-            product_title: order.product?.title || {},
-            product_image: order.product?.image_url || '',
-            original_price: order.product?.original_price || 0,
-            price_per_person: order.product?.price_per_person || 0,
-            // 拼团会话信息
-            session_status: order.session?.status || '',
-            session_code: order.session?.session_code || '',
-            current_participants: order.session?.current_participants || 0,
-            group_size: order.session?.group_size || 3,
-            expires_at: result?.expires_at || order.session?.expires_at || null,
+            product_title: product?.title || {},
+            product_image: product?.image_url || '',
+            original_price: product?.original_price || 0,
+            price_per_person: product?.price_per_person || 0,
+            session_status: session?.status || '',
+            session_code: session?.session_code || '',
+            current_participants: session?.current_participants || 0,
+            group_size: session?.group_size || 3,
+            expires_at: result?.expires_at || session?.expires_at || null,
             session_id: order.session_id,
-            // 自提信息（仅中奖者有）
             pickup_code: result?.pickup_code || null,
             pickup_status: order.status === 'WON' ? (result?.pickup_status || 'PENDING_CLAIM') : null,
-            pickup_point: result?.pickup_point || null,
+            pickup_point: pickupPoint || null,
             claimed_at: result?.claimed_at || null,
             picked_up_at: result?.picked_up_at || null,
-            // 拼团结果ID（用于领取操作）
             result_id: result?.id || null,
           });
         });
       }
     }
 
-    // 2. 获取抽奖中奖记录(积分商城)
+    // 2. 获取抽奖中奖记录(积分商城) - 不使用关联查询
     if (!order_type || order_type === 'all' || order_type === 'lottery') {
-      // prizes 表中的 user_id 可能存储的是 users 表的 id (uuid类型) 或 telegram_id (text类型)
-      // 需要同时查询两种情况
-      console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId, 'and telegramId:', telegramId);
+      console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId);
       
-      // 先用 userId (UUID) 查询
-      const { data: prizesByUserId, error: prizesError1 } = await supabase
+      // 先查询 prizes 表（不使用关联查询）
+      const { data: prizes, error: prizesError } = await supabase
         .from('prizes')
         .select(`
           id,
@@ -252,6 +240,8 @@ serve(async (req) => {
           user_id,
           winning_code,
           prize_value,
+          prize_name,
+          prize_image,
           status,
           won_at,
           created_at,
@@ -260,98 +250,46 @@ serve(async (req) => {
           pickup_point_id,
           expires_at,
           claimed_at,
-          picked_up_at,
-          lottery:lotteries(
-            id,
-            title,
-            title_i18n,
-            image_url,
-            period,
-            ticket_price
-          ),
-          shipping(*),
-          resale_listing(*),
-          pickup_point:pickup_points(
-            id,
-            name,
-            name_i18n,
-            address,
-            address_i18n,
-            contact_phone
-          )
+          picked_up_at
         `)
         .eq('user_id', userId)
         .order('won_at', { ascending: false });
 
-      // 再用 telegramId 查询（兼容旧数据）
-      const { data: prizesByTelegramId, error: prizesError2 } = await supabase
-        .from('prizes')
-        .select(`
-          id,
-          lottery_id,
-          user_id,
-          winning_code,
-          prize_value,
-          status,
-          won_at,
-          created_at,
-          pickup_code,
-          pickup_status,
-          pickup_point_id,
-          expires_at,
-          claimed_at,
-          picked_up_at,
-          lottery:lotteries(
-            id,
-            title,
-            title_i18n,
-            image_url,
-            period,
-            ticket_price
-          ),
-          shipping(*),
-          resale_listing(*),
-          pickup_point:pickup_points(
-            id,
-            name,
-            name_i18n,
-            address,
-            address_i18n,
-            contact_phone
-          )
-        `)
-        .eq('user_id', telegramId)
-        .order('won_at', { ascending: false });
-
-      // 合并两个查询结果，去重
-      const allPrizes = [...(prizesByUserId || []), ...(prizesByTelegramId || [])];
-      const prizeIds = new Set();
-      const prizes = allPrizes.filter((prize: any) => {
-        if (prizeIds.has(prize.id)) return false;
-        prizeIds.add(prize.id);
-        return true;
-      });
-      
-      const prizesError = prizesError1 && prizesError2 ? prizesError1 : null;
-
-    if (prizesError) {
+      if (prizesError) {
         console.error('[GetMyOrders] Prizes error:', prizesError);
-      } else if (prizes) {
+      } else if (prizes && prizes.length > 0) {
         console.log('[GetMyOrders] Found prizes:', prizes.length);
         
+        // 获取所有相关的 lottery_ids 和 pickup_point_ids
+        const lotteryIds = [...new Set(prizes.map(p => p.lottery_id).filter(Boolean))];
+        const pickupPointIds = [...new Set(prizes.map(p => p.pickup_point_id).filter(Boolean))];
+        
+        // 批量查询 lotteries
+        let lotteriesMap = new Map();
+        if (lotteryIds.length > 0) {
+          const { data: lotteries } = await supabase
+            .from('lotteries')
+            .select('id, title, title_i18n, image_url, period, ticket_price')
+            .in('id', lotteryIds);
+          lotteriesMap = new Map((lotteries || []).map(l => [l.id, l]));
+        }
+        
+        // 批量查询 pickup_points
+        let pickupPointsMap = new Map();
+        if (pickupPointIds.length > 0) {
+          const { data: pickupPoints } = await supabase
+            .from('pickup_points')
+            .select('id, name, name_i18n, address, address_i18n, contact_phone')
+            .in('id', pickupPointIds);
+          pickupPointsMap = new Map((pickupPoints || []).map(p => [p.id, p]));
+        }
+        
         prizes.forEach((prize: any) => {
+          const lottery = lotteriesMap.get(prize.lottery_id);
+          const pickupPoint = prize.pickup_point_id ? pickupPointsMap.get(prize.pickup_point_id) : null;
+          
           // 确定状态
           let displayStatus = prize.status || 'PENDING';
-          if (prize.resale_listing && prize.resale_listing.length > 0) {
-            displayStatus = 'RESOLD';
-          } else if (prize.shipping && prize.shipping.length > 0) {
-            const shippingStatus = prize.shipping[0]?.status;
-            if (shippingStatus === 'SHIPPED' || shippingStatus === 'DELIVERED') {
-              displayStatus = 'SHIPPED';
-            } else if (shippingStatus === 'PENDING' || shippingStatus === 'PROCESSING') {
-              displayStatus = 'SHIPPING';
-            }
-          }
 
           orders.push({
             id: prize.id,
@@ -360,21 +298,18 @@ serve(async (req) => {
             amount: prize.prize_value,
             status: displayStatus,
             created_at: prize.won_at || prize.created_at,
-            // 商品信息
-            product_title: prize.lottery?.title_i18n || { zh: prize.lottery?.title || '奖品' },
-            product_image: prize.lottery?.image_url || '',
+            // 商品信息 - 优先使用 lottery 数据，否则使用 prize 自身数据
+            product_title: lottery?.title_i18n || { zh: lottery?.title || prize.prize_name || '奖品' },
+            product_image: lottery?.image_url || prize.prize_image || '',
             original_price: prize.prize_value || 0,
-            price_per_person: prize.lottery?.ticket_price || 0,
+            price_per_person: lottery?.ticket_price || 0,
             // 抽奖信息
-            lottery_period: prize.lottery?.period || '',
+            lottery_period: lottery?.period || '',
             lottery_id: prize.lottery_id,
-            // 物流信息
-            shipping: prize.shipping?.[0] || null,
-            resale_listing: prize.resale_listing?.[0] || null,
             // 自提信息
             pickup_code: prize.pickup_code || null,
             pickup_status: prize.pickup_status || 'PENDING_CLAIM',
-            pickup_point: prize.pickup_point || null,
+            pickup_point: pickupPoint || null,
             expires_at: prize.expires_at || null,
             claimed_at: prize.claimed_at || null,
             picked_up_at: prize.picked_up_at || null,
