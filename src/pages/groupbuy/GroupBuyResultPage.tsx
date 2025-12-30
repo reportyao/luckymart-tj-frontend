@@ -64,9 +64,9 @@ interface GroupBuyResult {
 interface PickupPoint {
   id: string;
   name: string;
-  name_i18n: { zh?: string; ru?: string; tg?: string };
+  name_i18n: any;
   address: string;
-  address_i18n: { zh?: string; ru?: string; tg?: string };
+  address_i18n: any;
   contact_phone?: string;
   status: string;
 }
