@@ -116,7 +116,7 @@ const ShowoffCreatePage: React.FC = () => {
         lottery_id: prize.lottery_id,
         lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知积分商城',
         prize_name: prize.prize_name || prize.lottery?.title?.zh || '未知奖品',
-        prize_image: prize.prize_image || prize.lottery?.image_url || 'https://via.placeholder.com/400',
+        prize_image: prize.prize_image || prize.lottery?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
         winning_number: prize.winning_code || prize.winning_number || '',
         draw_time: prize.won_at,
       }));

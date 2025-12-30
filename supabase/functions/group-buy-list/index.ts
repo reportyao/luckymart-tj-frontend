@@ -162,7 +162,15 @@ Deno.serve(async (req) => {
         .select(`
           *,
           session:group_buy_sessions(*),
-          product:group_buy_products(*)
+          product:group_buy_products(*),
+          pickup_point:pickup_points(
+            id,
+            name,
+            name_i18n,
+            address,
+            address_i18n,
+            contact_phone
+          )
         `)
         .eq('session_id', session_id)
         .single();

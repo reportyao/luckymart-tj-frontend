@@ -7,7 +7,7 @@ import { getLocalizedText } from '../lib/utils'
 import { useSupabase } from '../contexts/SupabaseContext'
 import { LotteryCard } from '../components/lottery/LotteryCard'
 import { PurchaseModal } from '../components/lottery/PurchaseModal'
-import { AdjustmentsHorizontalIcon, ClockIcon, ClipboardDocumentListIcon, PlayIcon } from '@heroicons/react/24/outline'
+import { AdjustmentsHorizontalIcon, ClockIcon, ClipboardDocumentListIcon, PlayIcon, InformationCircleIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
 import { useUser } from '../contexts/UserContext'
 import { useNavigate } from 'react-router-dom'
@@ -24,6 +24,7 @@ const LotteryPage: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'active' | 'upcoming' | 'completed' | 'drawResult'>('active')
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false)
 
   const loadLotteries = useCallback(async () => {
     try {
@@ -87,43 +88,55 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="pb-20">
-      {/* 简洁的头部 - 三个按钮 */}
+      {/* 简洁的头部 - 四个按钮 */}
       <div className="bg-white border-b border-gray-100 px-4 py-3">
-        <div className="flex justify-end items-center space-x-2">
-          {/* 进行中按钮 */}
+        <div className="flex justify-between items-center">
+          {/* 规则说明按钮 - 左侧 */}
           <button
-            onClick={() => setFilter('active')}
-            className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              filter === 'active'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            onClick={() => setIsRulesModalOpen(true)}
+            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-purple-50 text-purple-600 hover:bg-purple-100 transition-all"
           >
-            <PlayIcon className="w-4 h-4" />
-            <span>{t('lottery.ongoing')}</span>
+            <InformationCircleIcon className="w-4 h-4" />
+            <span>{t('lottery.rulesButton')}</span>
           </button>
 
-          {/* 已结束按钮 */}
-          <button
-            onClick={() => setFilter('completed')}
-            className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              filter === 'completed'
-                ? 'bg-gray-900 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            <ClockIcon className="w-4 h-4" />
-            <span>{t('lottery.ended')}</span>
-          </button>
+          {/* 右侧按钮组 */}
+          <div className="flex items-center space-x-2">
+            {/* 进行中按钮 */}
+            <button
+              onClick={() => setFilter('active')}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                filter === 'active'
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <PlayIcon className="w-4 h-4" />
+              <span>{t('lottery.ongoing')}</span>
+            </button>
 
-          {/* 订单管理按钮 */}
-          <button
-            onClick={() => navigate('/orders')}
-            className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
-          >
-            <ClipboardDocumentListIcon className="w-4 h-4" />
-            <span>{t('lottery.orderManagement')}</span>
-          </button>
+            {/* 已结束按钮 */}
+            <button
+              onClick={() => setFilter('completed')}
+              className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                filter === 'completed'
+                  ? 'bg-gray-900 text-white'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              <ClockIcon className="w-4 h-4" />
+              <span>{t('lottery.ended')}</span>
+            </button>
+
+            {/* 订单管理按钮 */}
+            <button
+              onClick={() => navigate('/orders')}
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
+            >
+              <ClipboardDocumentListIcon className="w-4 h-4" />
+              <span>{t('lottery.orderManagement')}</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -172,6 +185,81 @@ const LotteryPage: React.FC = () => {
         onClose={() => setIsPurchaseModalOpen(false)}
         onConfirm={handlePurchaseConfirm}
       />
+
+      {/* 规则说明弹窗 */}
+      {isRulesModalOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-xl"
+          >
+            {/* 弹窗头部 */}
+            <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-4 flex items-center justify-between">
+              <h3 className="text-lg font-bold flex items-center gap-2">
+                <InformationCircleIcon className="w-6 h-6" />
+                {t('lottery.rulesTitle')}
+              </h3>
+              <button
+                onClick={() => setIsRulesModalOpen(false)}
+                className="p-1 hover:bg-white/20 rounded-lg transition-colors"
+              >
+                <XMarkIcon className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* 弹窗内容 */}
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-80px)]">
+              {/* 参与方式 */}
+              <div className="mb-6">
+                <h4 className="text-purple-600 font-bold text-base mb-2">
+                  {t('lottery.rulesParticipation')}
+                </h4>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {t('lottery.rulesParticipationDesc')}
+                </p>
+              </div>
+
+              {/* 开奖机制 */}
+              <div className="mb-6">
+                <h4 className="text-purple-600 font-bold text-base mb-2">
+                  {t('lottery.rulesDraw')}
+                </h4>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {t('lottery.rulesDrawDesc')}
+                </p>
+              </div>
+
+              {/* 领奖与核销 */}
+              <div className="mb-6">
+                <h4 className="text-purple-600 font-bold text-base mb-2">
+                  {t('lottery.rulesClaim')}
+                </h4>
+                <div className="space-y-2">
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesClaimPrize')}
+                  </p>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesPickup')}
+                  </p>
+                  <p className="text-gray-600 text-sm leading-relaxed">
+                    <span className="text-purple-500 font-medium">•</span> {t('lottery.rulesExpiry')}
+                  </p>
+                </div>
+              </div>
+
+              {/* 关闭按钮 */}
+              <button
+                onClick={() => setIsRulesModalOpen(false)}
+                className="w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors"
+              >
+                {t('common.confirm')}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }

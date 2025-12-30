@@ -11,8 +11,12 @@ import {
   CheckCircle,
   XCircle,
   Sparkles,
+  Gift,
+  MapPin,
+  Ticket,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import toast from 'react-hot-toast';
 
 interface GroupBuyResult {
   id: string;
@@ -22,6 +26,19 @@ interface GroupBuyResult {
   created_at: string;
   timestamp_sum: number;
   winning_index: number;
+  pickup_status?: string;
+  pickup_code?: string;
+  pickup_point_id?: string;
+  expires_at?: string;
+  claimed_at?: string;
+  pickup_point?: {
+    id: string;
+    name: string;
+    name_i18n: { zh?: string; ru?: string; tg?: string };
+    address: string;
+    address_i18n: { zh?: string; ru?: string; tg?: string };
+    contact_phone?: string;
+  };
   session: {
     id: string;
     session_code: string;
@@ -44,14 +61,28 @@ interface GroupBuyResult {
   }>;
 }
 
+interface PickupPoint {
+  id: string;
+  name: string;
+  name_i18n: { zh?: string; ru?: string; tg?: string };
+  address: string;
+  address_i18n: { zh?: string; ru?: string; tg?: string };
+  contact_phone?: string;
+  status: string;
+}
+
 export default function GroupBuyResultPage() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user } = useUser();
+  const { user, sessionToken } = useUser();
   const [result, setResult] = useState<GroupBuyResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [isWinner, setIsWinner] = useState(false);
+  const [showClaimModal, setShowClaimModal] = useState(false);
+  const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
+  const [selectedPointId, setSelectedPointId] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (sessionId) {
@@ -62,12 +93,14 @@ export default function GroupBuyResultPage() {
   useEffect(() => {
     if (result && user && result.winner_id === user.telegram_id.toString()) {
       setIsWinner(true);
-      // Trigger confetti animation
-      confetti({
-        particleCount: 100,
-        spread: 70,
-        origin: { y: 0.6 },
-      });
+      // Trigger confetti animation only if not already claimed
+      if (!result.pickup_code) {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.6 },
+        });
+      }
     }
   }, [result, user]);
 
@@ -91,9 +124,71 @@ export default function GroupBuyResultPage() {
     }
   };
 
+  const loadPickupPoints = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('pickup_points')
+        .select('*')
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true });
+
+      if (!error && data) {
+        setPickupPoints(data);
+        if (data.length > 0) {
+          setSelectedPointId(data[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load pickup points:', error);
+    }
+  };
+
+  const handleClaimPrize = async () => {
+    if (!result || !sessionToken || !selectedPointId) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('claim-prize', {
+        body: {
+          session_token: sessionToken,
+          prize_id: result.id,
+          order_type: 'group_buy',
+          pickup_point_id: selectedPointId,
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        toast.success(t('orders.claimSuccess'));
+        setShowClaimModal(false);
+        // Refresh result to show pickup code
+        await fetchResult();
+      } else {
+        throw new Error(data?.error || 'Failed to claim prize');
+      }
+    } catch (error: any) {
+      console.error('Claim prize error:', error);
+      toast.error(error.message || t('orders.claimError'));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const openClaimModal = () => {
+    loadPickupPoints();
+    setShowClaimModal(true);
+  };
+
   const getLocalizedText = (text: any) => {
     if (!text) return '';
-    return text[i18n.language] || text.zh || '';
+    if (typeof text === 'string') return text;
+    return text[i18n.language] || text.zh || text.ru || text.tg || '';
+  };
+
+  const formatDateTime = (dateString: string) => {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleString();
   };
 
   if (loading) {
@@ -150,6 +245,35 @@ export default function GroupBuyResultPage() {
               {t('groupBuy.congratulations')}
             </h2>
             <p className="text-white text-lg">{t('groupBuy.youWon')}</p>
+            
+            {/* 显示提货状态 */}
+            {result.pickup_status === 'PENDING_CLAIM' && !result.pickup_code && (
+              <button
+                onClick={openClaimModal}
+                className="mt-4 px-6 py-3 bg-white text-orange-500 rounded-xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 mx-auto"
+              >
+                <Gift className="w-5 h-5" />
+                {t('orders.claimNow')}
+              </button>
+            )}
+            
+            {/* 显示提货码 */}
+            {result.pickup_code && (
+              <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-xl p-4">
+                <div className="flex items-center justify-center gap-2 text-white mb-2">
+                  <Ticket className="w-5 h-5" />
+                  <span className="font-medium">{t('orders.pickupCode')}:</span>
+                </div>
+                <div className="text-4xl font-bold text-white font-mono tracking-wider">
+                  {result.pickup_code}
+                </div>
+                {result.expires_at && (
+                  <p className="text-white/80 text-sm mt-2">
+                    {t('orders.validUntil')}: {formatDateTime(result.expires_at).split(' ')[0]}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
@@ -162,6 +286,34 @@ export default function GroupBuyResultPage() {
         )}
       </div>
 
+      {/* Pickup Point Info (if claimed) */}
+      {isWinner && result.pickup_point && result.pickup_status === 'PENDING_PICKUP' && (
+        <div className="p-4">
+          <div className="bg-white rounded-2xl shadow-md p-4">
+            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-purple-500" />
+              {t('orders.pickupPointInfo')}
+            </h3>
+            <div className="bg-purple-50 rounded-xl p-4">
+              <p className="font-medium text-gray-800">
+                {getLocalizedText(result.pickup_point.name_i18n) || result.pickup_point.name}
+              </p>
+              <p className="text-sm text-gray-600 mt-1">
+                {getLocalizedText(result.pickup_point.address_i18n) || result.pickup_point.address}
+              </p>
+              {result.pickup_point.contact_phone && (
+                <a
+                  href={`tel:${result.pickup_point.contact_phone}`}
+                  className="text-sm text-purple-600 hover:underline mt-1 inline-block"
+                >
+                  {result.pickup_point.contact_phone}
+                </a>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Product Info */}
       <div className="p-4">
         <div className="bg-white rounded-2xl shadow-md overflow-hidden">
@@ -169,6 +321,9 @@ export default function GroupBuyResultPage() {
             src={result.product.image_url}
             alt={getLocalizedText(result.product.title)}
             className="w-full h-48 object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
+            }}
           />
           <div className="p-4">
             <h3 className="font-bold text-lg text-gray-800 mb-2">
@@ -197,9 +352,9 @@ export default function GroupBuyResultPage() {
             </div>
             <div>
               <p className="font-bold text-gray-800">{result.winner_username}</p>
-                <p className="text-sm text-gray-600">
-                  {t('groupBuy.drawTime')}: {new Date(result.created_at).toLocaleString()}
-                </p>
+              <p className="text-sm text-gray-600">
+                {t('groupBuy.drawTime')}: {formatDateTime(result.created_at)}
+              </p>
             </div>
           </div>
         </div>
@@ -228,7 +383,7 @@ export default function GroupBuyResultPage() {
                 <div className="flex-1">
                   <p className="font-medium text-gray-800">{participant.username}</p>
                   <p className="text-xs text-gray-500">
-                    {new Date(participant.created_at).toLocaleString()}
+                    {formatDateTime(participant.created_at)}
                   </p>
                 </div>
                 {participant.user_id === result.winner_id && (
@@ -263,6 +418,15 @@ export default function GroupBuyResultPage() {
 
       {/* Action Buttons */}
       <div className="p-4 space-y-3">
+        {isWinner && result.pickup_status === 'PENDING_CLAIM' && !result.pickup_code && (
+          <button
+            onClick={openClaimModal}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
+          >
+            <Gift className="w-5 h-5" />
+            {t('orders.claimNow')}
+          </button>
+        )}
         <button
           onClick={() => navigate('/group-buy')}
           className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
@@ -270,12 +434,85 @@ export default function GroupBuyResultPage() {
           {t('groupBuy.browseProducts')}
         </button>
         <button
-          onClick={() => navigate('/my-group-buys')}
+          onClick={() => navigate('/orders')}
           className="w-full bg-white text-purple-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
         >
-          {t('groupBuy.myGroups')}
+          {t('orders.title')}
         </button>
       </div>
+
+      {/* Claim Modal */}
+      {showClaimModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg animate-slide-up">
+            <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
+              <h3 className="text-lg font-bold">{t('orders.confirmClaim')}</h3>
+              <button
+                onClick={() => setShowClaimModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                <div className="flex items-center space-x-3 mb-2">
+                  <Gift className="w-6 h-6 text-purple-600" />
+                  <h4 className="font-bold text-gray-800">
+                    {getLocalizedText(result.product.title)}
+                  </h4>
+                </div>
+                <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('orders.selectPickupPoint')} *
+                </label>
+                <select
+                  value={selectedPointId}
+                  onChange={(e) => setSelectedPointId(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  required
+                >
+                  {pickupPoints.map((point) => (
+                    <option key={point.id} value={point.id}>
+                      {getLocalizedText(point.name_i18n) || point.name} - {getLocalizedText(point.address_i18n) || point.address}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
+                <p className="font-medium mb-1">{t('orders.claimNotice')}</p>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                  <li>{t('orders.claimNotice1')}</li>
+                  <li>{t('orders.claimNotice2')}</li>
+                  <li>{t('orders.claimNotice3')}</li>
+                </ul>
+              </div>
+
+              <div className="pt-4 flex space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setShowClaimModal(false)}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleClaimPrize}
+                  disabled={isSubmitting || !selectedPointId}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? t('common.submitting') : t('common.confirm')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

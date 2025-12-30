@@ -156,7 +156,17 @@
     "ongoing": "进行中",
     "ended": "已结束",
     "orderManagement": "订单管理",
-    "drawCompleted": "开奖完成"
+    "drawCompleted": "开奖完成",
+    "rulesTitle": "积分商城规则说明",
+    "rulesButton": "规则说明",
+    "rulesParticipation": "1. 参与方式",
+    "rulesParticipationDesc": "用户消耗积分购买入场券参与活动。每张入场券对应一个购物号码，购买越多，获得该商品的几率越大，用户购买全部参与码，则必然获得该商品。",
+    "rulesDraw": "2. 开奖机制",
+    "rulesDrawDesc": "当活动参与人数满额后，系统将根据最后100条参与记录的时间戳结合外部随机数值，通过公开公式计算出唯一参与码。所有过程均可追溯验证，确保公平公正。",
+    "rulesClaim": "3. 领奖与核销",
+    "rulesClaimPrize": "领取商品：中奖后请在30天内进入\"我的-订单管理\"选择自提点并领取。",
+    "rulesPickup": "线下取货：领取后将生成提货码（有效期30天），请凭码前往自提点核销取货。",
+    "rulesExpiry": "逾期说明：未在规定时间内领取或核销，将视为自动放弃奖品。"
   },
   "fairness": {
     "title": "为什么这个算法公平？",

@@ -11,17 +11,54 @@ export function formatCurrency(currency: string, amount: number): string {
 }
 
 // 日期时间格式化（显示用户本地时间）
+// 使用 Intl.DateTimeFormat 确保正确显示用户所在时区的时间
 export function formatDateTime(dateString: string): string {
   if (!dateString) return '';
-  const date = new Date(dateString);
   
-  // 使用用户本地时区显示时间
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  return `${year}-${month}-${day} ${hours}:${minutes}`;
+  try {
+    const date = new Date(dateString);
+    
+    // 检查日期是否有效
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    // 使用 toLocaleString 自动转换为用户本地时区
+    // 不指定 timeZone，让浏览器自动使用用户的本地时区
+    return date.toLocaleString(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }).replace(/\//g, '-').replace(',', '');
+  } catch (error) {
+    console.error('formatDateTime error:', error);
+    return '';
+  }
+}
+
+// 仅格式化日期（不包含时间）
+export function formatDate(dateString: string): string {
+  if (!dateString) return '';
+  
+  try {
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return '';
+    }
+    
+    return date.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).replace(/\//g, '-');
+  } catch (error) {
+    console.error('formatDate error:', error);
+    return '';
+  }
 }
 
 // 获取抽奖状态文本

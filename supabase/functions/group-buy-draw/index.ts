@@ -85,7 +85,11 @@ Deno.serve(async (req) => {
       .update({ status: 'WON' })
       .eq('id', winnerOrder.id);
 
-    // 7. 创建开奖结果记录
+    // 7. 创建开奖结果记录（包含 pickup_status 字段，初始状态为 PENDING_CLAIM）
+    // 设置领取过期时间为30天后
+    const claimExpiresAt = new Date();
+    claimExpiresAt.setDate(claimExpiresAt.getDate() + 30);
+    
     const { data: result, error: resultError } = await supabase
       .from('group_buy_results')
       .insert({
@@ -96,6 +100,8 @@ Deno.serve(async (req) => {
         total_participants: totalParticipants,
         timestamp_sum: timestampSum.toString(),
         winning_index: winningIndex,
+        pickup_status: 'PENDING_CLAIM',  // 初始状态：待确认领取
+        expires_at: claimExpiresAt.toISOString(),  // 领取过期时间
         algorithm_data: {
           orders: orders.map((o) => ({
             user_id: o.user_id,
