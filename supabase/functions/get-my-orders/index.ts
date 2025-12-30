@@ -280,43 +280,8 @@ serve(async (req) => {
       }
     }
 
-    // 3. 获取积分兑换记录
-    if (!order_type || order_type === 'all' || order_type === 'exchange') {
-      console.log('[GetMyOrders] Fetching exchange records for userId:', userId);
-      
-      const { data: exchangeRecords, error: exchangeError } = await supabase
-        .from('exchange_records')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-
-      if (exchangeError) {
-        console.error('[GetMyOrders] Exchange records error:', exchangeError);
-      } else if (exchangeRecords) {
-        console.log('[GetMyOrders] Found exchange records:', exchangeRecords.length);
-        
-        exchangeRecords.forEach((record: any) => {
-          orders.push({
-            id: record.id,
-            order_type: 'exchange',
-            order_number: `EX${record.id.slice(-8).toUpperCase()}`,
-            amount: record.amount,
-            status: 'COMPLETED',
-            created_at: record.created_at,
-            // 兑换信息
-            exchange_type: record.exchange_type,
-            exchange_rate: record.exchange_rate,
-            currency: record.currency,
-            product_title: { 
-              zh: '余额兑换积分', 
-              ru: 'Обмен баланса на баллы', 
-              tg: 'Мубодилаи баланс ба холҳо' 
-            },
-            product_image: '',
-          });
-        });
-      }
-    }
+    // 3. 不再获取积分兑换记录（已排除）
+    // Exchange records are now excluded from order management page
 
     // 按时间排序
     orders.sort((a, b) => {

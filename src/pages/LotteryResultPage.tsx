@@ -369,6 +369,19 @@ const LotteryResultPage: React.FC = () => {
                 {t('lottery.drawTime')}: {toTajikistanTime(lottery.draw_time)}
               </p>
             )}
+            
+            {/* 中奖用户的领取按钮 */}
+            {isCurrentUserWinner && (
+              <div className="mt-6">
+                <button
+                  onClick={() => navigate('/orders')}
+                  className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <TrophyIcon className="w-6 h-6" />
+                  {t('orders.claimPrize')}
+                </button>
+              </div>
+            )}
           </motion.div>
         )}
 

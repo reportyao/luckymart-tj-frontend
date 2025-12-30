@@ -76,13 +76,7 @@ export default function GroupBuyListPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <ShoppingBag className="w-7 h-7" />
-          {t('groupBuy.title')}
-        </h1>
-      </div>
+      {/* Header - 删除红色渐变区域 */}
 
       {/* Rules Card */}
       <div className="px-4 mt-4">

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
@@ -70,10 +70,16 @@ const OrderManagementPageNew: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   
-  const [orders, setOrders] = useState<UnifiedOrder[]>([]);
+  const [allOrders, setAllOrders] = useState<UnifiedOrder[]>([]); // 存储所有订单
   const [summary, setSummary] = useState<OrderSummary>({ group_buy_count: 0, lottery_count: 0, exchange_count: 0 });
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<OrderType>('all');
+  
+  // 根据当前 Tab 筛选订单
+  const orders = useMemo(() => {
+    if (activeTab === 'all') return allOrders;
+    return allOrders.filter(order => order.order_type === activeTab);
+  }, [allOrders, activeTab]);
   const [selectedOrder, setSelectedOrder] = useState<UnifiedOrder | null>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [showExtendModal, setShowExtendModal] = useState(false);
@@ -85,7 +91,7 @@ const OrderManagementPageNew: React.FC = () => {
     return text[i18n.language] || text.zh || text.ru || text.tg || '';
   };
 
-  // 加载订单数据
+  // 加载订单数据（仅加载一次）
   const loadOrders = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -96,7 +102,7 @@ const OrderManagementPageNew: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('get-my-orders', {
         body: {
           session_token: sessionToken,
-          order_type: activeTab,
+          order_type: 'all', // 总是加载所有订单
         },
       });
 
@@ -110,7 +116,7 @@ const OrderManagementPageNew: React.FC = () => {
       };
 
       if (result.success) {
-        setOrders(result.data || []);
+        setAllOrders(result.data || []);
         setSummary(result.summary || { group_buy_count: 0, lottery_count: 0, exchange_count: 0 });
       } else {
         throw new Error(result.error || 'Failed to load orders');
@@ -121,7 +127,7 @@ const OrderManagementPageNew: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, sessionToken, activeTab, t]);
+  }, [supabase, user, sessionToken, t]);
 
   useEffect(() => {
     loadOrders();
