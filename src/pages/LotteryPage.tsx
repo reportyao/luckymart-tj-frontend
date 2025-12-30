@@ -104,7 +104,7 @@ const LotteryPage: React.FC = () => {
 
           {/* 订单管理按钮 */}
           <button
-            onClick={() => navigate('/lottery-orders')}
+            onClick={() => navigate('/orders')}
             className="flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-all"
           >
             <ClipboardDocumentListIcon className="w-4 h-4" />

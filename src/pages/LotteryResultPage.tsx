@@ -242,7 +242,7 @@ const LotteryResultPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 pb-20">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-6 sticky top-0 z-10 shadow-lg">
+      <div className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-3 sticky top-0 z-10 shadow-lg">
         <div className="flex items-center justify-between max-w-4xl mx-auto">
           <button
             onClick={() => navigate('/lottery')}
@@ -378,7 +378,7 @@ const LotteryResultPage: React.FC = () => {
                   className="w-full bg-white text-orange-500 font-bold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2"
                 >
                   <TrophyIcon className="w-6 h-6" />
-                  {t('orders.claimPrize')}
+                  {t('orders.claimNow')}
                 </button>
               </div>
             )}
