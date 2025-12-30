@@ -203,6 +203,12 @@ serve(async (req) => {
           status,
           won_at,
           created_at,
+          pickup_code,
+          pickup_status,
+          pickup_point_id,
+          expires_at,
+          claimed_at,
+          picked_up_at,
           lottery:lotteries(
             id,
             title,
@@ -212,7 +218,15 @@ serve(async (req) => {
             ticket_price
           ),
           shipping(*),
-          resale_listing(*)
+          resale_listing(*),
+          pickup_point:pickup_points(
+            id,
+            name,
+            name_i18n,
+            address,
+            address_i18n,
+            contact_phone
+          )
         `)
         .eq('user_id', userId)
         .order('won_at', { ascending: false });
@@ -254,6 +268,13 @@ serve(async (req) => {
             // 物流信息
             shipping: prize.shipping?.[0] || null,
             resale_listing: prize.resale_listing?.[0] || null,
+            // 自提信息
+            pickup_code: prize.pickup_code || null,
+            pickup_status: prize.pickup_status || 'PENDING_CLAIM',
+            pickup_point: prize.pickup_point || null,
+            expires_at: prize.expires_at || null,
+            claimed_at: prize.claimed_at || null,
+            picked_up_at: prize.picked_up_at || null,
           });
         });
       }
