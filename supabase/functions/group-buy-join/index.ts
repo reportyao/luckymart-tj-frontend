@@ -270,6 +270,23 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 11. 【新增】处理首次拼团奖励（给邀请人增加2次抽奖机会）
+    try {
+      const rewardResponse = await supabase.functions.invoke('handle-first-group-buy-reward', {
+        body: { 
+          user_id: user.id,  // 使用 UUID 而不是 telegram_id
+          order_id: order.id 
+        }
+      });
+      
+      if (rewardResponse.data?.success && rewardResponse.data?.inviter_rewarded) {
+        console.log(`[First Group Buy] Inviter rewarded for user ${user.id}'s first group buy`);
+      }
+    } catch (rewardError) {
+      console.error('Failed to process first group buy reward:', rewardError);
+      // 奖励处理失败不影响主流程
+    }
+
     return createResponse({
       success: true,
       data: {

@@ -1,3 +1,16 @@
+/**
+ * Telegram 认证 Edge Function
+ * 
+ * 功能：
+ * 1. 验证 Telegram initData
+ * 2. 创建或更新用户
+ * 3. 处理邀请关系
+ * 4. 【新增】新用户邀请奖励：
+ *    - 给新用户发放10积分
+ *    - 给邀请人增加1次抽奖机会
+ * 5. 创建会话
+ */
+
 Deno.serve(async (req) => {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
@@ -100,6 +113,8 @@ Deno.serve(async (req) => {
 
         const existingUsers = await existingUserResponse.json();
         let user;
+        let isNewUser = existingUsers.length === 0;
+        let newUserGiftAwarded = false;
 
         if (existingUsers.length > 0) {
             // 更新现有用户
@@ -199,7 +214,7 @@ Deno.serve(async (req) => {
                     user_id: user.id,
                     type: 'LUCKY_COIN',
                     currency: 'TJS',
-                    balance: 0,
+                    balance: 10, // 【新增】新用户赠送10积分
                     frozen_balance: 0,
                     total_deposits: 0,
                     total_withdrawals: 0,
@@ -224,6 +239,79 @@ Deno.serve(async (req) => {
                 const errorText = await createWalletsResponse.text();
                 console.error('Failed to create wallets:', errorText);
                 // 钱包创建失败不影响用户认证，只记录错误
+            } else {
+                newUserGiftAwarded = true;
+                
+                // 【新增】记录新人积分奖励的钱包交易
+                const walletsData = await createWalletsResponse.json();
+                const luckyWallet = walletsData.find((w: any) => w.type === 'LUCKY_COIN');
+                if (luckyWallet) {
+                    await fetch(`${supabaseUrl}/rest/v1/wallet_transactions`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${serviceRoleKey}`,
+                            'apikey': serviceRoleKey,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            wallet_id: luckyWallet.id,
+                            type: 'NEW_USER_GIFT',
+                            amount: 10,
+                            balance_before: 0,
+                            balance_after: 10,
+                            description: '新用户注册奖励',
+                            status: 'COMPLETED',
+                            created_at: new Date().toISOString()
+                        })
+                    });
+                }
+            }
+
+            // 【新增】如果有邀请人，给邀请人增加1次抽奖机会
+            if (referredById) {
+                try {
+                    // 增加邀请人的抽奖次数
+                    await fetch(`${supabaseUrl}/rest/v1/rpc/add_user_spin_count`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${serviceRoleKey}`,
+                            'apikey': serviceRoleKey,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            p_user_id: referredById,
+                            p_count: 1,
+                            p_source: 'invite_reward'
+                        })
+                    });
+
+                    // 记录邀请奖励
+                    await fetch(`${supabaseUrl}/rest/v1/invite_rewards`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${serviceRoleKey}`,
+                            'apikey': serviceRoleKey,
+                            'Content-Type': 'application/json',
+                            'Prefer': 'return=minimal'
+                        },
+                        body: JSON.stringify({
+                            inviter_id: referredById,
+                            invitee_id: user.id,
+                            reward_type: 'new_user_register',
+                            spin_count_awarded: 1,
+                            lucky_coins_awarded: 10, // 记录给新用户的积分
+                            is_processed: true,
+                            processed_at: new Date().toISOString(),
+                            created_at: new Date().toISOString()
+                        })
+                    });
+
+                    console.log(`[Invite Reward] Awarded 1 spin to inviter ${referredById} for inviting ${user.id}`);
+                } catch (inviteError) {
+                    console.error('Failed to process invite reward:', inviteError);
+                    // 邀请奖励失败不影响用户注册
+                }
             }
         }
 
@@ -289,7 +377,12 @@ Deno.serve(async (req) => {
                 token: session.session_token,
                 expires_at: session.expires_at
             } : null,
-            is_new_user: existingUsers.length === 0
+            is_new_user: isNewUser,
+            // 【新增】新用户奖励信息
+            new_user_gift: isNewUser && newUserGiftAwarded ? {
+                lucky_coins: 10,
+                message: '恭喜！好友送你 10 积分！'
+            } : null
         };
 
         return new Response(JSON.stringify({ data: result }), {

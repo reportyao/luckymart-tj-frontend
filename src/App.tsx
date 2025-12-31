@@ -39,6 +39,7 @@ import GroupBuyDetailPage from "./pages/groupbuy/GroupBuyDetailPage"
 import MyGroupBuysPage from "./pages/groupbuy/MyGroupBuysPage"
 import GroupBuyResultPage from "./pages/groupbuy/GroupBuyResultPage"
 import FullPurchaseConfirmPage from "./pages/FullPurchaseConfirmPage"
+import SpinLotteryPage from "./pages/SpinLotteryPage"
 
 function App() {
   return (
@@ -69,6 +70,7 @@ function App() {
               <Route path="/orders" element={<OrderManagementPage />} />
               <Route path="/notifications" element={<NotificationPage />} />
               <Route path="/invite" element={<InvitePage />} />
+              <Route path="/spin" element={<SpinLotteryPage />} />
               <Route path="/showoff" element={<ShowoffPage />} />
               <Route path="/showoff/create" element={<ShowoffCreatePage />} />
               <Route path="/market" element={<MarketPage />} />
