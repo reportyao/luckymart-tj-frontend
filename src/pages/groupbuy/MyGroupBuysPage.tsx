@@ -97,16 +97,19 @@ export default function MyGroupBuysPage() {
           {t('groupBuy.status.active')}
         </div>
       );
-    } else if (order.session.status === 'TIMEOUT') {
+        } else if (order.status === 'LOST' || order.session.status === 'TIMEOUT') {
+      // 新增逻辑：未成团或未中奖，显示已退款到余额
       return (
-        <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold">
-          {t('groupBuy.status.timeout')}
+        <div className="flex items-center gap-1 bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-bold">
+          <RefreshCw className="w-4 h-4" />
+          {t('groupBuy.status.refundedToBalance')}
         </div>
       );
     } else {
+      // 默认状态，理论上不应该出现
       return (
-        <div className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-bold">
-          {t('groupBuy.status.lost')}
+        <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm font-bold">
+          {t('groupBuy.status.unknown')}
         </div>
       );
     }

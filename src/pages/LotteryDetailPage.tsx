@@ -1,4 +1,3 @@
-import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
@@ -21,6 +20,7 @@ import toast from 'react-hot-toast';
 import { lotteryService } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { CountdownTimer } from '../components/CountdownTimer';
+import { useState, useEffect, useCallback } from 'react';
 
 type Lottery = Tables<'lotteries'>;
 type Showoff = Tables<'showoffs'> & {
@@ -173,9 +173,9 @@ const LotteryDetailPage: React.FC = () => {
     }
   })();
 
-  // 计算全款购买价格（剩余票数 * 单价）
+  // 计算全款购买价格（使用原价）
   const remainingTickets = lottery.total_tickets - lottery.sold_tickets;
-  const fullPurchasePrice = remainingTickets * lottery.ticket_price;
+  const fullPurchasePrice = (lottery as any).original_price || (lottery.ticket_price * lottery.total_tickets);
 
   const handlePurchase = async () => {
     // 检查登录状态
@@ -267,7 +267,7 @@ const LotteryDetailPage: React.FC = () => {
     }
   };
 
-  // 全款购买处理
+  // 全款购买处理 - 使用原价购买，跳转到确认页
   const handleFullPurchase = async () => {
     // 检查登录状态
     if (!user) {
@@ -297,30 +297,8 @@ const LotteryDetailPage: React.FC = () => {
       return;
     }
 
-    setIsFullPurchasing(true);
-    
-    try {
-      // 调用购买 API，购买所有剩余票数
-      const order = await lotteryService.purchaseTickets(lottery.id, remainingTickets, user.id);
-      
-      console.log('Full purchase successful:', order);
-      toast.success(t('lottery.fullPurchaseSuccess'));
-      
-      // 刷新抽奖数据和钱包
-      await fetchLottery();
-      await refreshWallets();
-      
-      // 全款购买后必然售罄，跳转到开奖页面
-      toast.success(t('lottery.soldOutRedirect'));
-      navigate(`/lottery/${id}/result`);
-      
-    } catch (error: any) {
-      console.error('Full purchase failed:', error);
-      toast.error(error.message || t('error.purchaseFailed'));
-      await fetchLottery();
-    } finally {
-      setIsFullPurchasing(false);
-    }
+    // 全款购买使用原价，跳转到商品确认页选择自提点
+    navigate(`/full-purchase-confirm/${lottery.id}`);
   };
 
   const handleQuantityChange = (delta: number) => {

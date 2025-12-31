@@ -179,7 +179,12 @@
     "rulesClaim": "3. 领奖与核销",
     "rulesClaimPrize": "领取商品：中奖后请在30天内进入\"我的-订单管理\"选择自提点并领取。",
     "rulesPickup": "线下取货：领取后将生成提货码（有效期30天），请凭码前往自提点核销取货。",
-    "rulesExpiry": "逾期说明：未在规定时间内领取或核销，将视为自动放弃奖品。"
+    "rulesExpiry": "未在规定时间内领取或核销，将视为自动放弃奖品。",
+    "confirmOrder": "确认订单",
+    "productInfo": "商品信息",
+    "originalPrice": "原价",
+    "orderSummary": "订单汇总",
+    "productPrice": "商品价格"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -820,7 +825,8 @@
     "expiresIn": "剩余时间",
     "days": "天",
     "hours": "小时",
-    "expired": "已过期"
+    "expired": "已过期",
+    "noPickupPoints": "暂无可用自提点"
   },
   "notifications": {
     "congratulations": "恭喜中奖!",
@@ -899,6 +905,7 @@
     "drawTime": "开奖时间",
     "orderNumber": "订单号",
     "status": {
+      "refundedToBalance": "未成团/未中奖，已退款到账户余额",
       "active": "进行中",
       "won": "已中奖",
       "lost": "未中奖",

@@ -38,6 +38,7 @@ import GroupBuyListPage from "./pages/groupbuy/GroupBuyListPage"
 import GroupBuyDetailPage from "./pages/groupbuy/GroupBuyDetailPage"
 import MyGroupBuysPage from "./pages/groupbuy/MyGroupBuysPage"
 import GroupBuyResultPage from "./pages/groupbuy/GroupBuyResultPage"
+import FullPurchaseConfirmPage from "./pages/FullPurchaseConfirmPage"
 
 function App() {
   return (
@@ -51,6 +52,7 @@ function App() {
               <Route path="/lottery" element={<LotteryPage />} />
               <Route path="/lottery/:id" element={<LotteryDetailPage />} />
               <Route path="/lottery/:id/result" element={<LotteryResultPage />} />
+              <Route path="/full-purchase-confirm/:lotteryId" element={<FullPurchaseConfirmPage />} />
               <Route path="/group-buy" element={<GroupBuyListPage />} />
               <Route path="/group-buy/:productId" element={<GroupBuyDetailPage />} />
               <Route path="/group-buy/result/:sessionId" element={<GroupBuyResultPage />} />
