@@ -11,7 +11,13 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  X,
 } from 'lucide-react';
+
+interface PriceComparisonItem {
+  platform: string;
+  price: number;
+}
 
 interface GroupBuyProduct {
   id: string;
@@ -24,6 +30,7 @@ interface GroupBuyProduct {
   group_size: number;
   timeout_hours: number;
   product_type: string;
+  price_comparisons?: PriceComparisonItem[];
 }
 
 interface GroupBuySession {
@@ -115,6 +122,30 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
       {/* Image Counter */}
       <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
         {currentIndex + 1}/{images.length}
+      </div>
+    </div>
+  );
+}
+
+// 比价清单组件
+function PriceComparisonList({ comparisons, t }: { comparisons: PriceComparisonItem[]; t: any }) {
+  if (!comparisons || comparisons.length === 0) {
+    return null;
+  }
+
+  return (
+    <div className="bg-gray-100 rounded-xl p-4 mb-4">
+      <h3 className="text-sm font-semibold text-gray-700 mb-2">
+        {t('groupBuy.priceComparison')}
+      </h3>
+      <div className="space-y-1">
+        {comparisons.map((item, index) => (
+          <div key={index} className="flex items-center text-sm">
+            <X className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
+            <span className="text-gray-600">{item.platform}:</span>
+            <span className="ml-2 text-gray-500">TJS {item.price.toFixed(2)}</span>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -364,13 +395,16 @@ export default function GroupBuyDetailPage() {
         <p className="text-gray-600 mb-4">{getLocalizedText(product.description)}</p>
 
         {/* Price */}
-        <div className="bg-purple-50 rounded-2xl p-4 mb-6">
+        <div className="bg-purple-50 rounded-2xl p-4 mb-4">
           <div className="flex items-end gap-2 mb-2">
             <div className="text-purple-600 font-bold text-3xl">
-              ₽{product.price_per_person}
+              TJS {product.price_per_person}
             </div>
             <div className="text-gray-400 line-through text-lg mb-1">
-              ₽{product.original_price}
+              TJS {product.original_price}
+            </div>
+            <div className="text-xs text-white bg-red-500 px-2 py-1 rounded-full mb-1">
+              {t('groupBuy.groupPrice')}
             </div>
           </div>
           <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -390,6 +424,12 @@ export default function GroupBuyDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Price Comparison List */}
+        <PriceComparisonList 
+          comparisons={product.price_comparisons || []} 
+          t={t} 
+        />
 
         {/* Active Sessions */}
         <div className="mb-6">

@@ -56,7 +56,9 @@
     "groupBuy": "Хариди гурӯҳӣ",
     "groupBuyDesc": "3 нафар, 1 ғолиб",
     "lottery": "Лоторея",
-    "lotteryDesc": "Бахт барои ҳама"
+    "lotteryDesc": "Бахт барои ҳама",
+    "groupBuyProducts": "Молҳои хариди гурӯҳӣ",
+    "lotteryProducts": "Молҳои лоторея"
   },
   "lottery": {
     "hall": "Толори лоторея",
@@ -140,6 +142,17 @@
     "verificationFormula": "Формулаи тасдиқӣ",
     "verificationDataUnavailable": "Маълумоти тасдиқӣ дастрас нест",
     "insufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
+    "priceComparison": "Муқоисаи нархҳо дар шабака",
+    "purchaseOptions": "Имкониятҳои харид",
+    "luckyPurchase": "Хариди хушбахт",
+    "fullPurchase": "Хариди пурра",
+    "fullPurchasePrice": "Нархи пурра",
+    "buyAllNow": "Ҳамаро ҳозир харед",
+    "fullPurchaseHint": "Ҳамаи ҳиссаҳои боқимондаро харед ва молро кафолатан гиред",
+    "fullPurchaseSuccess": "Хариди пурра муваффақ буд",
+    "fullPurchaseInsufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
+    "specifications": "Тавсифот",
+    "material": "Материал",
     "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд",
     "ongoing": "Дар ҷараён",
     "ended": "Анҷом ёфта",
@@ -904,6 +917,8 @@
     "noActiveGroups": "Гурӯҳҳои фаъол нест",
     "beFirst": "Аввалин бошед",
     "startNewGroup": "Гурӯҳ сохтан",
+    "priceComparison": "Муқоисаи нархҳо дар шабака",
+    "groupPrice": "Нархи гурӯҳӣ",
     "peopleGroup": "наф. гурӯҳ",
     "hoursLimit": "соат мӯҳлат",
     "rules": {

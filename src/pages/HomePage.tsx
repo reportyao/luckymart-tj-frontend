@@ -1,75 +1,164 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useTranslation } from 'react-i18next'
-import { useUser } from '../contexts/UserContext'
-import { useInviteStats } from '../hooks/useInviteStats'
-import { Lottery } from '../lib/supabase'
-import { PurchaseModal } from '../components/lottery/PurchaseModal'
-import { useSupabase } from '../contexts/SupabaseContext'
-import { LotteryCard } from '../components/lottery/LotteryCard'
-import { SafeMotion } from '../components/SafeMotion'
-import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline'
-import ReferralBanner from '../components/ReferralBanner'
-import BannerCarousel from '../components/BannerCarousel'
-import toast from 'react-hot-toast'
+import { useTranslation } from 'react-i18next';
+import { useUser } from '../contexts/UserContext';
+import { useInviteStats } from '../hooks/useInviteStats';
+import { Lottery, supabase } from '../lib/supabase';
+import { PurchaseModal } from '../components/lottery/PurchaseModal';
+import { useSupabase } from '../contexts/SupabaseContext';
+import { LotteryCard } from '../components/lottery/LotteryCard';
+import { SafeMotion } from '../components/SafeMotion';
+import { ModulePreview } from '../components/home/ModulePreview';
+import { ProductList } from '../components/home/ProductList';
+import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import ReferralBanner from '../components/ReferralBanner';
+import BannerCarousel from '../components/BannerCarousel';
+import toast from 'react-hot-toast';
+
+interface GroupBuyProduct {
+  id: string;
+  title: { zh: string; ru: string; tg: string };
+  description: { zh: string; ru: string; tg: string };
+  image_url: string;
+  original_price: number;
+  price_per_person: number;
+  group_size: number;
+  timeout_hours: number;
+  active_sessions_count: number;
+  created_at?: string;
+}
 
 const HomePage: React.FC = () => {
-  const { t } = useTranslation()
-	  const { user, profile, wallets, isLoading: userLoading, refreshWallets } = useUser()
-  const { lotteryService } = useSupabase()
-  const { stats: inviteStats } = useInviteStats()
-  const [lotteries, setLotteries] = useState<Lottery[]>([])
-  const [isLoadingLotteries, setIsLoadingLotteries] = useState(true)
+  const { t, i18n } = useTranslation();
+  const { user, profile, wallets, isLoading: userLoading, refreshWallets } = useUser();
+  const { lotteryService } = useSupabase();
+  const { stats: inviteStats } = useInviteStats();
+  
+  // 积分商城数据
+  const [lotteries, setLotteries] = useState<Lottery[]>([]);
+  const [isLoadingLotteries, setIsLoadingLotteries] = useState(true);
+  
+  // 拼团数据
+  const [groupBuyProducts, setGroupBuyProducts] = useState<GroupBuyProduct[]>([]);
+  const [isLoadingGroupBuy, setIsLoadingGroupBuy] = useState(true);
 
+  // 加载积分商城数据
   const loadLotteries = useCallback(async () => {
     try {
-      setIsLoadingLotteries(true)
-      const data = await lotteryService.getActiveLotteries()
+      setIsLoadingLotteries(true);
+      const data = await lotteryService.getActiveLotteries();
       // 按创建时间从新到旧排序
       const sortedLotteries = [...data].sort((a, b) => {
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
-      setLotteries(sortedLotteries)
+      setLotteries(sortedLotteries);
     } catch (error: any) {
-      console.error('Failed to load lotteries:', error)
-      toast.error(t('error.networkError'))
+      console.error('Failed to load lotteries:', error);
+      toast.error(t('error.networkError'));
     } finally {
-      setIsLoadingLotteries(false)
+      setIsLoadingLotteries(false);
     }
-  }, [t, lotteryService])
+  }, [t, lotteryService]);
+
+  // 加载拼团数据
+  const loadGroupBuyProducts = useCallback(async () => {
+    try {
+      setIsLoadingGroupBuy(true);
+      const { data, error } = await supabase.functions.invoke('group-buy-list', {
+        body: { type: 'products' },
+      });
+
+      if (error) throw error;
+      if (data?.success) {
+        // 按创建时间从新到旧排序
+        const sortedProducts = [...data.data].sort((a: any, b: any) => {
+          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
+        });
+        setGroupBuyProducts(sortedProducts);
+      }
+    } catch (error) {
+      console.error('Failed to fetch group buy products:', error);
+    } finally {
+      setIsLoadingGroupBuy(false);
+    }
+  }, []);
 
   useEffect(() => {
-    loadLotteries()
-  }, [loadLotteries])
+    loadLotteries();
+    loadGroupBuyProducts();
+  }, [loadLotteries, loadGroupBuyProducts]);
 
-
-  const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null)
-  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false)
+  const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   const handlePurchaseLottery = (lottery: Lottery) => {
-    setSelectedLottery(lottery)
-    setIsPurchaseModalOpen(true)
-  }
+    setSelectedLottery(lottery);
+    setIsPurchaseModalOpen(true);
+  };
 
   const handlePurchaseConfirm = async (lotteryId: string, quantity: number) => {
     try {
-      await lotteryService.purchaseTickets(lotteryId, quantity)
-      toast.success(t('lottery.purchaseSuccess'))
+      await lotteryService.purchaseTickets(lotteryId, quantity);
+      toast.success(t('lottery.purchaseSuccess'));
       // 购买成功后刷新列表和钱包
-      await loadLotteries()
-      await refreshWallets()
+      await loadLotteries();
+      await refreshWallets();
     } catch (error: any) {
-      toast.error(error.message || t('error.networkError'))
+      toast.error(error.message || t('error.networkError'));
     } finally {
-      setIsPurchaseModalOpen(false)
-      setSelectedLottery(null)
+      setIsPurchaseModalOpen(false);
+      setSelectedLottery(null);
     }
-  }
+  };
 
   const handleRefreshWallets = async () => {
-    await refreshWallets()
-    toast.success(t('wallet.balanceUpdated'))
-  }
+    await refreshWallets();
+    toast.success(t('wallet.balanceUpdated'));
+  };
+
+  // 转换拼团商品数据格式用于预览
+  const groupBuyPreviewProducts = groupBuyProducts.slice(0, 4).map(p => ({
+    id: p.id,
+    image_url: p.image_url,
+    price: p.price_per_person,
+    title_i18n: p.title,
+  }));
+
+  // 转换积分商城数据格式用于预览
+  const lotteryPreviewProducts = lotteries.slice(0, 4).map(l => ({
+    id: l.id,
+    image_url: l.image_url,
+    price: l.ticket_price,
+    title_i18n: l.title_i18n as Record<string, string> | null,
+    name_i18n: l.name_i18n as Record<string, string> | null,
+  }));
+
+  // 转换拼团商品数据格式用于列表
+  const groupBuyListProducts = groupBuyProducts.map(p => ({
+    id: p.id,
+    type: 'groupbuy' as const,
+    image_url: p.image_url,
+    price: p.price_per_person,
+    original_price: p.original_price,
+    title_i18n: p.title,
+    group_size: p.group_size,
+    active_sessions_count: p.active_sessions_count,
+    created_at: p.created_at || new Date().toISOString(),
+  }));
+
+  // 转换积分商城数据格式用于列表
+  const lotteryListProducts = lotteries.map(l => ({
+    id: l.id,
+    type: 'lottery' as const,
+    image_url: l.image_url,
+    price: l.ticket_price,
+    title_i18n: l.title_i18n as Record<string, string> | null,
+    name_i18n: l.name_i18n as Record<string, string> | null,
+    sold_tickets: l.sold_tickets,
+    total_tickets: l.total_tickets,
+    status: l.status,
+    created_at: l.created_at,
+  }));
 
   if (userLoading) {
     return (
@@ -79,7 +168,7 @@ const HomePage: React.FC = () => {
           <p className="text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user) {
@@ -98,105 +187,76 @@ const HomePage: React.FC = () => {
           <p className="text-sm text-gray-500">{t('auth.pleaseLogin')}</p>
         </SafeMotion>
       </div>
-    )
+    );
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 bg-gray-50">
       {/* Banner广告位 */}
-      <div className="px-4 mt-4">
+      <div className="px-4 pt-4">
         <BannerCarousel />
       </div>
 
-      {/* 功能入口 */}
-      <div className="px-4 mt-6">
-        <div className="grid grid-cols-2 gap-3">
-          {/* 拼团入口 */}
-          <Link
-            to="/group-buy"
-            className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-purple-600 rounded-full flex items-center justify-center mb-2">
-                <UserGroupIcon className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-900">{t('home.groupBuy')}</h3>
-              <p className="text-xs text-gray-500 mt-1 text-center">{t('home.groupBuyDesc')}</p>
-            </div>
-          </Link>
+      {/* 模块预览区域 */}
+      <div className="px-4 mt-6 space-y-4">
+        {/* 拼团模块预览 */}
+        <ModulePreview
+          title={t('home.groupBuy')}
+          description={t('home.groupBuyDesc')}
+          linkTo="/group-buy"
+          linkText={t('home.viewAll')}
+          products={groupBuyPreviewProducts}
+          isLoading={isLoadingGroupBuy}
+          gradientFrom="from-pink-500"
+          gradientTo="to-purple-600"
+          iconBgFrom="from-pink-400"
+          iconBgTo="to-purple-500"
+          icon={<UserGroupIcon className="w-5 h-5 text-white" />}
+        />
 
-          {/* 积分商城入口 */}
-          <Link
-            to="/lottery"
-            className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow border border-gray-100"
-          >
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-full flex items-center justify-center mb-2">
-                <TrophyIcon className="w-6 h-6 text-white" />
-              </div>
-              <h3 className="text-sm font-semibold text-gray-900">{t('home.lottery')}</h3>
-              <p className="text-xs text-gray-500 mt-1 text-center">{t('home.lotteryDesc')}</p>
-            </div>
-          </Link>
-        </div>
+        {/* 积分商城模块预览 */}
+        <ModulePreview
+          title={t('home.lottery')}
+          description={t('home.lotteryDesc')}
+          linkTo="/lottery"
+          linkText={t('home.viewAll')}
+          products={lotteryPreviewProducts}
+          isLoading={isLoadingLotteries}
+          gradientFrom="from-purple-600"
+          gradientTo="to-blue-600"
+          iconBgFrom="from-purple-500"
+          iconBgTo="to-blue-500"
+          icon={<TrophyIcon className="w-5 h-5 text-white" />}
+        />
       </div>
 
-	
+      {/* 拼团商品完整列表 */}
+      <ProductList
+        title={t('home.groupBuyProducts')}
+        products={groupBuyListProducts}
+        isLoading={isLoadingGroupBuy}
+        emptyText={t('groupBuy.noProducts')}
+        linkPrefix="/group-buy"
+      />
 
-	      {/* 热门积分商城 */}
-	      <div className="px-4 mt-8">
-	        <div className="flex items-center justify-between mb-4">
-	          <h3 className="text-lg font-bold text-gray-900">{t('home.hotLotteries')}</h3>
-	          <Link to="/lottery" className="flex items-center text-blue-600 text-sm font-medium">
-	            {t('home.viewAll')}
-	            <ArrowRightIcon className="w-4 h-4 ml-1" />
-	          </Link>
-	        </div>
-	
-	        {isLoadingLotteries ? (
-	          <div className="space-y-4">
-	            {[1, 2].map((i) => (
-	              <div key={i} className="bg-white rounded-2xl p-4 animate-pulse">
-	                <div className="h-32 bg-gray-200 rounded-xl mb-4"></div>
-	                <div className="h-4 bg-gray-200 rounded mb-2"></div>
-	                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-	              </div>
-	            ))}
-	          </div>
-	        ) : (
-	          <div className="space-y-4">
-	            {lotteries.slice(0, 3).map((lottery) => (
-	              <LotteryCard
-	                key={lottery.id}
-	                lottery={lottery}
-	                onPurchase={handlePurchaseLottery}
-	              />
-	            ))}
-	
-	            {lotteries.length === 0 && (
-	              <SafeMotion
-	                initial={{ opacity: 0 }}
-	                animate={{ opacity: 1 }}
-	                className="bg-white rounded-2xl p-8 text-center"
-	              >
-	                <StarIcon className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-	                <p className="text-gray-500">{t('home.noLotteries')}</p>
-	                <p className="text-sm text-gray-400 mt-1">{t('home.stayTuned')}</p>
-	              </SafeMotion>
-	            )}
-	          </div>
-	        )}
-	      </div>
-	      
-	      {/* 购买模态框 */}
-		      <PurchaseModal
-		        lottery={selectedLottery}
-		        isOpen={isPurchaseModalOpen}
-		        onClose={() => setIsPurchaseModalOpen(false)}
-		        onConfirm={handlePurchaseConfirm}
-		      />
-		    </div>
-	  )
-	}
-	
-	export default HomePage
+      {/* 积分商城商品完整列表 */}
+      <ProductList
+        title={t('home.lotteryProducts')}
+        products={lotteryListProducts}
+        isLoading={isLoadingLotteries}
+        emptyText={t('home.noLotteries')}
+        linkPrefix="/lottery"
+      />
+
+      {/* 购买模态框 */}
+      <PurchaseModal
+        lottery={selectedLottery}
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
+        onConfirm={handlePurchaseConfirm}
+      />
+    </div>
+  );
+};
+
+export default HomePage;

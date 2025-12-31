@@ -56,7 +56,9 @@
     "groupBuy": "Групповая покупка",
     "groupBuyDesc": "3 человека, 1 победитель",
     "lottery": "Бонусный магазин",
-    "lotteryDesc": "Удача для каждого"
+    "lotteryDesc": "Удача для каждого",
+    "groupBuyProducts": "Товары групповой покупки",
+    "lotteryProducts": "Товары бонусного магазина"
   },
   "lottery": {
     "hall": "Зал бонусный магазин",
@@ -140,6 +142,17 @@
     "verificationFormula": "Формула проверки",
     "verificationDataUnavailable": "Данные для проверки недоступны",
     "insufficientBalance": "Недостаточно бонусов, требуется {{required}}, текущий баланс {{current}}",
+    "priceComparison": "Сравнение цен в сети",
+    "purchaseOptions": "Варианты покупки",
+    "luckyPurchase": "Счастливая покупка",
+    "fullPurchase": "Полная покупка",
+    "fullPurchasePrice": "Полная цена",
+    "buyAllNow": "Купить всё сейчас",
+    "fullPurchaseHint": "Купите все оставшиеся доли и гарантированно получите товар",
+    "fullPurchaseSuccess": "Полная покупка успешна",
+    "fullPurchaseInsufficientBalance": "Недостаточно бонусов, требуется {{required}}, текущий баланс {{current}}",
+    "specifications": "Характеристики",
+    "material": "Материал",
     "winningCodeCopied": "Выигрышный код скопирован",
     "ongoing": "В процессе",
     "ended": "Завершено",
@@ -899,6 +912,8 @@
     "noActiveGroups": "Нет активных групп",
     "beFirst": "Станьте первым",
     "startNewGroup": "Создать группу",
+    "priceComparison": "Сравнение цен в сети",
+    "groupPrice": "Групповая цена",
     "peopleGroup": "чел. группа",
     "hoursLimit": "час. лимит",
     "rules": {
