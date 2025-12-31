@@ -99,7 +99,7 @@
     "vrfProof": "VRF Proof",
     "selectQuantity": "Выберите количество",
     "totalPrice": "Общая цена",
-    "remainingTickets": "Осталось",
+    "remainingTickets": "Остаток",
     "pleaseEnterQuantity": "Пожалуйста, введите количество",
     "soldOutRedirect": "Распродано, переход к странице розыгрыша",
     "drawingCountdown": "Обратный отсчёт до розыгрыша",
@@ -147,8 +147,8 @@
     "luckyPurchase": "Счастливая покупка",
     "fullPurchase": "Полная покупка",
     "fullPurchasePrice": "Полная цена",
-    "buyAllNow": "Купить всё сейчас",
-    "fullPurchaseHint": "Купите все оставшиеся доли и гарантированно получите товар",
+    "buyAllNow": "Полная покупка",
+    "fullPurchaseHint": "Купить напрямую за баллы",
     "fullPurchaseSuccess": "Полная покупка успешна",
     "fullPurchaseInsufficientBalance": "Недостаточно бонусов, требуется {{required}}, текущий баланс {{current}}",
     "specifications": "Характеристики",
@@ -172,7 +172,8 @@
     "productInfo": "Информация о товаре",
     "originalPrice": "Оригинальная цена",
     "orderSummary": "Итоги заказа",
-    "productPrice": "Цена товара"
+    "productPrice": "Цена товара",
+    "totalAmount": "Итого"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",

@@ -114,7 +114,7 @@
     "seconds": "秒",
     "selectQuantity": "选择数量",
     "totalPrice": "总价",
-    "remainingTickets": "剩余",
+    "remainingTickets": "剩余份数",
     "pleaseEnterQuantity": "请输入购买数量",
     "soldOutRedirect": "已售罄，跳转到开奖页面",
     "drawingCountdown": "开奖倒计时",
@@ -159,8 +159,8 @@
     "luckyPurchase": "一元夺宝",
     "fullPurchase": "全款购买",
     "fullPurchasePrice": "全款价格",
-    "buyAllNow": "立即全款购买",
-    "fullPurchaseHint": "买下所有剩余份额，稳赢商品",
+    "buyAllNow": "全款购买",
+    "fullPurchaseHint": "直接使用积分全款购买",
     "fullPurchaseSuccess": "全款购买成功",
     "fullPurchaseInsufficientBalance": "积分余额不足，需要 {{required}} 积分，当前余额 {{current}} 积分",
     "specifications": "规格",
@@ -184,7 +184,8 @@
     "productInfo": "商品信息",
     "originalPrice": "原价",
     "orderSummary": "订单汇总",
-    "productPrice": "商品价格"
+    "productPrice": "商品价格",
+    "totalAmount": "合计"
   },
   "fairness": {
     "title": "为什么这个算法公平？",

@@ -147,8 +147,8 @@
     "luckyPurchase": "Хариди хушбахт",
     "fullPurchase": "Хариди пурра",
     "fullPurchasePrice": "Нархи пурра",
-    "buyAllNow": "Ҳамаро ҳозир харед",
-    "fullPurchaseHint": "Ҳамаи ҳиссаҳои боқимондаро харед ва молро кафолатан гиред",
+    "buyAllNow": "Хариди пурра",
+    "fullPurchaseHint": "Мустақиман бо бонусҳо харидан",
     "fullPurchaseSuccess": "Хариди пурра муваффақ буд",
     "fullPurchaseInsufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
     "specifications": "Тавсифот",
@@ -172,7 +172,8 @@
     "productInfo": "Маълумоти мол",
     "originalPrice": "Қиматии асли",
     "orderSummary": "Хулосаи фармоиш",
-    "productPrice": "Қиматии мол"
+    "productPrice": "Қиматии мол",
+    "totalAmount": "Ҳамагӣ"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",

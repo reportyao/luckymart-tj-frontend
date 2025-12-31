@@ -78,12 +78,19 @@ const FullPurchaseConfirmPage: React.FC = () => {
 
     setIsSubmitting(true);
     try {
+      // 获取 session token
+      const sessionToken = localStorage.getItem('custom_session_token');
+      if (!sessionToken) {
+        throw new Error(t('common.pleaseLogin'));
+      }
+
       // 调用后端API创建全款购买订单
       const { data, error } = await supabase.functions.invoke('create-full-purchase-order', {
         body: {
           lottery_id: lotteryId,
           pickup_point_id: selectedPointId,
           user_id: user.id,
+          session_token: sessionToken,
         },
       });
 

@@ -526,11 +526,6 @@ const LotteryDetailPage: React.FC = () => {
               <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 space-y-3">
                 <h4 className="text-sm font-medium text-orange-700 text-center">{t('lottery.fullPurchase')}</h4>
                 
-                <div className="text-center space-y-1">
-                  <p className="text-xs text-gray-500">{t('lottery.remainingTickets')}</p>
-                  <p className="text-xl font-bold text-orange-600">{remainingTickets}</p>
-                </div>
-                
                 <div className="text-center">
                   <p className="text-xs text-gray-500">{t('lottery.fullPurchasePrice')}</p>
                   <p className="text-lg font-bold text-orange-600">
