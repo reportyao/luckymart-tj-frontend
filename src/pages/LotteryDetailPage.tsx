@@ -521,6 +521,10 @@ const LotteryDetailPage: React.FC = () => {
                       {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
                     </p>
                   </div>
+                  
+                  <p className="text-xs text-center text-orange-600 border-t border-orange-200 pt-2 mt-2">
+                    {t('lottery.remainingTickets')}: {lottery ? lottery.total_tickets - lottery.sold_tickets : 0}
+                  </p>
                 </div>
               </div>
               
@@ -557,10 +561,6 @@ const LotteryDetailPage: React.FC = () => {
                 </motion.button>
               </div>
             </div>
-            
-            <p className="text-xs text-gray-500 text-center">
-              {t('lottery.remainingTickets')}: {lottery ? lottery.total_tickets - lottery.sold_tickets : 0}
-            </p>
           </div>
         </div>
 

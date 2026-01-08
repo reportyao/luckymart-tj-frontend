@@ -202,6 +202,14 @@ const WalletPage: React.FC = () => {
     }
   }
 
+  const getAmountIcon = (type: string) => {
+    // 积分类交易使用积分图标，其他使用金钱图标
+    if (type === 'SPIN_REWARD') {
+      return <span className="text-yellow-600 mr-1">🍀</span>
+    }
+    return <span className="text-green-600 mr-1">💰</span>
+  }
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
@@ -322,9 +330,10 @@ const WalletPage: React.FC = () => {
                   </div>
                   
                   <div className="text-right">
-                    <p className={`text-lg font-bold ${
+                    <p className={`text-lg font-bold flex items-center justify-end ${
                       transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
+                      {getAmountIcon(transaction.type)}
                       {transaction.amount > 0 ? '+' : ''}
                       {Math.abs(parseFloat(transaction.amount)).toFixed(2)}
                     </p>
