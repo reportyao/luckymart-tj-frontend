@@ -154,8 +154,9 @@ const FullPurchaseConfirmPage: React.FC = () => {
     || (lottery as any).original_price 
     || (lottery.ticket_price * lottery.total_tickets);
   
-  // 全款购买库存
-  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : (lottery.total_tickets - lottery.sold_tickets);
+  // 全款购买库存：仅使用库存商品库存，如果没有关联库存商品则显示为无限
+  // 重要：份数（total_tickets/sold_tickets）和库存（inventory_products.stock）是两个独立的概念
+  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : 999999;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">

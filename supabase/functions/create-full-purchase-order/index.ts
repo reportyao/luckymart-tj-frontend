@@ -403,31 +403,15 @@ serve(async (req) => {
         stockAfter: newStock,
       });
     } else {
-      // 向后兼容：没有关联库存商品时，使用旧逻辑（更新sold_tickets）
-      // 注意：这只是为了兼容旧数据，新创建的商品应该都关联库存商品
-      const newSoldTickets = lottery.sold_tickets + 1;
-      const updateData: any = {
-        sold_tickets: newSoldTickets,
-        updated_at: new Date().toISOString(),
-      };
-      
-      // 仅当库存完全卖完时，才将商品状态改为SOLD_OUT
-      if (newSoldTickets >= lottery.total_tickets) {
-        updateData.status = 'SOLD_OUT';
-      }
-      
-      const { error: updateLotteryError } = await supabase
-        .from('lotteries')
-        .update(updateData)
-        .eq('id', lottery_id);
-
-      if (updateLotteryError) {
-        console.error('[CreateFullPurchaseOrder] Update lottery error (legacy mode):', updateLotteryError);
-      }
-
-      console.log('[CreateFullPurchaseOrder] Legacy mode: lottery sold_tickets updated:', {
-        soldTicketsBefore: lottery.sold_tickets,
-        soldTicketsAfter: newSoldTickets,
+      // 重要修改（2026-01-09）：
+      // 全款购买不应该影响 sold_tickets（份数），因为份数只用于一元购物抽奖
+      // 全款购买应该扣减库存，但如果没有关联库存商品，则只记录日志，不做任何库存变动
+      // 这样可以避免全款购买导致份数被消耗，进而触发不应该发生的开奖
+      console.log('[CreateFullPurchaseOrder] No inventory product linked, full purchase completed without stock deduction:', {
+        lotteryId: lottery_id,
+        soldTickets: lottery.sold_tickets,
+        totalTickets: lottery.total_tickets,
+        note: 'Full purchase does not affect sold_tickets (lottery tickets). Consider linking an inventory product for proper stock management.'
       });
     }
 

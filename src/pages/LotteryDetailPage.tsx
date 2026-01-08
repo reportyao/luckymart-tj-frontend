@@ -191,8 +191,10 @@ const LotteryDetailPage: React.FC = () => {
   // 全款购买是否启用
   const fullPurchaseEnabled = (lottery as any).full_purchase_enabled !== false;
   
-  // 全款购买库存：优先使用库存商品库存，否则使用剩余份数
-  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : remainingTickets;
+  // 全款购买库存：仅使用库存商品库存，如果没有关联库存商品则显示为无限（不影响一元购物份数）
+  // 重要：份数（total_tickets/sold_tickets）和库存（inventory_products.stock）是两个独立的概念
+  // 份数用于一元购物抽奖，库存用于全款购买
+  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : 999999;
   
   // 全款购买价格：优先使用full_purchase_price，其次使用库存商品原价，最后使用计算价格
   const fullPurchasePrice = (lottery as any).full_purchase_price 
