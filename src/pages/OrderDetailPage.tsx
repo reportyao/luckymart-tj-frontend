@@ -69,47 +69,18 @@ const OrderDetailPage: React.FC = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await (supabase as any)
-        .from('full_purchase_orders')
-        .select(`
-          id,
-          order_number,
-          status,
-          total_amount,
-          currency,
-          pickup_code,
-          claimed_at,
-          created_at,
-          metadata,
-          lottery_id,
-          pickup_point_id,
-          lotteries (
-            title,
-            title_i18n,
-            image_url,
-            original_price
-          )
-        `)
-        .eq('id', id)
-        .eq('user_id', user?.id)
-        .single();
+      // 使用 Edge Function 获取订单详情，绕过 RLS 限制
+      const { data, error } = await supabase.functions.invoke('get-order-detail', {
+        body: {
+          order_id: id,
+          user_id: user?.id
+        }
+      });
 
       if (error) throw error;
+      if (!data) throw new Error('Order not found');
 
-      // 如果有 pickup_point_id，获取自提点信息
-      let pickupPoint = null;
-      if (data.pickup_point_id) {
-        const { data: pointData } = await supabase
-          .from('pickup_points')
-          .select('name, name_i18n, address, address_i18n, contact_phone')
-          .eq('id', data.pickup_point_id)
-          .single();
-        pickupPoint = pointData;
-      }
-
-      // 计算 pickup_status
-      const pickup_status = data.pickup_code ? (data.claimed_at ? 'PICKED_UP' : 'PENDING_PICKUP') : data.status;
-      setOrder({ ...data, pickup_status, pickup_point: pickupPoint });
+      setOrder(data);
     } catch (error) {
       console.error('Error fetching order detail:', error);
       toast.error(t('orders.loadError') || '加载订单失败');
