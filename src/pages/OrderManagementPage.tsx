@@ -23,12 +23,12 @@ import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 // 订单类型
-type OrderType = 'all' | 'group_buy' | 'lottery';
+type OrderType = 'all' | 'group_buy' | 'lottery' | 'full_purchase';
 
 // 统一订单接口
 interface UnifiedOrder {
   id: string;
-  order_type: 'group_buy' | 'lottery' | 'exchange';
+  order_type: 'group_buy' | 'lottery' | 'exchange' | 'full_purchase';
   order_number: string;
   amount: number;
   status: string;
@@ -64,6 +64,7 @@ interface OrderSummary {
   group_buy_count: number;
   lottery_count: number;
   exchange_count: number;
+  full_purchase_count: number;
 }
 
 interface OrdersResponse {
@@ -125,7 +126,7 @@ const OrderManagementPage: React.FC = () => {
   });
 
   const allOrders = data?.data || [];
-  const summary = data?.summary || { group_buy_count: 0, lottery_count: 0, exchange_count: 0 };
+  const summary = data?.summary || { group_buy_count: 0, lottery_count: 0, exchange_count: 0, full_purchase_count: 0 };
 
   // 根据当前 Tab 筛选订单
   const filteredOrders = useMemo(() => {
@@ -146,6 +147,7 @@ const OrderManagementPage: React.FC = () => {
       case 'group_buy': return <UsersIcon className="w-5 h-5" />;
       case 'lottery': return <TrophyIcon className="w-5 h-5" />;
       case 'exchange': return <ArrowsRightLeftIcon className="w-5 h-5" />;
+      case 'full_purchase': return <ShoppingBagIcon className="w-5 h-5" />;
       default: return <ShoppingBagIcon className="w-5 h-5" />;
     }
   };
@@ -196,13 +198,16 @@ const OrderManagementPage: React.FC = () => {
       navigate(order.status === 'WON' || order.status === 'LOST' ? `/group-buy/result/${order.session_id}` : `/group-buy/${order.session_id}`);
     } else if (order.order_type === 'lottery' && order.lottery_id) {
       navigate(`/lottery/${order.lottery_id}`);
+    } else if (order.order_type === 'full_purchase') {
+      navigate(`/order-detail/${order.id}`);
     }
   };
 
   const tabs = [
-    { key: 'all', label: t('orders.tabAll'), count: summary.group_buy_count + summary.lottery_count },
+    { key: 'all', label: t('orders.tabAll'), count: summary.group_buy_count + summary.lottery_count + summary.full_purchase_count },
     { key: 'group_buy', label: t('orders.tabGroupBuy'), count: summary.group_buy_count },
     { key: 'lottery', label: t('orders.tabLottery'), count: summary.lottery_count },
+    { key: 'full_purchase', label: t('orders.tabFullPurchase') || '全款购买', count: summary.full_purchase_count },
   ];
 
   return (
@@ -218,14 +223,18 @@ const OrderManagementPage: React.FC = () => {
             {isRefetching && <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>}
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-3xl font-black">{summary.group_buy_count}</p>
-              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.groupBuyCount')}</p>
+              <p className="text-2xl font-black">{summary.group_buy_count}</p>
+              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.groupBuyCount')}</p>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-3xl font-black">{summary.lottery_count}</p>
-              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.lotteryCount')}</p>
+              <p className="text-2xl font-black">{summary.lottery_count}</p>
+              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.lotteryCount')}</p>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
+              <p className="text-2xl font-black">{summary.full_purchase_count}</p>
+              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.fullPurchaseCount') || '全款购买'}</p>
             </motion.div>
           </div>
         </div>

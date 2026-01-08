@@ -786,6 +786,8 @@
     "groupBuyCount": "拼团订单",
     "lotteryCount": "积分商城",
     "exchangeCount": "兑换记录",
+    "fullPurchaseCount": "全款购买",
+    "tabFullPurchase": "全款购买",
     "pointsRefunded": "积分已退",
     "period": "期号",
     "applyShipping": "申请发货",

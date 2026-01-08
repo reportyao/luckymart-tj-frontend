@@ -28,6 +28,7 @@ import MarketCreatePage from "./pages/MarketCreatePage"
 import MyTicketsPage from "./pages/MyTicketsPage"
 import MyPrizesPage from "./pages/MyPrizesPage"
 import OrderManagementPage from "./pages/OrderManagementPage"
+import OrderDetailPage from "./pages/OrderDetailPage"
 import SettingsPage from "./pages/SettingsPage"
 import DepositPage from "./pages/DepositPage"
 import ExchangePage from "./pages/ExchangePage"
@@ -78,7 +79,8 @@ function App() {
               <Route path="/my-tickets" element={<MyTicketsPage />} />
               <Route path="/my-prizes" element={<OrderManagementPage />} />
               <Route path="/prizes" element={<OrderManagementPage />} />
-              <Route path="/orders-management" element={<OrderPage />} />
+              <Route path="/orders-management" element={<OrderManagementPage />} />
+              <Route path="/order-detail/:id" element={<OrderDetailPage />} />
               <Route path="/showoff/my" element={<ShowoffPage />} />
               <Route path="/market/my-resales" element={<MarketPage />} />
               <Route path="/settings" element={<SettingsPage />} />

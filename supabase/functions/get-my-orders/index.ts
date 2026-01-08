@@ -471,6 +471,7 @@ serve(async (req) => {
           group_buy_count: orders.filter(o => o.order_type === 'group_buy').length,
           lottery_count: orders.filter(o => o.order_type === 'lottery').length,
           exchange_count: orders.filter(o => o.order_type === 'exchange').length,
+          full_purchase_count: orders.filter(o => o.order_type === 'full_purchase').length,
         }
       }),
       {
