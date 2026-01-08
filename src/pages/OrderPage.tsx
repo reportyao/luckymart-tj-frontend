@@ -68,7 +68,7 @@ const OrderPage: React.FC = () => {
           total_amount,
           currency,
           lottery_id,
-          purchased_numbers,
+          selected_numbers,
           created_at,
           updated_at,
           lotteries (
@@ -92,7 +92,7 @@ const OrderPage: React.FC = () => {
             lottery_id: order.lottery_id,
             lottery_title: order.lotteries?.title || getLocalizedText(order.lotteries?.title_i18n, i18n.language),
             lottery_title_i18n: order.lotteries?.title_i18n,
-            purchased_numbers: order.purchased_numbers,
+            purchased_numbers: order.selected_numbers,
             created_at: order.created_at,
             updated_at: order.updated_at
           });
