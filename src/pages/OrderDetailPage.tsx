@@ -23,6 +23,7 @@ interface OrderDetail {
   total_amount: number;
   currency: string;
   pickup_code: string | null;
+  pickup_status?: string;
   claimed_at: string | null;
   created_at: string;
   metadata: any;
