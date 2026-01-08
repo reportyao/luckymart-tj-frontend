@@ -11,9 +11,16 @@ import {
   ClockIcon,
   CheckCircleIcon,
   DocumentDuplicateIcon,
+  PhoneIcon,
+  CalendarIcon,
+  CurrencyDollarIcon,
+  TicketIcon,
+  TruckIcon,
+  GiftIcon,
 } from '@heroicons/react/24/outline';
+import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { LazyImage } from '../components/LazyImage';
-import { formatDateTime } from '../lib/utils';
+import { formatDateTime, formatCurrency } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 interface OrderDetail {
@@ -33,7 +40,7 @@ interface OrderDetail {
     title_i18n: any;
     image_url: string;
     original_price: number;
-  };
+  } | null;
   pickup_point: {
     name: string;
     name_i18n: any;
@@ -105,7 +112,7 @@ const OrderDetailPage: React.FC = () => {
       setOrder({ ...data, pickup_status, pickup_point: pickupPoint });
     } catch (error) {
       console.error('Error fetching order detail:', error);
-      toast.error(t('orders.loadError'));
+      toast.error(t('orders.loadError') || '加载订单失败');
     } finally {
       setLoading(false);
     }
@@ -120,23 +127,82 @@ const OrderDetailPage: React.FC = () => {
   const copyPickupCode = () => {
     if (order?.pickup_code) {
       navigator.clipboard.writeText(order.pickup_code);
-      toast.success(t('lottery.winningCodeCopied'));
+      toast.success(t('lottery.winningCodeCopied') || '提货码已复制');
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { text: string; color: string }> = {
-      'PENDING_PICKUP': { text: t('orders.statusPendingPickup'), color: 'bg-blue-100 text-blue-700' },
-      'PICKED_UP': { text: t('orders.statusPickedUp'), color: 'bg-green-100 text-green-700' },
-      'EXPIRED': { text: t('orders.statusExpired'), color: 'bg-red-100 text-red-700' },
+  const copyOrderNumber = () => {
+    if (order?.order_number) {
+      navigator.clipboard.writeText(order.order_number);
+      toast.success(t('order.orderNumberCopied') || '订单号已复制');
+    }
+  };
+
+  const getStatusInfo = (status: string) => {
+    const statusMap: Record<string, { text: string; color: string; bgColor: string; icon: React.ReactNode }> = {
+      'PENDING': { 
+        text: t('orders.statusPending') || '待处理', 
+        color: 'text-yellow-700', 
+        bgColor: 'bg-yellow-100',
+        icon: <ClockIcon className="w-5 h-5" />
+      },
+      'COMPLETED': { 
+        text: t('orders.statusCompleted') || '已完成', 
+        color: 'text-green-700', 
+        bgColor: 'bg-green-100',
+        icon: <CheckCircleSolidIcon className="w-5 h-5" />
+      },
+      'PENDING_PICKUP': { 
+        text: t('orders.statusPendingPickup') || '待提货', 
+        color: 'text-blue-700', 
+        bgColor: 'bg-blue-100',
+        icon: <TruckIcon className="w-5 h-5" />
+      },
+      'PICKED_UP': { 
+        text: t('orders.statusPickedUp') || '已提货', 
+        color: 'text-green-700', 
+        bgColor: 'bg-green-100',
+        icon: <CheckCircleSolidIcon className="w-5 h-5" />
+      },
+      'EXPIRED': { 
+        text: t('orders.statusExpired') || '已过期', 
+        color: 'text-red-700', 
+        bgColor: 'bg-red-100',
+        icon: <ClockIcon className="w-5 h-5" />
+      },
     };
 
-    const badge = statusMap[status] || { text: status, color: 'bg-gray-100 text-gray-700' };
-    return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badge.color}`}>
-        {badge.text}
-      </span>
-    );
+    return statusMap[status] || { 
+      text: status, 
+      color: 'text-gray-700', 
+      bgColor: 'bg-gray-100',
+      icon: <ShoppingBagIcon className="w-5 h-5" />
+    };
+  };
+
+  // 计算有效期（创建后30天）
+  const getExpiryDate = () => {
+    if (!order?.created_at) return null;
+    const createdDate = new Date(order.created_at);
+    const expiryDate = new Date(createdDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    return expiryDate;
+  };
+
+  // 检查是否已过期
+  const isExpired = () => {
+    const expiryDate = getExpiryDate();
+    if (!expiryDate) return false;
+    return new Date() > expiryDate;
+  };
+
+  // 获取剩余天数
+  const getRemainingDays = () => {
+    const expiryDate = getExpiryDate();
+    if (!expiryDate) return 0;
+    const now = new Date();
+    const diffTime = expiryDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
   };
 
   if (loading) {
@@ -150,22 +216,28 @@ const OrderDetailPage: React.FC = () => {
   if (!order) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex flex-col items-center justify-center px-4">
-        <p className="text-gray-600 mb-4">{t('orders.noOrders')}</p>
+        <GiftIcon className="w-16 h-16 text-gray-400 mb-4" />
+        <p className="text-gray-600 mb-4">{t('orders.noOrders') || '未找到订单'}</p>
         <button
           onClick={() => navigate('/orders-management')}
           className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
         >
-          {t('common.back')}
+          {t('common.back') || '返回'}
         </button>
       </div>
     );
   }
 
+  const statusInfo = getStatusInfo(order.pickup_status || order.status);
+  const productTitle = getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title || t('order.unknownProduct') || '未知商品';
+  const productImage = order.lotteries?.image_url || order.metadata?.product_image;
+  const remainingDays = getRemainingDays();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
       {/* 头部 */}
-      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white shadow-lg">
-        <div className="max-w-2xl mx-auto px-4 py-6">
+      <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 text-white shadow-lg">
+        <div className="max-w-2xl mx-auto px-4 py-4">
           <div className="flex items-center space-x-3">
             <button
               onClick={() => navigate('/orders-management')}
@@ -173,131 +245,223 @@ const OrderDetailPage: React.FC = () => {
             >
               <ArrowLeftIcon className="w-6 h-6" />
             </button>
-            <h1 className="text-xl font-bold">{t('order.orderDetails')}</h1>
+            <h1 className="text-xl font-bold">{t('order.orderDetails') || '订单详情'}</h1>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
+      <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* 订单状态卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-2xl p-6 shadow-sm"
+          className={`rounded-2xl p-5 shadow-sm ${statusInfo.bgColor}`}
         >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-2">
-              <ShoppingBagIcon className="w-6 h-6 text-purple-600" />
-              <span className="font-medium text-gray-900">{t('order.fullPurchase')}</span>
+          <div className="flex items-center space-x-3">
+            <div className={`p-2 rounded-full bg-white/50 ${statusInfo.color}`}>
+              {statusInfo.icon}
             </div>
-            {getStatusBadge(order.pickup_status || order.status)}
-          </div>
-
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">{t('order.orderNumber')}:</span>
-              <span className="font-medium">{order.order_number}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">{t('order.orderTime')}:</span>
-              <span className="font-medium">{formatDateTime(order.created_at)}</span>
+            <div>
+              <h2 className={`text-lg font-bold ${statusInfo.color}`}>{statusInfo.text}</h2>
+              {order.pickup_status === 'PENDING_PICKUP' && !isExpired() && (
+                <p className="text-sm text-gray-600 mt-1">
+                  {t('order.remainingDays', { days: remainingDays }) || `剩余 ${remainingDays} 天提货`}
+                </p>
+              )}
             </div>
           </div>
         </motion.div>
 
-        {/* 商品信息 */}
+        {/* 商品信息卡片 */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="bg-white rounded-2xl p-6 shadow-sm"
+          className="bg-white rounded-2xl p-5 shadow-sm"
         >
-          <h2 className="text-lg font-bold mb-4">{t('order.product')}</h2>
+          <div className="flex items-center space-x-2 mb-4">
+            <ShoppingBagIcon className="w-5 h-5 text-purple-600" />
+            <h2 className="text-base font-bold text-gray-900">{t('order.productInfo') || '商品信息'}</h2>
+          </div>
+          
           <div className="flex space-x-4">
-            <LazyImage
-              src={order.lotteries?.image_url || order.metadata?.product_image}
-              alt={getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title}
-              className="w-24 h-24 rounded-xl object-cover"
-            />
-            <div className="flex-1">
-              <h3 className="font-medium text-gray-900 mb-2">
-                {getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title}
-              </h3>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">{t('lottery.totalAmount')}:</span>
-                <span className="text-lg font-bold text-purple-600">
-                  {order.total_amount} {order.currency}
-                </span>
+            {productImage && (
+              <LazyImage
+                src={productImage}
+                alt={productTitle}
+                className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{productTitle}</h3>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
+                  <span className="text-lg font-bold text-purple-600">
+                    {formatCurrency(order.currency, order.total_amount)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
         </motion.div>
 
-        {/* 提货码信息 */}
+        {/* 提货码卡片 */}
         {order.pickup_code && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-sm border-2 border-purple-200"
+            className="bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-5 shadow-lg text-white"
           >
             <div className="flex items-center space-x-2 mb-4">
-              <CheckCircleIcon className="w-6 h-6 text-purple-600" />
-              <h2 className="text-lg font-bold">{t('orders.pickupCode')}</h2>
+              <TicketIcon className="w-5 h-5" />
+              <h2 className="text-base font-bold">{t('orders.pickupCode') || '提货码'}</h2>
             </div>
 
-            <div className="bg-white rounded-xl p-4 mb-4">
+            <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-3xl font-black text-purple-600 tracking-wider">
+                <span className="text-3xl font-black tracking-[0.3em]">
                   {order.pickup_code}
                 </span>
                 <button
                   onClick={copyPickupCode}
-                  className="p-2 hover:bg-purple-100 rounded-lg transition"
+                  className="p-2 hover:bg-white/20 rounded-lg transition"
+                  title={t('common.copy') || '复制'}
                 >
-                  <DocumentDuplicateIcon className="w-6 h-6 text-purple-600" />
+                  <DocumentDuplicateIcon className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
-            {order.created_at && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <ClockIcon className="w-4 h-4" />
-                <span>{t('orders.validUntil')}: {formatDateTime(new Date(new Date(order.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())}</span>
-              </div>
-            )}
+            <div className="flex items-center space-x-2 text-sm opacity-90">
+              <ClockIcon className="w-4 h-4" />
+              <span>
+                {t('orders.validUntil') || '有效期至'}: {formatDateTime(getExpiryDate()?.toISOString() || '')}
+              </span>
+            </div>
           </motion.div>
         )}
 
-        {/* 自提点信息 */}
+        {/* 自提点信息卡片 */}
         {order.pickup_point && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-2xl p-6 shadow-sm"
+            className="bg-white rounded-2xl p-5 shadow-sm"
           >
             <div className="flex items-center space-x-2 mb-4">
-              <MapPinIcon className="w-6 h-6 text-purple-600" />
-              <h2 className="text-lg font-bold">{t('orders.selectPickupPoint')}</h2>
+              <MapPinIcon className="w-5 h-5 text-purple-600" />
+              <h2 className="text-base font-bold text-gray-900">{t('orders.pickupPointInfo') || '自提点信息'}</h2>
             </div>
 
-            <div className="space-y-2 text-sm">
-              <div>
-                <span className="text-gray-600">{t('common.name')}:</span>
-                <span className="ml-2 font-medium">
-                  {getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}
-                </span>
+            <div className="space-y-3">
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                  <MapPinIcon className="w-4 h-4 text-purple-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">{t('orders.pickupPointName') || '自提点名称'}</p>
+                  <p className="font-medium text-gray-900">
+                    {getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <TruckIcon className="w-4 h-4 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-500">{t('orders.pickupPointAddress') || '地址'}</p>
+                  <p className="font-medium text-gray-900">
+                    {getLocalizedText(order.pickup_point.address_i18n) || order.pickup_point.address}
+                  </p>
+                </div>
+              </div>
+
+              {order.pickup_point.contact_phone && (
+                <div className="flex items-start space-x-3">
+                  <div className="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                    <PhoneIcon className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">{t('orders.pickupPointPhone') || '联系电话'}</p>
+                    <a 
+                      href={`tel:${order.pickup_point.contact_phone}`}
+                      className="font-medium text-purple-600 hover:underline"
+                    >
+                      {order.pickup_point.contact_phone}
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 订单信息卡片 */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="bg-white rounded-2xl p-5 shadow-sm"
+        >
+          <div className="flex items-center space-x-2 mb-4">
+            <CalendarIcon className="w-5 h-5 text-purple-600" />
+            <h2 className="text-base font-bold text-gray-900">{t('order.orderInfo') || '订单信息'}</h2>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-500">{t('order.orderNumber') || '订单号'}</span>
+              <div className="flex items-center space-x-2">
+                <span className="font-medium text-gray-900 text-sm">{order.order_number}</span>
+                <button
+                  onClick={copyOrderNumber}
+                  className="p-1 hover:bg-gray-100 rounded transition"
+                  title={t('common.copy') || '复制'}
+                >
+                  <DocumentDuplicateIcon className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-500">{t('order.orderType') || '订单类型'}</span>
+              <span className="font-medium text-gray-900 text-sm">{t('order.fullPurchase') || '全款购买'}</span>
+            </div>
+
+            <div className="flex items-center justify-between py-2 border-b border-gray-100">
+              <span className="text-sm text-gray-500">{t('order.orderTime') || '下单时间'}</span>
+              <span className="font-medium text-gray-900 text-sm">{formatDateTime(order.created_at)}</span>
+            </div>
+
+            <div className="flex items-center justify-between py-2">
+              <span className="text-sm text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
+              <span className="font-bold text-purple-600">{formatCurrency(order.currency, order.total_amount)}</span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* 温馨提示 */}
+        {order.pickup_status === 'PENDING_PICKUP' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-amber-50 border border-amber-200 rounded-2xl p-4"
+          >
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <GiftIcon className="w-4 h-4 text-amber-600" />
               </div>
               <div>
-                <span className="text-gray-600">{t('orders.pickupPointAddress')}:</span>
-                <span className="ml-2 font-medium">
-                  {getLocalizedText(order.pickup_point.address_i18n) || order.pickup_point.address}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-600">{t('orders.pickupPointPhone')}:</span>
-                <span className="ml-2 font-medium">{order.pickup_point.contact_phone}</span>
+                <h3 className="font-medium text-amber-800 mb-1">{t('order.pickupTips') || '温馨提示'}</h3>
+                <p className="text-sm text-amber-700">
+                  {t('order.pickupTipsContent') || '请在有效期内前往自提点提货，出示提货码即可领取商品。'}
+                </p>
               </div>
             </div>
           </motion.div>
