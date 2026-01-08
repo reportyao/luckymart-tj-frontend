@@ -1021,5 +1021,22 @@
     "youReceived": "您获得了",
     "points": "积分",
     "receiveButton": "开心收下"
+  },
+  "logistics": {
+    "title": "物流状态",
+    "pendingShipment": "待发货",
+    "inTransitChina": "中国段运输中",
+    "inTransitTajikistan": "塔国段运输中",
+    "readyForPickup": "待自提",
+    "pickedUp": "已提货",
+    "chinaTrackingNo": "中国段物流单号",
+    "tajikistanTrackingNo": "塔国段物流单号",
+    "estimatedArrival": "预计到达",
+    "pickupCode": "提货码",
+    "pendingShipmentDesc": "您的订单正在等待发货，请耐心等待。",
+    "inTransitChinaDesc": "您的包裹正在中国境内运输，即将发往塔吉克斯坦。",
+    "inTransitTajikistanDesc": "您的包裹已到达塔吉克斯坦，正在派送至自提点。",
+    "readyForPickupDesc": "您的包裹已到达自提点，请携带提货码前往提货。",
+    "pickedUpDesc": "您已成功提货，感谢您的购买！"
   }
 }

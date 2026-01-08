@@ -20,6 +20,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { LazyImage } from '../components/LazyImage';
+import { LogisticsStatus } from '../components/LogisticsStatus';
 import { formatDateTime, formatCurrency } from '../lib/utils';
 import toast from 'react-hot-toast';
 
@@ -31,10 +32,17 @@ interface OrderDetail {
   currency: string;
   pickup_code: string | null;
   pickup_status?: string;
+  logistics_status?: string | null;
+  batch_id?: string | null;
   claimed_at: string | null;
   created_at: string;
   metadata: any;
   lottery_id: string;
+  shipment_batch?: {
+    china_tracking_no: string | null;
+    tajikistan_tracking_no: string | null;
+    estimated_arrival_date: string | null;
+  } | null;
   lotteries: {
     title: string;
     title_i18n: any;
@@ -277,8 +285,25 @@ const OrderDetailPage: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* 物流状态卡片 */}
+        {order.logistics_status && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+          >
+            <LogisticsStatus
+              status={order.logistics_status}
+              chinaTrackingNo={order.shipment_batch?.china_tracking_no}
+              tajikistanTrackingNo={order.shipment_batch?.tajikistan_tracking_no}
+              estimatedArrivalDate={order.shipment_batch?.estimated_arrival_date}
+              pickupCode={order.pickup_code}
+            />
+          </motion.div>
+        )}
+
         {/* 提货码卡片 */}
-        {order.pickup_code && (
+        {order.pickup_code && order.logistics_status === 'READY_FOR_PICKUP' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

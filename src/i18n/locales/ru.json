@@ -976,5 +976,22 @@
     "youReceived": "Вы получили",
     "points": "баллов",
     "receiveButton": "Получить"
+  },
+  "logistics": {
+    "title": "Статус доставки",
+    "pendingShipment": "Ожидает отправки",
+    "inTransitChina": "В пути (Китай)",
+    "inTransitTajikistan": "В пути (Таджикистан)",
+    "readyForPickup": "Готов к получению",
+    "pickedUp": "Получено",
+    "chinaTrackingNo": "Номер отслеживания (Китай)",
+    "tajikistanTrackingNo": "Номер отслеживания (Таджикистан)",
+    "estimatedArrival": "Ожидаемое прибытие",
+    "pickupCode": "Код получения",
+    "pendingShipmentDesc": "Ваш заказ ожидает отправки. Пожалуйста, подождите.",
+    "inTransitChinaDesc": "Ваша посылка в пути по Китаю и скоро будет отправлена в Таджикистан.",
+    "inTransitTajikistanDesc": "Ваша посылка прибыла в Таджикистан и доставляется в пункт выдачи.",
+    "readyForPickupDesc": "Ваша посылка прибыла в пункт выдачи. Придите с кодом получения.",
+    "pickedUpDesc": "Вы успешно получили заказ. Спасибо за покупку!"
   }
 }
