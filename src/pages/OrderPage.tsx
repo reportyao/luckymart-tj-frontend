@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-
+import { useSupabase } from '../contexts/SupabaseContext';
+import { useUser } from '../contexts/UserContext';
 import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ClockIcon,
-
-
   TicketIcon,
-  ArrowPathIcon
+  ArrowPathIcon,
+  ShoppingBagIcon,
+  BanknotesIcon
 } from '@heroicons/react/24/outline';
 import { formatCurrency, formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
@@ -17,20 +18,24 @@ import toast from 'react-hot-toast';
 interface Order {
   id: string;
   order_number: string;
-  type: 'LOTTERY_PURCHASE' | 'COIN_EXCHANGE' | 'DEPOSIT' | 'WITHDRAWAL';
+  type: 'LOTTERY_PURCHASE' | 'FULL_PURCHASE' | 'COIN_EXCHANGE' | 'DEPOSIT' | 'WITHDRAWAL';
   status: 'PENDING' | 'COMPLETED' | 'CANCELLED' | 'FAILED';
   amount: number;
   currency: string;
-  description: string;
+  description?: string;
   lottery_id?: string;
   lottery_title?: string;
+  lottery_title_i18n?: any;
   purchased_numbers?: string;
+  pickup_code?: string;
   created_at: string;
   updated_at: string;
 }
 
 const OrderPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const { supabase } = useSupabase();
+  const { user, sessionToken } = useUser();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
@@ -40,85 +45,117 @@ const OrderPage: React.FC = () => {
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
+  const getLocalizedText = (i18nObj: any, lang: string) => {
+    if (!i18nObj) return '';
+    return i18nObj[lang] || i18nObj['zh'] || i18nObj['en'] || '';
+  };
+
   const fetchOrders = useCallback(async () => {
+    if (!user || !sessionToken) return;
+    
     setIsLoading(true);
     try {
-      // TODO: 调用实际API获取订单
-      // 这里使用mock数据
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockOrders: Order[] = [
-        {
-          id: '1',
-          order_number: 'ORD20250107001',
-          type: 'LOTTERY_PURCHASE',
-          status: 'COMPLETED',
-          amount: 10.00,
-          currency: 'TJS',
-          description: '购买彩票',
-          lottery_id: 'lottery1',
-          lottery_title: 'iPhone 15 Pro Max 积分商城',
-          purchased_numbers: '001,002,003',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        },
-        {
-          id: '2',
-          order_number: 'ORD20250107002',
-          type: 'COIN_EXCHANGE',
-          status: 'COMPLETED',
-          amount: 50.00,
-          currency: 'TJS',
-          description: '余额兑换积分商城币',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          updated_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: '3',
-          order_number: 'ORD20250106001',
-          type: 'DEPOSIT',
-          status: 'COMPLETED',
-          amount: 100.00,
-          currency: 'TJS',
-          description: '钱包充值',
-          created_at: new Date(Date.now() - 86400000).toISOString(),
-          updated_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: '4',
-          order_number: 'ORD20250105001',
-          type: 'LOTTERY_PURCHASE',
-          status: 'COMPLETED',
-          amount: 20.00,
-          currency: 'TJS',
-          description: '购买彩票',
-          lottery_id: 'lottery2',
-          lottery_title: 'MacBook Pro 积分商城',
-          purchased_numbers: '015,016',
-          created_at: new Date(Date.now() - 172800000).toISOString(),
-          updated_at: new Date(Date.now() - 172800000).toISOString()
-        },
-        {
-          id: '5',
-          order_number: 'ORD20250104001',
-          type: 'WITHDRAWAL',
-          status: 'PENDING',
-          amount: 200.00,
-          currency: 'TJS',
-          description: '提现申请',
-          created_at: new Date(Date.now() - 259200000).toISOString(),
-          updated_at: new Date(Date.now() - 259200000).toISOString()
-        }
-      ];
+      const allOrders: Order[] = [];
 
-      setOrders(mockOrders);
+      // 1. 获取抽奖购买订单
+      const { data: lotteryOrders, error: lotteryError } = await supabase
+        .from('orders')
+        .select(`
+          id,
+          order_number,
+          type,
+          status,
+          total_amount,
+          currency,
+          lottery_id,
+          purchased_numbers,
+          created_at,
+          updated_at,
+          lotteries (
+            title,
+            title_i18n
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('type', 'LOTTERY_PURCHASE')
+        .order('created_at', { ascending: false });
+
+      if (!lotteryError && lotteryOrders) {
+        lotteryOrders.forEach((order: any) => {
+          allOrders.push({
+            id: order.id,
+            order_number: order.order_number,
+            type: 'LOTTERY_PURCHASE',
+            status: order.status,
+            amount: order.total_amount,
+            currency: order.currency,
+            lottery_id: order.lottery_id,
+            lottery_title: order.lotteries?.title || getLocalizedText(order.lotteries?.title_i18n, i18n.language),
+            lottery_title_i18n: order.lotteries?.title_i18n,
+            purchased_numbers: order.purchased_numbers,
+            created_at: order.created_at,
+            updated_at: order.updated_at
+          });
+        });
+      }
+
+      // 2. 获取全款购买订单
+      const { data: fullPurchaseOrders, error: fullPurchaseError } = await supabase
+        .from('full_purchase_orders')
+        .select(`
+          id,
+          order_number,
+          status,
+          total_amount,
+          currency,
+          lottery_id,
+          pickup_code,
+          metadata,
+          created_at,
+          updated_at,
+          lotteries (
+            title,
+            title_i18n
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (!fullPurchaseError && fullPurchaseOrders) {
+        fullPurchaseOrders.forEach((order: any) => {
+          const title = order.lotteries?.title || 
+                       getLocalizedText(order.lotteries?.title_i18n, i18n.language) ||
+                       getLocalizedText(order.metadata?.product_title_i18n, i18n.language) ||
+                       order.metadata?.product_title;
+          
+          allOrders.push({
+            id: order.id,
+            order_number: order.order_number,
+            type: 'FULL_PURCHASE',
+            status: order.status,
+            amount: order.total_amount,
+            currency: order.currency,
+            lottery_id: order.lottery_id,
+            lottery_title: title,
+            lottery_title_i18n: order.lotteries?.title_i18n || order.metadata?.product_title_i18n,
+            pickup_code: order.pickup_code,
+            created_at: order.created_at,
+            updated_at: order.updated_at
+          });
+        });
+      }
+
+      // 按时间排序
+      allOrders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setOrders(allOrders);
     } catch (error) {
       console.error('Failed to fetch orders:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoading(false);
     }
-  }, [t]);
+  }, [supabase, user, sessionToken, t, i18n.language]);
 
   const filterOrders = useCallback(() => {
     let filtered = [...orders];
@@ -127,8 +164,9 @@ const OrderPage: React.FC = () => {
     if (searchQuery) {
       filtered = filtered.filter(order =>
         order.order_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.lottery_title?.toLowerCase().includes(searchQuery.toLowerCase())
+        order.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.lottery_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        order.pickup_code?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
 
@@ -155,25 +193,24 @@ const OrderPage: React.FC = () => {
 
   const getOrderTypeLabel = (type: string): string => {
     const labels: Record<string, string> = {
-      LOTTERY_PURCHASE: t('order.lotteryPurchase'),
-      COIN_EXCHANGE: t('order.coinExchange'),
-      DEPOSIT: '充值',
-      WITHDRAWAL: '提现'
+      LOTTERY_PURCHASE: t('order.lotteryPurchase') || '抽奖购买',
+      FULL_PURCHASE: t('order.fullPurchase') || '全款购买',
+      COIN_EXCHANGE: t('order.coinExchange') || '积分兑换',
+      DEPOSIT: t('order.deposit') || '充值',
+      WITHDRAWAL: t('order.withdrawal') || '提现'
     };
     return labels[type] || type;
   };
 
   const getOrderStatusLabel = (status: string): string => {
     const labels: Record<string, string> = {
-      PENDING: t('order.pending'),
-      COMPLETED: t('order.completed'),
-      CANCELLED: t('order.cancelled'),
-      FAILED: t('order.failed')
+      PENDING: t('order.pending') || '待处理',
+      COMPLETED: t('order.completed') || '已完成',
+      CANCELLED: t('order.cancelled') || '已取消',
+      FAILED: t('order.failed') || '失败'
     };
     return labels[status] || status;
   };
-
-
 
   const getStatusColor = (status: string): string => {
     switch (status) {
@@ -192,11 +229,16 @@ const OrderPage: React.FC = () => {
   const getTypeIcon = (type: string) => {
     switch (type) {
       case 'LOTTERY_PURCHASE':
-        return <TicketIcon className="w-5 h-5" />;
+        return <TicketIcon className="w-5 h-5 text-blue-600" />;
+      case 'FULL_PURCHASE':
+        return <ShoppingBagIcon className="w-5 h-5 text-orange-600" />;
       case 'COIN_EXCHANGE':
-        return <ArrowPathIcon className="w-5 h-5" />;
+        return <ArrowPathIcon className="w-5 h-5 text-purple-600" />;
+      case 'DEPOSIT':
+      case 'WITHDRAWAL':
+        return <BanknotesIcon className="w-5 h-5 text-green-600" />;
       default:
-        return <ClockIcon className="w-5 h-5" />;
+        return <ClockIcon className="w-5 h-5 text-gray-600" />;
     }
   };
 
@@ -204,7 +246,7 @@ const OrderPage: React.FC = () => {
     <div className="pb-20 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-6 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-gray-900">{t('order.myOrders')}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('order.myOrders') || '我的订单'}</h1>
         
         {/* Search Bar */}
         <div className="mt-4 flex space-x-2">
@@ -214,7 +256,7 @@ const OrderPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="搜索订单号或商品名称..."
+              placeholder={t('order.searchPlaceholder') || '搜索订单号或商品名称...'}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -240,7 +282,7 @@ const OrderPage: React.FC = () => {
           >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('order.orderStatus')}
+                {t('order.orderStatus') || '订单状态'}
               </label>
               <div className="flex flex-wrap gap-2">
                 {['all', 'PENDING', 'COMPLETED', 'CANCELLED', 'FAILED'].map((status) => (
@@ -253,7 +295,7 @@ const OrderPage: React.FC = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {status === 'all' ? t('common.all') : getOrderStatusLabel(status)}
+                    {status === 'all' ? (t('common.all') || '全部') : getOrderStatusLabel(status)}
                   </button>
                 ))}
               </div>
@@ -261,10 +303,10 @@ const OrderPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('order.orderType')}
+                {t('order.orderType') || '订单类型'}
               </label>
               <div className="flex flex-wrap gap-2">
-                {['all', 'LOTTERY_PURCHASE', 'COIN_EXCHANGE', 'DEPOSIT', 'WITHDRAWAL'].map((type) => (
+                {['all', 'LOTTERY_PURCHASE', 'FULL_PURCHASE', 'COIN_EXCHANGE'].map((type) => (
                   <button
                     key={type}
                     onClick={() => setTypeFilter(type)}
@@ -274,7 +316,7 @@ const OrderPage: React.FC = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {type === 'all' ? t('common.all') : getOrderTypeLabel(type)}
+                    {type === 'all' ? (t('common.all') || '全部') : getOrderTypeLabel(type)}
                   </button>
                 ))}
               </div>
@@ -292,7 +334,7 @@ const OrderPage: React.FC = () => {
         ) : filteredOrders.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <TicketIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">{t('order.noOrders')}</p>
+            <p className="text-gray-500">{t('order.noOrders') || '暂无订单'}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -320,44 +362,41 @@ const OrderPage: React.FC = () => {
                 </div>
 
                 {/* Order Details */}
-                <div className="space-y-2">
+                <div className="space-y-2 border-t border-gray-100 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{t('order.orderType')}</span>
+                    <span className="text-sm text-gray-600">{t('order.type') || '类型'}:</span>
                     <span className="text-sm font-medium text-gray-900">{getOrderTypeLabel(order.type)}</span>
                   </div>
                   
                   {order.lottery_title && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">商品名称</span>
-                      <span className="text-sm font-medium text-gray-900">{order.lottery_title}</span>
+                      <span className="text-sm text-gray-600">{t('order.product') || '商品'}:</span>
+                      <span className="text-sm font-medium text-gray-900 text-right max-w-[200px] truncate">
+                        {order.lottery_title}
+                      </span>
                     </div>
                   )}
 
                   {order.purchased_numbers && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{t('order.purchasedNumbers')}</span>
-                      <span className="text-sm font-medium text-blue-600">{order.purchased_numbers}</span>
+                      <span className="text-sm text-gray-600">{t('order.numbers') || '号码'}:</span>
+                      <span className="text-sm font-medium text-gray-900">{order.purchased_numbers}</span>
+                    </div>
+                  )}
+
+                  {order.pickup_code && (
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">{t('order.pickupCode') || '提货码'}:</span>
+                      <span className="text-sm font-bold text-orange-600 text-lg">{order.pickup_code}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="text-sm text-gray-600">{t('order.orderAmount')}</span>
-                    <span className="text-lg font-bold text-gray-900">
-                      {formatCurrency(order.currency, order.amount)}
+                    <span className="text-sm text-gray-600">{t('order.amount') || '金额'}:</span>
+                    <span className="text-lg font-bold text-blue-600">
+                      {formatCurrency(order.amount, order.currency)}
                     </span>
                   </div>
-                </div>
-
-                {/* Order Actions */}
-                <div className="mt-4 flex space-x-2">
-                  <button className="flex-1 px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
-                    {t('order.viewDetails')}
-                  </button>
-                  {order.status === 'PENDING' && order.type === 'LOTTERY_PURCHASE' && (
-                    <button className="px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 text-sm font-medium rounded-lg transition-colors">
-                      取消订单
-                    </button>
-                  )}
                 </div>
               </motion.div>
             ))}

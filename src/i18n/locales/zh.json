@@ -302,7 +302,8 @@
       "groupBuyPurchase": "参与拼团",
       "groupBuyRefund": "拼团退款",
       "groupBuyPrize": "拼团中奖",
-      "spinReward": "邀请奖励-转盘抽奖"
+      "spinReward": "邀请奖励-转盘抽奖",
+      "fullPurchase": "全款购买"
     },
     "transactionStatus": {
       "completed": "已完成",
@@ -320,7 +321,10 @@
     "orderAmount": "订单金额",
     "orderTime": "下单时间",
     "lotteryPurchase": "参与抽奖",
+    "fullPurchase": "全款购买",
     "coinExchange": "币种兑换",
+    "deposit": "充值",
+    "withdrawal": "提现",
     "pending": "待处理",
     "completed": "已完成",
     "cancelled": "已取消",
@@ -330,7 +334,13 @@
     "orderDetails": "订单详情",
     "lotteryInfo": "抽奖信息",
     "paymentInfo": "支付信息",
-    "purchasedNumbers": "购买号码"
+    "purchasedNumbers": "购买号码",
+    "type": "类型",
+    "product": "商品",
+    "numbers": "号码",
+    "pickupCode": "提货码",
+    "amount": "金额",
+    "searchPlaceholder": "搜索订单号或商品名称..."
   },
   "notification": {
     "notifications": "通知中心",

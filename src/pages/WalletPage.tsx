@@ -147,6 +147,7 @@ const WalletPage: React.FC = () => {
       'WITHDRAWAL': t('wallet.transactionType.withdrawal'),
       'ONE_YUAN_PURCHASE': t('wallet.transactionType.oneYuanPurchase'),
       'LOTTERY_PURCHASE': t('wallet.transactionType.lotteryPurchase'),
+      'FULL_PURCHASE': t('wallet.transactionType.fullPurchase') || '全款购买',
       'LOTTERY_REFUND': t('wallet.transactionType.lotteryRefund'),
       'LOTTERY_PRIZE': t('wallet.transactionType.lotteryPrize'),
       'REFERRAL_BONUS': t('wallet.transactionType.referralBonus'),
@@ -181,6 +182,7 @@ const WalletPage: React.FC = () => {
         return <ArrowUpIcon className="w-5 h-5 text-red-600" />
       case 'ONE_YUAN_PURCHASE':
       case 'LOTTERY_PURCHASE':
+      case 'FULL_PURCHASE':
       case 'GROUP_BUY_PURCHASE':
         return <ArrowUpIcon className="w-5 h-5 text-orange-600" />
       case 'LOTTERY_PRIZE':
@@ -336,8 +338,7 @@ const WalletPage: React.FC = () => {
                       transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {getAmountIcon(transaction.type)}
-                      {transaction.amount > 0 ? '+' : ''}
-                      {Math.abs(parseFloat(transaction.amount)).toFixed(2)}
+                      <span>{transaction.amount > 0 ? '+' : '-'}{Math.abs(parseFloat(transaction.amount)).toFixed(2)}</span>
                     </p>
                   </div>
                 </motion.div>
