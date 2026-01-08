@@ -100,7 +100,7 @@ const OrderPage: React.FC = () => {
       }
 
       // 2. 获取全款购买订单
-      const { data: fullPurchaseOrders, error: fullPurchaseError } = await supabase
+      const { data: fullPurchaseOrders, error: fullPurchaseError } = await (supabase as any)
         .from('full_purchase_orders')
         .select(`
           id,
