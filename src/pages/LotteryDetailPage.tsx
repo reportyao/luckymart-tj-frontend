@@ -475,44 +475,64 @@ const LotteryDetailPage: React.FC = () => {
           <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
             <h3 className="text-lg font-semibold text-gray-900">{t('lottery.purchaseOptions')}</h3>
             
-            <div className="grid grid-cols-2 gap-4">
-              {/* 左侧：一元夺宝模式 */}
-              <div className="border border-gray-200 rounded-xl p-4 space-y-3">
-                <h4 className="text-sm font-medium text-gray-700 text-center">{t('lottery.luckyPurchase')}</h4>
-                
-                {/* 数量选择器 */}
-                <div className="flex items-center justify-center space-x-3">
-                  <button
-                    onClick={() => handleQuantityChange(-1)}
-                    disabled={quantity <= 1}
-                    className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold"
-                  >
-                    -
-                  </button>
-                  <span className="text-xl font-bold text-gray-900 w-12 text-center">{quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(1)}
-                    disabled={!lottery || quantity >= (lottery.total_tickets - lottery.sold_tickets)}
-                    className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold text-white"
-                  >
-                    +
-                  </button>
+            <div className="space-y-3">
+              {/* 购买信息卡片 */}
+              <div className="grid grid-cols-2 gap-4">
+                {/* 左侧：一元夺宝信息 */}
+                <div className="border border-gray-200 rounded-xl p-4 space-y-3">
+                  <h4 className="text-sm font-medium text-gray-700 text-center">{t('lottery.luckyPurchase')}</h4>
+                  
+                  {/* 数量选择器 */}
+                  <div className="flex items-center justify-center space-x-3">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      disabled={quantity <= 1}
+                      className="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold"
+                    >
+                      -
+                    </button>
+                    <span className="text-xl font-bold text-gray-900 w-12 text-center">{quantity}</span>
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      disabled={!lottery || quantity >= (lottery.total_tickets - lottery.sold_tickets)}
+                      className="w-8 h-8 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-100 disabled:cursor-not-allowed flex items-center justify-center text-lg font-bold text-white"
+                    >
+                      +
+                    </button>
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500">{t('lottery.totalPrice')}</p>
+                    <p className="text-lg font-bold text-blue-600">
+                      {formatCurrency(lottery?.currency || 'TJS', (lottery?.ticket_price || 0) * quantity)}
+                    </p>
+                  </div>
                 </div>
-                
-                <div className="text-center">
-                  <p className="text-xs text-gray-500">{t('lottery.totalPrice')}</p>
-                  <p className="text-lg font-bold text-blue-600">
-                    {formatCurrency(lottery?.currency || 'TJS', (lottery?.ticket_price || 0) * quantity)}
-                  </p>
+
+                {/* 右侧：全款购买信息 */}
+                <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 space-y-3">
+                  <h4 className="text-sm font-medium text-orange-700 text-center">{t('lottery.fullPurchase')}</h4>
+                  
+                  <p className="text-xs text-center text-orange-600">{t('lottery.fullPurchaseHint')}</p>
+                  
+                  <div className="text-center">
+                    <p className="text-xs text-gray-500">{t('lottery.fullPurchasePrice')}</p>
+                    <p className="text-lg font-bold text-orange-600">
+                      {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
+                    </p>
+                  </div>
                 </div>
-                
+              </div>
+              
+              {/* 底部按钮 - 水平对齐 */}
+              <div className="grid grid-cols-2 gap-4">
                 <motion.button
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={handlePurchase}
                   disabled={!isActive || isSoldOut || isPurchasing}
                   className={cn(
-                    "w-full py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all duration-200",
+                    "py-3 rounded-xl font-semibold text-sm shadow-md transition-all duration-200",
                     isActive && !isSoldOut && !isPurchasing
                       ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-lg"
                       : "bg-gray-300 text-gray-600 cursor-not-allowed"
@@ -520,13 +540,6 @@ const LotteryDetailPage: React.FC = () => {
                 >
                   {isPurchasing ? t('common.submitting') : isSoldOut ? t('lottery.soldOut') : isActive ? t('lottery.participateNow') : t('lottery.upcoming')}
                 </motion.button>
-              </div>
-
-              {/* 右侧：全款购买 */}
-              <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 space-y-3">
-                <h4 className="text-sm font-medium text-orange-700 text-center">{t('lottery.fullPurchase')}</h4>
-                
-                <p className="text-xs text-center text-orange-600">{t('lottery.fullPurchaseHint')}</p>
                 
                 <motion.button
                   whileHover={{ scale: 1.01 }}
@@ -534,7 +547,7 @@ const LotteryDetailPage: React.FC = () => {
                   onClick={handleFullPurchase}
                   disabled={!isActive || isSoldOut || isFullPurchasing || remainingTickets < 1}
                   className={cn(
-                    "w-full py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all duration-200",
+                    "py-3 rounded-xl font-semibold text-sm shadow-md transition-all duration-200",
                     isActive && !isSoldOut && !isFullPurchasing && remainingTickets > 0
                       ? "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-lg"
                       : "bg-gray-300 text-gray-600 cursor-not-allowed"
@@ -542,13 +555,6 @@ const LotteryDetailPage: React.FC = () => {
                 >
                   {isFullPurchasing ? t('common.submitting') : t('lottery.buyAllNow')}
                 </motion.button>
-                
-                <div className="text-center">
-                  <p className="text-xs text-gray-500">{t('lottery.fullPurchasePrice')}</p>
-                  <p className="text-lg font-bold text-orange-600">
-                    {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
-                  </p>
-                </div>
               </div>
             </div>
             

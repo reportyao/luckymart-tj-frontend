@@ -144,7 +144,7 @@
     "insufficientBalance": "Сикка ҳои хушбахтӣ кофӣ нест, зарур аст {{required}}, мавҷуда {{current}}",
     "priceComparison": "Муқоисаи нархҳо дар шабака",
     "purchaseOptions": "Имкониятҳои харид",
-    "luckyPurchase": "Хариди хушбахт",
+    "luckyPurchase": "Хариди як юан",
     "fullPurchase": "Хариди пурра",
     "fullPurchasePrice": "Нархи пурра",
     "buyAllNow": "Хариди пурра",
@@ -277,6 +277,7 @@
     "transactionType": {
       "deposit": "Пур кардан",
       "withdrawal": "Гирифтан",
+      "oneYuanPurchase": "Иштирок дар хариди як юан",
       "lotteryPurchase": "Иштирок дар қуръа",
       "lotteryRefund": "Баргардонидани пул барои қуръа",
       "lotteryPrize": "Ҷоизаи бурд",
@@ -289,7 +290,8 @@
       "friendCashback": "Баргашти пул аз дӯст",
       "groupBuyPurchase": "Иштирок дар хариди гурӯҳӣ",
       "groupBuyRefund": "Баргашти пул барои хариди гурӯҳӣ",
-      "groupBuyPrize": "Бурд дар хариди гурӯҳӣ"
+      "groupBuyPrize": "Бурд дар хариди гурўҳӣ",
+      "spinReward": "Мукофоти дават - чархи ҷодуӣ"
     },
     "transactionStatus": {
       "completed": "Анҷом ёфт",

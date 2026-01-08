@@ -308,6 +308,52 @@ serve(async (req) => {
       }
     }
 
+    // 4. 获取一元购物订单
+    if (!order_type || order_type === 'all' || order_type === 'lottery') {
+      console.log('[GetMyOrders] Fetching one-yuan purchase orders for userId:', userId);
+      
+      const { data: oneYuanOrders, error: oneYuanError } = await supabase
+        .from('orders')
+        .select('id, user_id, lottery_id, order_number, total_amount, currency, status, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (oneYuanError) {
+        console.error('[GetMyOrders] One-yuan orders error:', oneYuanError);
+      } else if (oneYuanOrders && oneYuanOrders.length > 0) {
+        console.log('[GetMyOrders] Found one-yuan orders:', oneYuanOrders.length);
+        
+        const lotteryIds = [...new Set(oneYuanOrders.map(o => o.lottery_id).filter(Boolean))];
+        
+        let lotteriesMap = new Map();
+        if (lotteryIds.length > 0) {
+          const { data: lotteries } = await supabase
+            .from('lotteries')
+            .select('id, title, title_i18n, image_url, ticket_price')
+            .in('id', lotteryIds);
+          lotteriesMap = new Map((lotteries || []).map(l => [l.id, l]));
+        }
+        
+        oneYuanOrders.forEach((order: any) => {
+          const lottery = lotteriesMap.get(order.lottery_id);
+          
+          orders.push({
+            id: order.id,
+            order_type: 'lottery',
+            order_number: order.order_number,
+            amount: order.total_amount,
+            status: order.status || 'COMPLETED',
+            created_at: order.created_at,
+            product_title: lottery?.title_i18n || { zh: lottery?.title || '一元购物' },
+            product_image: lottery?.image_url || '',
+            original_price: lottery?.ticket_price || 0,
+            price_per_person: lottery?.ticket_price || 0,
+            lottery_id: order.lottery_id,
+          });
+        });
+      }
+    }
+
     if (!order_type || order_type === 'all' || order_type === 'lottery') {
       console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId);
       

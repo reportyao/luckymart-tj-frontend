@@ -156,7 +156,7 @@
     "insufficientBalance": "积分余额不足，需要 {{required}} 积分，当前余额 {{current}} 积分",
     "priceComparison": "全网价格对比",
     "purchaseOptions": "购买方式",
-    "luckyPurchase": "一元夺宝",
+    "luckyPurchase": "一元购物",
     "fullPurchase": "全款购买",
     "fullPurchasePrice": "全款价格",
     "buyAllNow": "全款购买",
@@ -288,6 +288,7 @@
     "transactionType": {
       "deposit": "充值",
       "withdrawal": "提现",
+      "oneYuanPurchase": "参与一元购物",
       "lotteryPurchase": "参与积分商城",
       "lotteryRefund": "积分商城退款",
       "lotteryPrize": "中奖奖金",
@@ -300,7 +301,8 @@
       "friendCashback": "好友消费返现",
       "groupBuyPurchase": "参与拼团",
       "groupBuyRefund": "拼团退款",
-      "groupBuyPrize": "拼团中奖"
+      "groupBuyPrize": "拼团中奖",
+      "spinReward": "邀请奖励-转盘抽奖"
     },
     "transactionStatus": {
       "completed": "已完成",

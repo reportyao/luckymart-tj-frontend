@@ -144,7 +144,7 @@
     "insufficientBalance": "Недостаточно бонусов, требуется {{required}}, текущий баланс {{current}}",
     "priceComparison": "Сравнение цен в сети",
     "purchaseOptions": "Варианты покупки",
-    "luckyPurchase": "Счастливая покупка",
+    "luckyPurchase": "Одноюань покупка",
     "fullPurchase": "Полная покупка",
     "fullPurchasePrice": "Полная цена",
     "buyAllNow": "Полная покупка",
@@ -277,6 +277,7 @@
     "transactionType": {
       "deposit": "Пополнение",
       "withdrawal": "Вывод",
+      "oneYuanPurchase": "Участие в одноюань покупке",
       "lotteryPurchase": "Участие в розыгрыше",
       "lotteryRefund": "Возврат за розыгрыш",
       "lotteryPrize": "Выигрыш",
@@ -289,7 +290,8 @@
       "friendCashback": "Кэшбэк от друга",
       "groupBuyPurchase": "Участие в групповой покупке",
       "groupBuyRefund": "Возврат за групповую покупку",
-      "groupBuyPrize": "Выигрыш в групповой покупке"
+      "groupBuyPrize": "Выигрыш в групповой покупке",
+      "spinReward": "Приглашение награда-волшебные колеса"
     },
     "transactionStatus": {
       "completed": "Завершено",

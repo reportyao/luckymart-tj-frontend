@@ -29,6 +29,7 @@ const WalletPage: React.FC = () => {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false)
   const [transactions, setTransactions] = useState<any[]>([])
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(true)
+  const [hasLoadedTransactions, setHasLoadedTransactions] = useState(false)
 
   const handleRefresh = async () => {
     setIsRefreshing(true)
@@ -123,6 +124,7 @@ const WalletPage: React.FC = () => {
       })
       
       setTransactions(uniqueTransactions.slice(0, 30))
+      setHasLoadedTransactions(true)
     } catch (error) {
       console.error('Failed to fetch transactions:', error)
       toast.error(t('error.networkError'))
@@ -132,10 +134,10 @@ const WalletPage: React.FC = () => {
   }, [user, wallets, supabase, t])
 
   useEffect(() => {
-    if (user && wallets.length > 0) {
+    if (user && wallets.length > 0 && !hasLoadedTransactions) {
       fetchTransactions()
     }
-  }, [user, wallets, fetchTransactions])
+  }, [user, wallets, hasLoadedTransactions])
 
 
 
@@ -143,6 +145,7 @@ const WalletPage: React.FC = () => {
     const typeMap: Record<string, string> = {
       'DEPOSIT': t('wallet.transactionType.deposit'),
       'WITHDRAWAL': t('wallet.transactionType.withdrawal'),
+      'ONE_YUAN_PURCHASE': t('wallet.transactionType.oneYuanPurchase'),
       'LOTTERY_PURCHASE': t('wallet.transactionType.lotteryPurchase'),
       'LOTTERY_REFUND': t('wallet.transactionType.lotteryRefund'),
       'LOTTERY_PRIZE': t('wallet.transactionType.lotteryPrize'),
@@ -155,7 +158,8 @@ const WalletPage: React.FC = () => {
       'FRIEND_CASHBACK': t('wallet.transactionType.friendCashback'),
       'GROUP_BUY_PURCHASE': t('wallet.transactionType.groupBuyPurchase'),
       'GROUP_BUY_REFUND': t('wallet.transactionType.groupBuyRefund'),
-      'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize')
+      'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize'),
+      'SPIN_REWARD': t('wallet.transactionType.spinReward')
     }
     return typeMap[type] || type
   }
@@ -175,6 +179,7 @@ const WalletPage: React.FC = () => {
         return <ArrowDownIcon className="w-5 h-5 text-green-600" />
       case 'WITHDRAWAL':
         return <ArrowUpIcon className="w-5 h-5 text-red-600" />
+      case 'ONE_YUAN_PURCHASE':
       case 'LOTTERY_PURCHASE':
       case 'GROUP_BUY_PURCHASE':
         return <ArrowUpIcon className="w-5 h-5 text-orange-600" />
@@ -187,6 +192,7 @@ const WalletPage: React.FC = () => {
       case 'COIN_EXCHANGE':
         return <ArrowPathIcon className="w-5 h-5 text-blue-600" />
       case 'SHOWOFF_REWARD':
+      case 'SPIN_REWARD':
         return <ArrowDownIcon className="w-5 h-5 text-yellow-600" />
       case 'REFERRAL_BONUS':
       case 'FRIEND_CASHBACK':
@@ -320,7 +326,7 @@ const WalletPage: React.FC = () => {
                       transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
                       {transaction.amount > 0 ? '+' : ''}
-                      {formatCurrency('TJS', Math.abs(parseFloat(transaction.amount)))}
+                      {Math.abs(parseFloat(transaction.amount)).toFixed(2)}
                     </p>
                   </div>
                 </motion.div>
