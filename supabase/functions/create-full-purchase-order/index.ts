@@ -302,14 +302,21 @@ serve(async (req) => {
       // 不影响主流程
     }
 
-    // 13. 更新商品状态为已售罄（全款购买后商品下架）
+    // 13. 更新商品库存（只减少1份，不影响一元夹宝业务）
+    const newSoldTickets = lottery.sold_tickets + 1;
+    const updateData: any = {
+      sold_tickets: newSoldTickets,
+      updated_at: new Date().toISOString(),
+    };
+    
+    // 仅当库存完全卖完时，才将商品状态改为SOLD_OUT
+    if (newSoldTickets >= lottery.total_tickets) {
+      updateData.status = 'SOLD_OUT';
+    }
+    
     const { error: updateLotteryError } = await supabase
       .from('lotteries')
-      .update({
-        status: 'COMPLETED',
-        sold_tickets: lottery.total_tickets,
-        updated_at: new Date().toISOString(),
-      })
+      .update(updateData)
       .eq('id', lottery_id);
 
     if (updateLotteryError) {

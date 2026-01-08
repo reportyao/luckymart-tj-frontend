@@ -526,12 +526,7 @@ const LotteryDetailPage: React.FC = () => {
               <div className="border border-orange-200 bg-orange-50 rounded-xl p-4 space-y-3">
                 <h4 className="text-sm font-medium text-orange-700 text-center">{t('lottery.fullPurchase')}</h4>
                 
-                <div className="text-center">
-                  <p className="text-xs text-gray-500">{t('lottery.fullPurchasePrice')}</p>
-                  <p className="text-lg font-bold text-orange-600">
-                    {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
-                  </p>
-                </div>
+                <p className="text-xs text-center text-orange-600">{t('lottery.fullPurchaseHint')}</p>
                 
                 <motion.button
                   whileHover={{ scale: 1.01 }}
@@ -548,7 +543,12 @@ const LotteryDetailPage: React.FC = () => {
                   {isFullPurchasing ? t('common.submitting') : t('lottery.buyAllNow')}
                 </motion.button>
                 
-                <p className="text-xs text-center text-orange-600">{t('lottery.fullPurchaseHint')}</p>
+                <div className="text-center">
+                  <p className="text-xs text-gray-500">{t('lottery.fullPurchasePrice')}</p>
+                  <p className="text-lg font-bold text-orange-600">
+                    {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
+                  </p>
+                </div>
               </div>
             </div>
             

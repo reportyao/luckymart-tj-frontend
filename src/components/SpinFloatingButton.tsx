@@ -55,12 +55,12 @@ const SpinFloatingButton: React.FC<SpinFloatingButtonProps> = ({ spinCount = 0 }
         <SafeMotion
           animate={isShaking ? {
             rotate: [0, -15, 15, -10, 10, -5, 5, 0],
-            scale: [1, 1.1, 1.1, 1.1, 1.1, 1.05, 1.05, 1]
+            scale: [1, 1.05, 1.05, 1.05, 1.05, 1.02, 1.02, 1]
           } : {}}
           transition={{ duration: 0.8 }}
-          className="relative w-14 h-14 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
+          className="relative w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow"
         >
-          <GiftIcon className="w-7 h-7 text-white" />
+          <GiftIcon className="w-6 h-6 text-white" />
           
           {/* 抽奖次数徽章 */}
           {spinCount > 0 && (
@@ -76,17 +76,7 @@ const SpinFloatingButton: React.FC<SpinFloatingButtonProps> = ({ spinCount = 0 }
           )}
         </SafeMotion>
         
-        {/* 提示文字 */}
-        <SafeMotion
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 1 }}
-          className="absolute right-full mr-2 top-1/2 -translate-y-1/2 whitespace-nowrap"
-        >
-          <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg shadow-md text-sm font-medium text-purple-600">
-            {t('spin.floatingText')}
-          </div>
-        </SafeMotion>
+
       </button>
     </SafeMotion>
   );

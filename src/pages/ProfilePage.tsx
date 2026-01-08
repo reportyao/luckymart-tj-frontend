@@ -93,12 +93,13 @@ const ProfilePage: React.FC = () => {
       subtitle: t('profile.viewNotifications'),
       action: () => navigate('/notifications'),
     },
-    {
-      icon: ShoppingBagIcon,
-      title: t('market.resaleRecords'),
-      subtitle: t('market.viewResaleHistory'),
-      action: () => navigate('/market/my-resales'),
-    },
+    // 转售历史已隐藏
+    // {
+    //   icon: ShoppingBagIcon,
+    //   title: t('market.resaleRecords'),
+    //   subtitle: t('market.viewResaleHistory'),
+    //   action: () => navigate('/market/my-resales'),
+    // },
     {
       icon: PhotoIcon,
       title: t('showoff.myShowoffs'),

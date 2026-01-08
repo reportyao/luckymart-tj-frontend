@@ -435,7 +435,8 @@
     "description": "Платформаи пешбари иҷтимоии лоторея дар Тоҷикистон",
     "loginWithTelegram": "Ворид шудан тавассути Telegram",
     "guestMode": "Ҳолати меҳмон",
-    "pleaseLogin": "Лутфан, тавассути Telegram ворид шавед"
+    "pleaseLogin": "Лутфан, тавассути Telegram ворид шавед",
+    "loginSuccess": "Воридшавӣ муваффақ!"
   },
   "error": {
     "networkError": "Хатогии шабака, лутфан баъдтар кӯшиш кунед",

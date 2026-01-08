@@ -228,6 +228,86 @@ serve(async (req) => {
     }
 
     // 2. 获取抽奖中奖记录(积分商城) - 不使用关联查询
+    // 3. 获取全款购买订单
+    if (!order_type || order_type === 'all' || order_type === 'lottery') {
+      console.log('[GetMyOrders] Fetching full purchase orders for userId:', userId);
+      
+      const { data: fullPurchaseOrders, error: fullPurchaseError } = await supabase
+        .from('full_purchase_orders')
+        .select(`
+          id,
+          user_id,
+          lottery_id,
+          order_number,
+          total_amount,
+          currency,
+          status,
+          pickup_point_id,
+          pickup_code,
+          metadata,
+          expires_at,
+          created_at
+        `)
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (fullPurchaseError) {
+        console.error('[GetMyOrders] Full purchase orders error:', fullPurchaseError);
+      } else if (fullPurchaseOrders && fullPurchaseOrders.length > 0) {
+        console.log('[GetMyOrders] Found full purchase orders:', fullPurchaseOrders.length);
+        
+        // 获取所有相关的 lottery_ids 和 pickup_point_ids
+        const lotteryIds = [...new Set(fullPurchaseOrders.map(o => o.lottery_id).filter(Boolean))];
+        const pickupPointIds = [...new Set(fullPurchaseOrders.map(o => o.pickup_point_id).filter(Boolean))];
+        
+        // 批量查询 lotteries
+        let lotteriesMap = new Map();
+        if (lotteryIds.length > 0) {
+          const { data: lotteries } = await supabase
+            .from('lotteries')
+            .select('id, title, title_i18n, image_url, original_price')
+            .in('id', lotteryIds);
+          lotteriesMap = new Map((lotteries || []).map(l => [l.id, l]));
+        }
+        
+        // 批量查询 pickup_points
+        let pickupPointsMap = new Map();
+        if (pickupPointIds.length > 0) {
+          const { data: pickupPoints } = await supabase
+            .from('pickup_points')
+            .select('id, name, name_i18n, address, address_i18n, contact_phone')
+            .in('id', pickupPointIds);
+          pickupPointsMap = new Map((pickupPoints || []).map(p => [p.id, p]));
+        }
+        
+        fullPurchaseOrders.forEach((order: any) => {
+          const lottery = lotteriesMap.get(order.lottery_id);
+          const pickupPoint = order.pickup_point_id ? pickupPointsMap.get(order.pickup_point_id) : null;
+          
+          orders.push({
+            id: order.id,
+            order_type: 'full_purchase',
+            order_number: order.order_number,
+            amount: order.total_amount,
+            status: order.status,
+            created_at: order.created_at,
+            // 商品信息
+            product_title: order.metadata?.product_title_i18n || lottery?.title_i18n || { zh: order.metadata?.product_title || '全款购买' },
+            product_image: order.metadata?.product_image || lottery?.image_url || '',
+            original_price: order.total_amount,
+            price_per_person: order.total_amount,
+            // 全款购买信息
+            lottery_id: order.lottery_id,
+            // 自提信息
+            pickup_code: order.pickup_code || null,
+            pickup_status: 'PENDING_PICKUP',
+            pickup_point: pickupPoint || null,
+            expires_at: order.expires_at || null,
+          });
+        });
+      }
+    }
+
     if (!order_type || order_type === 'all' || order_type === 'lottery') {
       console.log('[GetMyOrders] Fetching lottery prizes for userId:', userId);
       

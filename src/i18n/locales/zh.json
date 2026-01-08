@@ -448,7 +448,8 @@
     "description": "塔吉克斯坦领先的社交积分商城平台",
     "loginWithTelegram": "通过 Telegram 登录",
     "guestMode": "游客模式",
-    "pleaseLogin": "请通过 Telegram 访问此应用"
+    "pleaseLogin": "请通过 Telegram 访问此应用",
+    "loginSuccess": "登录成功！"
   },
   "error": {
     "networkError": "网络错误，请稍后重试",

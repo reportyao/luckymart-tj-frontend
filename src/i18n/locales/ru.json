@@ -433,7 +433,8 @@
     "description": "Ведущая социальная лотерейная платформа Таджикистана",
     "loginWithTelegram": "Войти через Telegram",
     "guestMode": "Гостевой режим",
-    "pleaseLogin": "Пожалуйста, войдите через Telegram"
+    "pleaseLogin": "Пожалуйста, войдите через Telegram",
+    "loginSuccess": "Вход выполнен!"
   },
   "error": {
     "networkError": "Ошибка сети, повторите попытку позже",
