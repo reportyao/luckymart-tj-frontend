@@ -30,9 +30,18 @@ const FullPurchaseConfirmPage: React.FC = () => {
   const fetchLottery = useCallback(async () => {
     if (!lotteryId) return;
     try {
+      // 获取商品信息，包含关联的库存商品信息
       const { data, error } = await supabase
         .from('lotteries')
-        .select('*')
+        .select(`
+          *,
+          inventory_product:inventory_products (
+            id,
+            stock,
+            original_price,
+            status
+          )
+        `)
         .eq('id', lotteryId)
         .single();
 
@@ -136,6 +145,18 @@ const FullPurchaseConfirmPage: React.FC = () => {
 
   const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
 
+  // 获取关联的库存商品信息
+  const inventoryProduct = (lottery as any).inventory_product;
+  
+  // 全款购买价格：优先使用full_purchase_price，其次使用库存商品原价，最后使用计算价格
+  const fullPurchasePrice = (lottery as any).full_purchase_price 
+    || (inventoryProduct?.original_price) 
+    || (lottery as any).original_price 
+    || (lottery.ticket_price * lottery.total_tickets);
+  
+  // 全款购买库存
+  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : (lottery.total_tickets - lottery.sold_tickets);
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
       {/* Header */}
@@ -174,8 +195,8 @@ const FullPurchaseConfirmPage: React.FC = () => {
             <div className="flex-1">
               <p className="font-bold text-gray-900">{title}</p>
               <p className="text-sm text-gray-600 mt-2">
-                {t('lottery.originalPrice')}: <span className="font-bold text-red-500">
-                  {formatCurrency(lottery.currency, (lottery as any).original_price || (lottery.ticket_price * lottery.total_tickets))}
+                {t('lottery.fullPurchasePrice')}: <span className="font-bold text-red-500">
+                  {formatCurrency(lottery.currency, fullPurchasePrice)}
                 </span>
               </p>
               <p className="text-sm text-gray-600 mt-1">
@@ -188,7 +209,7 @@ const FullPurchaseConfirmPage: React.FC = () => {
             <div className="flex justify-between items-center">
               <span className="text-gray-700 font-medium">{t('lottery.totalAmount')}</span>
               <span className="text-2xl font-bold text-red-500">
-                {formatCurrency(lottery.currency, (lottery as any).original_price || (lottery.ticket_price * lottery.total_tickets))}
+                {formatCurrency(lottery.currency, fullPurchasePrice)}
               </span>
             </div>
           </div>

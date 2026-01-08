@@ -53,9 +53,18 @@ const LotteryDetailPage: React.FC = () => {
     if (!id) return;
     setIsLoading(true);
     try {
+      // 获取商品信息，包含关联的库存商品信息
       const { data, error } = await supabase
         .from('lotteries')
-        .select('*')
+        .select(`
+          *,
+          inventory_product:inventory_products (
+            id,
+            stock,
+            original_price,
+            status
+          )
+        `)
         .eq('id', id)
         .single();
 
@@ -173,9 +182,26 @@ const LotteryDetailPage: React.FC = () => {
     }
   })();
 
-  // 计算全款购买价格（使用原价）
+  // 计算全款购买价格和库存
   const remainingTickets = lottery.total_tickets - lottery.sold_tickets;
-  const fullPurchasePrice = (lottery as any).original_price || (lottery.ticket_price * lottery.total_tickets);
+  
+  // 获取关联的库存商品信息
+  const inventoryProduct = (lottery as any).inventory_product;
+  
+  // 全款购买是否启用
+  const fullPurchaseEnabled = (lottery as any).full_purchase_enabled !== false;
+  
+  // 全款购买库存：优先使用库存商品库存，否则使用剩余份数
+  const fullPurchaseStock = inventoryProduct ? inventoryProduct.stock : remainingTickets;
+  
+  // 全款购买价格：优先使用full_purchase_price，其次使用库存商品原价，最后使用计算价格
+  const fullPurchasePrice = (lottery as any).full_purchase_price 
+    || (inventoryProduct?.original_price) 
+    || (lottery as any).original_price 
+    || (lottery.ticket_price * lottery.total_tickets);
+  
+  // 全款购买是否可用
+  const canFullPurchase = fullPurchaseEnabled && fullPurchaseStock > 0 && lottery.status === 'ACTIVE';
 
   const handlePurchase = async () => {
     // 检查登录状态
@@ -275,8 +301,20 @@ const LotteryDetailPage: React.FC = () => {
       return;
     }
 
-    if (!isActive || remainingTickets < 1) {
-      toast.error(t('lottery.soldOut'));
+    // 检查全款购买是否启用
+    if (!fullPurchaseEnabled) {
+      toast.error(t('lottery.fullPurchaseDisabled') || '该商品不支持全款购买');
+      return;
+    }
+
+    // 检查库存（使用库存商品库存或剩余份数）
+    if (fullPurchaseStock <= 0) {
+      toast.error(t('lottery.fullPurchaseOutOfStock') || '库存不足，无法全款购买');
+      return;
+    }
+
+    if (!isActive) {
+      toast.error(t('lottery.notActive') || '商品当前不可购买');
       return;
     }
 
@@ -525,6 +563,11 @@ const LotteryDetailPage: React.FC = () => {
                       {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
                     </p>
                   </div>
+                  
+                  {/* 显示全款购买库存 */}
+                  <p className="text-xs text-center text-gray-500 border-t border-orange-100 pt-2 mt-2">
+                    {t('lottery.fullPurchaseStock') || '全款购买库存'}: {fullPurchaseStock}
+                  </p>
                 </div>
               </div>
               
@@ -549,15 +592,15 @@ const LotteryDetailPage: React.FC = () => {
                   whileHover={{ scale: 1.01 }}
                   whileTap={{ scale: 0.99 }}
                   onClick={handleFullPurchase}
-                  disabled={!isActive || isSoldOut || isFullPurchasing || remainingTickets < 1}
+                  disabled={!canFullPurchase || isSoldOut || isFullPurchasing}
                   className={cn(
                     "py-3 rounded-xl font-semibold text-sm shadow-md transition-all duration-200",
-                    isActive && !isSoldOut && !isFullPurchasing && remainingTickets > 0
+                    canFullPurchase && !isSoldOut && !isFullPurchasing
                       ? "bg-gradient-to-r from-orange-500 to-red-500 text-white hover:shadow-lg"
                       : "bg-gray-300 text-gray-600 cursor-not-allowed"
                   )}
                 >
-                  {isFullPurchasing ? t('common.submitting') : t('lottery.buyAllNow')}
+                  {isFullPurchasing ? t('common.submitting') : !fullPurchaseEnabled ? t('lottery.fullPurchaseDisabled') : fullPurchaseStock <= 0 ? t('lottery.fullPurchaseOutOfStock') : t('lottery.buyAllNow')}
                 </motion.button>
               </div>
             </div>

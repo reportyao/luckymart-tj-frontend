@@ -117,6 +117,11 @@ async function generatePickupCode(supabase: any): Promise<string> {
 /**
  * 全款购买积分商城商品
  * 用户直接使用积分购买商品的全款价格，立即获得商品
+ * 
+ * 重要逻辑修改（2026-01-08）：
+ * - 全款购买从关联的库存商品(inventory_products)扣减库存
+ * - 不再修改lotteries表的sold_tickets字段
+ * - 一元购物的份数和全款购买的库存独立管理
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -166,7 +171,7 @@ serve(async (req) => {
       },
     });
 
-    // 1. 获取商品信息
+    // 1. 获取商品信息（包含关联的库存商品ID）
     const { data: lottery, error: lotteryError } = await supabase
       .from('lotteries')
       .select('*')
@@ -183,10 +188,62 @@ serve(async (req) => {
       throw new Error('该商品当前不可购买');
     }
 
-    // 3. 计算全款价格（使用 original_price 或 ticket_price * total_tickets）
-    const fullPrice = lottery.original_price || (lottery.ticket_price * lottery.total_tickets);
+    // 3. 验证全款购买是否启用
+    if (lottery.full_purchase_enabled === false) {
+      throw new Error('该商品不支持全款购买');
+    }
 
-    // 4. 获取用户积分钱包
+    // 4. 获取关联的库存商品信息
+    let inventoryProduct = null;
+    if (lottery.inventory_product_id) {
+      const { data: invProduct, error: invError } = await supabase
+        .from('inventory_products')
+        .select('*')
+        .eq('id', lottery.inventory_product_id)
+        .single();
+
+      if (invError) {
+        console.error('[CreateFullPurchaseOrder] Inventory product error:', invError);
+        throw new Error('获取库存商品信息失败');
+      }
+
+      inventoryProduct = invProduct;
+
+      // 验证库存商品状态
+      if (!inventoryProduct || inventoryProduct.status === 'INACTIVE') {
+        throw new Error('关联的库存商品已下架');
+      }
+
+      // 验证库存是否充足
+      if (inventoryProduct.stock <= 0) {
+        throw new Error('库存不足，无法全款购买');
+      }
+    } else {
+      // 如果没有关联库存商品，检查是否还有剩余份数可供全款购买
+      // 这是向后兼容的逻辑，对于未关联库存商品的旧数据
+      if (lottery.sold_tickets >= lottery.total_tickets) {
+        throw new Error('商品已售罄');
+      }
+    }
+
+    // 5. 计算全款价格
+    // 优先使用 full_purchase_price，其次使用库存商品原价，最后使用 ticket_price * total_tickets
+    let fullPrice = lottery.full_purchase_price;
+    if (!fullPrice && inventoryProduct) {
+      fullPrice = inventoryProduct.original_price;
+    }
+    if (!fullPrice) {
+      fullPrice = lottery.original_price || (lottery.ticket_price * lottery.total_tickets);
+    }
+
+    console.log('[CreateFullPurchaseOrder] Full price calculated:', { 
+      fullPrice,
+      full_purchase_price: lottery.full_purchase_price,
+      inventory_original_price: inventoryProduct?.original_price,
+      lottery_original_price: lottery.original_price
+    });
+
+    // 6. 获取用户积分钱包
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
@@ -200,12 +257,12 @@ serve(async (req) => {
       throw new Error('钱包不存在');
     }
 
-    // 5. 检查余额是否足够
+    // 7. 检查余额是否足够
     if (wallet.balance < fullPrice) {
       throw new Error(`积分余额不足，需要 ${fullPrice} 积分，当前余额 ${wallet.balance} 积分`);
     }
 
-    // 6. 验证自提点
+    // 8. 验证自提点
     if (pickup_point_id) {
       const { data: pickupPoint, error: pointError } = await supabase
         .from('pickup_points')
@@ -222,17 +279,17 @@ serve(async (req) => {
       }
     }
 
-    // 7. 生成订单号
+    // 9. 生成订单号
     const orderNumber = `FP${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-    // 8. 生成提货码
+    // 10. 生成提货码
     const pickupCode = await generatePickupCode(supabase);
 
-    // 9. 设置过期时间（30天后）
+    // 11. 设置过期时间（30天后）
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    // 10. 创建全款购买订单
+    // 12. 创建全款购买订单
     const { data: order, error: orderError } = await supabase
       .from('full_purchase_orders')
       .insert({
@@ -247,10 +304,12 @@ serve(async (req) => {
         metadata: {
           product_title: lottery.title,
           product_title_i18n: lottery.title_i18n,
-          product_image: lottery.image_urls?.[0] || null,
+          product_image: lottery.image_urls?.[0] || lottery.image_url || null,
           original_price: lottery.original_price,
           ticket_price: lottery.ticket_price,
           total_tickets: lottery.total_tickets,
+          inventory_product_id: lottery.inventory_product_id,
+          full_purchase_price: fullPrice,
         }
       })
       .select()
@@ -261,7 +320,7 @@ serve(async (req) => {
       throw new Error('创建订单失败');
     }
 
-    // 11. 扣除用户积分
+    // 13. 扣除用户积分
     const newBalance = wallet.balance - fullPrice;
     const { error: updateWalletError } = await supabase
       .from('wallets')
@@ -282,7 +341,7 @@ serve(async (req) => {
       throw new Error('扣除积分失败');
     }
 
-    // 12. 创建钱包交易记录
+    // 14. 创建钱包交易记录
     const { error: transactionError } = await supabase
       .from('wallet_transactions')
       .insert({
@@ -302,29 +361,77 @@ serve(async (req) => {
       // 不影响主流程
     }
 
-    // 13. 更新商品库存（只减少1份，不影响一元夹宝业务）
-    const newSoldTickets = lottery.sold_tickets + 1;
-    const updateData: any = {
-      sold_tickets: newSoldTickets,
-      updated_at: new Date().toISOString(),
-    };
-    
-    // 仅当库存完全卖完时，才将商品状态改为SOLD_OUT
-    if (newSoldTickets >= lottery.total_tickets) {
-      updateData.status = 'SOLD_OUT';
-    }
-    
-    const { error: updateLotteryError } = await supabase
-      .from('lotteries')
-      .update(updateData)
-      .eq('id', lottery_id);
+    // 15. 更新库存（关键修改：从库存商品扣减，不影响一元购物份数）
+    if (inventoryProduct) {
+      // 有关联库存商品：从库存商品扣减库存
+      const newStock = inventoryProduct.stock - 1;
+      const { error: updateInventoryError } = await supabase
+        .from('inventory_products')
+        .update({
+          stock: newStock,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', inventoryProduct.id);
 
-    if (updateLotteryError) {
-      console.error('[CreateFullPurchaseOrder] Update lottery error:', updateLotteryError);
-      // 不影响主流程，但记录日志
+      if (updateInventoryError) {
+        console.error('[CreateFullPurchaseOrder] Update inventory error:', updateInventoryError);
+        // 不影响主流程，但记录日志
+      }
+
+      // 记录库存变动
+      const { error: inventoryTransactionError } = await supabase
+        .from('inventory_transactions')
+        .insert({
+          inventory_product_id: inventoryProduct.id,
+          transaction_type: 'FULL_PURCHASE',
+          quantity: -1,
+          stock_before: inventoryProduct.stock,
+          stock_after: newStock,
+          related_order_id: order.id,
+          related_lottery_id: lottery_id,
+          notes: `全款购买订单 ${orderNumber}`,
+        });
+
+      if (inventoryTransactionError) {
+        console.error('[CreateFullPurchaseOrder] Inventory transaction log error:', inventoryTransactionError);
+        // 不影响主流程
+      }
+
+      console.log('[CreateFullPurchaseOrder] Inventory updated:', {
+        inventoryProductId: inventoryProduct.id,
+        stockBefore: inventoryProduct.stock,
+        stockAfter: newStock,
+      });
+    } else {
+      // 向后兼容：没有关联库存商品时，使用旧逻辑（更新sold_tickets）
+      // 注意：这只是为了兼容旧数据，新创建的商品应该都关联库存商品
+      const newSoldTickets = lottery.sold_tickets + 1;
+      const updateData: any = {
+        sold_tickets: newSoldTickets,
+        updated_at: new Date().toISOString(),
+      };
+      
+      // 仅当库存完全卖完时，才将商品状态改为SOLD_OUT
+      if (newSoldTickets >= lottery.total_tickets) {
+        updateData.status = 'SOLD_OUT';
+      }
+      
+      const { error: updateLotteryError } = await supabase
+        .from('lotteries')
+        .update(updateData)
+        .eq('id', lottery_id);
+
+      if (updateLotteryError) {
+        console.error('[CreateFullPurchaseOrder] Update lottery error (legacy mode):', updateLotteryError);
+      }
+
+      console.log('[CreateFullPurchaseOrder] Legacy mode: lottery sold_tickets updated:', {
+        soldTicketsBefore: lottery.sold_tickets,
+        soldTicketsAfter: newSoldTickets,
+      });
     }
 
-    // 14. 记录操作日志
+    // 16. 记录操作日志
     await supabase
       .from('pickup_logs')
       .insert({
@@ -339,7 +446,8 @@ serve(async (req) => {
       orderId: order.id, 
       orderNumber, 
       pickupCode,
-      totalAmount: fullPrice
+      totalAmount: fullPrice,
+      inventoryProductId: inventoryProduct?.id || null,
     });
 
     return new Response(
