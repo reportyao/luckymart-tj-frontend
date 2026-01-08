@@ -78,7 +78,7 @@ function App() {
               <Route path="/my-tickets" element={<MyTicketsPage />} />
               <Route path="/my-prizes" element={<OrderManagementPage />} />
               <Route path="/prizes" element={<OrderManagementPage />} />
-              <Route path="/orders-management" element={<OrderManagementPage />} />
+              <Route path="/orders-management" element={<OrderPage />} />
               <Route path="/showoff/my" element={<ShowoffPage />} />
               <Route path="/market/my-resales" element={<MarketPage />} />
               <Route path="/settings" element={<SettingsPage />} />
