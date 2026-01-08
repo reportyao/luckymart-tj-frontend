@@ -563,11 +563,7 @@ const LotteryDetailPage: React.FC = () => {
                       {formatCurrency(lottery?.currency || 'TJS', fullPurchasePrice)}
                     </p>
                   </div>
-                  
-                  {/* 显示全款购买库存 */}
-                  <p className="text-xs text-center text-gray-500 border-t border-orange-100 pt-2 mt-2">
-                    {t('lottery.fullPurchaseStock') || '全款购买库存'}: {fullPurchaseStock}
-                  </p>
+
                 </div>
               </div>
               

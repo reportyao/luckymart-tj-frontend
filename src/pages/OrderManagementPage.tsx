@@ -131,6 +131,10 @@ const OrderManagementPage: React.FC = () => {
   // 根据当前 Tab 筛选订单
   const filteredOrders = useMemo(() => {
     if (activeTab === 'all') return allOrders;
+    if (activeTab === 'lottery') {
+      // 积分商城 Tab 包含 lottery 和 full_purchase 类型
+      return allOrders.filter(order => order.order_type === 'lottery' || order.order_type === 'full_purchase');
+    }
     return allOrders.filter(order => order.order_type === activeTab);
   }, [allOrders, activeTab]);
 
@@ -206,8 +210,7 @@ const OrderManagementPage: React.FC = () => {
   const tabs = [
     { key: 'all', label: t('orders.tabAll'), count: summary.group_buy_count + summary.lottery_count + summary.full_purchase_count },
     { key: 'group_buy', label: t('orders.tabGroupBuy'), count: summary.group_buy_count },
-    { key: 'lottery', label: t('orders.tabLottery'), count: summary.lottery_count },
-    { key: 'full_purchase', label: t('orders.tabFullPurchase') || '全款购买', count: summary.full_purchase_count },
+    { key: 'lottery', label: t('orders.tabLottery'), count: summary.lottery_count + summary.full_purchase_count },
   ];
 
   return (
@@ -223,18 +226,14 @@ const OrderManagementPage: React.FC = () => {
             {isRefetching && <div className="animate-spin rounded-full h-5 w-5 border-2 border-white/30 border-t-white"></div>}
           </div>
           
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-2xl font-black">{summary.group_buy_count}</p>
-              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.groupBuyCount')}</p>
+              <p className="text-3xl font-black">{summary.group_buy_count}</p>
+              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.groupBuyCount')}</p>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-2xl font-black">{summary.lottery_count}</p>
-              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.lotteryCount')}</p>
-            </motion.div>
-            <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-2xl font-black">{summary.full_purchase_count}</p>
-              <p className="text-[10px] mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.fullPurchaseCount') || '全款购买'}</p>
+              <p className="text-3xl font-black">{summary.lottery_count + summary.full_purchase_count}</p>
+              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.lotteryCount')}</p>
             </motion.div>
           </div>
         </div>

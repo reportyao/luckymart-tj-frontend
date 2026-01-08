@@ -244,6 +244,7 @@ serve(async (req) => {
           status,
           pickup_point_id,
           pickup_code,
+          pickup_status,
           metadata,
           expires_at,
           created_at
@@ -300,7 +301,7 @@ serve(async (req) => {
             lottery_id: order.lottery_id,
             // 自提信息
             pickup_code: order.pickup_code || null,
-            pickup_status: 'PENDING_PICKUP',
+            pickup_status: order.pickup_status || order.status,
             pickup_point: pickupPoint || null,
             expires_at: order.expires_at || null,
           });
