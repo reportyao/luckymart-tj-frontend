@@ -23,8 +23,7 @@ interface OrderDetail {
   total_amount: number;
   currency: string;
   pickup_code: string | null;
-  pickup_status: string;
-  expires_at: string | null;
+  claimed_at: string | null;
   created_at: string;
   metadata: any;
   lottery_id: string;
@@ -71,8 +70,7 @@ const OrderDetailPage: React.FC = () => {
           total_amount,
           currency,
           pickup_code,
-          pickup_status,
-          expires_at,
+          claimed_at,
           created_at,
           metadata,
           lottery_id,
@@ -101,7 +99,9 @@ const OrderDetailPage: React.FC = () => {
         pickupPoint = pointData;
       }
 
-      setOrder({ ...data, pickup_point: pickupPoint });
+      // 计算 pickup_status
+      const pickup_status = data.pickup_code ? (data.claimed_at ? 'PICKED_UP' : 'PENDING_PICKUP') : data.status;
+      setOrder({ ...data, pickup_status, pickup_point: pickupPoint });
     } catch (error) {
       console.error('Error fetching order detail:', error);
       toast.error(t('orders.loadError'));
@@ -259,10 +259,10 @@ const OrderDetailPage: React.FC = () => {
               </div>
             </div>
 
-            {order.expires_at && (
+            {order.created_at && (
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <ClockIcon className="w-4 h-4" />
-                <span>{t('orders.validUntil')}: {formatDateTime(order.expires_at)}</span>
+                <span>{t('orders.validUntil')}: {formatDateTime(new Date(new Date(order.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString())}</span>
               </div>
             )}
           </motion.div>

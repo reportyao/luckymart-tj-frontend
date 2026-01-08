@@ -244,9 +244,8 @@ serve(async (req) => {
           status,
           pickup_point_id,
           pickup_code,
-          pickup_status,
+          claimed_at,
           metadata,
-          expires_at,
           created_at
         `)
         .eq('user_id', userId)
@@ -301,9 +300,9 @@ serve(async (req) => {
             lottery_id: order.lottery_id,
             // 自提信息
             pickup_code: order.pickup_code || null,
-            pickup_status: order.pickup_status || order.status,
+            pickup_status: order.pickup_code ? (order.claimed_at ? 'PICKED_UP' : 'PENDING_PICKUP') : null,
             pickup_point: pickupPoint || null,
-            expires_at: order.expires_at || null,
+            claimed_at: order.claimed_at || null,
           });
         });
       }
