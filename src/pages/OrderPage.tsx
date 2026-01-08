@@ -394,7 +394,7 @@ const OrderPage: React.FC = () => {
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
                     <span className="text-sm text-gray-600">{t('order.amount') || '金额'}:</span>
                     <span className="text-lg font-bold text-blue-600">
-                      {formatCurrency(order.amount, order.currency)}
+                      {formatCurrency(order.currency, order.amount)}
                     </span>
                   </div>
                 </div>
