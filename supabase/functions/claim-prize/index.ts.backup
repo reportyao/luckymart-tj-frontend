@@ -6,56 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// ============================================
-// 数据验证工具函数
-// ============================================
-
-/**
- * 验证prizes表记录的字段完整性
- */
-function validatePrizeFields(prize: any, tableName: string): void {
-  const requiredFields = ['id', 'user_id', 'lottery_id'];
-  const pickupFields = ['pickup_code', 'pickup_status', 'pickup_point_id', 'expires_at', 'claimed_at'];
-  
-  // 检查必需字段
-  for (const field of requiredFields) {
-    if (!(field in prize)) {
-      throw new Error(`数据库错误: ${tableName}表缺少必需字段 ${field}`);
-    }
-  }
-  
-  // 检查提货相关字段（这些是我们刚添加的）
-  for (const field of pickupFields) {
-    if (!(field in prize)) {
-      console.warn(`[Validation] ${tableName}表缺少字段 ${field}，可能需要执行数据库迁移`);
-    }
-  }
-}
-
-/**
- * 验证状态一致性
- * status: 业务流程状态 (PENDING, SHIPPING, DELIVERED, RESELLING)
- * pickup_status: 提货流程状态 (PENDING_CLAIM, PENDING_PICKUP, PICKED_UP, EXPIRED)
- */
-function validateStatusConsistency(prize: any): void {
-  const { status, pickup_status, pickup_code } = prize;
-  
-  // 规则1: 如果已提货，status应该更新
-  if (pickup_status === 'PICKED_UP' && status === 'PENDING') {
-    console.warn('[Validation] 状态不一致: pickup_status=PICKED_UP 但 status=PENDING');
-  }
-  
-  // 规则2: 如果有提货码，pickup_status不应该是PENDING_CLAIM
-  if (pickup_code && pickup_status === 'PENDING_CLAIM') {
-    console.warn('[Validation] 状态不一致: 已有pickup_code但pickup_status=PENDING_CLAIM');
-  }
-  
-  // 规则3: 如果选择发货，不应该有提货相关信息
-  if (status === 'SHIPPING' && pickup_code) {
-    console.warn('[Validation] 状态不一致: status=SHIPPING但有pickup_code');
-  }
-}
-
 // 通用的 session 验证函数
 async function validateSession(sessionToken: string) {
   if (!sessionToken) {
@@ -166,11 +116,6 @@ async function generatePickupCode(supabase: any): Promise<string> {
  * 支持两种类型：
  * - lottery: 积分商城中奖（prizes表）
  * - group_buy: 拼团中奖（group_buy_results表）
- * 
- * ✨ 优化点：
- * 1. 添加了字段完整性验证
- * 2. 添加了状态一致性检查
- * 3. 改进了错误处理和日志
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -242,17 +187,6 @@ serve(async (req) => {
 
     prize = prizeData;
 
-    // ✨ 新增：验证字段完整性
-    try {
-      validatePrizeFields(prize, tableName);
-    } catch (validationError) {
-      console.error('[ClaimPrize] Field validation failed:', validationError);
-      throw validationError;
-    }
-
-    // ✨ 新增：验证状态一致性
-    validateStatusConsistency(prize);
-
     // 2. 检查是否已经领取过
     if (prize.pickup_code) {
       console.log('[ClaimPrize] Prize already claimed');
@@ -275,12 +209,7 @@ serve(async (req) => {
 
     // 3. 检查状态是否允许领取
     if (prize.pickup_status && prize.pickup_status !== 'PENDING_CLAIM') {
-      throw new Error(`该奖品当前状态不允许领取 (当前状态: ${prize.pickup_status})`);
-    }
-
-    // ✨ 新增：检查status字段
-    if (prize.status && !['PENDING', 'WON'].includes(prize.status)) {
-      console.warn(`[ClaimPrize] Unusual prize status: ${prize.status}`);
+      throw new Error('该奖品当前状态不允许领取');
     }
 
     // 4. 验证自提点是否存在
@@ -308,35 +237,22 @@ serve(async (req) => {
     expiresAt.setDate(expiresAt.getDate() + 30);
 
     // 7. 更新奖品记录
-    const updateData: any = {
-      pickup_code: pickupCode,
-      pickup_status: 'PENDING_PICKUP',
-      pickup_point_id: pickup_point_id || null,
-      expires_at: expiresAt.toISOString(),
-      claimed_at: new Date().toISOString(),
-    };
-
-    // ✨ 新增：如果status是PENDING，更新为更明确的状态
-    if (prize.status === 'PENDING') {
-      // 不修改status，保持业务流程独立
-      console.log('[ClaimPrize] Keeping status as PENDING, pickup_status updated to PENDING_PICKUP');
-    }
-
     const { data: updatedPrize, error: updateError } = await supabase
       .from(tableName)
-      .update(updateData)
+      .update({
+        pickup_code: pickupCode,
+        pickup_status: 'PENDING_PICKUP',
+        pickup_point_id: pickup_point_id || null,
+        expires_at: expiresAt.toISOString(),
+        claimed_at: new Date().toISOString(),
+      })
       .eq('id', prize_id)
       .select()
       .single();
 
     if (updateError) {
       console.error('[ClaimPrize] Update error:', updateError);
-      throw new Error(`更新奖品状态失败: ${updateError.message}`);
-    }
-
-    // ✨ 新增：验证更新后的状态
-    if (updatedPrize) {
-      validateStatusConsistency(updatedPrize);
+      throw new Error('更新奖品状态失败');
     }
 
     // 8. 记录操作日志
@@ -366,7 +282,7 @@ serve(async (req) => {
       pickupPointDetails = pointData;
     }
 
-    console.log('[ClaimPrize] Success:', { pickupCode, expiresAt, status: updatedPrize?.status, pickup_status: updatedPrize?.pickup_status });
+    console.log('[ClaimPrize] Success:', { pickupCode, expiresAt });
 
     return new Response(
       JSON.stringify({
@@ -377,8 +293,6 @@ serve(async (req) => {
           pickup_point_id: pickup_point_id,
           pickup_point: pickupPointDetails,
           claimed_at: new Date().toISOString(),
-          status: updatedPrize?.status,
-          pickup_status: updatedPrize?.pickup_status,
         }
       }),
       {
