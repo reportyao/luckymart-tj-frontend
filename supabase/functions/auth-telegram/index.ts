@@ -377,10 +377,9 @@ Deno.serve(async (req) => {
         const sessionData = {
             user_id: user.id,
             session_token: sessionToken,
-            device: 'telegram_mini_app',
+            device_info: 'telegram_mini_app',
             is_active: true,
-            expires_at: expiresAt.toISOString(),
-            created_at: new Date().toISOString()
+            expires_at: expiresAt.toISOString()
         };
 
         const createSessionResponse = await fetch(`${supabaseUrl}/rest/v1/user_sessions`, {
@@ -398,6 +397,10 @@ Deno.serve(async (req) => {
         if (createSessionResponse.ok) {
             const sessions = await createSessionResponse.json();
             session = sessions[0];
+            console.log('[Auth] Session created successfully:', session?.session_token?.substring(0, 8) + '...');
+        } else {
+            const errorText = await createSessionResponse.text();
+            console.error('[Auth] Failed to create session:', createSessionResponse.status, errorText);
         }
 
         // 返回认证结果
