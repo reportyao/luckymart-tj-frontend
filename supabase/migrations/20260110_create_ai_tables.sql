@@ -4,7 +4,7 @@
 -- 1. 创建 AI 对话配额表
 CREATE TABLE IF NOT EXISTS ai_chat_quota (
   id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   date DATE NOT NULL,
   base_quota INTEGER NOT NULL DEFAULT 10,
   bonus_quota INTEGER NOT NULL DEFAULT 0,
@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS ai_chat_quota (
 -- 2. 创建 AI 对话历史表
 CREATE TABLE IF NOT EXISTS ai_chat_history (
   id BIGSERIAL PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   user_message TEXT NOT NULL,
   ai_response TEXT NOT NULL,
   is_blocked BOOLEAN NOT NULL DEFAULT FALSE,
@@ -46,7 +46,7 @@ CREATE TRIGGER trigger_update_ai_chat_quota_updated_at
   EXECUTE FUNCTION update_ai_chat_quota_updated_at();
 
 -- 5. 创建增加已用配额的 RPC 函数
-CREATE OR REPLACE FUNCTION increment_ai_quota_used(p_user_id UUID, p_date DATE)
+CREATE OR REPLACE FUNCTION increment_ai_quota_used(p_user_id TEXT, p_date DATE)
 RETURNS VOID AS $$
 BEGIN
   UPDATE ai_chat_quota
@@ -56,7 +56,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- 6. 创建增加奖励配额的 RPC 函数
-CREATE OR REPLACE FUNCTION increment_ai_quota_bonus(p_user_id UUID, p_date DATE, p_amount INTEGER)
+CREATE OR REPLACE FUNCTION increment_ai_quota_bonus(p_user_id TEXT, p_date DATE, p_amount INTEGER)
 RETURNS VOID AS $$
 BEGIN
   UPDATE ai_chat_quota
@@ -72,11 +72,11 @@ ALTER TABLE ai_chat_history ENABLE ROW LEVEL SECURITY;
 -- 8. 创建 RLS 策略 (用户只能访问自己的数据)
 DROP POLICY IF EXISTS "Users can view own quota" ON ai_chat_quota;
 CREATE POLICY "Users can view own quota" ON ai_chat_quota
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.uid()::text = user_id);
 
 DROP POLICY IF EXISTS "Users can view own history" ON ai_chat_history;
 CREATE POLICY "Users can view own history" ON ai_chat_history
-  FOR SELECT USING (auth.uid() = user_id);
+  FOR SELECT USING (auth.uid()::text = user_id);
 
 -- 9. 授予 service_role 完全访问权限
 GRANT ALL ON ai_chat_quota TO service_role;
