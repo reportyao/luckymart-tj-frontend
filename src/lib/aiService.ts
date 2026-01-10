@@ -87,13 +87,36 @@ export const aiService = {
       };
     }
 
-    const { data, error } = await supabase.functions.invoke('ai-get-quota', {
-      body: { session_token: sessionToken }
-    });
+    try {
+      const { data, error } = await supabase.functions.invoke('ai-get-quota', {
+        body: { session_token: sessionToken }
+      });
 
-    if (error) {
-      console.error('[AIService] GetQuota error:', error);
-      // 返回默认值而不是抛出错误
+      if (error) {
+        console.error('[AIService] GetQuota error:', error);
+        return {
+          total_quota: 10,
+          used_quota: 0,
+          remaining_quota: 10,
+          base_quota: 10,
+          bonus_quota: 0
+        };
+      }
+
+      if (!data || !data.success) {
+        console.error('[AIService] GetQuota failed:', data?.error || 'Unknown error');
+        return {
+          total_quota: 10,
+          used_quota: 0,
+          remaining_quota: 10,
+          base_quota: 10,
+          bonus_quota: 0
+        };
+      }
+
+      return data.data as AIQuota;
+    } catch (err) {
+      console.error('[AIService] GetQuota exception:', err);
       return {
         total_quota: 10,
         used_quota: 0,
@@ -102,19 +125,6 @@ export const aiService = {
         bonus_quota: 0
       };
     }
-
-    if (!data.success) {
-      console.error('[AIService] GetQuota failed:', data.error);
-      return {
-        total_quota: 10,
-        used_quota: 0,
-        remaining_quota: 10,
-        base_quota: 10,
-        bonus_quota: 0
-      };
-    }
-
-    return data.data as AIQuota;
   },
 
   /**

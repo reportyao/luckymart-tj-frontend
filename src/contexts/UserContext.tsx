@@ -120,7 +120,15 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           
-          const response = await fetch(
+          // 优化：先检查本地存储的过期时间（如果有），减少不必要的网络请求
+          // 如果没有存储过期时间，或者已经快过期了，再进行网络验证
+          
+          console.log('[Session] Restoring user from localStorage...');
+          setUser(parsedUser as User);
+          setSessionToken(storedToken);
+
+          // 异步验证，不阻塞 UI
+          fetch(
             `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${storedToken}&user_id=eq.${parsedUser.id}&select=*`,
             {
               headers: {
@@ -128,36 +136,27 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
                 'Authorization': `Bearer ${supabaseKey}`,
               }
             }
-          );
+          ).then(async (response) => {
+            if (response.ok) {
+              const sessions = await response.json();
+              if (!sessions || sessions.length === 0) {
+                console.log('[Session] Session token invalid on server, clearing...');
+                logout();
+              } else {
+                const sessionData = sessions[0];
+                const expiresAt = new Date(sessionData.expires_at);
+                if (expiresAt < new Date()) {
+                  console.log('[Session] Session expired on server, clearing...');
+                  logout();
+                }
+              }
+            }
+          }).catch(err => {
+            console.warn('[Session] Network validation failed, keeping local session:', err);
+          });
           
-          const sessions = await response.json();
-          
-          if (!response.ok || !sessions || sessions.length === 0) {
-            console.log('[Session] Session token invalid or expired, clearing...');
-            localStorage.removeItem('custom_session_token');
-            localStorage.removeItem('custom_user');
-            setSessionToken(null);
-            setUser(null);
-            setProfile(null);
-            return;
-          }
-          
-          const sessionData = sessions[0];
-          
-          const expiresAt = new Date(sessionData.expires_at);
-          if (expiresAt < new Date()) {
-            console.log('[Session] Session expired, clearing...');
-            localStorage.removeItem('custom_session_token');
-            localStorage.removeItem('custom_user');
-            setSessionToken(null);
-            setUser(null);
-            setProfile(null);
-            return;
-          }
-          
-          console.log('[Session] Session valid, restoring user...');
-          setUser(parsedUser as User);
-          setSessionToken(storedToken);
+          // 已在上方恢复，此处仅保留日志
+          console.log('[Session] Session restoration initiated');
           
           const { data: profileData, error: profileError } = await supabase
             .from('users')

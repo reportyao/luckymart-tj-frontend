@@ -2,7 +2,8 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-customer-header',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
 // 验证session
@@ -109,8 +110,14 @@ serve(async (req) => {
   }
 
   try {
-    const body = await req.json();
-    const { session_token } = body;
+    let session_token;
+    try {
+      const body = await req.json();
+      session_token = body.session_token;
+    } catch (e) {
+      // 兼容某些请求可能不带body的情况
+      console.warn('[AI-GetQuota] Failed to parse JSON body');
+    }
 
     console.log('[AI-GetQuota] Received request');
 
