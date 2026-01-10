@@ -46,7 +46,7 @@ export const aiService = {
     const sessionToken = localStorage.getItem('custom_session_token');
     
     if (!sessionToken) {
-      throw new AIServiceError('UNAUTHORIZED', '请先登录');
+      throw new AIServiceError('UNAUTHORIZED', 'Лутфан аввал ворид шавед');
     }
 
     const { data, error } = await supabase.functions.invoke('ai-chat', {
@@ -60,17 +60,20 @@ export const aiService = {
       console.error('[AIService] Chat error:', error);
       // 检查是否是 400 错误（配额不足）
       if (error.message && error.message.includes('400')) {
-        throw new AIServiceError('QUOTA_EXCEEDED', '您今天的AI提问次数已用完，请邀请好友或参与拼团获取更多次数！');
+        // 译文：您今天的免费次数已用完。请邀请好友或参与活动以获取更多！
+        throw new AIServiceError('QUOTA_EXCEEDED', 'Миқдори саволҳои ройгони Шумо барои имрӯз ба охир расид. Лутфан дӯстонро даъват кунед ё дар аксия иштирок намоед, то имконияти бештар гиред!');
       }
-      throw new AIServiceError('AI_ERROR', error.message || 'AI 服务暂时不可用');
+      // 译文：AI 服务暂时不可用
+      throw new AIServiceError('AI_ERROR', error.message || 'Хизматрасонии AI муваққатан дастнорас аст');
     }
 
     if (!data.success) {
       const errorCode = data.error as AIErrorCode;
-      const errorMessage = data.message || '请求失败';
+      const errorMessage = data.message || 'Дархост иҷро нашуд'; // 请求失败
       // 如果是配额不足，使用更友好的提示
       if (errorCode === 'QUOTA_EXCEEDED') {
-        throw new AIServiceError(errorCode, '您今天的AI提问次数已用完，请邀请好友或参与拼团获取更多次数！');
+        // 译文：您今天的免费次数已用完。请邀请好友或参与活动以获取更多！
+        throw new AIServiceError(errorCode, 'Миқдори саволҳои ройгони Шумо барои имрӯз ба охир расид. Лутфан дӯстонро даъват кунед ё дар аксия иштирок намоед, то имконияти бештар гиред!');
       }
       throw new AIServiceError(errorCode, errorMessage);
     }
@@ -112,8 +115,7 @@ export const aiService = {
         };
       }
 
-      if (!data || !data.success) {
-        console.error('[AIService] GetQuota failed:', data?.error || 'Unknown error');
+      if (!data.success) {
         return {
           total_quota: 10,
           used_quota: 0,
@@ -124,8 +126,8 @@ export const aiService = {
       }
 
       return data.data as AIQuota;
-    } catch (err) {
-      console.error('[AIService] GetQuota exception:', err);
+    } catch (e) {
+      console.error('[AIService] GetQuota exception:', e);
       return {
         total_quota: 10,
         used_quota: 0,
@@ -134,31 +136,5 @@ export const aiService = {
         bonus_quota: 0
       };
     }
-  },
-
-  /**
-   * 添加奖励配额 (内部使用)
-   * @param userId 用户ID
-   * @param amount 奖励数量
-   * @param reason 奖励原因
-   */
-  async addBonus(userId: string, amount: number, reason: string = 'bonus'): Promise<boolean> {
-    const sessionToken = localStorage.getItem('custom_session_token');
-
-    const { data, error } = await supabase.functions.invoke('ai-add-bonus', {
-      body: { 
-        session_token: sessionToken,
-        user_id: userId,
-        amount,
-        reason
-      }
-    });
-
-    if (error) {
-      console.error('[AIService] AddBonus error:', error);
-      return false;
-    }
-
-    return data.success === true;
   }
 };
