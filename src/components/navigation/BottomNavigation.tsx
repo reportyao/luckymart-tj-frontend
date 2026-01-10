@@ -33,12 +33,6 @@ export const BottomNavigation: React.FC = () => {
       icon: HomeIcon,
       activeIcon: HomeIconSolid,
     },
-    // {
-    //   name: t('nav.lottery'),
-    //   path: '/lottery',
-    //   icon: SparklesIcon,
-    //   activeIcon: SparklesIconSolid,
-    // },
     {
       name: t('showoff.showoff'),
       path: '/showoff',
@@ -50,6 +44,12 @@ export const BottomNavigation: React.FC = () => {
       path: '/wallet',
       icon: CreditCardIcon,
       activeIcon: CreditCardIconSolid,
+    },
+    {
+      name: 'AI',
+      path: '/ai',
+      icon: SparklesIcon,
+      activeIcon: SparklesIconSolid,
     },
     {
       name: t('nav.profile'),

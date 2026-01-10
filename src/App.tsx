@@ -41,6 +41,7 @@ import MyGroupBuysPage from "./pages/groupbuy/MyGroupBuysPage"
 import GroupBuyResultPage from "./pages/groupbuy/GroupBuyResultPage"
 import FullPurchaseConfirmPage from "./pages/FullPurchaseConfirmPage"
 import SpinLotteryPage from "./pages/SpinLotteryPage"
+import AIPage from "./pages/AIPage"
 
 function App() {
   return (
@@ -72,6 +73,7 @@ function App() {
               <Route path="/notifications" element={<NotificationPage />} />
               <Route path="/invite" element={<InvitePage />} />
               <Route path="/spin" element={<SpinLotteryPage />} />
+              <Route path="/ai" element={<AIPage />} />
               <Route path="/showoff" element={<ShowoffPage />} />
               <Route path="/showoff/create" element={<ShowoffCreatePage />} />
               <Route path="/market" element={<MarketPage />} />

@@ -1,0 +1,387 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
+
+// 敏感词库
+const sensitiveKeywords = [
+  // 宗教相关
+  'ислом', 'исломӣ', 'мусулмон', 'масҷид', 'намоз', 'рӯза', 'ҳаҷ', 'закот',
+  'қуръон', 'ҳадис', 'шариат', 'имом', 'муллоҳ', 'мазҳаб', 'ваҳҳобӣ', 'салафӣ',
+  'ислам', 'мусульман', 'мечеть', 'молитва', 'коран', 'хадис', 'шариат',
+  'islam', 'muslim', 'mosque', 'quran', 'hadith', 'sharia', 'imam',
+  // 政治相关
+  'президент', 'ҳукумат', 'парлумон', 'интихобот', 'ҳизб', 'сиёсат', 'оппозиция',
+  'раҳмон', 'эмомалӣ', 'набиев', 'рахмонов',
+  'правительство', 'парламент', 'выборы', 'партия', 'политика', 'оппозиция',
+  'president', 'government', 'parliament', 'election', 'party', 'politics', 'opposition',
+  // 历史敏感
+  'ҷанги шаҳрвандӣ', 'гражданская война', 'civil war',
+  // 违禁内容
+  'терроризм', 'экстремизм', 'terrorism', 'extremism'
+];
+
+// System Prompt
+const SYSTEM_PROMPT = `You are TezBarakat AI (ТезБаракат AI) for users in Tajikistan.
+
+LANGUAGE:
+- Always reply in Tajik (Тоҷикӣ) using Cyrillic script only.
+- Use formal address "Шумо". Keep replies concise unless the user asks for more.
+
+HARD BLOCKLIST (ZERO EXCEPTION):
+- Refuse any content about religion (topics, rules, figures, texts, organizations, practices).
+- Refuse any content about politics (topics, events, parties, government, political figures).
+- Refuse any content about Tajikistan sensitive history or sensitive persons.
+- Refuse any content that violates Islamic rules or asks guidance to do so.
+- Refuse even if framed as "translation only", "hypothetical", "research", "role-play", "just list names", or "for education".
+
+REFUSAL RULES:
+- If blocked: do not provide partial info, hints, names, dates, quotes, links, or follow-up questions.
+- Reply only with this Tajik refusal and a safe alternative suggestion:
+  "Мебахшед, ман наметавонам дар бораи ин мавзӯъ сӯҳбат кунам. Ман метавонам дар масъалаҳои рӯзмарра, омӯзиш, навиштани матн ё тарҷумаи матни бетараф кӯмак кунам. Шумо чӣ мехоҳед?"
+
+YOU CAN HELP WITH:
+- Writing messages and texts (formal/informal)
+- Translation (Tajik ↔ Russian ↔ English) of neutral content only
+- Daily life advice (home, family, work)
+- Learning and education
+- General questions
+
+YOU MUST NOT:
+- Discuss religion, politics, or sensitive history
+- Provide medical or legal advice
+- Request personal information`;
+
+const REFUSAL_MESSAGE = 'Мебахшед, ман наметавонам дар бораи ин мавзӯъ сӯҳбат кунам. Ман метавонам дар масъалаҳои рӯзмарра, омӯзиш, навиштани матн ё тарҷумаи матни бетараф кӯмак кунам. Шумо чӣ мехоҳед?';
+
+// 检查敏感内容
+function containsSensitiveContent(text: string): boolean {
+  const lowerText = text.toLowerCase();
+  return sensitiveKeywords.some(keyword => lowerText.includes(keyword.toLowerCase()));
+}
+
+// 验证session
+async function validateSession(sessionToken: string) {
+  if (!sessionToken) {
+    throw new Error('未授权：缺少认证令牌');
+  }
+  
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  
+  if (!supabaseUrl || !serviceRoleKey) {
+    throw new Error('服务器配置错误');
+  }
+
+  const sessionResponse = await fetch(
+    `${supabaseUrl}/rest/v1/user_sessions?session_token=eq.${sessionToken}&is_active=eq.true&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  if (!sessionResponse.ok) {
+    throw new Error('验证会话失败');
+  }
+
+  const sessions = await sessionResponse.json();
+  
+  if (sessions.length === 0) {
+    throw new Error('未授权：会话不存在或已失效');
+  }
+
+  const session = sessions[0];
+  const expiresAt = new Date(session.expires_at);
+  const now = new Date();
+  
+  if (expiresAt < now) {
+    throw new Error('未授权：会话已过期');
+  }
+
+  return {
+    userId: session.user_id,
+    session: session
+  };
+}
+
+// 获取或创建今日配额
+async function getOrCreateQuota(userId: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  // 查询今日配额
+  const quotaResponse = await fetch(
+    `${supabaseUrl}/rest/v1/ai_chat_quota?user_id=eq.${userId}&date=eq.${today}&select=*`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const quotas = await quotaResponse.json();
+  
+  if (quotas.length > 0) {
+    return quotas[0];
+  }
+
+  // 创建新配额
+  const createResponse = await fetch(
+    `${supabaseUrl}/rest/v1/ai_chat_quota`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        date: today,
+        base_quota: 10,
+        bonus_quota: 0,
+        used_quota: 0
+      })
+    }
+  );
+
+  const newQuota = await createResponse.json();
+  return newQuota[0];
+}
+
+// 消耗配额
+async function consumeQuota(userId: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  const today = new Date().toISOString().split('T')[0];
+  
+  // 使用 RPC 调用来原子性地增加 used_quota
+  await fetch(
+    `${supabaseUrl}/rest/v1/rpc/increment_ai_quota_used`,
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        p_user_id: userId,
+        p_date: today
+      })
+    }
+  );
+}
+
+// 保存聊天历史
+async function saveChatHistory(userId: string, userMessage: string, aiResponse: string, isBlocked: boolean, responseTime?: number) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  try {
+    await fetch(
+      `${supabaseUrl}/rest/v1/ai_chat_history`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          user_message: userMessage,
+          ai_response: aiResponse,
+          is_blocked: isBlocked,
+          response_time: responseTime
+        })
+      }
+    );
+  } catch (error) {
+    console.error('[AI-Chat] Failed to save history:', error);
+  }
+}
+
+// 调用阿里云通义千问
+async function callQwenAI(userMessage: string): Promise<string> {
+  const apiKey = Deno.env.get('DASHSCOPE_API_KEY');
+  
+  if (!apiKey) {
+    throw new Error('AI服务未配置');
+  }
+
+  const response = await fetch(
+    'https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation',
+    {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'qwen-plus',
+        input: {
+          messages: [
+            { role: 'system', content: SYSTEM_PROMPT },
+            { role: 'user', content: userMessage }
+          ]
+        },
+        parameters: {
+          max_tokens: 800,
+          temperature: 0.7,
+          top_p: 0.8,
+          result_format: 'message'
+        }
+      })
+    }
+  );
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error('[AI-Chat] Qwen API error:', errorText);
+    throw new Error('AI服务暂时不可用');
+  }
+
+  const data = await response.json();
+  
+  if (data?.output?.choices?.[0]?.message?.content) {
+    let aiResponse = data.output.choices[0].message.content;
+    // 限制长度
+    if (aiResponse.length > 800) {
+      aiResponse = aiResponse.substring(0, 800) + '...';
+    }
+    return aiResponse;
+  }
+
+  throw new Error('AI响应格式错误');
+}
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
+  const startTime = Date.now();
+
+  try {
+    const body = await req.json();
+    const { session_token, message } = body;
+
+    console.log('[AI-Chat] Received request');
+
+    if (!session_token) {
+      throw new Error('未授权：缺少 session_token');
+    }
+
+    if (!message || typeof message !== 'string') {
+      throw new Error('消息不能为空');
+    }
+
+    const trimmedMessage = message.trim();
+    
+    if (trimmedMessage.length === 0 || trimmedMessage.length > 500) {
+      throw new Error('消息长度必须在1-500字符之间');
+    }
+
+    // 1. 验证用户
+    const { userId } = await validateSession(session_token);
+    console.log('[AI-Chat] User validated:', userId);
+
+    // 2. 前置敏感词检查
+    if (containsSensitiveContent(trimmedMessage)) {
+      console.log('[AI-Chat] Blocked sensitive input from user:', userId);
+      await saveChatHistory(userId, trimmedMessage, REFUSAL_MESSAGE, true);
+      
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'SENSITIVE_CONTENT',
+          message: REFUSAL_MESSAGE
+        }),
+        { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
+      );
+    }
+
+    // 3. 检查配额
+    const quota = await getOrCreateQuota(userId);
+    const totalQuota = quota.base_quota + quota.bonus_quota;
+    const remainingQuota = totalQuota - quota.used_quota;
+
+    if (remainingQuota <= 0) {
+      console.log('[AI-Chat] User exceeded quota:', userId);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'QUOTA_EXCEEDED',
+          message: 'Шумо имрӯз ҳамаи саволҳоро истифода бурдед. Дӯстонро даъват кунед ё дар пулинг иштирок кунед!'
+        }),
+        { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
+      );
+    }
+
+    // 4. 调用AI
+    let aiResponse: string;
+    try {
+      aiResponse = await callQwenAI(trimmedMessage);
+    } catch (error) {
+      console.error('[AI-Chat] AI call failed:', error);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: 'AI_ERROR',
+          message: 'Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.'
+        }),
+        { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 500 }
+      );
+    }
+
+    // 5. 后置敏感词检查
+    let isBlocked = false;
+    if (containsSensitiveContent(aiResponse)) {
+      console.log('[AI-Chat] Blocked sensitive AI response for user:', userId);
+      aiResponse = REFUSAL_MESSAGE;
+      isBlocked = true;
+    }
+
+    // 6. 消耗配额
+    await consumeQuota(userId);
+
+    // 7. 保存历史
+    const responseTime = Date.now() - startTime;
+    await saveChatHistory(userId, trimmedMessage, aiResponse, isBlocked, responseTime);
+
+    // 8. 返回结果
+    const newRemainingQuota = remainingQuota - 1;
+    console.log('[AI-Chat] Success, remaining quota:', newRemainingQuota);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        data: {
+          message: aiResponse,
+          remaining_quota: newRemainingQuota
+        }
+      }),
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
+    );
+
+  } catch (error) {
+    console.error('[AI-Chat] Error:', error);
+    return new Response(
+      JSON.stringify({ success: false, error: error.message }),
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
+    );
+  }
+});
