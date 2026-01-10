@@ -30,7 +30,7 @@ const ProfilePage: React.FC = () => {
   const handleCopyReferralLink = async () => {
     if (user?.invite_code) {
       // 复制完整的邀请链接
-      const inviteLink = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
+      const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${user.invite_code}`
       const success = await copyToClipboard(inviteLink)
       if (success) {
         toast.success(t('profile.copyReferralCode'))
@@ -43,7 +43,7 @@ const ProfilePage: React.FC = () => {
   const handleShareReferral = () => {
     if (user?.invite_code) {
       const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
-      const shareUrl = `https://t.me/mybot2636_bot?start=ref_${user.invite_code}`
+      const shareUrl = `t.me/mybot2636_bot/shoppp?startapp=${user.invite_code}`
       shareToTelegram(shareText, shareUrl)
     }
   }

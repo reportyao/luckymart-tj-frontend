@@ -286,6 +286,30 @@ Deno.serve(async (req) => {
       console.error('Failed to process first group buy reward:', rewardError);
       // 奖励处理失败不影响主流程
     }
+    
+    // 12. 【新增】给参与拼团的用户增加10次AI对话次数
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      await fetch(`${supabaseUrl}/functions/v1/ai-add-bonus`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: user.id,
+          amount: 10,
+          reason: 'group_buy_participation'
+        })
+      });
+      
+      console.log(`[Group Buy] Awarded 10 AI chats to user ${user.id} for participating`);
+    } catch (aiRewardError) {
+      console.error('Failed to process AI group buy reward:', aiRewardError);
+      // AI奖励失败不影响主流程
+    }
 
     return createResponse({
       success: true,

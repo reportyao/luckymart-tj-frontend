@@ -168,28 +168,50 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 5. 如果中奖（非"谢谢惠顾"），发放积分
+    // 5. 如果中奖（非“谢谢惠顾”），发放奖励
     let newBalance: number | null = null;
-    const isWinner = selectedReward.reward_type === 'LUCKY_COIN' && selectedReward.reward_amount > 0;
+    const isWinner = (selectedReward.reward_type === 'LUCKY_COIN' || selectedReward.reward_type === 'AI_CHAT') && selectedReward.reward_amount > 0;
 
     if (isWinner) {
-      const addCoinsResponse = await fetch(
-        `${supabaseUrl}/rest/v1/rpc/add_user_lucky_coins`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${serviceRoleKey}`,
-            'apikey': serviceRoleKey,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            p_user_id: user_id,
-            p_amount: selectedReward.reward_amount,
-            p_description: `转盘抽奖奖励: ${selectedReward.reward_name}`
-          })
+      if (selectedReward.reward_type === 'LUCKY_COIN') {
+        // 发放积分奖励
+        const addCoinsResponse = await fetch(
+          `${supabaseUrl}/rest/v1/rpc/add_user_lucky_coins`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceRoleKey}`,
+              'apikey': serviceRoleKey,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              p_user_id: user_id,
+              p_amount: selectedReward.reward_amount,
+              p_description: `转盘抽奖奖励: ${selectedReward.reward_name}`
+            })
+          }
+        );
+        newBalance = await addCoinsResponse.json();
+      } else if (selectedReward.reward_type === 'AI_CHAT') {
+        // 发放AI对话次数奖励
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/ai-add-bonus`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${serviceRoleKey}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              user_id: user_id,
+              amount: selectedReward.reward_amount,
+              reason: 'spin_lottery_reward'
+            })
+          });
+          console.log(`[Spin Lottery] Awarded ${selectedReward.reward_amount} AI chats to user ${user_id}`);
+        } catch (aiError) {
+          console.error('Failed to award AI chats:', aiError);
         }
-      );
-      newBalance = await addCoinsResponse.json();
+      }
     }
 
     // 6. 记录抽奖日志

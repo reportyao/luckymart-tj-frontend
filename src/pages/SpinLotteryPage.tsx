@@ -310,7 +310,7 @@ const SpinLotteryPage: React.FC = () => {
   const copyInviteLink = () => {
     if (!spinData?.referral_code) return;
     
-    const inviteLink = `https://t.me/mybot2636_bot?start=ref_${spinData.referral_code}`;
+    const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     toast.success(t('spin.linkCopied'));
@@ -321,7 +321,7 @@ const SpinLotteryPage: React.FC = () => {
   const shareInvite = () => {
     if (!spinData?.referral_code) return;
     
-    const inviteLink = `https://t.me/mybot2636_bot?start=ref_${spinData.referral_code}`;
+    const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
     const shareText = t('spin.shareText', { link: inviteLink });
     
     // 尝试使用 Telegram WebApp 分享

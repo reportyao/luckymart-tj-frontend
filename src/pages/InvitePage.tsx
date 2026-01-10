@@ -27,7 +27,7 @@ const InvitePage: React.FC = () => {
 
   const [isActivating, setIsActivating] = useState(false);
   const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
-  const inviteLink = `https://t.me/mybot2636_bot?start=ref_${inviteCode}`;
+  const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${inviteCode}`;
 
   const fetchInviteData = useCallback(async () => {
     setIsLoading(true);

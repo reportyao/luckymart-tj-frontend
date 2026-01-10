@@ -308,6 +308,41 @@ Deno.serve(async (req) => {
                     });
 
                     console.log(`[Invite Reward] Awarded 1 spin to inviter ${referredById} for inviting ${user.id}`);
+                    
+                    // 给邀请人和被邀请人各增加5次AI对话次数
+                    try {
+                        // 给邀请人增加AI次数
+                        await fetch(`${supabaseUrl}/functions/v1/ai-add-bonus`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${serviceRoleKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_id: referredById,
+                                amount: 5,
+                                reason: 'invite_reward'
+                            })
+                        });
+                        
+                        // 给被邀请人增加AI次数
+                        await fetch(`${supabaseUrl}/functions/v1/ai-add-bonus`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${serviceRoleKey}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                user_id: user.id,
+                                amount: 5,
+                                reason: 'invite_reward'
+                            })
+                        });
+                        
+                        console.log(`[Invite Reward] Awarded 5 AI chats to both inviter ${referredById} and invitee ${user.id}`);
+                    } catch (aiRewardError) {
+                        console.error('Failed to process AI invite reward:', aiRewardError);
+                    }
                 } catch (inviteError) {
                     console.error('Failed to process invite reward:', inviteError);
                     // 邀请奖励失败不影响用户注册

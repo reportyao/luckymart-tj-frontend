@@ -177,6 +177,11 @@ export function AIChat({ onBack, onQuotaUpdate }: AIChatProps) {
             {input.length}/500
           </div>
         )}
+        
+        {/* AI免责声明 */}
+        <div className="text-center text-xs text-gray-400 mt-2">
+          AI танҳо барои маълумот аст, на мавқеи расмӣ.
+        </div>
       </div>
     </div>
   );
