@@ -30,6 +30,40 @@ const InvitePage: React.FC = () => {
   const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
   const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${inviteCode}`;
 
+  // 加载佣金配置 - 独立于用户登录状态
+  const loadCommissionConfig = useCallback(async () => {
+    try {
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const configResponse = await fetch(
+        `${supabaseUrl}/rest/v1/commission_settings?is_active=eq.true&order=level.asc`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+        }
+      );
+      if (configResponse.ok) {
+        const configData = await configResponse.json();
+        if (configData && configData.length > 0) {
+          const rates: Record<number, number> = {};
+          configData.forEach((config: any) => {
+            rates[config.level] = config.rate;
+          });
+          setCommissionRates(rates);
+        }
+      }
+    } catch (configError) {
+      console.warn('加载佣金配置失败:', configError);
+    }
+  }, []);
+
+  // 页面加载时立即加载佣金配置
+  useEffect(() => {
+    loadCommissionConfig();
+  }, [loadCommissionConfig]);
+
   const fetchInviteData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -39,33 +73,6 @@ const InvitePage: React.FC = () => {
         setInvitedUsers([]);
         setIsLoading(false);
         return;
-      }
-
-      // 加载佣金配置 - 使用REST API直接调用
-      try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-        const configResponse = await fetch(
-          `${supabaseUrl}/rest/v1/commission_settings?is_active=eq.true&order=level.asc`,
-          {
-            headers: {
-              'Authorization': `Bearer ${supabaseKey}`,
-              'apikey': supabaseKey,
-            },
-          }
-        );
-        if (configResponse.ok) {
-          const configData = await configResponse.json();
-          if (configData && configData.length > 0) {
-            const rates: Record<number, number> = {};
-            configData.forEach((config: any) => {
-              rates[config.level] = config.rate;
-            });
-            setCommissionRates(rates);
-          }
-        }
-      } catch (configError) {
-        console.warn('加载佣金配置失败:', configError);
       }
 
       // 使用Edge Function获取邀请数据
