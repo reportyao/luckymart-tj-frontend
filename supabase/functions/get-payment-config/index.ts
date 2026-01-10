@@ -35,7 +35,18 @@ serve(async (req) => {
 
     if (error) {
       console.error('获取支付配置失败:', error)
-      throw new Error('获取支付配置失败')
+      // 如果表不存在或没有数据，返回空数组而不是错误
+      return new Response(
+        JSON.stringify({
+          success: true,
+          data: [],
+          message: '暂无支付配置'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 200,
+        }
+      )
     }
 
     return new Response(

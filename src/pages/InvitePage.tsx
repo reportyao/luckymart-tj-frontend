@@ -24,6 +24,7 @@ const InvitePage: React.FC = () => {
   const [invitedUsers, setInvitedUsers] = useState<InvitedUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [commissionRates, setCommissionRates] = useState<Record<number, number>>({ 1: 0.03, 2: 0.01, 3: 0.005 });
 
   const [isActivating, setIsActivating] = useState(false);
   const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
@@ -38,6 +39,21 @@ const InvitePage: React.FC = () => {
         setInvitedUsers([]);
         setIsLoading(false);
         return;
+      }
+
+      // 加载佣金配置
+      const { data: configData, error: configError } = await supabase
+        .from('commission_config')
+        .select('*')
+        .eq('is_active', true)
+        .order('level', { ascending: true });
+      
+      if (!configError && configData && configData.length > 0) {
+        const rates: Record<number, number> = {};
+        configData.forEach((config: any) => {
+          rates[config.level] = config.rate;
+        });
+        setCommissionRates(rates);
       }
 
       // 使用Edge Function获取邀请数据
@@ -347,7 +363,7 @@ const InvitePage: React.FC = () => {
                   <p className="text-xs text-gray-500">{t('invite.level1Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-blue-600">3%</span>
+              <span className="text-lg font-bold text-blue-600">{(commissionRates[1] * 100).toFixed(1)}%</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
@@ -360,7 +376,7 @@ const InvitePage: React.FC = () => {
                   <p className="text-xs text-gray-500">{t('invite.level2Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-purple-600">1%</span>
+              <span className="text-lg font-bold text-purple-600">{(commissionRates[2] * 100).toFixed(1)}%</span>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
@@ -373,7 +389,7 @@ const InvitePage: React.FC = () => {
                   <p className="text-xs text-gray-500">{t('invite.level3Desc')}</p>
                 </div>
               </div>
-              <span className="text-lg font-bold text-orange-600">0.5%</span>
+              <span className="text-lg font-bold text-orange-600">{(commissionRates[3] * 100).toFixed(1)}%</span>
             </div>
           </div>
 

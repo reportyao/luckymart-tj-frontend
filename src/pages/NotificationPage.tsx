@@ -156,7 +156,7 @@ const NotificationPage: React.FC = () => {
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
         const groupBuyResponse = await fetch(
-          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,winner_id)&order=created_at.desc&limit=20`,
+          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,session_code)&order=created_at.desc&limit=20`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,

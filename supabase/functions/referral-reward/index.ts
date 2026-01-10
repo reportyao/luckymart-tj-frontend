@@ -40,11 +40,27 @@ serve(async (req) => {
       )
     }
 
-    // 计算佣金比例
-    const commissionRates = {
-      1: 0.10, // 一级 10%
-      2: 0.05, // 二级 5%
-      3: 0.02  // 三级 2%
+    // 从数据库读取佣金配置
+    const { data: commissionConfig, error: configError } = await supabaseClient
+      .from('commission_config')
+      .select('*')
+      .eq('is_active', true)
+      .order('level', { ascending: true })
+    
+    if (configError || !commissionConfig || commissionConfig.length === 0) {
+      console.error('Failed to load commission config:', configError)
+      // 如果配置加载失败，使用默认配置
+      const commissionRates = {
+        1: 0.10, // 一级 10%
+        2: 0.05, // 二级 5%
+        3: 0.02  // 三级 2%
+      }
+    } else {
+      // 使用数据库配置
+      var commissionRates: Record<number, number> = {}
+      commissionConfig.forEach(config => {
+        commissionRates[config.level] = config.rate
+      })
     }
 
     const rewards: Array<{

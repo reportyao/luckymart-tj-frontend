@@ -82,11 +82,19 @@ Deno.serve(async (req) => {
 
         // 处理推荐关系
         let referredById = null;
-        if (startParam && startParam.startsWith('ref_')) {
-            const referralCodeFromParam = startParam.substring(4);
+        if (startParam) {
+            // 支持多种格式：
+            // 1. ref_XXX (旧格式)
+            // 2. XXX (新格式，直接是邀请码)
+            let referralCodeFromParam = startParam;
+            if (startParam.startsWith('ref_')) {
+                referralCodeFromParam = startParam.substring(4);
+            }
             
-            // 查找推荐人
-            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/users?referral_code=eq.${referralCodeFromParam}&select=id`, {
+            console.log(`[Auth] Processing referral code: ${referralCodeFromParam}`);
+            
+            // 查找推荐人（同时支持 referral_code 和 invite_code）
+            const referrerResponse = await fetch(`${supabaseUrl}/rest/v1/users?or=(referral_code.eq.${referralCodeFromParam},invite_code.eq.${referralCodeFromParam})&select=id`, {
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
                     'apikey': serviceRoleKey,
