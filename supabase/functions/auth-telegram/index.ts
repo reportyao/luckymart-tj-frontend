@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
             const updatedUsers = await updateResponse.json();
             user = updatedUsers[0];
         } else {
-            // 创建新用户
+            // 创建新用户 (id 由数据库自动生成)
             const newUserData = {
                 telegram_id: telegramId,
                 telegram_username: userData.username || null,
