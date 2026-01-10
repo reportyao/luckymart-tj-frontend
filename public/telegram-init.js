@@ -32,6 +32,17 @@
     }, 100);
   }
   
+  // 捕获全局错误，忽略 assetCache TIMEOUT 错误
+  const originalError = window.console.error;
+  window.console.error = function(...args) {
+    // 忽略 assetCache.ts 的 TIMEOUT 错误
+    if (args.length > 0 && args[0] && args[0].message === 'TIMEOUT') {
+      console.warn('[Telegram Init] Asset cache timeout ignored (non-critical)');
+      return;
+    }
+    originalError.apply(console, args);
+  };
+  
   // 初始化 Telegram WebApp
   waitForTelegram(function(WebApp) {
     // 标记初始化完成

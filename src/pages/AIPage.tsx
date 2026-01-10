@@ -48,8 +48,14 @@ export default function AIPage() {
     };
     setMessages(prev => [...prev, userMessage]);
 
+    // 清空输入
+    setQuickInput('');
+    
+    // 立即切换到聊天界面
+    setShowWelcome(false);
+
     try {
-      // 发送消息
+      // 异步发送消息（不阻塞UI）
       const response = await sendMessage(trimmedInput);
       
       // 添加AI回复到全局状态
@@ -60,12 +66,6 @@ export default function AIPage() {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, aiMessage]);
-      
-      // 清空输入
-      setQuickInput('');
-      
-      // 切换到聊天界面
-      setShowWelcome(false);
       
       // 更新配额
       refetch();
