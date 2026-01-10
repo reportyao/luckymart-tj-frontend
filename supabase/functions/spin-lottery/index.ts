@@ -175,23 +175,42 @@ Deno.serve(async (req) => {
     if (isWinner) {
       if (selectedReward.reward_type === 'LUCKY_COIN') {
         // 发放积分奖励
-        const addCoinsResponse = await fetch(
-          `${supabaseUrl}/rest/v1/rpc/add_user_lucky_coins`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${serviceRoleKey}`,
-              'apikey': serviceRoleKey,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              p_user_id: user_id,
-              p_amount: selectedReward.reward_amount,
-              p_description: `转盘抽奖奖励: ${selectedReward.reward_name}`
-            })
+        try {
+          const addCoinsResponse = await fetch(
+            `${supabaseUrl}/rest/v1/rpc/add_user_lucky_coins`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${serviceRoleKey}`,
+                'apikey': serviceRoleKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                p_user_id: user_id,
+                p_amount: selectedReward.reward_amount,
+                p_description: `转盘抽奖奖励: ${selectedReward.reward_name}`
+              })
+            }
+          );
+          
+          if (!addCoinsResponse.ok) {
+            const errorText = await addCoinsResponse.text();
+            console.error(`[Spin Lottery] Failed to add lucky coins: ${errorText}`);
+            console.error(`[Spin Lottery] Response status: ${addCoinsResponse.status}`);
+            // 如果是函数不存在的错误，记录详细信息
+            if (errorText.includes('function') || errorText.includes('does not exist')) {
+              console.error('[Spin Lottery] Database function add_user_lucky_coins may not exist. Please check database migrations.');
+            }
+            throw new Error(`Failed to add lucky coins: ${errorText}`);
           }
-        );
-        newBalance = await addCoinsResponse.json();
+          
+          newBalance = await addCoinsResponse.json();
+          console.log(`[Spin Lottery] Successfully added ${selectedReward.reward_amount} coins to user ${user_id}, new balance: ${newBalance}`);
+        } catch (error) {
+          console.error('[Spin Lottery] Error in add_user_lucky_coins:', error);
+          // 积分发放失败，但不影响抽奖记录，只是newBalance为null
+          // 前端会显示中奖，但余额可能不会立即更新
+        }
       } else if (selectedReward.reward_type === 'AI_CHAT') {
         // 发放AI对话次数奖励
         try {

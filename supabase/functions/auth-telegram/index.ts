@@ -303,16 +303,16 @@ Deno.serve(async (req) => {
                             'Content-Type': 'application/json',
                             'Prefer': 'return=minimal'
                         },
-                        body: JSON.stringify({
-                            inviter_id: referredById,
-                            invitee_id: user.id,
-                            reward_type: 'new_user_register',
-                            spin_count_awarded: 1,
-                            lucky_coins_awarded: 10, // 记录给新用户的积分
-                            is_processed: true,
-                            processed_at: new Date().toISOString(),
-                            created_at: new Date().toISOString()
-                        })
+                    body: JSON.stringify({
+                        inviter_id: referredById,
+                        invitee_id: user.id,
+                        reward_type: 'new_user_register',
+                        spin_count_awarded: 1,
+                        lucky_coins_awarded: 10, // 注：这里只是记录，实际积分已在创建钱包时发放（第225行 balance: 10）
+                        is_processed: true,
+                        processed_at: new Date().toISOString(),
+                        created_at: new Date().toISOString()
+                    })
                     });
 
                     console.log(`[Invite Reward] Awarded 1 spin to inviter ${referredById} for inviting ${user.id}`);
