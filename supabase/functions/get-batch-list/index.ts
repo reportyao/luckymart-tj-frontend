@@ -36,19 +36,7 @@ serve(async (req) => {
     // 构建查询
     let query = supabase
       .from('shipment_batches')
-      .select(`
-        *,
-        creator:created_by (
-          id,
-          username,
-          email
-        ),
-        confirmer:confirmed_by (
-          id,
-          username,
-          email
-        )
-      `, { count: 'exact' })
+      .select('*', { count: 'exact' })
 
     // 状态筛选
     if (status) {
