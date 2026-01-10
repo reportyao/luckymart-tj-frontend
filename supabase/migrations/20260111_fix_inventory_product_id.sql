@@ -8,10 +8,11 @@
 ALTER TABLE lotteries ADD COLUMN IF NOT EXISTS inventory_product_sku TEXT;
 
 -- Update inventory_product_sku for records that have a SKU in inventory_product_id
+-- Cast UUID to TEXT for regex matching
 UPDATE lotteries
-SET inventory_product_sku = inventory_product_id
+SET inventory_product_sku = inventory_product_id::TEXT
 WHERE inventory_product_id IS NOT NULL
-  AND inventory_product_id !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
+  AND inventory_product_id::TEXT !~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$';
 
 -- Now update inventory_product_id with the correct UUID from inventory_products table
 UPDATE lotteries l
