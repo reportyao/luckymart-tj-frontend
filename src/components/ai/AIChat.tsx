@@ -14,6 +14,8 @@ interface Message {
 }
 
 interface AIChatProps {
+  initialMessages?: Message[];
+  onMessagesChange?: (messages: Message[]) => void;
   onBack: () => void;
   onQuotaUpdate: () => void;
 }
@@ -27,8 +29,15 @@ const ERROR_MESSAGES: Record<string, string> = {
   'DEFAULT': 'Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.'
 };
 
-export function AIChat({ onBack, onQuotaUpdate }: AIChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
+export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuotaUpdate }: AIChatProps) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  
+  // 同步messages到父组件
+  useEffect(() => {
+    if (onMessagesChange) {
+      onMessagesChange(messages);
+    }
+  }, [messages, onMessagesChange]);
   const [input, setInput] = useState('');
   const { sendMessage, loading } = useAIChat();
   const messagesEndRef = useRef<HTMLDivElement>(null);

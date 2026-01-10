@@ -19,10 +19,18 @@ const ERROR_MESSAGES: Record<string, string> = {
   'DEFAULT': 'Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.'
 };
 
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
 export default function AIPage() {
   const { quota, loading, refetch } = useAIQuota();
   const [showWelcome, setShowWelcome] = useState(true);
   const [quickInput, setQuickInput] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
   const { sendMessage, loading: sending } = useAIChat();
 
   // 处理欢迎页面的快速提问
@@ -31,9 +39,27 @@ export default function AIPage() {
     
     if (!trimmedInput || sending) return;
 
+    // 添加用户消息到全局状态
+    const userMessage: Message = {
+      id: `user-${Date.now()}`,
+      role: 'user',
+      content: trimmedInput,
+      timestamp: new Date()
+    };
+    setMessages(prev => [...prev, userMessage]);
+
     try {
       // 发送消息
-      await sendMessage(trimmedInput);
+      const response = await sendMessage(trimmedInput);
+      
+      // 添加AI回复到全局状态
+      const aiMessage: Message = {
+        id: `ai-${Date.now()}`,
+        role: 'assistant',
+        content: response.message,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, aiMessage]);
       
       // 清空输入
       setQuickInput('');
@@ -145,6 +171,8 @@ export default function AIPage() {
               className="h-full"
             >
               <AIChat 
+                initialMessages={messages}
+                onMessagesChange={setMessages}
                 onBack={() => setShowWelcome(true)} 
                 onQuotaUpdate={refetch}
               />
