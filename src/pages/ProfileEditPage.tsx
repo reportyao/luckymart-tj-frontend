@@ -156,7 +156,7 @@ const ProfileEditPage: React.FC = () => {
 	            </label>
 	            <input
 	              type="text"
-	              value={user?.invite_code || ''}
+	              value={user?.referral_code || user?.invite_code || ''}
 	              disabled
 	              className="w-full px-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed font-mono text-center text-lg"
 	            />

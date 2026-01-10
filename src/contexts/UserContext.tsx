@@ -37,7 +37,8 @@ export type User = UserProfile & {
   telegram_username?: string;
   is_verified?: boolean;
   kyc_level?: string;
-  invite_code?: string;
+  invite_code?: string;  // 兼容旧字段
+  referral_code?: string;  // 新字段（优先使用）
 };
 
 interface UserContextType {

@@ -27,7 +27,7 @@ const InvitePage: React.FC = () => {
   const [commissionRates, setCommissionRates] = useState<Record<number, number>>({ 1: 0.03, 2: 0.01, 3: 0.005 });
 
   const [isActivating, setIsActivating] = useState(false);
-  const inviteCode = user?.invite_code || 'LOADING...'; // 使用 invite_code 字段
+  const inviteCode = user?.referral_code || user?.invite_code || 'LOADING...'; // 优先使用 referral_code，兼容旧的 invite_code
   const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${inviteCode}`;
 
   // 加载佣金配置 - 独立于用户登录状态

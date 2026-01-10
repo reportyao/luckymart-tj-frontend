@@ -28,9 +28,10 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate()
 
   const handleCopyReferralLink = async () => {
-    if (user?.invite_code) {
+    const code = user?.referral_code || user?.invite_code;
+    if (code) {
       // 复制完整的邀请链接
-      const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${user.invite_code}`
+      const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${code}`
       const success = await copyToClipboard(inviteLink)
       if (success) {
         toast.success(t('profile.copyReferralCode'))
@@ -41,9 +42,10 @@ const ProfilePage: React.FC = () => {
   }
 
   const handleShareReferral = () => {
-    if (user?.invite_code) {
-      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${user.invite_code}`
-      const shareUrl = `t.me/mybot2636_bot/shoppp?startapp=${user.invite_code}`
+    const code = user?.referral_code || user?.invite_code;
+    if (code) {
+      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${code}`
+      const shareUrl = `t.me/mybot2636_bot/shoppp?startapp=${code}`
       shareToTelegram(shareText, shareUrl)
     }
   }
@@ -177,7 +179,7 @@ const ProfilePage: React.FC = () => {
         
         <div className="bg-gray-50 rounded-xl p-4 mb-4">
           <p className="text-2xl font-bold text-center text-gray-900 font-mono">
-            {user?.invite_code || '------'}
+            {user?.referral_code || user?.invite_code || '------'}
           </p>
         </div>
 
