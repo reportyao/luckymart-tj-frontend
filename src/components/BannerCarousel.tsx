@@ -7,9 +7,6 @@ interface Banner {
   id: string;
   title: string;
   image_url: string;
-  image_url_zh: string | null;
-  image_url_ru: string | null;
-  image_url_tg: string | null;
   link_url: string | null;
   link_type: string;
 }
@@ -28,22 +25,6 @@ const BannerCarousel: React.FC = () => {
   const preloadedRef = useRef<boolean>(false);
   const loadedCountRef = useRef<number>(0);
 
-  // 根据当前语言获取对应的Banner图片
-  const getLocalizedImageUrl = useCallback((banner: Banner): string => {
-    const lang = i18n.language;
-    
-    if (lang === 'zh' && banner.image_url_zh) return banner.image_url_zh;
-    if (lang === 'ru' && banner.image_url_ru) return banner.image_url_ru;
-    if (lang === 'tg' && banner.image_url_tg) return banner.image_url_tg;
-    
-    // Fallback
-    if (banner.image_url_zh) return banner.image_url_zh;
-    if (banner.image_url_ru) return banner.image_url_ru;
-    if (banner.image_url_tg) return banner.image_url_tg;
-    
-    return banner.image_url;
-  }, [i18n.language]);
-
   // 预加载所有图片
   const preloadImages = useCallback((bannerList: Banner[]) => {
     if (preloadedRef.current || bannerList.length === 0) return;
@@ -53,7 +34,6 @@ const BannerCarousel: React.FC = () => {
     const totalImages = bannerList.length;
     
     bannerList.forEach((banner) => {
-      const imageUrl = getLocalizedImageUrl(banner);
       const img = new Image();
       img.onload = () => {
         loadedCountRef.current += 1;
@@ -67,14 +47,14 @@ const BannerCarousel: React.FC = () => {
           setImagesLoaded(true);
         }
       };
-      img.src = imageUrl;
+      img.src = banner.image_url;
     });
     
     // 超时后强制显示
     setTimeout(() => {
       setImagesLoaded(true);
     }, 3000);
-  }, [getLocalizedImageUrl]);
+  }, []);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -90,7 +70,7 @@ const BannerCarousel: React.FC = () => {
       try {
         const { data, error } = await (supabase as any)
           .from('banners')
-          .select('id, title, image_url, image_url_zh, image_url_ru, image_url_tg, link_url, link_type')
+          .select('id, title, image_url, link_url, link_type')
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
 
@@ -122,11 +102,6 @@ const BannerCarousel: React.FC = () => {
     return () => clearInterval(interval);
   }, [banners.length, imagesLoaded]);
 
-  // 预计算所有图片URL
-  const imageUrls = useMemo(() => {
-    return banners.map(banner => getLocalizedImageUrl(banner));
-  }, [banners, getLocalizedImageUrl]);
-
   if (isLoading) {
     return (
       <div className="relative h-40 bg-gray-200 rounded-2xl animate-pulse"></div>
@@ -156,7 +131,7 @@ const BannerCarousel: React.FC = () => {
             }}
           >
             <img
-              src={imageUrls[index]}
+              src={banner.image_url}
               alt={banner.title}
               className="w-full h-full object-cover"
               style={{
