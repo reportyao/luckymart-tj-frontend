@@ -41,19 +41,31 @@ const InvitePage: React.FC = () => {
         return;
       }
 
-      // 加载佣金配置
-      const { data: configData, error: configError } = await supabase
-        .from('commission_config')
-        .select('*')
-        .eq('is_active', true)
-        .order('level', { ascending: true });
-      
-      if (!configError && configData && configData.length > 0) {
-        const rates: Record<number, number> = {};
-        configData.forEach((config: any) => {
-          rates[config.level] = config.rate;
-        });
-        setCommissionRates(rates);
+      // 加载佣金配置 - 使用REST API直接调用
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const configResponse = await fetch(
+          `${supabaseUrl}/rest/v1/commission_config?is_active=eq.true&order=level.asc`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (configResponse.ok) {
+          const configData = await configResponse.json();
+          if (configData && configData.length > 0) {
+            const rates: Record<number, number> = {};
+            configData.forEach((config: any) => {
+              rates[config.level] = config.rate;
+            });
+            setCommissionRates(rates);
+          }
+        }
+      } catch (configError) {
+        console.warn('加载佣金配置失败:', configError);
       }
 
       // 使用Edge Function获取邀请数据
