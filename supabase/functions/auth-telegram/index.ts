@@ -371,7 +371,7 @@ Deno.serve(async (req) => {
 
         // 创建会话token（简单实现）
         const sessionToken = crypto.randomUUID();
-        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7天后过期
+        const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30天后过期
 
         // 创建用户会话
         const sessionData = {

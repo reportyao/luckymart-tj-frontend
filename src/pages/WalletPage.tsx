@@ -40,7 +40,10 @@ const WalletPage: React.FC = () => {
   }
 
   const fetchTransactions = useCallback(async () => {
-    if (!user) return
+    if (!user) {
+      setIsLoadingTransactions(false)
+      return
+    }
     
     setIsLoadingTransactions(true)
     try {
@@ -125,9 +128,11 @@ const WalletPage: React.FC = () => {
       
       setTransactions(uniqueTransactions.slice(0, 30))
       setHasLoadedTransactions(true)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch transactions:', error)
-      toast.error(t('error.networkError'))
+      // 不显示错误提示，只记录日志
+      setTransactions([])
+      setHasLoadedTransactions(true)
     } finally {
       setIsLoadingTransactions(false)
     }

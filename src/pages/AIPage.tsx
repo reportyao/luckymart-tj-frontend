@@ -92,41 +92,37 @@ export default function AIPage() {
                 {/* 每日谚语 */}
                 <DailyProverb />
 
-                {/* 快捷提问建议 */}
-                <QuickSuggestions />
-
-                {/* 直接输入框和按钮 */}
+                {/* 直接输入框和按钮 - 移到谚语下方 */}
                 <div className="space-y-3">
                   <div className="flex items-end gap-2">
-                    <input
-                      type="text"
+                    <textarea
                       value={quickInput}
                       onChange={(e) => setQuickInput(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          handleQuickSend();
+                        }
+                      }}
                       placeholder="Саволи худро нависед..."
-                      className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       disabled={sending}
                       maxLength={500}
+                      rows={4}
+                      style={{ minHeight: '100px' }}
                     />
                     <button
                       onClick={handleQuickSend}
                       disabled={sending || !quickInput.trim()}
-                      className="p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors"
+                      className="p-3 bg-blue-600 text-white rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-blue-700 transition-colors self-end"
                     >
                       <PaperAirplaneIcon className="w-5 h-5" />
                     </button>
                   </div>
-
-                  {/* 或者点击按钮进入完整对话 */}
-                  <motion.button
-                    onClick={() => setShowWelcome(false)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl font-medium shadow-lg hover:shadow-xl transition-shadow"
-                  >
-                    Оғоз кардани гуфтугӯ
-                  </motion.button>
                 </div>
+
+                {/* 快捷提问建议 */}
+                <QuickSuggestions />
 
                 {/* 使用说明 */}
                 <div className="text-center text-sm text-gray-500 space-y-1">
