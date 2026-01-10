@@ -156,7 +156,7 @@ const NotificationPage: React.FC = () => {
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
         const groupBuyResponse = await fetch(
-          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,session_code)&order=created_at.desc&limit=20`,
+          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,winner_id)&order=created_at.desc&limit=20`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
@@ -168,8 +168,9 @@ const NotificationPage: React.FC = () => {
         if (groupBuyResponse.ok) {
           const groupBuyResults = await groupBuyResponse.json();
           groupBuyResults.forEach((order: any) => {
-            if (order.session?.status === 'SUCCESS') {
-              const isWinner = order.session.winner_id === user.id || order.session.winner_id === (user as any).telegram_id;
+            if (order.session?.status === 'SUCCESS' || order.session?.status === 'COMPLETED') {
+              // 检查用户是否是中奖者
+              const isWinner = order.session?.winner_id === user.id || order.session?.winner_id === (user as any).telegram_id;
               allNotifications.push({
                 id: `groupbuy_${order.id}`,
                 user_id: user.id,
