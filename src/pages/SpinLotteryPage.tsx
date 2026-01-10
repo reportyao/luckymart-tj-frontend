@@ -321,12 +321,15 @@ const SpinLotteryPage: React.FC = () => {
   const shareInvite = () => {
     if (!spinData?.referral_code) return;
     
-    const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
+    const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
     const shareText = t('spin.shareText', { link: inviteLink });
     
-    // 尝试使用 Telegram WebApp 分享
-    if (window.Telegram?.WebApp?.switchInlineQuery) {
-      window.Telegram.WebApp.switchInlineQuery(shareText, ['users', 'groups']);
+    // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面
+    // switchInlineQuery 需要 bot 启用 inline mode，我们改用直接分享链接
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      // 使用 Telegram 的分享链接
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else if (navigator.share) {
       navigator.share({
         title: t('spin.shareTitle'),

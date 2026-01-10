@@ -496,11 +496,24 @@ const InvitePage: React.FC = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <img
-                      src={invitedUser.avatar_url || 'default-avatar.png'}
-                      alt="Avatar"
-                      className="w-10 h-10 rounded-full object-cover"
-                    />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold">
+                      {invitedUser.avatar_url ? (
+                        <img
+                          src={invitedUser.avatar_url}
+                          alt="Avatar"
+                          className="w-10 h-10 rounded-full object-cover"
+                          onError={(e) => {
+                            // 如果图片加载失败，显示首字母
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
+                      ) : null}
+                      {!invitedUser.avatar_url && (
+                        <span className="text-lg">
+                          {(invitedUser.telegram_username || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
                     <div>
                       <p className="font-medium text-gray-900">{invitedUser.telegram_username || t('invite.anonymousUser')}</p>
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getLevelBadge(invitedUser.level)}`}>

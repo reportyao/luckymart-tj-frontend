@@ -58,12 +58,21 @@ export const aiService = {
 
     if (error) {
       console.error('[AIService] Chat error:', error);
+      // 检查是否是 400 错误（配额不足）
+      if (error.message && error.message.includes('400')) {
+        throw new AIServiceError('QUOTA_EXCEEDED', '您今天的AI提问次数已用完，请邀请好友或参与拼团获取更多次数！');
+      }
       throw new AIServiceError('AI_ERROR', error.message || 'AI 服务暂时不可用');
     }
 
     if (!data.success) {
       const errorCode = data.error as AIErrorCode;
-      throw new AIServiceError(errorCode, data.message || '请求失败');
+      const errorMessage = data.message || '请求失败';
+      // 如果是配额不足，使用更友好的提示
+      if (errorCode === 'QUOTA_EXCEEDED') {
+        throw new AIServiceError(errorCode, '您今天的AI提问次数已用完，请邀请好友或参与拼团获取更多次数！');
+      }
+      throw new AIServiceError(errorCode, errorMessage);
     }
 
     return data.data as AIChatResponse;

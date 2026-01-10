@@ -141,8 +141,12 @@ const WalletPage: React.FC = () => {
   useEffect(() => {
     if (user && wallets.length > 0 && !hasLoadedTransactions) {
       fetchTransactions()
+    } else if (user && wallets.length === 0 && !hasLoadedTransactions) {
+      // 如果用户没有钱包，直接设置为加载完成
+      setIsLoadingTransactions(false)
+      setHasLoadedTransactions(true)
     }
-  }, [user, wallets, hasLoadedTransactions])
+  }, [user, wallets, hasLoadedTransactions, fetchTransactions])
 
 
 
