@@ -42,7 +42,7 @@ serve(async (req) => {
 
     // 从数据库读取佣金配置
     const { data: commissionConfig, error: configError } = await supabaseClient
-      .from('commission_config')
+      .from('commission_settings')
       .select('*')
       .eq('is_active', true)
       .order('level', { ascending: true })

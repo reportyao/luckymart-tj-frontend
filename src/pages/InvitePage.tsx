@@ -46,7 +46,7 @@ const InvitePage: React.FC = () => {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         const configResponse = await fetch(
-          `${supabaseUrl}/rest/v1/commission_config?is_active=eq.true&order=level.asc`,
+          `${supabaseUrl}/rest/v1/commission_settings?is_active=eq.true&order=level.asc`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
