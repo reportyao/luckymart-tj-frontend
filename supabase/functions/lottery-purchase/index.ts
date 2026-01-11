@@ -154,9 +154,11 @@ Deno.serve(async (req) => {
     const totalAmount = lottery.ticket_price * quantity;
 
     // 获取用户钱包
-    const walletType = paymentMethod === 'BALANCE_WALLET' ? 'BALANCE' : 'LUCKY_COIN';
+    // 注意：数据库中现金余额的type是'TJS'，积分的currency是'POINTS'
+    const walletType = paymentMethod === 'BALANCE_WALLET' ? 'TJS' : 'LUCKY_COIN';
+    const walletCurrency = paymentMethod === 'BALANCE_WALLET' ? lottery.currency : 'POINTS';
     const walletResponse = await fetch(
-      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.${walletType}&currency=eq.${lottery.currency}&select=*`,
+      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.${walletType}&currency=eq.${walletCurrency}&select=*`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
