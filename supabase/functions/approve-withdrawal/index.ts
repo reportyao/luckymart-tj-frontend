@@ -87,7 +87,7 @@ serve(async (req) => {
       .from('wallets')
       .select('*')
       .eq('user_id', withdrawalRequest.user_id)
-      .eq('type', 'BALANCE')
+      .eq('type', 'TJS')
       .eq('currency', withdrawalRequest.currency)
       .single()
 

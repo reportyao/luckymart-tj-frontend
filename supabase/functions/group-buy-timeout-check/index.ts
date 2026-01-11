@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
             }
           }
 
-          // Get user's wallet - 使用 type='BALANCE'
+          // Get user's wallet - 使用 type='TJS'
           const { data: wallet } = await supabase
             .from('wallets')
             .select('*')

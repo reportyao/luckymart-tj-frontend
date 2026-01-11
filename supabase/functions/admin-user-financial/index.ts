@@ -98,7 +98,7 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
   if (walletsError) throw walletsError
 
   const luckyCoinsWallet = wallets.find((w: any) => w.type === 'LUCKY_COIN')
-  const cashWallet = wallets.find((w: any) => w.type === 'BALANCE')
+  const cashWallet = wallets.find((w: any) => w.type === 'TJS')
 
   // 2. 获取佣金统计
   const { data: commissions, error: commissionsError } = await supabaseClient

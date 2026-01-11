@@ -208,7 +208,7 @@ Deno.serve(async (req) => {
             const wallets = [
                 {
                     user_id: user.id,
-                    type: 'BALANCE',
+                    type: 'TJS',
                     currency: 'TJS',
                     balance: 0,
                     frozen_balance: 0,

@@ -10,13 +10,13 @@ import { useAIChat } from '../hooks/ai/useAIChat';
 import { AIServiceError } from '../lib/aiService';
 import toast from 'react-hot-toast';
 
-// 错误消息映射 (塔吉克语)
+// 错误消息映射 (中文)
 const ERROR_MESSAGES: Record<string, string> = {
-  'QUOTA_EXCEEDED': 'Шумо имрӯз ҳамаи саволҳоро истифода бурдед. Дӯстонро даъват кунед ё дар пулинг иштирок кунед!',
-  'SENSITIVE_CONTENT': 'Мебахшед, ман наметавонам дар бораи ин мавзӯъ сӯҳбат кунам. Лутфан мавзӯъи дигар интихоб кунед.',
-  'AI_ERROR': 'Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.',
-  'UNAUTHORIZED': 'Лутфан аввал ворид шавед.',
-  'DEFAULT': 'Хатогӣ рух дод. Лутфан дубора кӯшиш кунед.'
+  'QUOTA_EXCEEDED': '今日提问次数已用完，邀请好友或参与拼团可获得更多次数！',
+  'SENSITIVE_CONTENT': '抱歉，我无法回答这个问题。请换一个话题。',
+  'AI_ERROR': '发生错误，请重试。',
+  'UNAUTHORIZED': '请先登录。',
+  'DEFAULT': '发生错误，请重试。'
 };
 
 interface Message {

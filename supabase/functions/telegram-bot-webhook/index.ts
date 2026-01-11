@@ -152,7 +152,7 @@ const commands: BotCommand[] = [
           return messages[lang as keyof typeof messages]?.balance_error || messages.zh.balance_error;
         }
 
-        const balanceWallet = wallets.find(w => w.wallet_type === 'BALANCE')?.balance || 0;
+        const balanceWallet = wallets.find(w => w.wallet_type === 'TJS')?.balance || 0;
         const luckyCoinWallet = wallets.find(w => w.wallet_type === 'LUCKY_COIN')?.balance || 0;
 
         const balanceText = {

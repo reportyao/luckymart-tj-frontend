@@ -193,7 +193,6 @@ Deno.serve(async (req) => {
       payment_method: paymentMethod,
       lottery_id: lotteryId,
       quantity: quantity,
-      selected_numbers: null,
       status: 'PENDING',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()

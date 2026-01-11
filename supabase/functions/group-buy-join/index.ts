@@ -84,12 +84,12 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'User not found' }, 404);
     }
 
-    // 3. Get user's BALANCE wallet (type='BALANCE')
+    // 3. Get user's TJS wallet (type='TJS')
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', user_id)
-      .eq('type', 'BALANCE')
+      .eq('type', 'TJS')
       .single();
 
     if (walletError || !wallet) {

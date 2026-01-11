@@ -394,7 +394,7 @@ const LotteryDetailPage: React.FC = () => {
         {/* Image Carousel */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div 
-            className="relative aspect-square overflow-hidden bg-gray-50"
+            className="relative h-64 overflow-hidden bg-gray-50"
             onTouchStart={(e) => {
               setAutoPlayEnabled(false); // 用户交互时暂停自动播放
               const touch = e.touches[0];

@@ -442,7 +442,7 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         balance_before: targetWallet.balance,
         balance_after: newTargetBalance,
         status: 'COMPLETED',
-        description: `从${sourceWallet.type === 'BALANCE' ? '余额钱包' : '积分钱包'}兑换`,
+        description: `从${sourceWallet.type === 'TJS' ? '余额钱包' : '积分钱包'}兑换`,
         processed_at: new Date().toISOString(),
         created_at: new Date().toISOString()
     };
