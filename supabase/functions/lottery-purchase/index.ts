@@ -175,9 +175,13 @@ Deno.serve(async (req) => {
 
     const wallet = wallets[0];
 
-    // 检查钱包余额
-    if (wallet.balance < totalAmount) {
-      throw new Error('Insufficient wallet balance');
+    // 检查可用余额（余额 - 冻结金额）
+    const currentBalance = parseFloat(wallet.balance) || 0;
+    const frozenBalance = parseFloat(wallet.frozen_balance) || 0;
+    const availableBalance = currentBalance - frozenBalance;
+    
+    if (availableBalance < totalAmount) {
+      throw new Error(`Insufficient available balance. Available: ${availableBalance.toFixed(2)}, Required: ${totalAmount.toFixed(2)} (Total: ${currentBalance.toFixed(2)}, Frozen: ${frozenBalance.toFixed(2)})`);
     }
 
     // 生成订单号
