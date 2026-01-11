@@ -27,7 +27,7 @@ serve(async (req) => {
 
     // 获取支付配置
     const { data: configs, error } = await supabaseClient
-      .from('payment_configs')
+      .from('payment_config')
       .select('*')
       .eq('config_type', configType)
       .eq('is_enabled', true)
