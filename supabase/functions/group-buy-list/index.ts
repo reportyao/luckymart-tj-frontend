@@ -23,11 +23,27 @@ function createResponse(data: any, status: number = 200) {
   });
 }
 
-// Helper function to ensure product data is properly formatted
+// Helper function to map database fields to frontend expected fields
 function mapProductToFrontend(product: any) {
+  if (!product) return null;
+  
   return {
-    ...product,
-    // group_size is the database field name, keep it as is
+    id: product.id,
+    title: product.name_i18n || { zh: product.name || '', ru: '', tg: '' },
+    description: product.description_i18n || { zh: product.description || '', ru: '', tg: '' },
+    image_url: product.image_url,
+    images: product.image_urls || (product.image_url ? [product.image_url] : []),
+    original_price: product.original_price,
+    price_per_person: product.group_price, // 数据库: group_price -> 前端: price_per_person
+    group_size: product.max_participants || product.min_participants, // 数据库: max_participants -> 前端: group_size
+    timeout_hours: product.duration_hours, // 数据库: duration_hours -> 前端: timeout_hours
+    product_type: product.status || 'ACTIVE',
+    price_comparisons: product.price_comparisons || [],
+    currency: product.currency || 'TJS',
+    stock: product.stock,
+    status: product.status,
+    created_at: product.created_at,
+    updated_at: product.updated_at,
   };
 }
 

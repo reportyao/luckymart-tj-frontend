@@ -46,7 +46,16 @@ export default function AIPage() {
       content: trimmedInput,
       timestamp: new Date()
     };
-    setMessages(prev => [...prev, userMessage]);
+    
+    // 添加一个“正在思考”的占位消息
+    const thinkingMessage: Message = {
+      id: 'thinking',
+      role: 'assistant',
+      content: 'Дар ҳоли фикр кардан...', // "正在思考..."
+      timestamp: new Date()
+    };
+    
+    setMessages([userMessage, thinkingMessage]);
 
     // 清空输入
     setQuickInput('');
@@ -55,17 +64,17 @@ export default function AIPage() {
     setShowWelcome(false);
 
     try {
-      // 异步发送消息（不阻塞UI）
+      // 异步发送消息
       const response = await sendMessage(trimmedInput);
       
-      // 添加AI回复到全局状态
+      // 添加AI回复到全局状态，替换占位消息
       const aiMessage: Message = {
         id: `ai-${Date.now()}`,
         role: 'assistant',
         content: response.message,
         timestamp: new Date()
       };
-      setMessages(prev => [...prev, aiMessage]);
+      setMessages([userMessage, aiMessage]);
       
       // 更新配额
       refetch();

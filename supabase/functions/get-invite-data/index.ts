@@ -29,7 +29,7 @@ serve(async (req) => {
     // 获取邀请的用户列表
     const { data: referralsData, error: referralsError } = await supabase
       .from('users')
-      .select('id, first_name, telegram_username, telegram_photo_url, created_at')
+      .select('id, first_name, telegram_username, avatar_url, created_at')
       .eq('referred_by_id', user_id)
 
     if (referralsError) {
@@ -60,7 +60,7 @@ serve(async (req) => {
     const invited_users = referralsData?.map(u => ({
       id: u.id,
       telegram_username: u.telegram_username,
-      avatar_url: u.telegram_photo_url || null,
+      avatar_url: u.avatar_url || null,
       created_at: u.created_at,
       level: 1,
       total_spent: 0,

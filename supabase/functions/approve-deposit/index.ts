@@ -100,18 +100,38 @@ serve(async (req) => {
     if (action === 'APPROVED') {
       // 获取用户余额钱包
       console.log('查询用户钱包...')
-      const { data: wallet, error: walletError } = await supabaseClient
+      let { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
         .select('*')
         .eq('user_id', depositRequest.user_id)
-        .eq('type', 'BALANCE')
+        .eq('type', 'TJS')
         .eq('currency', depositRequest.currency)
         .single()
 
       console.log('钱包查询结果:', { wallet, walletError })
 
+      // 如果钱包不存在，自动创建
       if (walletError || !wallet) {
-        throw new Error(`未找到用户钱包: ${walletError?.message}`)
+        console.log('钱包不存在，自动创建...')
+        const { data: newWallet, error: createWalletError } = await supabaseClient
+          .from('wallets')
+          .insert({
+            user_id: depositRequest.user_id,
+            type: 'TJS',
+            currency: depositRequest.currency,
+            balance: 0,
+            total_deposits: 0,
+          })
+          .select()
+          .single()
+
+        if (createWalletError || !newWallet) {
+          console.error('创建钱包失败:', createWalletError)
+          throw new Error(`创建钱包失败: ${createWalletError?.message}`)
+        }
+
+        wallet = newWallet
+        console.log('钱包创建成功:', wallet)
       }
 
       // 更新钱包余额

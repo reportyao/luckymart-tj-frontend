@@ -46,13 +46,21 @@ serve(async (req) => {
     // 验证管理员权限
     const { data: adminUser, error: adminError } = await supabase
       .from('admin_users')
-      .select('id, role_id')
+      .select('id, role, status')
       .eq('id', admin_id)
       .single()
 
     if (adminError || !adminUser) {
+      console.error('Admin verification error:', adminError)
       return new Response(
-        JSON.stringify({ success: false, error: '无效的管理员' }),
+        JSON.stringify({ success: false, error: '无效的管理员: ' + (adminError?.message || '未找到管理员') }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    if (adminUser.status !== 'active') {
+      return new Response(
+        JSON.stringify({ success: false, error: '管理员账户已被禁用' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
