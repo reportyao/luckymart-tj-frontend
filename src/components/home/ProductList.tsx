@@ -62,7 +62,9 @@ export const ProductList: React.FC<ProductListProps> = ({
   // 计算进度百分比
   const getProgress = (product: Product) => {
     if (product.type === 'lottery') {
-      return (product.sold_tickets / product.total_tickets) * 100;
+      const soldTickets = product.sold_tickets || 0;
+      const totalTickets = product.total_tickets || 1;
+      return (soldTickets / totalTickets) * 100;
     }
     return 0;
   };

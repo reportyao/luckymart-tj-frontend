@@ -6,8 +6,9 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // 货币格式化
-export function formatCurrency(currency: string, amount: number): string {
-  return `${currency} ${amount.toFixed(2)}`;
+export function formatCurrency(currency: string, amount: number | undefined | null): string {
+  const safeAmount = typeof amount === 'number' ? amount : 0;
+  return `${currency} ${safeAmount.toFixed(2)}`;
 }
 
 // 日期时间格式化（显示用户本地时间）

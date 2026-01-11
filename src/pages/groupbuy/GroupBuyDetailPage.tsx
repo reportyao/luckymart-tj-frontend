@@ -143,7 +143,7 @@ function PriceComparisonList({ comparisons, t }: { comparisons: PriceComparisonI
           <div key={index} className="flex items-center text-sm">
             <X className="w-4 h-4 text-red-500 mr-2 flex-shrink-0" />
             <span className="text-gray-600">{item.platform}:</span>
-            <span className="ml-2 text-gray-500">TJS {item.price.toFixed(2)}</span>
+            <span className="ml-2 text-gray-500">TJS {(item.price || 0).toFixed(2)}</span>
           </div>
         ))}
       </div>

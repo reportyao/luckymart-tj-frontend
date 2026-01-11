@@ -47,7 +47,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
     return () => clearInterval(timer);
   }, [lottery.end_time, lottery.draw_time, lottery.status]);
 
-  const progress = (lottery.sold_tickets / lottery.total_tickets) * 100
+  const progress = ((lottery.sold_tickets || 0) / (lottery.total_tickets || 1)) * 100
   const isActive = lottery.status === 'ACTIVE'
   const isSoldOut = lottery.status === 'SOLD_OUT'
   const isUpcoming = lottery.status === 'UPCOMING'
