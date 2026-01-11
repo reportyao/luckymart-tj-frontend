@@ -22,7 +22,7 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const [showBalance, setShowBalance] = useState(true)
   
   // 查找 TJS 货币的余额钱包
-  const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
+  const balanceWallet = wallets.find(w => w.type === 'TJS' && w.currency === 'TJS')
   // 查找积分钱包
   const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
   
