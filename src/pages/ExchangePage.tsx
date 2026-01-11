@@ -16,8 +16,8 @@ export default function ExchangePage() {
   const [success, setSuccess] = useState(false)
 
   // 从 UserContext 获取钱包数据
-  const balanceWallet = wallets.find(w => w.type === "BALANCE" && w.currency === "TJS")
-  const coinWallet = wallets.find(w => w.type === "LUCKY_COIN" && w.currency === "TJS")
+  const balanceWallet = wallets.find(w => w.type === "TJS" && w.currency === "TJS")
+  const coinWallet = wallets.find(w => w.type === "LUCKY_COIN")
   
   const balance = balanceWallet?.balance || 0
   const luckyCoin = coinWallet?.balance || 0

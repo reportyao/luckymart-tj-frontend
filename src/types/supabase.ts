@@ -3149,7 +3149,7 @@ export type Database = {
         | "MARKET_SALE"
         | "ADMIN_ADJUSTMENT"
       UserStatus: "ACTIVE" | "SUSPENDED" | "BANNED" | "PENDING_VERIFICATION"
-      WalletType: "BALANCE" | "LUCKY_COIN"
+      WalletType: "BALANCE" | "LUCKY_COIN" | "TJS"
       WithdrawalMethod: "BANK_TRANSFER" | "ALIF_MOBI" | "DC_BANK" | "OTHER"
       WithdrawalStatus:
         | "PENDING"
@@ -3353,7 +3353,7 @@ export const Constants = {
         "ADMIN_ADJUSTMENT",
       ],
       UserStatus: ["ACTIVE", "SUSPENDED", "BANNED", "PENDING_VERIFICATION"],
-      WalletType: ["BALANCE", "LUCKY_COIN"],
+      WalletType: ["BALANCE", "LUCKY_COIN", "TJS"],
       WithdrawalMethod: ["BANK_TRANSFER", "ALIF_MOBI", "DC_BANK", "OTHER"],
       WithdrawalStatus: [
         "PENDING",

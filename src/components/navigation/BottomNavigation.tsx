@@ -40,16 +40,16 @@ export const BottomNavigation: React.FC = () => {
       activeIcon: PhotoIconSolid,
     },
     {
-      name: t('nav.wallet'),
-      path: '/wallet',
-      icon: CreditCardIcon,
-      activeIcon: CreditCardIconSolid,
-    },
-    {
       name: 'AI',
       path: '/ai',
       icon: SparklesIcon,
       activeIcon: SparklesIconSolid,
+    },
+    {
+      name: t('nav.wallet'),
+      path: '/wallet',
+      icon: CreditCardIcon,
+      activeIcon: CreditCardIconSolid,
     },
     {
       name: t('nav.profile'),

@@ -226,11 +226,15 @@ const WalletPage: React.FC = () => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'COMPLETED':
+      case 'APPROVED':
         return <CheckCircleIcon className="w-4 h-4 text-green-500" />
       case 'FAILED':
+      case 'REJECTED':
         return <XCircleIcon className="w-4 h-4 text-red-500" />
-      default:
+      case 'PENDING':
         return <ClockIcon className="w-4 h-4 text-orange-500" />
+      default:
+        return <ClockIcon className="w-4 h-4 text-gray-500" />
     }
   }
 

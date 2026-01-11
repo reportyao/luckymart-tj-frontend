@@ -196,8 +196,7 @@ Deno.serve(async (req) => {
       selected_numbers: null,
       status: 'PENDING',
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      expired_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(), // 30分钟过期
+      updated_at: new Date().toISOString()
     };
 
     const createOrderResponse = await fetch(`${supabaseUrl}/rest/v1/orders`, {

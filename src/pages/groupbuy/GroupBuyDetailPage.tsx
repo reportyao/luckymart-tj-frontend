@@ -330,9 +330,9 @@ export default function GroupBuyDetailPage() {
 
     if (!product) return;
 
-    // Check balance from wallets - use BALANCE type wallet
+    // Check balance from wallets - use TJS type wallet
     console.log('[GroupBuy] Checking balance, wallets:', wallets);
-    const mainWallet = wallets.find((w) => w.type === 'BALANCE');
+    const mainWallet = wallets.find((w) => w.type === 'TJS' && w.currency === 'TJS');
     console.log('[GroupBuy] Main wallet:', mainWallet);
     const balance = Number(mainWallet?.balance || 0);
     const pricePerPerson = Number(product.price_per_person);
