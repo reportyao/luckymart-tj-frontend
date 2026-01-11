@@ -221,16 +221,29 @@ Deno.serve(async (req) => {
     const orders = await createOrderResponse.json();
     const order = orders[0];
 
+    // ✅ 查询当前最大票号以避免并发冲突
+    const maxTicketResponse = await fetch(
+      `${supabaseUrl}/rest/v1/lottery_entries?lottery_id=eq.${lotteryId}&select=ticket_number&order=ticket_number.desc&limit=1`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    const maxTicketEntries = await maxTicketResponse.json();
+    const startTicketNumber = maxTicketEntries.length > 0 ? maxTicketEntries[0].ticket_number + 1 : 1;
+
     // ✅ 生成连续7位数参与码
-    // 逻辑：从 1000000 + lottery.sold_tickets 开始分配连续号码
-    // 例如：已售0份，分配 1000000, 1000001, 1000002
-    //      已售10份，分配 1000010, 1000011, 1000012
+    // 逻辑：从 1000000 + startTicketNumber 开始分配连续号码
     const generateConsecutiveNumbers = (startIndex: number, count: number) => {
       const numbers = [];
       const baseNumber = 1000000; // 7位数起始值
       
       for (let i = 0; i < count; i++) {
-        const number = baseNumber + startIndex + i;
+        const number = baseNumber + startIndex + i - 1; // startIndex已经是从1开始，所以-1
         numbers.push(number.toString());
       }
       
@@ -238,13 +251,13 @@ Deno.serve(async (req) => {
     };
 
     // 生成连续号码
-    const newNumbers = generateConsecutiveNumbers(lottery.sold_tickets, quantity);
+    const newNumbers = generateConsecutiveNumbers(startTicketNumber, quantity);
 
     // 创建彩票记录
     const lotteryEntries = newNumbers.map((number, index) => ({
       user_id: userId,
       lottery_id: lotteryId,
-      ticket_number: lottery.sold_tickets + index + 1, // 票号
+      ticket_number: startTicketNumber + index, // 使用查询到的最大票号+1开始
       participation_code: number, // 7位数参与码（字符串）
       is_winning: false,
       created_at: new Date().toISOString(),
