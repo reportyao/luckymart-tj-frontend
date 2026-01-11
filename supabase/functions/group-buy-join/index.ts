@@ -55,20 +55,29 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product ID and User ID are required' }, 400);
     }
 
-    // 1. Get product information
+    // 1. Get product information - 使用兼容的字段名
     const { data: product, error: productError } = await supabase
       .from('group_buy_products')
       .select('*')
       .eq('id', product_id)
-      .eq('status', 'ACTIVE')
+      .in('status', ['ACTIVE', 'active'])
       .single();
 
     if (productError || !product) {
+      console.error('Product query error:', productError);
       return createResponse({ success: false, error: 'Product not found or inactive' }, 404);
     }
 
+    // 兼容不同的字段名
+    const stockQuantity = product.stock_quantity ?? product.stock ?? 0;
+    const soldQuantity = product.sold_quantity ?? 0;
+    const pricePerPerson = Number(product.price_per_person ?? product.group_price ?? 0);
+    const timeoutHours = product.timeout_hours ?? product.duration_hours ?? 24;
+    const groupSize = product.group_size ?? product.max_participants ?? 3;
+    const productTitle = product.title ?? product.name_i18n ?? { zh: product.name };
+
     // Check stock
-    if (product.stock_quantity <= product.sold_quantity) {
+    if (stockQuantity <= soldQuantity) {
       return createResponse({ success: false, error: 'Product out of stock' }, 400);
     }
 
@@ -97,14 +106,14 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Wallet not found' }, 404);
     }
 
-    // Check balance
-    const pricePerPerson = Number(product.price_per_person);
-    if (Number(wallet.balance) < pricePerPerson) {
+    // Check available balance (balance - frozen_balance)
+    const availableBalance = Number(wallet.balance) - Number(wallet.frozen_balance || 0);
+    if (availableBalance < pricePerPerson) {
       return createResponse({ 
         success: false, 
         error: 'Insufficient balance',
         required: pricePerPerson,
-        current: Number(wallet.balance)
+        current: availableBalance
       }, 400);
     }
 
@@ -115,7 +124,7 @@ Deno.serve(async (req) => {
       let sessionQuery = supabase
         .from('group_buy_sessions')
         .select('*')
-        .eq('status', 'ACTIVE')
+        .in('status', ['ACTIVE', 'active'])
         .gt('expires_at', new Date().toISOString());
       
       if (session_id) {
@@ -130,8 +139,11 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: 'Session not found or expired' }, 404);
       }
 
+      // 兼容不同的字段名
+      const maxParticipants = existingSession.max_participants ?? existingSession.required_participants ?? groupSize;
+
       // Check if session is full
-      if (existingSession.current_participants >= existingSession.max_participants) {
+      if (existingSession.current_participants >= maxParticipants) {
         return createResponse({ success: false, error: 'Session is full' }, 400);
       }
 
@@ -150,18 +162,19 @@ Deno.serve(async (req) => {
       targetSession = existingSession;
     } else {
       // 5. Create new session
-      const sessionCode = generateSessionCode();
+      const newSessionCode = generateSessionCode();
       const expiresAt = new Date();
-      expiresAt.setHours(expiresAt.getHours() + product.timeout_hours);
+      expiresAt.setHours(expiresAt.getHours() + timeoutHours);
 
       const { data: newSession, error: createSessionError } = await supabase
         .from('group_buy_sessions')
         .insert({
           product_id: product.id,
-          session_code: sessionCode,
+          session_code: newSessionCode,
           status: 'ACTIVE',
           current_participants: 0,
-          max_participants: product.group_size,
+          max_participants: groupSize,
+          required_participants: groupSize,
           initiator_id: user.telegram_id,
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
@@ -177,9 +190,12 @@ Deno.serve(async (req) => {
       targetSession = newSession;
     }
 
-    // 6. Deduct balance from wallet
+    // 生成订单号
+    const orderNumber = generateOrderNumber();
+
+    // 6. Deduct balance from wallet using optimistic locking
     const newBalance = Number(wallet.balance) - pricePerPerson;
-    const { error: updateWalletError } = await supabase
+    const { error: updateWalletError, data: updatedWallet } = await supabase
       .from('wallets')
       .update({ 
         balance: newBalance,
@@ -187,11 +203,13 @@ Deno.serve(async (req) => {
         version: wallet.version + 1
       })
       .eq('id', wallet.id)
-      .eq('version', wallet.version); // Optimistic locking
+      .eq('version', wallet.version) // Optimistic locking
+      .select()
+      .single();
 
-    if (updateWalletError) {
+    if (updateWalletError || !updatedWallet) {
       console.error('Failed to update wallet:', updateWalletError);
-      return createResponse({ success: false, error: 'Failed to deduct balance, please try again' }, 500);
+      return createResponse({ success: false, error: 'Failed to deduct balance, please try again (concurrent modification detected)' }, 500);
     }
 
     // 7. Create wallet transaction record
@@ -206,7 +224,7 @@ Deno.serve(async (req) => {
         balance_before: Number(wallet.balance),
         balance_after: newBalance,
         status: 'COMPLETED',
-        description: `拼团参与 - ${product.title?.zh || 'Group Buy'}`,
+        description: `拼团参与 - ${productTitle?.zh || productTitle?.en || 'Group Buy'}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -217,6 +235,8 @@ Deno.serve(async (req) => {
       .insert({
         session_id: targetSession.id,
         user_id: user.telegram_id, // 使用 telegram_id 因为外键约束指向 users.telegram_id
+        product_id: product.id,
+        order_number: orderNumber,
         amount: pricePerPerson,
         status: 'PAID',
         created_at: new Date().toISOString(),
@@ -239,6 +259,7 @@ Deno.serve(async (req) => {
     }
 
     // 9. Update session participant count
+    const maxParticipants = targetSession.max_participants ?? targetSession.required_participants ?? groupSize;
     const newParticipantCount = targetSession.current_participants + 1;
     const { error: updateSessionError } = await supabase
       .from('group_buy_sessions')
@@ -254,7 +275,7 @@ Deno.serve(async (req) => {
 
     // 10. Check if session is now full, trigger draw
     let drawResult = null;
-    if (newParticipantCount >= targetSession.max_participants) {
+    if (newParticipantCount >= maxParticipants) {
       // Call draw function
       try {
         const drawResponse = await supabase.functions.invoke('group-buy-draw', {
@@ -319,8 +340,8 @@ Deno.serve(async (req) => {
         session_id: targetSession.id,
         session_code: targetSession.session_code,
         current_participants: newParticipantCount,
-        max_participants: targetSession.max_participants,
-        is_full: newParticipantCount >= targetSession.max_participants,
+        max_participants: maxParticipants,
+        is_full: newParticipantCount >= maxParticipants,
         draw_result: drawResult,
       }
     });

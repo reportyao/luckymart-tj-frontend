@@ -148,38 +148,44 @@ serve(async (req) => {
       throw new Error('未找到积分钱包');
     }
 
-    // 检查源钱包余额
-    if (sourceWallet.balance < amount) {
-      throw new Error('余额不足');
+    // 检查源钱包可用余额（余额 - 冻结金额）
+    const availableBalance = Number(sourceWallet.balance) - Number(sourceWallet.frozen_balance || 0);
+    if (availableBalance < amount) {
+      throw new Error(`可用余额不足，当前可用余额: ${availableBalance.toFixed(2)} TJS`);
     }
 
     console.log('[Exchange] Wallets found, processing exchange...');
-    console.log('[Exchange] Source balance:', sourceWallet.balance, 'Amount:', amount);
+    console.log('[Exchange] Source balance:', sourceWallet.balance, 'Frozen:', sourceWallet.frozen_balance, 'Available:', availableBalance, 'Amount:', amount);
     console.log('[Exchange] Target balance:', targetWallet.balance);
 
     // 记录兑换前余额
-    const sourceBalanceBefore = sourceWallet.balance;
-    const targetBalanceBefore = targetWallet.balance;
+    const sourceBalanceBefore = Number(sourceWallet.balance);
+    const targetBalanceBefore = Number(targetWallet.balance);
 
-    // 更新源钱包余额
-    const { error: updateSourceError } = await supabaseClient
+    // 使用乐观锁更新源钱包余额
+    const { error: updateSourceError, data: updatedSource } = await supabaseClient
       .from('wallets')
       .update({
-        balance: sourceWallet.balance - amount,
+        balance: sourceBalanceBefore - amount,
+        version: (sourceWallet.version || 1) + 1,
         updated_at: new Date().toISOString(),
       })
       .eq('id', sourceWallet.id)
+      .eq('version', sourceWallet.version || 1)
+      .select()
+      .single()
 
-    if (updateSourceError) {
+    if (updateSourceError || !updatedSource) {
       console.error('[Exchange] Update source wallet error:', updateSourceError);
-      throw new Error('更新余额钱包失败');
+      throw new Error('更新余额钱包失败，请重试（并发冲突）');
     }
 
     // 更新目标钱包余额
     const { error: updateTargetError } = await supabaseClient
       .from('wallets')
       .update({
-        balance: targetWallet.balance + amount,
+        balance: targetBalanceBefore + amount,
+        version: (targetWallet.version || 1) + 1,
         updated_at: new Date().toISOString(),
       })
       .eq('id', targetWallet.id)
@@ -190,34 +196,39 @@ serve(async (req) => {
       await supabaseClient
         .from('wallets')
         .update({
-          balance: sourceWallet.balance,
+          balance: sourceBalanceBefore,
+          version: (sourceWallet.version || 1) + 2,
           updated_at: new Date().toISOString(),
         })
         .eq('id', sourceWallet.id)
       throw new Error('更新积分钱包失败');
     }
 
-    // 创建兑换记录
+    // 创建兑换记录 - 使用数据库中存在的字段
     const { data: exchangeRecord, error: recordError } = await supabaseClient
       .from('exchange_records')
       .insert({
         user_id: userId,
-        exchange_type: 'BALANCE_TO_COIN',
+        from_wallet_type: 'TJS',
+        to_wallet_type: 'LUCKY_COIN',
         amount: amount,
-        currency: 'TJS',
         exchange_rate: 1.0,
+        status: 'COMPLETED',
+        exchange_type: 'BALANCE_TO_COIN',
+        currency: 'TJS',
         source_wallet_id: sourceWallet.id,
         target_wallet_id: targetWallet.id,
         source_balance_before: sourceBalanceBefore,
-        source_balance_after: sourceWallet.balance - amount,
+        source_balance_after: sourceBalanceBefore - amount,
         target_balance_before: targetBalanceBefore,
-        target_balance_after: targetWallet.balance + amount,
+        target_balance_after: targetBalanceBefore + amount,
       })
       .select()
       .single()
 
     if (recordError) {
       console.error('[Exchange] Create exchange record error:', recordError);
+      // 不阻断流程，只记录错误
     }
 
     // 创建钱包交易记录 (使用正确的枚举值 COIN_EXCHANGE)
@@ -231,7 +242,7 @@ serve(async (req) => {
         type: 'COIN_EXCHANGE',
         amount: -amount,
         balance_before: sourceBalanceBefore,
-        balance_after: sourceWallet.balance - amount,
+        balance_after: sourceBalanceBefore - amount,
         status: 'COMPLETED',
         description: `兑换${amount}TJS到积分`,
         processed_at: new Date().toISOString(),
@@ -242,7 +253,7 @@ serve(async (req) => {
         type: 'COIN_EXCHANGE',
         amount: amount,
         balance_before: targetBalanceBefore,
-        balance_after: targetWallet.balance + amount,
+        balance_after: targetBalanceBefore + amount,
         status: 'COMPLETED',
         description: `从余额兑换${amount}TJS`,
         processed_at: new Date().toISOString(),
@@ -250,16 +261,16 @@ serve(async (req) => {
     ])
 
     console.log('[Exchange] Success, new balances:', {
-      source: sourceWallet.balance - amount,
-      target: targetWallet.balance + amount
+      source: sourceBalanceBefore - amount,
+      target: targetBalanceBefore + amount
     });
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         message: '兑换成功',
-        new_balance: sourceWallet.balance - amount,
-        lucky_coin_balance: targetWallet.balance + amount
+        new_balance: sourceBalanceBefore - amount,
+        lucky_coin_balance: targetBalanceBefore + amount
       }),
       { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
     )

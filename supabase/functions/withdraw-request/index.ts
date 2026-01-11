@@ -132,16 +132,19 @@ serve(async (req) => {
 
     const wallet = wallets[0];
 
-    // 2. 检查余额是否足够
+    // 2. 检查可用余额是否足够（余额 - 已冻结金额）
     const currentBalance = parseFloat(wallet.balance) || 0;
+    const currentFrozenBalance = parseFloat(wallet.frozen_balance) || 0;
     const withdrawAmount = parseFloat(amount);
+    const availableBalance = currentBalance - currentFrozenBalance;
 
-    if (currentBalance < withdrawAmount) {
-      throw new Error(`余额不足，当前余额: ${currentBalance} ${currency}`);
+    if (availableBalance < withdrawAmount) {
+      throw new Error(`可用余额不足，当前可用余额: ${availableBalance.toFixed(2)} ${currency}（总余额: ${currentBalance.toFixed(2)}，已冻结: ${currentFrozenBalance.toFixed(2)}）`);
     }
 
-    // 3. 扣除余额（直接减少balance）
-    const newBalance = currentBalance - withdrawAmount;
+    // 3. 冻结余额（增加frozen_balance，不减少balance）
+    // 这样用户可以看到余额，但不能使用被冻结的部分
+    const newFrozenBalance = currentFrozenBalance + withdrawAmount;
 
     const updateWalletResponse = await fetch(
       `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}`,
@@ -154,7 +157,7 @@ serve(async (req) => {
           'Prefer': 'return=representation'
         },
         body: JSON.stringify({
-          balance: newBalance,
+          frozen_balance: newFrozenBalance,
           updated_at: new Date().toISOString()
         })
       }
@@ -162,14 +165,14 @@ serve(async (req) => {
 
     if (!updateWalletResponse.ok) {
       const errorText = await updateWalletResponse.text();
-      console.error('扣除余额失败:', errorText);
-      throw new Error('扣除余额失败');
+      console.error('冻结余额失败:', errorText);
+      throw new Error('冻结余额失败');
     }
 
     // 4. 生成订单号
     const orderNumber = generateOrderNumber();
 
-    // 5. 创建提现请求
+    // 5. 创建提现请求（状态为PENDING，等待管理员审核）
     const insertResponse = await fetch(
       `${supabaseUrl}/rest/v1/withdrawal_requests`,
       {
@@ -212,8 +215,7 @@ serve(async (req) => {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            balance: currentBalance,
-            frozen_balance: parseFloat(wallet.frozen_balance) || 0,
+            frozen_balance: currentFrozenBalance,
             updated_at: new Date().toISOString()
           })
         }
@@ -226,7 +228,8 @@ serve(async (req) => {
 
     const data = await insertResponse.json();
 
-    // 6. 创建钱包交易记录
+    // 6. 创建钱包交易记录（状态为PENDING，等待审核）
+    // 注意：此时不记录余额变化，因为余额还没有真正扣除
     await fetch(
       `${supabaseUrl}/rest/v1/wallet_transactions`,
       {
@@ -238,10 +241,11 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           wallet_id: wallet.id,
-          type: 'WITHDRAWAL',
+          type: 'WITHDRAWAL_FREEZE',
           amount: -withdrawAmount,
-          balance_after: newBalance,
-          description: `提现申请 - 订单号: ${orderNumber}`,
+          balance_after: currentBalance, // 余额不变，只是冻结
+          status: 'PENDING',
+          description: `提现申请已冻结 - 订单号: ${orderNumber}，等待审核`,
           related_id: data[0]?.id || null
         })
       }
@@ -250,11 +254,12 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: '提现申请已提交，余额已冻结', 
+        message: '提现申请已提交，金额已冻结，等待管理员审核', 
         data: data[0],
         wallet: {
-          balance: newBalance,
-          frozen_balance: newFrozenBalance
+          balance: currentBalance,
+          frozen_balance: newFrozenBalance,
+          available_balance: currentBalance - newFrozenBalance
         }
       }),
       { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }

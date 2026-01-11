@@ -25,16 +25,31 @@ serve(async (req) => {
     
     // 方式1: 通过 x-admin-id 头部认证（管理后台使用）
     if (adminId) {
+      console.log('Authenticating with x-admin-id:', adminId);
       // 验证管理员是否存在且有效
       const { data: adminUser, error: adminError } = await supabaseClient
         .from('admin_users')
-        .select('id, status')
+        .select('id, status, is_active')
         .eq('id', adminId)
         .single()
       
-      if (adminError || !adminUser || adminUser.status !== 'active') {
-        throw new Error('管理员认证失败')
+      console.log('Admin user query result:', { adminUser, adminError });
+      
+      if (adminError) {
+        console.error('Admin query error:', adminError);
+        throw new Error('管理员查询失败: ' + adminError.message)
       }
+      
+      if (!adminUser) {
+        throw new Error('管理员不存在')
+      }
+      
+      // 检查管理员状态 - 兼容 status='active' 或 is_active=true
+      const isActive = adminUser.status === 'active' || adminUser.is_active === true;
+      if (!isActive) {
+        throw new Error('管理员账户已禁用')
+      }
+      
       adminUserId = adminUser.id
     }
     // 方式2: 通过 Supabase Auth token 认证（兼容旧方式）
@@ -48,7 +63,17 @@ serve(async (req) => {
     }
     
     if (!adminUserId) {
-      throw new Error('未授权')
+      console.error('Authentication failed: no valid admin ID or auth token');
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: '未授权：请提供有效的管理员认证',
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 401,
+        }
+      )
     }
 
     const { requestId, action, adminNote, transferProofImages, transferReference } = await req.json()
@@ -101,26 +126,21 @@ serve(async (req) => {
     const currentTotalWithdrawals = parseFloat(wallet.total_withdrawals) || 0
 
     if (action === 'APPROVED') {
-      // 审核通过 - 如果余额没有被冻结，现在冻结它
-      let newBalance = currentBalance
-      let newFrozenBalance = currentFrozenBalance
-
-      // 检查是否需要冻结余额（兼容旧的没有冻结的提现请求）
+      // 审核通过 - 检查冻结余额是否足够
+      // 新的提现流程：提现时已经冻结了余额，审核通过只需要更新状态
+      
+      // 如果冻结余额不足（兼容旧的没有冻结的提现请求），需要冻结
       if (currentFrozenBalance < withdrawAmount) {
-        // 需要从balance中冻结
         const needToFreeze = withdrawAmount - currentFrozenBalance
         if (currentBalance < needToFreeze) {
           throw new Error(`余额不足，当前余额: ${currentBalance}`)
         }
-        newBalance = currentBalance - needToFreeze
-        newFrozenBalance = withdrawAmount
         
-        // 更新钱包余额
+        // 冻结差额
         const { error: freezeError } = await supabaseClient
           .from('wallets')
           .update({
-            balance: newBalance,
-            frozen_balance: newFrozenBalance,
+            frozen_balance: withdrawAmount,
             updated_at: new Date().toISOString(),
           })
           .eq('id', wallet.id)
@@ -173,14 +193,12 @@ serve(async (req) => {
         console.error('Failed to send Telegram notification:', error);
       }
     } else if (action === 'REJECTED') {
-      // 审核拒绝,解冻余额
-      // 只解冻实际冻结的金额
+      // 审核拒绝 - 解冻余额，返还给用户
       const amountToUnfreeze = Math.min(currentFrozenBalance, withdrawAmount)
       
       const { error: unfreezeError } = await supabaseClient
         .from('wallets')
         .update({
-          balance: currentBalance + amountToUnfreeze,
           frozen_balance: Math.max(0, currentFrozenBalance - withdrawAmount),
           updated_at: new Date().toISOString(),
         })
@@ -207,12 +225,23 @@ serve(async (req) => {
         throw new Error('审核失败')
       }
 
+      // 创建解冻交易记录
+      await supabaseClient.from('wallet_transactions').insert({
+        wallet_id: wallet.id,
+        type: 'WITHDRAWAL_UNFREEZE',
+        amount: 0, // 解冻不改变余额
+        balance_after: currentBalance,
+        status: 'COMPLETED',
+        description: `提现申请被拒绝，已解冻 - 订单号: ${withdrawalRequest.order_number}`,
+        related_id: requestId,
+      })
+
       // 发送通知给用户
       await supabaseClient.from('notifications').insert({
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_FAILED',
         title: '提现失败',
-        content: `您的提现申请已被拒绝${adminNote ? `,原因: ${adminNote}` : ''},金额已退回账户`,
+        content: `您的提现申请已被拒绝${adminNote ? `,原因: ${adminNote}` : ''},金额已解冻`,
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
@@ -226,7 +255,7 @@ serve(async (req) => {
             data: {
               transaction_amount: withdrawalRequest.amount,
               failure_reason: adminNote || '审核未通过',
-              current_balance: currentBalance + amountToUnfreeze,
+              current_balance: currentBalance,
             },
             priority: 2,
           },
@@ -235,23 +264,19 @@ serve(async (req) => {
         console.error('Failed to send Telegram notification:', error);
       }
     } else if (action === 'COMPLETED') {
-      // 转账完成
-      // 计算需要从frozen_balance和balance中扣除的金额
-      let newFrozenBalance = currentFrozenBalance
-      let newBalance = currentBalance
+      // 转账完成 - 真正扣除余额
+      // 从冻结余额中扣除，同时从总余额中扣除
+      let newFrozenBalance = Math.max(0, currentFrozenBalance - withdrawAmount)
+      let newBalance = currentBalance - withdrawAmount
       
-      if (currentFrozenBalance >= withdrawAmount) {
-        // 冻结余额足够，只从冻结余额扣除
-        newFrozenBalance = currentFrozenBalance - withdrawAmount
-      } else {
-        // 冻结余额不足，需要从balance中扣除差额
-        const fromBalance = withdrawAmount - currentFrozenBalance
+      // 如果冻结余额不足以覆盖提现金额（不应该发生，但做兼容处理）
+      if (currentFrozenBalance < withdrawAmount) {
+        console.warn(`Frozen balance (${currentFrozenBalance}) less than withdraw amount (${withdrawAmount}), adjusting...`)
         newFrozenBalance = 0
-        newBalance = currentBalance - fromBalance
-        
-        if (newBalance < 0) {
-          throw new Error(`余额不足，无法完成提现`)
-        }
+      }
+      
+      if (newBalance < 0) {
+        throw new Error(`余额不足，无法完成提现`)
       }
       
       const { error: deductError } = await supabaseClient
@@ -285,12 +310,13 @@ serve(async (req) => {
         throw new Error('更新失败')
       }
 
-      // 创建钱包交易记录
+      // 创建钱包交易记录 - 这是真正的扣款记录
       await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
         type: 'WITHDRAWAL',
         amount: -withdrawAmount,
         balance_after: newBalance,
+        status: 'COMPLETED',
         description: `提现完成 - 订单号: ${withdrawalRequest.order_number}`,
         related_id: requestId,
       })
