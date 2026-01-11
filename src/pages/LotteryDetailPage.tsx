@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
 import { Tables, Enums } from '../types/supabase';
-import { ArrowLeftIcon, ClockIcon, UserGroupIcon, StarIcon, XCircleIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ClockIcon, UserGroupIcon, StarIcon, XCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -431,6 +431,35 @@ const LotteryDetailPage: React.FC = () => {
                 <StarIcon className="w-12 h-12 text-gray-400" />
               </div>
             )}
+            
+            {/* Navigation Arrows */}
+            {lottery.image_urls && lottery.image_urls.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => prev === 0 ? lottery.image_urls.length - 1 : prev - 1);
+                    setAutoPlayEnabled(false);
+                    setTimeout(() => setAutoPlayEnabled(true), 5000);
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-10"
+                >
+                  <ChevronLeftIcon className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setActiveImageIndex((prev) => prev === lottery.image_urls.length - 1 ? 0 : prev + 1);
+                    setAutoPlayEnabled(false);
+                    setTimeout(() => setAutoPlayEnabled(true), 5000);
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-10"
+                >
+                  <ChevronRightIcon className="w-5 h-5" />
+                </button>
+              </>
+            )}
+            
             {/* Image Indicators */}
             {lottery.image_urls && lottery.image_urls.length > 1 && (
               <div className="absolute bottom-3 left-0 right-0 flex justify-center space-x-2">
