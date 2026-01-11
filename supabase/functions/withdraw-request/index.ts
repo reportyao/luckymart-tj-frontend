@@ -140,9 +140,8 @@ serve(async (req) => {
       throw new Error(`余额不足，当前余额: ${currentBalance} ${currency}`);
     }
 
-    // 3. 冻结余额（减少balance，增加frozen_balance）
+    // 3. 扣除余额（直接减少balance）
     const newBalance = currentBalance - withdrawAmount;
-    const newFrozenBalance = (parseFloat(wallet.frozen_balance) || 0) + withdrawAmount;
 
     const updateWalletResponse = await fetch(
       `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}`,
@@ -156,7 +155,6 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           balance: newBalance,
-          frozen_balance: newFrozenBalance,
           updated_at: new Date().toISOString()
         })
       }
@@ -164,8 +162,8 @@ serve(async (req) => {
 
     if (!updateWalletResponse.ok) {
       const errorText = await updateWalletResponse.text();
-      console.error('冻结余额失败:', errorText);
-      throw new Error('冻结余额失败');
+      console.error('扣除余额失败:', errorText);
+      throw new Error('扣除余额失败');
     }
 
     // 4. 生成订单号

@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
 
     // 检查用户购买限制
     const userEntriesResponse = await fetch(
-      `${supabaseUrl}/rest/v1/lottery_entries?user_id=eq.${userId}&lottery_id=eq.${lotteryId}&status=eq.ACTIVE&select=id`,
+      `${supabaseUrl}/rest/v1/lottery_entries?user_id=eq.${userId}&lottery_id=eq.${lotteryId}&select=id`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -243,10 +243,7 @@ Deno.serve(async (req) => {
       order_id: order.id,
       numbers: number, // 7位数参与码（字符串）
       is_winning: false,
-      status: 'ACTIVE',
-      is_from_market: false,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
     }));
 
     const createEntriesResponse = await fetch(`${supabaseUrl}/rest/v1/lottery_entries`, {

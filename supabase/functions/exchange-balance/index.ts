@@ -141,7 +141,6 @@ serve(async (req) => {
       .select('*')
       .eq('user_id', userId)
       .eq('type', 'LUCKY_COIN')
-      .eq('currency', 'TJS')
       .single()
 
     if (targetError || !targetWallet) {
