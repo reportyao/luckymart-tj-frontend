@@ -30,23 +30,33 @@ const FullPurchaseConfirmPage: React.FC = () => {
   const fetchLottery = useCallback(async () => {
     if (!lotteryId) return;
     try {
-      // 获取商品信息，包含关联的库存商品信息
+      // 获取商品信息
       const { data, error } = await supabase
         .from('lotteries')
-        .select(`
-          *,
-          inventory_product:inventory_products (
-            id,
-            stock,
-            original_price,
-            status
-          )
-        `)
+        .select('*')
         .eq('id', lotteryId)
         .single();
 
       if (error) throw error;
-      setLottery(data);
+
+      // 如果有关联的库存商品ID，单独查询库存商品信息
+      let inventoryProductData = null;
+      if (data && data.inventory_product_id) {
+        const { data: invData } = await supabase
+          .from('inventory_products')
+          .select('id, stock, original_price, status')
+          .eq('id', data.inventory_product_id)
+          .single();
+        inventoryProductData = invData;
+      }
+
+      // 将库存商品信息附加到lottery对象
+      const lotteryWithInventory = {
+        ...data,
+        inventory_product: inventoryProductData
+      };
+
+      setLottery(lotteryWithInventory);
     } catch (error) {
       console.error('Failed to fetch lottery:', error);
       toast.error(t('error.networkError'));
