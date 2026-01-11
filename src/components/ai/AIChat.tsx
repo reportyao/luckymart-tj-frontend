@@ -32,6 +32,13 @@ const ERROR_MESSAGES: Record<string, string> = {
 export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuotaUpdate }: AIChatProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   
+  // 当 initialMessages 变化时，更新 messages
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
+  
   // 同步messages到父组件
   useEffect(() => {
     if (onMessagesChange) {

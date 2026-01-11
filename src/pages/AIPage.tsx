@@ -82,6 +82,9 @@ export default function AIPage() {
     } catch (error) {
       console.error('Quick send error:', error);
       
+      // 移除占位消息，只保留用户消息
+      setMessages([userMessage]);
+      
       // 根据错误类型显示不同提示
       let errorMessage = ERROR_MESSAGES['DEFAULT'];
       
