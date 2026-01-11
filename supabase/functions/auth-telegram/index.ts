@@ -351,6 +351,47 @@ Deno.serve(async (req) => {
                     } catch (aiRewardError) {
                         console.error('Failed to process AI invite reward:', aiRewardError);
                     }
+                    
+                    // 创建邀请成功通知
+                    try {
+                        await fetch(`${supabaseUrl}/rest/v1/notifications`, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${serviceRoleKey}`,
+                                'apikey': serviceRoleKey,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=minimal'
+                            },
+                            body: JSON.stringify({
+                                user_id: referredById,
+                                type: 'INVITE_SUCCESS',
+                                title_i18n: {
+                                    zh: '邀请成功',
+                                    ru: 'Успешное приглашение',
+                                    tg: 'Даъвати муваффақ'
+                                },
+                                message_i18n: {
+                                    zh: `恭喜！用户 ${userData.first_name || userData.username || '新用户'} 通过您的邀请链接注册成功！您获得了1次抽奖机会和5次AI对话次数。`,
+                                    ru: `Поздравляем! Пользователь ${userData.first_name || userData.username || 'новый пользователь'} успешно зарегистрировался по вашей реферальной ссылке! Вы получили 1 попытку в лотерее и 5 AI-чатов.`,
+                                    tg: `Табрик! Корбар ${userData.first_name || userData.username || 'корбари нав'} тавассути истинодаи шумо бомуваффақият сабти ном кард! Шумо 1 имконияти қуръакашӣ ва 5 суҳбати AI гирифтед.`
+                                },
+                                is_read: false,
+                                metadata: {
+                                    invitee_id: user.id,
+                                    invitee_name: userData.first_name || userData.username,
+                                    rewards: {
+                                        spin_count: 1,
+                                        ai_chats: 5
+                                    }
+                                },
+                                created_at: new Date().toISOString()
+                            })
+                        });
+                        
+                        console.log(`[Invite Notification] Created notification for inviter ${referredById}`);
+                    } catch (notificationError) {
+                        console.error('Failed to create invite notification:', notificationError);
+                    }
                 } catch (inviteError) {
                     console.error('Failed to process invite reward:', inviteError);
                     // 邀请奖励失败不影响用户注册

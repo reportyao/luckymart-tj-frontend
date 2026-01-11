@@ -19,7 +19,7 @@ import {
   TrophyIcon,
   LanguageIcon
 } from '@heroicons/react/24/outline'
-import { copyToClipboard, shareToTelegram } from '../lib/utils'
+import { copyToClipboard } from '../lib/utils'
 import toast from 'react-hot-toast'
 
 const ProfilePage: React.FC = () => {
@@ -43,10 +43,24 @@ const ProfilePage: React.FC = () => {
 
   const handleShareReferral = () => {
     const code = user?.referral_code || user?.invite_code;
-    if (code) {
-      const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${code}`
-      const shareUrl = `t.me/mybot2636_bot/shoppp?startapp=${code}`
-      shareToTelegram(shareText, shareUrl)
+    if (!code) return;
+    
+    const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${code}`;
+    const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${code}`;
+    
+    // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      // 使用 Telegram 的分享链接
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
+    } else if (navigator.share) {
+      navigator.share({
+        title: t('invite.shareInvite'),
+        text: shareText,
+        url: inviteLink
+      }).catch(console.error);
+    } else {
+      handleCopyReferralLink();
     }
   }
 

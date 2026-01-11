@@ -25,6 +25,9 @@ interface Notification {
   type: string;
   title: string;
   content: string;
+  title_i18n?: Record<string, string>;
+  message_i18n?: Record<string, string>;
+  metadata?: any;
   related_id?: string;
   related_type?: string;
   is_read: boolean;
@@ -34,7 +37,7 @@ interface Notification {
 }
 
 const NotificationPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useUser();
   const { supabase } = useSupabase();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -304,6 +307,8 @@ const NotificationPage: React.FC = () => {
         return <ShoppingBagIcon className={`${iconClass} text-purple-600`} />;
       case 'REFERRAL_REWARD':
         return <BanknotesIcon className={`${iconClass} text-green-600`} />;
+      case 'INVITE_SUCCESS':
+        return <UsersIcon className={`${iconClass} text-green-600`} />;
       case 'SYSTEM_ANNOUNCEMENT':
         return <MegaphoneIcon className={`${iconClass} text-blue-600`} />;
       case 'ACCOUNT_SECURITY':
@@ -335,6 +340,8 @@ const NotificationPage: React.FC = () => {
       case 'MARKET_PURCHASED':
         return 'bg-purple-50';
       case 'REFERRAL_REWARD':
+        return 'bg-green-50';
+      case 'INVITE_SUCCESS':
         return 'bg-green-50';
       case 'SYSTEM_ANNOUNCEMENT':
         return 'bg-blue-50';
@@ -435,14 +442,14 @@ const NotificationPage: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between mb-1">
                       <h3 className={`font-semibold ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {notification.title}
+                        {notification.title_i18n?.[i18n.language] || notification.title}
                       </h3>
                       {!notification.is_read && (
                         <span className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full ml-2 mt-2"></span>
                       )}
                     </div>
                     <p className={`text-sm mb-2 ${!notification.is_read ? 'text-gray-700' : 'text-gray-500'}`}>
-                      {notification.content}
+                      {notification.message_i18n?.[i18n.language] || notification.content}
                     </p>
                     <p className="text-xs text-gray-400">
                       {formatDateTime(notification.created_at)}
