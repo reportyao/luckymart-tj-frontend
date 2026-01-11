@@ -207,25 +207,20 @@ Deno.serve(async (req) => {
         balance_after: newBalance,
         status: 'COMPLETED',
         description: `拼团参与 - ${product.title?.zh || 'Group Buy'}`,
-        processed_at: new Date().toISOString(),
         created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
 
     // 8. Create order
-    const orderNumber = generateOrderNumber();
-    const orderTimestamp = Date.now();
-
     const { data: order, error: createOrderError } = await supabase
       .from('group_buy_orders')
       .insert({
         session_id: targetSession.id,
-        product_id: product.id,
         user_id: user.telegram_id, // 使用 telegram_id 因为外键约束指向 users.telegram_id
-        order_number: orderNumber,
         amount: pricePerPerson,
-        payment_method: 'WALLET',
         status: 'PAID',
-        order_timestamp: orderTimestamp,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();

@@ -237,11 +237,11 @@ Deno.serve(async (req) => {
     const newNumbers = generateConsecutiveNumbers(lottery.sold_tickets, quantity);
 
     // 创建彩票记录
-    const lotteryEntries = newNumbers.map((number) => ({
+    const lotteryEntries = newNumbers.map((number, index) => ({
       user_id: userId,
       lottery_id: lotteryId,
-      order_id: order.id,
-      numbers: number, // 7位数参与码（字符串）
+      ticket_number: lottery.sold_tickets + index + 1, // 票号
+      participation_code: number, // 7位数参与码（字符串）
       is_winning: false,
       created_at: new Date().toISOString(),
     }));
