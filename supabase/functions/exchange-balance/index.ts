@@ -121,12 +121,12 @@ serve(async (req) => {
       }
     );
 
-    // 获取源钱包（BALANCE）
+    // 获取源钱包（TJS）
     const { data: sourceWallet, error: sourceError } = await supabaseClient
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
-      .eq('type', 'BALANCE')
+      .eq('type', 'TJS')
       .eq('currency', 'TJS')
       .single()
 

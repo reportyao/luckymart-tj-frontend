@@ -110,7 +110,7 @@ serve(async (req) => {
 
     // 1. 获取用户钱包
     const walletResponse = await fetch(
-      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.BALANCE&currency=eq.${currency}&select=*`,
+      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.TJS&currency=eq.${currency}&select=*`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
