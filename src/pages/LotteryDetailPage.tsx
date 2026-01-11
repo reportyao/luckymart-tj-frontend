@@ -64,11 +64,12 @@ const LotteryDetailPage: React.FC = () => {
 
       // 如果有关联的库存商品ID，单独查询库存商品信息
       let inventoryProductData = null;
-      if (data && data.inventory_product_id) {
+      const inventoryProductId = (data as any)?.inventory_product_id;
+      if (inventoryProductId) {
         const { data: invData } = await supabase
-          .from('inventory_products')
+          .from('inventory_products' as any)
           .select('id, stock, original_price, status')
-          .eq('id', data.inventory_product_id)
+          .eq('id', inventoryProductId)
           .single();
         inventoryProductData = invData;
       }

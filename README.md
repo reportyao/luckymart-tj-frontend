@@ -1,179 +1,177 @@
-# TezBarakat TJ - Telegram Mini App 积分商城平台
+# Supabase CLI
 
-一个基于Telegram Mini App的社交积分商城平台前端项目。
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
+](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
 
-## 🎯 功能特性
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-### 核心功能
-- 🎲 **积分商城系统** - 完整的积分商城购买、开奖、中奖流程
-- 💰 **双钱包系统** - 余额钱包 + 积分商城币钱包
-- 💳 **充值提现** - 支持Alif Mobi、DC Bank等支付方式
-- 🔄 **余额兑换** - 余额与积分商城币1:1互相兑换
-- 👥 **三级邀请** - 10%/5%/2%返佣机制
-- 🎁 **晒单系统** - 用户分享中奖喜悦
-- 🛒 **转售市场** - 中奖商品二次交易
+This repository contains all the functionality for Supabase CLI.
 
-### 用户功能
-- 👤 个人资料编辑
-- ⚙️ 系统设置
-- 🌍 多语言支持 (中文/俄语/塔吉克语)
-- 🎫 我的彩票
-- 🏆 我的奖品
-- 📊 邀请统计
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-## 🛠️ 技术栈
+## Getting started
 
-- **框架**: React 18 + TypeScript
-- **构建工具**: Vite
-- **样式**: Tailwind CSS
-- **动画**: Framer Motion
-- **路由**: React Router v6
-- **状态管理**: React Context
-- **国际化**: react-i18next
-- **后端**: Supabase
-- **SDK**: Telegram Mini App SDK
+### Install the CLI
 
-## 📦 项目结构
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-```
-luckymart-tj/
-├── src/
-│   ├── components/        # 组件
-│   │   ├── lottery/      # 积分商城相关组件
-│   │   ├── wallet/       # 钱包相关组件
-│   │   └── navigation/   # 导航组件
-│   ├── pages/            # 页面
-│   │   ├── HomePage.tsx
-│   │   ├── LotteryPage.tsx
-│   │   ├── WalletPage.tsx
-│   │   ├── ProfilePage.tsx
-│   │   ├── DepositPage.tsx
-│   │   ├── WithdrawPage.tsx
-│   │   └── ...
-│   ├── contexts/         # Context
-│   │   └── UserContext.tsx
-│   ├── lib/             # 工具库
-│   │   ├── supabase.ts
-│   │   └── utils.ts
-│   ├── i18n/            # 国际化
-│   │   ├── config.ts
-│   │   └── locales/
-│   └── App.tsx
-├── supabase/
-│   └── functions/       # Edge Functions
-│       ├── auth-telegram/
-│       ├── purchase-lottery/
-│       ├── deposit-request/
-│       ├── withdraw-request/
-│       └── ...
-└── package.json
-```
-
-## 🚀 快速开始
-
-### 安装依赖
 ```bash
-pnpm install
+npm i supabase --save-dev
 ```
 
-### 开发环境
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+
+```
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+```
+
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+
+<details>
+  <summary><b>macOS</b></summary>
+
+  Available via [Homebrew](https://brew.sh). To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
 ```bash
-pnpm dev
+supabase bootstrap
 ```
 
-### 构建生产版本
+Or using npx:
+
 ```bash
-pnpm build
+npx supabase bootstrap
 ```
 
-### 预览生产版本
-```bash
-pnpm preview
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
 ```
-
-## 🔧 环境变量
-
-创建 `.env` 文件并配置以下变量:
-
-```env
-VITE_SUPABASE_URL=your_supabase_url
-VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_TELEGRAM_BOT_USERNAME=your_bot_username
-```
-
-## 📱 Telegram Mini App 配置
-
-1. 在 BotFather 中创建 Telegram Bot
-2. 配置 Mini App URL
-3. 设置 Bot 命令和菜单
-
-## 🌍 多语言支持
-
-项目支持以下语言:
-- 🇨🇳 简体中文 (zh)
-- 🇷🇺 俄语 (ru)
-- 🇹🇯 塔吉克语 (tg)
-
-翻译文件位于 `src/i18n/locales/`
-
-## 📊 数据库
-
-使用 Supabase 作为后端服务:
-- PostgreSQL 数据库
-- Edge Functions
-- 实时订阅
-- 文件存储
-
-主要数据表:
-- `users` - 用户信息
-- `wallets` - 钱包
-- `lotteries` - 积分商城商品
-- `lottery_entries` - 积分商城记录
-- `orders` - 订单
-- `deposit_requests` - 充值申请
-- `withdrawal_requests` - 提现申请
-- `exchange_records` - 兑换记录
-
-## 🎨 UI 组件
-
-- 响应式设计
-- 流畅动画效果
-- 现代化界面
-- Telegram 风格主题
-
-## 📝 开发说明
-
-### Mock 数据
-开发环境下使用 mock 用户数据,方便本地测试。
-
-### 类型安全
-全面使用 TypeScript,确保类型安全。
-
-### 代码规范
-- ESLint
-- Prettier
-- TypeScript strict mode
-
-## 🔐 安全性
-
-- JWT 认证
-- Telegram WebApp 数据验证
-- RLS (Row Level Security)
-- API 密钥保护
-
-## 📄 许可证
-
-MIT License
-
-## 👥 贡献
-
-欢迎提交 Issue 和 Pull Request！
-
-## 📞 联系方式
-
-- GitHub: [@reportyao](https://github.com/reportyao)
-- 项目地址: [tezbarakat-tj-frontend](https://github.com/reportyao/tezbarakat-tj-frontend)
-
----
-
-**注意**: 本项目仅供学习和研究使用。
