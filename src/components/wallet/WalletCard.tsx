@@ -21,10 +21,10 @@ export const WalletCard: React.FC<WalletCardProps> = ({
   const { t } = useTranslation()
   const [showBalance, setShowBalance] = useState(true)
   
-  // 查找 TJS 货币的余额钱包
-  const balanceWallet = wallets.find(w => w.type === 'BALANCE' && w.currency === 'TJS')
-  // 查找积分钱包
-  const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')
+  // 查找 TJS 货币的余额钱包 (type='TJS')
+  const balanceWallet = wallets.find(w => (w.type as string) === 'TJS' && w.currency === 'TJS')
+  // 查找积分钱包 (type='LUCKY_COIN', currency='POINTS')
+  const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN' && (w.currency as string) === 'POINTS')
   
   const toggleShowBalance = () => {
     setShowBalance(!showBalance)
