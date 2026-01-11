@@ -322,7 +322,7 @@ const SpinLotteryPage: React.FC = () => {
     if (!spinData?.referral_code) return;
     
     const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
-    const shareText = t('spin.shareText', { link: inviteLink });
+    const shareText = `🎁 Барои Шумо 10 сомонӣ тӯҳфа!\nБо истиноди ман ворид шавед ва бонус гиред. Дар TezBarakat арзон харед ва бурд кунед!`;
     
     // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面
     // switchInlineQuery 需要 bot 启用 inline mode，我们改用直接分享链接

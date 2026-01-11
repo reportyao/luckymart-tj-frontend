@@ -89,7 +89,10 @@ export default function AIPage() {
       let errorMessage = ERROR_MESSAGES['DEFAULT'];
       
       if (error instanceof AIServiceError) {
-        errorMessage = ERROR_MESSAGES[error.code] || error.message || ERROR_MESSAGES['DEFAULT'];
+        // 优先使用 ERROR_MESSAGES 中的映射，如果没有则使用 error.message
+        errorMessage = ERROR_MESSAGES[error.code] || ERROR_MESSAGES['DEFAULT'];
+      } else if (error instanceof Error) {
+        errorMessage = error.message || ERROR_MESSAGES['DEFAULT'];
       }
       
       toast.error(errorMessage, {

@@ -46,7 +46,7 @@ const ProfilePage: React.FC = () => {
     if (!code) return;
     
     const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${code}`;
-    const shareText = `🎉 ${t('auth.welcome')}! ${t('home.referralCode')}: ${code}`;
+    const shareText = `🎁 Барои Шумо 10 сомонӣ тӯҳфа!\nБо истиноди ман ворид шавед ва бонус гиред. Дар TezBarakat арзон харед ва бурд кунед!`;
     
     // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面
     if (window.Telegram?.WebApp?.openTelegramLink) {
