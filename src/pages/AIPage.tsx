@@ -166,9 +166,9 @@ export default function AIPage() {
                 <QuickSuggestions />
 
                 {/* 使用说明 */}
-                <div className="text-center text-sm text-gray-500 space-y-1">
-                  <p>Ман ёрдамчии ҳушманди TezBarakat ҳастам</p>
-                  <p>Ман метавонам ба Шумо дар масъалаҳои рӯзмарра кӯмак кунам</p>
+                <div className="text-center text-xs text-gray-500 space-y-1 px-4">
+                  <p className="font-medium">TezBarakat AI</p>
+                  <p>Зеҳни сунъии сатҳи олӣ дар хизмати мардуми тоҷик.</p>
                 </div>
 
                 {/* AI免责声明 */}
