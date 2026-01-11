@@ -928,6 +928,7 @@
     "notWinning": "很遗憾，未中奖",
     "refundedLuckyCoins": "已退还积分",
     "winner": "中奖者",
+    "walletNotFound": "您还没有钱包，请先充值",
     "drawTime": "开奖时间",
     "orderNumber": "订单号",
     "status": {
