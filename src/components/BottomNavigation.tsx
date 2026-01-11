@@ -7,14 +7,16 @@ import {
   SparklesIcon, 
   PhotoIcon,
   CreditCardIcon, 
-  UserIcon 
+  UserIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline'
 import {
   HomeIcon as HomeIconSolid,
   SparklesIcon as SparklesIconSolid,
   PhotoIcon as PhotoIconSolid,
   CreditCardIcon as CreditCardIconSolid,
-  UserIcon as UserIconSolid
+  UserIcon as UserIconSolid,
+  ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid
 } from '@heroicons/react/24/solid'
 import { cn } from '../lib/utils'
 
@@ -39,10 +41,10 @@ export const BottomNavigation: React.FC = () => {
       activeIcon: SparklesIconSolid,
     },
     {
-      name: t('showoff.showoff'),
-      path: '/showoff',
-      icon: PhotoIcon,
-      activeIcon: PhotoIconSolid,
+      name: t('nav.ai'),
+      path: '/ai',
+      icon: ChatBubbleLeftRightIcon,
+      activeIcon: ChatBubbleLeftRightIconSolid,
     },
     {
       name: t('nav.wallet'),

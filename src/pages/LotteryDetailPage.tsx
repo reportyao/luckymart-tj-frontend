@@ -44,6 +44,21 @@ const LotteryDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof getTimeRemaining> | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
+
+  // 自动播放图片
+  useEffect(() => {
+    if (!lottery?.image_urls || lottery.image_urls.length <= 1 || !autoPlayEnabled) return;
+    
+    const timer = setInterval(() => {
+      setActiveImageIndex((prev) => 
+        prev === lottery.image_urls.length - 1 ? 0 : prev + 1
+      );
+    }, 3000); // 每3秒切换
+
+    return () => clearInterval(timer);
+  }, [lottery?.image_urls, autoPlayEnabled]);
   const [randomShowoffs, setRandomShowoffs] = useState<Showoff[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
@@ -379,8 +394,9 @@ const LotteryDetailPage: React.FC = () => {
         {/* Image Carousel */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div 
-            className="relative aspect-square overflow-hidden"
+            className="relative aspect-square overflow-hidden bg-gray-50"
             onTouchStart={(e) => {
+              setAutoPlayEnabled(false); // 用户交互时暂停自动播放
               const touch = e.touches[0];
               (e.currentTarget as any)._touchStartX = touch.clientX;
             }}
@@ -396,13 +412,17 @@ const LotteryDetailPage: React.FC = () => {
                   setActiveImageIndex(activeImageIndex - 1);
                 }
               }
+              
+              // 重新启动自动播放
+              setTimeout(() => setAutoPlayEnabled(true), 5000);
             }}
+            onClick={() => setIsImageModalOpen(true)}
           >
             {lottery.image_urls && lottery.image_urls.length > 0 ? (
               <LazyImage
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="w-full h-full object-contain"
+                className="w-full h-full object-contain cursor-pointer"
                 width={600}
                 height={600}
               />
@@ -417,17 +437,82 @@ const LotteryDetailPage: React.FC = () => {
                 {lottery.image_urls.map((_, index) => (
                   <button
                     key={index}
-                    onClick={() => setActiveImageIndex(index)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex(index);
+                      setAutoPlayEnabled(false);
+                      setTimeout(() => setAutoPlayEnabled(true), 5000);
+                    }}
                     className={cn(
-                      "w-2 h-2 rounded-full transition-colors",
-                      index === activeImageIndex ? "bg-white" : "bg-gray-400"
+                      "w-2 h-2 rounded-full transition-all",
+                      index === activeImageIndex ? "bg-white w-4" : "bg-white/60"
                     )}
                   />
                 ))}
               </div>
             )}
+            {/* Image Counter */}
+            {lottery.image_urls && lottery.image_urls.length > 1 && (
+              <div className="absolute top-3 right-3 bg-black/50 text-white px-3 py-1 rounded-full text-sm">
+                {activeImageIndex + 1}/{lottery.image_urls.length}
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Image Modal */}
+        {isImageModalOpen && lottery.image_urls && (
+          <div 
+            className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+            onClick={() => setIsImageModalOpen(false)}
+          >
+            <button
+              onClick={() => setIsImageModalOpen(false)}
+              className="absolute top-4 right-4 text-white p-2 hover:bg-white/10 rounded-full transition-colors z-10"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="relative w-full h-full flex items-center justify-center p-4">
+              <img
+                src={lottery.image_urls[activeImageIndex]}
+                alt={title}
+                className="max-w-full max-h-full object-contain"
+                onClick={(e) => e.stopPropagation()}
+              />
+              {lottery.image_urls.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => prev === 0 ? lottery.image_urls.length - 1 : prev - 1);
+                    }}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveImageIndex((prev) => prev === lottery.image_urls.length - 1 ? 0 : prev + 1);
+                    }}
+                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 text-white p-3 rounded-full hover:bg-white/30 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                  <div className="absolute bottom-8 left-1/2 -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                    {activeImageIndex + 1} / {lottery.image_urls.length}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Lottery Info Card */}
         <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
