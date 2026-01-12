@@ -178,7 +178,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
             placeholder={t('ai.placeholder')}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             disabled={loading}
-            maxLength={500}
+            maxLength={1000}
           />
           <button
             onClick={handleSend}
@@ -192,7 +192,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
         {/* 字符计数 */}
         {input.length > 0 && (
           <div className="text-xs text-gray-500 mt-2 text-right">
-            {input.length}/500
+            {input.length}/1000
           </div>
         )}
         

@@ -263,7 +263,7 @@ const LotteryResultPage: React.FC = () => {
 
   // 当确认是中奖用户时，获取奖品信息
   useEffect(() => {
-    if (lottery?.winning_user_id === currentUser?.id) {
+    if (lottery?.winning_user_id === currentUser?.telegram_id) {
       fetchPrizeInfo();
       loadPickupPoints();
     }
@@ -416,8 +416,8 @@ const LotteryResultPage: React.FC = () => {
         : lottery.winning_numbers[0])
     : lottery.winning_ticket_number;
   const winningTicket = tickets.find(t => t.ticket_number === winningTicketNumber);
-  const winningUser = participants.find(p => p.user.id === lottery.winning_user_id);
-  const isCurrentUserWinner = currentUser?.id === lottery.winning_user_id;
+  const winningUser = participants.find(p => p.user.telegram_id === lottery.winning_user_id);
+  const isCurrentUserWinner = currentUser?.telegram_id === lottery.winning_user_id;
   const myTickets = tickets.filter(t => t.user_id === currentUser?.id);
 
   // 判断是否需要领取
@@ -691,9 +691,9 @@ const LotteryResultPage: React.FC = () => {
                   <img
                     src={participant.user.avatar_url || '/default-avatar.png'}
                     alt={participant.user.telegram_username || participant.user.first_name || 'User'}
-                    className={`w-8 h-8 rounded-full ${participant.user.id === lottery.winning_user_id ? 'ring-2 ring-yellow-400' : ''}`}
+                    className={`w-8 h-8 rounded-full ${participant.user.telegram_id === lottery.winning_user_id ? 'ring-2 ring-yellow-400' : ''}`}
                   />
-                  {participant.user.id === lottery.winning_user_id && (
+                  {participant.user.telegram_id === lottery.winning_user_id && (
                     <TrophyIcon className="w-4 h-4 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-0.5" />
                   )}
                 </div>

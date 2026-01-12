@@ -58,7 +58,7 @@ const LotteryDetailPage: React.FC = () => {
     }, 3000); // 每3秒切换
 
     return () => clearInterval(timer);
-  }, [lottery?.image_urls, autoPlayEnabled]);
+  }, [lottery?.image_urls, lottery?.image_urls?.length, autoPlayEnabled, activeImageIndex]);
   const [randomShowoffs, setRandomShowoffs] = useState<Showoff[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
@@ -423,7 +423,7 @@ const LotteryDetailPage: React.FC = () => {
               <LazyImage
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="w-full h-full object-cover cursor-pointer"
+                className="w-full h-full object-contain cursor-pointer"
                 width={600}
                 height={600}
               />

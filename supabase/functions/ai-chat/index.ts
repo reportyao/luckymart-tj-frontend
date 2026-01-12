@@ -221,7 +221,7 @@ async function callQwenAI(userMessage: string): Promise<string> {
           ]
         },
         parameters: {
-          max_tokens: 800,
+          max_tokens: 1600,
           temperature: 0.7,
           top_p: 0.8,
           result_format: 'message'
@@ -241,7 +241,7 @@ async function callQwenAI(userMessage: string): Promise<string> {
   if (data?.output?.choices?.[0]?.message?.content) {
     let aiResponse = data.output.choices[0].message.content;
     // 限制长度
-    if (aiResponse.length > 800) {
+    if (aiResponse.length > 1600) {
       aiResponse = aiResponse.substring(0, 800) + '...';
     }
     return aiResponse;
@@ -273,8 +273,8 @@ serve(async (req) => {
 
     const trimmedMessage = message.trim();
     
-    if (trimmedMessage.length === 0 || trimmedMessage.length > 500) {
-      throw new Error('消息长度必须在1-500字符之间');
+    if (trimmedMessage.length === 0 || trimmedMessage.length > 1000) {
+      throw new Error('消息长度必须在1-1000字符之间');
     }
 
     // 1. 验证用户

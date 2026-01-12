@@ -68,7 +68,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
     }, 3000); // 每3秒切换
 
     return () => clearInterval(timer);
-  }, [images, autoPlayEnabled]);
+  }, [images, images.length, autoPlayEnabled, currentIndex]);
 
   if (!images || images.length === 0) {
     return (
@@ -89,7 +89,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           <img
             src={images[0]}
             alt={alt}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
         {/* Image Modal */}
@@ -139,7 +139,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           <img
             src={images[currentIndex]}
             alt={`${alt} - ${currentIndex + 1}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         </div>
         
@@ -399,13 +399,21 @@ export default function GroupBuyDetailPage() {
       // 使用标准的带邀请码分享链接
       const referralCode = user?.referral_code || user?.invite_code;
       if (!referralCode) {
-        alert(t('common.error') || '错误');
+        toast.error(t('invite.noReferralCode') || '没有邀请码');
         return;
       }
       
       const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${referralCode}`;
       const shareText = `In molro bo 70% takhfif kharidan mumkin ast?!\nMan allakay ishtirok kardam. Ba Shumo ham yak imkoniyati kharidi arzonro tuhfa mekunam, zudtar kushoed va bined!`;
       
+      // 优先使用 Telegram WebApp 的分享功能
+      if (window.Telegram?.WebApp?.openTelegramLink) {
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+        window.Telegram.WebApp.openTelegramLink(shareUrl);
+        return;
+      }
+      
+      // fallback 到浏览器原生分享
       if (navigator.share) {
         await navigator.share({
           title: getLocalizedText(product?.title),
@@ -413,14 +421,15 @@ export default function GroupBuyDetailPage() {
           url: inviteLink,
         });
       } else {
+        // 最后 fallback 到复制链接
         await navigator.clipboard.writeText(inviteLink);
-        alert(t('common.linkCopied') || '链接已复制');
+        toast.success(t('common.linkCopied') || '链接已复制');
       }
     } catch (error) {
       console.error('Share error:', error);
       // 如果用户取消分享，不显示错误
       if (error instanceof Error && error.name !== 'AbortError') {
-        alert(t('common.error') || '分享失败');
+        toast.error(t('common.shareFailed') || '分享失败');
       }
     }
   };
