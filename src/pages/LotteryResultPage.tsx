@@ -184,7 +184,7 @@ const LotteryResultPage: React.FC = () => {
     if (!id || !currentUser) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: prizesData, error } = await supabase
         .from('prizes')
         .select(`
           id,
@@ -196,7 +196,9 @@ const LotteryResultPage: React.FC = () => {
         `)
         .eq('lottery_id', id)
         .eq('user_id', currentUser.telegram_id)
-        .single();
+        .maybeSingle(); // 使用maybeSingle()而不是single()，允许没有记录
+
+      const data = prizesData;
 
       if (!error && data) {
         // 如果有自提点ID，获取自提点信息
