@@ -244,12 +244,12 @@ serve(async (req) => {
     });
 
     // 6. 获取用户积分钱包
+    // 注意：LUCKY_COIN钱包的currency总是POINTS，不需要匹配lottery.currency
     const { data: wallet, error: walletError } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
       .eq('type', 'LUCKY_COIN')
-      .eq('currency', lottery.currency)
       .single();
 
     if (walletError || !wallet) {
