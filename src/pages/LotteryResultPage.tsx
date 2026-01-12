@@ -179,12 +179,15 @@ const LotteryResultPage: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to fetch tickets:', error);
     }
-  }, [id, supabase]  // 获取奖品信息
+  }, [id, supabase]);
+  
+  // 获取奖品信息
   const fetchPrizeInfo = useCallback(async () => {
     if (!id || !currentUser?.id) return;
     
     setIsLoadingPrizeInfo(true);
-    try {      const { data: prizesData, error } = await supabase
+    try {
+      const { data: prizesData, error } = await supabase
         .from('prizes')
         .select(`
           id,
