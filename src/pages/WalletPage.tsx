@@ -10,7 +10,8 @@ import {
   ArrowPathIcon,
   ClockIcon,
   CheckCircleIcon,
-  XCircleIcon
+  XCircleIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { formatCurrency, formatDateTime } from '../lib/utils'
 import toast from 'react-hot-toast'
@@ -183,7 +184,7 @@ const WalletPage: React.FC = () => {
     return statusMap[status] || status
   }
 
-  const getTransactionIcon = (type: string) => {
+  const getTransactionIcon = (type: string, amount?: number) => {
     switch (type) {
       case 'DEPOSIT':
         return <ArrowDownIcon className="w-5 h-5 text-green-600" />
@@ -201,6 +202,10 @@ const WalletPage: React.FC = () => {
       case 'GROUP_BUY_REFUND':
         return <ArrowDownIcon className="w-5 h-5 text-blue-600" />
       case 'COIN_EXCHANGE':
+        // 积分增加时显示四叶草图标（SparklesIcon），减少时显示循环箭头
+        if (amount && amount > 0) {
+          return <SparklesIcon className="w-5 h-5 text-yellow-600" />
+        }
         return <ArrowPathIcon className="w-5 h-5 text-blue-600" />
       case 'SHOWOFF_REWARD':
       case 'SPIN_REWARD':
@@ -331,7 +336,7 @@ const WalletPage: React.FC = () => {
                 >
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 bg-gray-50 rounded-lg flex items-center justify-center">
-                      {getTransactionIcon(transaction.type)}
+                      {getTransactionIcon(transaction.type, transaction.amount)}
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-900">

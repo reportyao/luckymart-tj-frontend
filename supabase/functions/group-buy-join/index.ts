@@ -68,8 +68,8 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product not found or inactive' }, 404);
     }
 
-    // 兼容不同的字段名
-    const stockQuantity = product.stock_quantity ?? product.stock ?? 0;
+    // 兼容不同的字段名 - 优先使用stock字段，因为stock_quantity可能为0但stock有值
+    const stockQuantity = product.stock ?? product.stock_quantity ?? 0;
     const soldQuantity = product.sold_quantity ?? 0;
     const pricePerPerson = Number(product.price_per_person ?? product.group_price ?? 0);
     const timeoutHours = product.timeout_hours ?? product.duration_hours ?? 24;
