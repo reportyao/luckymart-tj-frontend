@@ -124,8 +124,13 @@ const FullPurchaseConfirmPage: React.FC = () => {
       if (data?.success) {
         toast.success(t('lottery.fullPurchaseSuccess'));
         await refreshWallets();
-        // 跳转到订单管理页面
-        navigate('/orders');
+        // 跳转到全款购买订单详情页
+        const orderId = data.data?.order_id;
+        if (orderId) {
+          navigate(`/order-detail/${orderId}`);
+        } else {
+          navigate('/orders');
+        }
       } else {
         const errorMsg = data?.error || t('error.unknownError');
         console.error('Full purchase failed:', errorMsg, data);
