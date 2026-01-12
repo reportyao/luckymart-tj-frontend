@@ -309,8 +309,8 @@ serve(async (req) => {
       }
     }
 
-    // 4. 获取一元购物订单
-    if (!order_type || order_type === 'all' || order_type === 'lottery') {
+    // 4. 获取一元购物订单和积分商城订单
+    if (!order_type || order_type === 'all' || order_type === 'lottery' || order_type === 'exchange') {
       console.log('[GetMyOrders] Fetching one-yuan purchase orders for userId:', userId);
       
       const { data: oneYuanOrders, error: oneYuanError } = await supabase

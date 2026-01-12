@@ -179,10 +179,11 @@ serve(async (req) => {
 
   try {
     const body = await req.json()
-    const { session_token, prize_id, order_type = 'lottery', pickup_point_id } = body
+    const { session_token, prize_id, lottery_id, order_type = 'lottery', pickup_point_id } = body
 
     console.log('[ClaimPrize] Received request:', { 
       prize_id,
+      lottery_id,
       order_type,
       pickup_point_id,
       session_token: session_token ? 'present' : 'missing'
@@ -192,8 +193,8 @@ serve(async (req) => {
       throw new Error('未授权：缺少 session_token');
     }
 
-    if (!prize_id) {
-      throw new Error('缺少奖品ID');
+    if (!prize_id && !lottery_id) {
+      throw new Error('缺少奖品ID或抽奖ID');
     }
 
     // 验证用户 session
@@ -228,12 +229,72 @@ serve(async (req) => {
     }
 
     // 1. 验证奖品是否属于该用户
-    const { data: prizeData, error: prizeError } = await supabase
-      .from(tableName)
-      .select('*')
-      .eq('id', prize_id)
-      .eq(userIdField, userIdValue)
-      .single();
+    let prizeData;
+    let prizeError;
+    
+    if (prize_id) {
+      // 如果有 prize_id，直接查询
+      const result = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', prize_id)
+        .eq(userIdField, userIdValue)
+        .single();
+      prizeData = result.data;
+      prizeError = result.error;
+    } else if (lottery_id) {
+      // 如果只有 lottery_id，通过 lottery_id 查找
+      const result = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('lottery_id', lottery_id)
+        .eq(userIdField, userIdValue)
+        .maybeSingle();
+      prizeData = result.data;
+      prizeError = result.error;
+      
+      // 如果没有找到，需要创建一个新的 prize 记录
+      if (!prizeData && !prizeError) {
+        console.log('[ClaimPrize] Prize not found, creating new prize record');
+        
+        // 查询 lottery 信息确认用户是中奖者
+        const { data: lotteryData, error: lotteryError } = await supabase
+          .from('lotteries')
+          .select('*')
+          .eq('id', lottery_id)
+          .single();
+        
+        if (lotteryError || !lotteryData) {
+          throw new Error('抽奖不存在');
+        }
+        
+        if (lotteryData.winning_user_id !== telegramId) {
+          throw new Error('您不是该抽奖的中奖者');
+        }
+        
+        // 创建新的 prize 记录
+        const { data: newPrize, error: createError } = await supabase
+          .from(tableName)
+          .insert({
+            user_id: userId,
+            lottery_id: lottery_id,
+            status: 'PENDING',
+            pickup_status: 'PENDING_CLAIM',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+        
+        if (createError || !newPrize) {
+          console.error('[ClaimPrize] Failed to create prize:', createError);
+          throw new Error('创建奖品记录失败');
+        }
+        
+        prizeData = newPrize;
+        console.log('[ClaimPrize] Created new prize:', prizeData.id);
+      }
+    }
 
     if (prizeError || !prizeData) {
       console.error('[ClaimPrize] Prize not found:', prizeError);
@@ -325,7 +386,7 @@ serve(async (req) => {
     const { data: updatedPrize, error: updateError } = await supabase
       .from(tableName)
       .update(updateData)
-      .eq('id', prize_id)
+      .eq('id', prize.id)
       .select()
       .single();
 
@@ -343,7 +404,7 @@ serve(async (req) => {
     const { error: logError } = await supabase
       .from('pickup_logs')
       .insert({
-        prize_id: prize_id,
+        prize_id: prize.id,
         pickup_code: pickupCode,
         pickup_point_id: pickup_point_id || null,
         operation_type: 'CLAIM',

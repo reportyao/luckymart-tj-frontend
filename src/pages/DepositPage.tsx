@@ -386,9 +386,9 @@ export default function DepositPage() {
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.uploadProof')}</h2>
           
-          {/* 上传区域 */}
-          <div 
-            onClick={handleUploadClick}
+          {/* 上传区域 - 使用 label 包裹 input 实现更好的移动端兼容 */}
+          <label 
+            htmlFor="payment-proof-upload"
             className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl transition-all cursor-pointer ${
               uploading 
                 ? 'border-purple-500 bg-purple-50' 
@@ -437,6 +437,7 @@ export default function DepositPage() {
               </>
             )}
             <input
+              id="payment-proof-upload"
               ref={fileInputRef}
               type="file"
               accept="image/*"
@@ -450,7 +451,7 @@ export default function DepositPage() {
               disabled={uploading}
               className="hidden"
             />
-          </div>
+          </label>
           
           {/* 已上传的图片预览 */}
           {uploadedImages.length > 0 && (

@@ -26,52 +26,157 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // 获取邀请的用户列表
-    const { data: referralsData, error: referralsError } = await supabase
+    console.log('[GetInviteData] Fetching invite data for user:', user_id)
+
+    // 1. 获取一级邀请用户（直接邀请）
+    const { data: level1Users, error: level1Error } = await supabase
       .from('users')
       .select('id, first_name, telegram_username, avatar_url, created_at')
       .eq('referred_by_id', user_id)
 
-    if (referralsError) {
-      throw referralsError
+    if (level1Error) {
+      console.error('[GetInviteData] Level 1 query error:', level1Error)
+      throw level1Error
     }
+
+    console.log('[GetInviteData] Level 1 users:', level1Users?.length || 0)
+
+    const level1Count = level1Users?.length || 0
+    const allInvitedUsers: any[] = []
+
+    // 添加一级用户到结果
+    if (level1Users && level1Users.length > 0) {
+      level1Users.forEach(u => {
+        allInvitedUsers.push({
+          id: u.id,
+          telegram_username: u.telegram_username,
+          first_name: u.first_name,
+          avatar_url: u.avatar_url || null,
+          created_at: u.created_at,
+          level: 1,
+          total_spent: 0,
+          commission_earned: 0,
+        })
+      })
+
+      // 2. 获取二级邀请用户（一级用户邀请的用户）
+      const level1Ids = level1Users.map(u => u.id)
+      
+      const { data: level2Users, error: level2Error } = await supabase
+        .from('users')
+        .select('id, first_name, telegram_username, avatar_url, created_at')
+        .in('referred_by_id', level1Ids)
+
+      if (level2Error) {
+        console.error('[GetInviteData] Level 2 query error:', level2Error)
+      } else {
+        console.log('[GetInviteData] Level 2 users:', level2Users?.length || 0)
+        
+        // 添加二级用户到结果
+        if (level2Users && level2Users.length > 0) {
+          level2Users.forEach(u => {
+            allInvitedUsers.push({
+              id: u.id,
+              telegram_username: u.telegram_username,
+              first_name: u.first_name,
+              avatar_url: u.avatar_url || null,
+              created_at: u.created_at,
+              level: 2,
+              total_spent: 0,
+              commission_earned: 0,
+            })
+          })
+
+          // 3. 获取三级邀请用户（二级用户邀请的用户）
+          const level2Ids = level2Users.map(u => u.id)
+          
+          const { data: level3Users, error: level3Error } = await supabase
+            .from('users')
+            .select('id, first_name, telegram_username, avatar_url, created_at')
+            .in('referred_by_id', level2Ids)
+
+          if (level3Error) {
+            console.error('[GetInviteData] Level 3 query error:', level3Error)
+          } else {
+            console.log('[GetInviteData] Level 3 users:', level3Users?.length || 0)
+            
+            // 添加三级用户到结果
+            if (level3Users && level3Users.length > 0) {
+              level3Users.forEach(u => {
+                allInvitedUsers.push({
+                  id: u.id,
+                  telegram_username: u.telegram_username,
+                  first_name: u.first_name,
+                  avatar_url: u.avatar_url || null,
+                  created_at: u.created_at,
+                  level: 3,
+                  total_spent: 0,
+                  commission_earned: 0,
+                })
+              })
+            }
+          }
+        }
+      }
+    }
+
+    // 统计各级用户数量
+    const level2Count = allInvitedUsers.filter(u => u.level === 2).length
+    const level3Count = allInvitedUsers.filter(u => u.level === 3).length
+    const totalReferrals = level1Count + level2Count + level3Count
+
+    console.log('[GetInviteData] Total referrals:', {
+      level1: level1Count,
+      level2: level2Count,
+      level3: level3Count,
+      total: totalReferrals
+    })
 
     // 获取佣金数据
     const { data: commissionsData } = await supabase
       .from('commissions')
-      .select('amount')
+      .select('amount, status')
       .eq('user_id', user_id)
 
-    const totalInvited = referralsData?.length || 0
-    const totalEarnings = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0
+    const totalCommission = commissionsData?.reduce((sum, c) => sum + Number(c.amount), 0) || 0
+    const paidCommission = commissionsData?.filter(c => c.status === 'PAID').reduce((sum, c) => sum + Number(c.amount), 0) || 0
+    const pendingCommission = commissionsData?.filter(c => c.status === 'PENDING').reduce((sum, c) => sum + Number(c.amount), 0) || 0
+
+    // 获取奖金余额
+    const { data: walletData } = await supabase
+      .from('wallets')
+      .select('balance')
+      .eq('user_id', user_id)
+      .eq('type', 'BONUS')
+      .eq('currency', 'TJS')
+      .single()
+
+    const bonusBalance = walletData?.balance || 0
 
     const stats = {
-      total_invites: totalInvited,
-      total_referrals: totalInvited,
-      level1_referrals: totalInvited,
-      level2_referrals: 0,
-      level3_referrals: 0,
-      total_commission: totalEarnings,
-      pending_commission: 0,
-      paid_commission: totalEarnings,
-      bonus_balance: 0,
+      total_invites: level1Count, // 直接邀请数
+      total_referrals: totalReferrals, // 总推荐数（3级）
+      level1_referrals: level1Count,
+      level2_referrals: level2Count,
+      level3_referrals: level3Count,
+      total_commission: totalCommission,
+      pending_commission: pendingCommission,
+      paid_commission: paidCommission,
+      bonus_balance: bonusBalance,
     }
 
-    const invited_users = referralsData?.map(u => ({
-      id: u.id,
-      telegram_username: u.telegram_username,
-      avatar_url: u.avatar_url || null,
-      created_at: u.created_at,
-      level: 1,
-      total_spent: 0,
-      commission_earned: 0,
-    })) || []
+    console.log('[GetInviteData] Stats:', stats)
 
     return new Response(
-      JSON.stringify({ success: true, stats, invited_users }),
+      JSON.stringify({ 
+        success: true, 
+        stats, 
+        invited_users: allInvitedUsers 
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('[GetInviteData] Error:', error)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

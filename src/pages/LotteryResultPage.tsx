@@ -322,12 +322,10 @@ const LotteryResultPage: React.FC = () => {
       return;
     }
     
-    // 检查是否有奖品信息
-    if (!prizeInfo) {
-      toast.error(t('orders.prizeInfoNotLoaded') || '奖品信息加载中，请稍后再试');
-      console.error('[ClaimPrize] Prize info not loaded');
-      return;
-    }
+    // 修复: 如果 prizeInfo 不存在，说明是首次领取，允许继续
+    // 只有当 prizeInfo 存在且没有 pickup_code 时才需要领取
+    // 或者 prizeInfo 不存在时也允许领取
+    console.log('[ClaimPrize] Prize info:', prizeInfo);
     
     // 检查是否有可用的自提点
     if (pickupPoints.length === 0) {
@@ -343,17 +341,25 @@ const LotteryResultPage: React.FC = () => {
   // 提交领取请求
   const handleSubmitClaim = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prizeInfo || !sessionToken) return;
+    if (!sessionToken || !id) return;
 
     setIsSubmitting(true);
     try {
+      // 修复: 如果 prizeInfo 存在就使用 prize_id，否则使用 lottery_id
+      const requestBody: any = {
+        session_token: sessionToken,
+        order_type: 'lottery',
+        pickup_point_id: selectedPointId,
+      };
+      
+      if (prizeInfo?.id) {
+        requestBody.prize_id = prizeInfo.id;
+      } else {
+        requestBody.lottery_id = id;
+      }
+      
       const { data, error } = await supabase.functions.invoke('claim-prize', {
-        body: {
-          session_token: sessionToken,
-          prize_id: prizeInfo.id,
-          order_type: 'lottery',
-          pickup_point_id: selectedPointId,
-        }
+        body: requestBody
       });
 
       if (error) throw error;
@@ -420,8 +426,8 @@ const LotteryResultPage: React.FC = () => {
   const isCurrentUserWinner = currentUser?.telegram_id === lottery.winning_user_id;
   const myTickets = tickets.filter(t => t.user_id === currentUser?.id);
 
-  // 判断是否需要领取
-  const needsClaim = isCurrentUserWinner && prizeInfo && !prizeInfo.pickup_code;
+  // 判断是否需要领取 - 修复: 即使 prizeInfo 不存在，只要是中奖用户且没有领取码，就显示按钮
+  const needsClaim = isCurrentUserWinner && (!prizeInfo || !prizeInfo.pickup_code);
   const hasClaimed = isCurrentUserWinner && prizeInfo?.pickup_code;
   const isPickedUp = prizeInfo?.pickup_status === 'PICKED_UP' || prizeInfo?.picked_up_at;
   

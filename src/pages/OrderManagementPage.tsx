@@ -134,8 +134,12 @@ const OrderManagementPage: React.FC = () => {
   const filteredOrders = useMemo(() => {
     if (activeTab === 'all') return allOrders;
     if (activeTab === 'lottery') {
-      // 积分商城 Tab 包含 lottery 和 full_purchase 类型
-      return allOrders.filter(order => order.order_type === 'lottery' || order.order_type === 'full_purchase');
+      // 积分商城 Tab 包含 lottery、exchange、full_purchase 类型
+      return allOrders.filter(order => 
+        order.order_type === 'lottery' || 
+        order.order_type === 'exchange' || 
+        order.order_type === 'full_purchase'
+      );
     }
     return allOrders.filter(order => order.order_type === activeTab);
   }, [allOrders, activeTab]);
