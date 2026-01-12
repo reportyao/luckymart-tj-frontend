@@ -206,6 +206,7 @@ serve(async (req) => {
             status: order.status,
             refund_lucky_coins: order.refund_lucky_coins,
             created_at: order.created_at,
+            product_id: order.product_id,
             product_title: product?.title || {},
             product_image: product?.image_url || '',
             original_price: product?.original_price || 0,

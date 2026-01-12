@@ -33,6 +33,7 @@ interface UnifiedOrder {
   status: string;
   created_at: string;
   // 商品信息
+  product_id?: string;
   product_title: { zh?: string; ru?: string; tg?: string };
   product_image: string;
   original_price?: number;
@@ -203,11 +204,17 @@ const OrderManagementPageNew: React.FC = () => {
 
   // 处理订单点击
   const handleOrderClick = (order: UnifiedOrder) => {
-    if (order.order_type === 'group_buy' && order.session_id) {
+    if (order.order_type === 'group_buy') {
       if (order.status === 'WON' || order.status === 'LOST') {
-        navigate(`/group-buy/result/${order.session_id}`);
+        // 拼团已完成，跳转到结果页
+        if (order.session_id) {
+          navigate(`/group-buy/result/${order.session_id}`);
+        }
       } else {
-        navigate(`/group-buy/${order.session_id}`);
+        // 拼团进行中，跳转到商品详情页
+        if (order.product_id) {
+          navigate(`/group-buy/${order.product_id}`);
+        }
       }
     } else if (order.order_type === 'lottery' && order.lottery_id) {
       navigate(`/lottery/${order.lottery_id}`);
@@ -391,7 +398,7 @@ const OrderManagementPageNew: React.FC = () => {
                 <div className="flex flex-col items-end justify-between">
                   <div className="text-right">
                     <p className="text-lg font-bold text-purple-600">
-                      ₽{order.amount}
+                      {order.order_type === 'group_buy' ? 'TJS' : '₽'}{order.amount}
                     </p>
                   </div>
                   <ChevronRightIcon className="w-5 h-5 text-gray-300" />

@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
     // 兼容不同的字段名 - 优先使用stock字段，因为stock_quantity可能为0但stock有值
     const stockQuantity = product.stock ?? product.stock_quantity ?? 0;
     const soldQuantity = product.sold_quantity ?? 0;
-    const pricePerPerson = Number(product.price_per_person ?? product.group_price ?? 0);
+    const pricePerPerson = Number(product.price_per_person) || Number(product.group_price) || 0;
     const timeoutHours = product.timeout_hours ?? product.duration_hours ?? 24;
     const groupSize = product.group_size ?? product.max_participants ?? 3;
     const productTitle = product.title ?? product.name_i18n ?? { zh: product.name };
@@ -173,6 +173,7 @@ Deno.serve(async (req) => {
           session_code: newSessionCode,
           status: 'ACTIVE',
           current_participants: 0,
+          group_size: groupSize,
           max_participants: groupSize,
           required_participants: groupSize,
           initiator_id: user.telegram_id,
