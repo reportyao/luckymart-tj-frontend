@@ -277,9 +277,10 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('[Exchange] Error:', error)
+    const errorMessage = error.message || '兑换失败，请稍后重试';
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 400 }
+      JSON.stringify({ success: false, error: errorMessage }),
+      { headers: { "Content-Type": "application/json", ...corsHeaders }, status: 200 }
     )
   }
 })

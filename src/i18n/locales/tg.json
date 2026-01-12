@@ -499,6 +499,7 @@
     "imageRequiredError": "Лутфан, ҳадди ақал як тасвир бор кунед",
     "imagesUploadedAndOptimized": "Тасвирҳо бомуваффақият бор шуданд",
     "imageUploadFailed": "Боркунии сурат ноком шуд",
+    "imageFormatHint": "Форматҳои JPG, PNG пуштибонӣ мешаванд, ҳаҷми як тасвир на беш аз 5 МБ",
     "showoffSuccessPending": "Намоиш бомуваффақият нашр шуд, дар интизории тасдиқ",
     "publish": "Нашр кардан",
     "selectPrizeRecord": "Сабти бурдро интихоб кунед",

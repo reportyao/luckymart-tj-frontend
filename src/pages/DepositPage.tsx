@@ -177,8 +177,12 @@ export default function DepositPage() {
   }
 
   const handleUploadClick = () => {
+    console.log('[DepositPage] handleUploadClick called, uploading:', uploading)
     if (!uploading && fileInputRef.current) {
+      console.log('[DepositPage] Triggering file input click')
       fileInputRef.current.click()
+    } else {
+      console.log('[DepositPage] Click blocked - uploading:', uploading, 'inputRef:', !!fileInputRef.current)
     }
   }
 
@@ -436,9 +440,13 @@ export default function DepositPage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              capture="environment"
               multiple
               onChange={handleImageUpload}
+              onClick={(e) => {
+                console.log('[DepositPage] File input clicked')
+                // 清空value以允许选择相同文件
+                e.currentTarget.value = ''
+              }}
               disabled={uploading}
               className="hidden"
             />

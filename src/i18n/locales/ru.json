@@ -497,6 +497,7 @@
     "imageRequiredError": "Пожалуйста, загрузите хотя бы одно изображение",
     "imagesUploadedAndOptimized": "Изображения успешно загружены",
     "imageUploadFailed": "Не удалось загрузить изображение",
+    "imageFormatHint": "Поддерживаются форматы JPG, PNG, размер одного изображения не более 5 МБ",
     "showoffSuccessPending": "Опубликовано успешно, ожидает модерации",
     "publish": "Опубликовать",
     "selectPrizeRecord": "Выберите запись о выигрыше",

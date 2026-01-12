@@ -551,7 +551,8 @@
     "tip3": "优质晒单有机会获得平台奖励",
     "tip4": "请勿发布违法违规、广告等不当内容",
     "preview": "预览",
-    "imageUploadFailed": "图片上传失败"
+    "imageUploadFailed": "图片上传失败",
+    "imageFormatHint": "支持JPG、PNG格式,单张图片不超过5MB"
   },
   "prize": {
     "prizeManagement": "中奖管理",

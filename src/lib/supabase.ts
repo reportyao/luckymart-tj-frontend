@@ -485,6 +485,11 @@ export const walletService = {
       throw new Error(`兑换失败: ${error.message}`);
     }
     
+    // 检查返回的数据中是否有错误
+    if (data && !data.success) {
+      throw new Error(data.error || '兑换失败，请稍后重试');
+    }
+    
     return data as { success: boolean; new_balance?: number };
   }
 };

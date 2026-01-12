@@ -398,7 +398,7 @@ const ShowoffCreatePage: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-gray-500 mt-3">
-            * 支持JPG、PNG格式,单张图片不超过5MB
+            * {t('showoff.imageFormatHint') || '支持JPG、PNG格式,单张图片不超过5MB'}
           </p>
         </div>
 
