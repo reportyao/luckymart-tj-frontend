@@ -2,8 +2,10 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { SparklesIcon, ArrowPathIcon } from '@heroicons/react/24/outline';
 import { useDailyProverb } from '../../hooks/ai/useDailyProverb';
+import { useTranslation } from 'react-i18next';
 
 export function DailyProverb() {
+  const { t } = useTranslation();
   const { proverb, nextProverb, loading } = useDailyProverb();
 
   if (loading || !proverb) {
@@ -21,7 +23,7 @@ export function DailyProverb() {
       {/* 标题 */}
       <div className="flex items-center gap-2 mb-4">
         <SparklesIcon className="w-5 h-5" />
-        <span className="text-sm font-medium">Имрӯз меомӯзем</span>
+        <span className="text-sm font-medium">{t('ai.dailyProverbTitle')}</span>
       </div>
 
       {/* 谚语内容 - 只显示塔吉克语 */}

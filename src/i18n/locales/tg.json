@@ -1005,5 +1005,21 @@
     "inTransitTajikistanDesc": "Бастаи шумо ба Тоҷикистон расид ва ба нуқтаи гирифтан интиқол мешавад.",
     "readyForPickupDesc": "Бастаи шумо ба нуқтаи гирифтан расид. Бо рамзи гирифтан биёед.",
     "pickedUpDesc": "Шумо фармоишро бомуваффақият гирифтед. Ташаккур барои харид!"
+  },
+  "ai": {
+    "title": "TezBarakat AI",
+    "subtitle": "и пешрафта барои Тоҷикистон",
+    "backButton": "Бозгашт",
+    "placeholder": "Саволи худро нависед...",
+    "sendButton": "Фиристодан",
+    "thinking": "Дар ҳоли фикр кардан...",
+    "emptyStateTitle": "Саволи худро нависед",
+    "emptyStateDesc": "Ман ба Шумо дар масъалаҳои рӯзмарра кӯмак мекунам",
+    "dailyProverbTitle": "Имрӯз меомӯзем",
+    "quickSuggestionsTitle": "Шумо метавонед пурсед:",
+    "usageQuota": "{{used}}/{{total}}",
+    "disclaimer": "AI танҳо барои маълумот аст, на мавқеи расмӣ",
+    "footer": "TezBarakat AI",
+    "footerDesc": "Зеҳни сунъии сатҳи олӣ дар хизмати мардуми тоҷик"
   }
 }

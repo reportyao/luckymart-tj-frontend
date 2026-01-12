@@ -9,6 +9,7 @@ import { useAIQuota } from '../hooks/ai/useAIQuota';
 import { useAIChat } from '../hooks/ai/useAIChat';
 import { AIServiceError } from '../lib/aiService';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // 错误消息映射 (中文)
 const ERROR_MESSAGES: Record<string, string> = {
@@ -27,6 +28,7 @@ interface Message {
 }
 
 export default function AIPage() {
+  const { t } = useTranslation();
   const { quota, loading, refetch } = useAIQuota();
   const [showWelcome, setShowWelcome] = useState(true);
   const [quickInput, setQuickInput] = useState('');
@@ -51,7 +53,7 @@ export default function AIPage() {
     const thinkingMessage: Message = {
       id: 'thinking',
       role: 'assistant',
-      content: 'Дар ҳоли фикр кардан...', // "正在思考..."
+      content: t('ai.thinking'),
       timestamp: new Date()
     };
     
@@ -113,7 +115,10 @@ export default function AIPage() {
       {/* 头部 */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 sticky top-0 z-10">
         <div className="flex items-center justify-between">
-          <h1 className="text-xl font-bold text-gray-900">TezBarakat AI</h1>
+          <div className="flex flex-col">
+            <h1 className="text-xl font-bold text-gray-900">TezBarakat AI</h1>
+            <p className="text-xs text-gray-600 mt-0.5">и пешрафта барои Тоҷикистон</p>
+          </div>
           {!loading && <UsageQuota quota={quota} />}
         </div>
       </header>
@@ -145,7 +150,7 @@ export default function AIPage() {
                           handleQuickSend();
                         }
                       }}
-                      placeholder="Саволи худро нависед..."
+                      placeholder={t('ai.placeholder')}
                       className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                       disabled={sending}
                       maxLength={500}
@@ -167,13 +172,13 @@ export default function AIPage() {
 
                 {/* 使用说明 */}
                 <div className="text-center text-xs text-gray-500 space-y-1 px-4">
-                  <p className="font-medium">TezBarakat AI</p>
-                  <p>Зеҳни сунъии сатҳи олӣ дар хизмати мардуми тоҷик.</p>
+                  <p className="font-medium">{t('ai.footer')}</p>
+                  <p>{t('ai.footerDesc')}</p>
                 </div>
 
                 {/* AI免责声明 */}
                 <div className="text-center text-xs text-gray-400 mt-4 pb-4">
-                  AI танҳо барои маълумот аст, на мавқеи расмӣ.
+                  {t('ai.disclaimer')}
                 </div>
               </div>
             </motion.div>

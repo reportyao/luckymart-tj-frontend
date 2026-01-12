@@ -1040,5 +1040,21 @@
     "inTransitTajikistanDesc": "您的包裹已到达塔吉克斯坦，正在派送至自提点。",
     "readyForPickupDesc": "您的包裹已到达自提点，请携带提货码前往提货。",
     "pickedUpDesc": "您已成功提货，感谢您的购买！"
+  },
+  "ai": {
+    "title": "TezBarakat AI",
+    "subtitle": "и пешрафта барои Тоҷикистон",
+    "backButton": "返回",
+    "placeholder": "输入您的问题...",
+    "sendButton": "发送",
+    "thinking": "正在思考...",
+    "emptyStateTitle": "输入您的问题",
+    "emptyStateDesc": "我可以帮助您解决日常问题",
+    "dailyProverbTitle": "今天学习",
+    "quickSuggestionsTitle": "您可以问：",
+    "usageQuota": "{{used}}/{{total}}",
+    "disclaimer": "AI仅供参考，非官方立场",
+    "footer": "TezBarakat AI",
+    "footerDesc": "为塔吉克斯坦人民服务的高级人工智能"
   }
 }

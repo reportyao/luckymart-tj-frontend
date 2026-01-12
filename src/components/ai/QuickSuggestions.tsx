@@ -2,8 +2,10 @@ import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { LightBulbIcon } from '@heroicons/react/24/outline';
 import { suggestions } from '../../data/suggestions';
+import { useTranslation } from 'react-i18next';
 
 export function QuickSuggestions() {
+  const { t } = useTranslation();
   // 随机选择5条建议
   const randomSuggestions = useMemo(() => {
     const shuffled = [...suggestions].sort(() => 0.5 - Math.random());
@@ -15,7 +17,7 @@ export function QuickSuggestions() {
       {/* 标题 */}
       <div className="flex items-center gap-2 text-gray-700">
         <LightBulbIcon className="w-5 h-5" />
-        <h3 className="text-sm font-medium">Шумо метавонед пурсед:</h3>
+        <h3 className="text-sm font-medium">{t('ai.quickSuggestionsTitle')}</h3>
       </div>
 
       {/* 建议列表 - 只显示塔吉克语 */}

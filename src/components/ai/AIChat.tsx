@@ -5,6 +5,7 @@ import { useAIChat } from '../../hooks/ai/useAIChat';
 import { MessageBubble } from './MessageBubble';
 import { AIServiceError } from '../../lib/aiService';
 import toast from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 interface Message {
   id: string;
@@ -30,6 +31,7 @@ const ERROR_MESSAGES: Record<string, string> = {
 };
 
 export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuotaUpdate }: AIChatProps) {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   
   // 当 initialMessages 变化时，更新 messages
@@ -126,7 +128,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeftIcon className="w-5 h-5" />
-          <span className="text-sm font-medium">Бозгашт</span>
+          <span className="text-sm font-medium">{t('ai.backButton')}</span>
         </button>
       </div>
 
@@ -134,8 +136,8 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
-            <p className="text-sm">Саволи худро нависед</p>
-            <p className="text-xs mt-2">Ман ба Шумо дар масъалаҳои рӯзмарра кӯмак мекунам</p>
+            <p className="text-sm">{t('ai.emptyStateTitle')}</p>
+            <p className="text-xs mt-2">{t('ai.emptyStateDesc')}</p>
           </div>
         )}
         
@@ -157,7 +159,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
               <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <span className="text-sm">Интизор шавед...</span>
+            <span className="text-sm">{t('ai.thinking')}</span>
           </motion.div>
         )}
 
@@ -173,7 +175,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Саволи худро нависед..."
+            placeholder={t('ai.placeholder')}
             className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             disabled={loading}
             maxLength={500}

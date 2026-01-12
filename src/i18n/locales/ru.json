@@ -1000,5 +1000,21 @@
     "inTransitTajikistanDesc": "Ваша посылка прибыла в Таджикистан и доставляется в пункт выдачи.",
     "readyForPickupDesc": "Ваша посылка прибыла в пункт выдачи. Придите с кодом получения.",
     "pickedUpDesc": "Вы успешно получили заказ. Спасибо за покупку!"
+  },
+  "ai": {
+    "title": "TezBarakat AI",
+    "subtitle": "и пешрафта барои Тоҷикистон",
+    "backButton": "Назад",
+    "placeholder": "Введите ваш вопрос...",
+    "sendButton": "Отправить",
+    "thinking": "Думаю...",
+    "emptyStateTitle": "Введите ваш вопрос",
+    "emptyStateDesc": "Я помогу вам с повседневными вопросами",
+    "dailyProverbTitle": "Сегодня учимся",
+    "quickSuggestionsTitle": "Вы можете спросить:",
+    "usageQuota": "{{used}}/{{total}}",
+    "disclaimer": "AI только для справки, не официальная позиция",
+    "footer": "TezBarakat AI",
+    "footerDesc": "Искусственный интеллект высокого уровня на службе таджикского народа"
   }
 }
