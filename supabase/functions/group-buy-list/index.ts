@@ -274,6 +274,13 @@ Deno.serve(async (req) => {
     }
   } catch (error) {
     console.error('Group buy list error:', error);
-    return createResponse({ success: false, error: error.message }, 500);
+    console.error('Error details:', JSON.stringify(error, null, 2));
+    return createResponse({ 
+      success: false, 
+      error: error.message || 'Unknown error',
+      details: error.details || null,
+      hint: error.hint || null,
+      code: error.code || null
+    }, 500);
   }
 });
