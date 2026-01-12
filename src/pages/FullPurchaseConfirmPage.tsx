@@ -114,7 +114,12 @@ const FullPurchaseConfirmPage: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge Function error:', error);
+        // 尝试从错误对象中提取详细信息
+        const errorMessage = error.message || error.toString();
+        throw new Error(errorMessage);
+      }
 
       if (data?.success) {
         toast.success(t('lottery.fullPurchaseSuccess'));
@@ -122,11 +127,14 @@ const FullPurchaseConfirmPage: React.FC = () => {
         // 跳转到订单管理页面
         navigate('/orders');
       } else {
-        throw new Error(data?.error || t('error.unknownError'));
+        const errorMsg = data?.error || t('error.unknownError');
+        console.error('Full purchase failed:', errorMsg, data);
+        throw new Error(errorMsg);
       }
     } catch (error: any) {
       console.error('Create full purchase order failed:', error);
-      toast.error(error.message || t('error.purchaseFailed'));
+      const errorMessage = error.message || error.toString() || t('error.purchaseFailed');
+      toast.error(errorMessage);
     } finally {
       setIsSubmitting(false);
     }

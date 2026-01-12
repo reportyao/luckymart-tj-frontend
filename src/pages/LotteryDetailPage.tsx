@@ -394,7 +394,8 @@ const LotteryDetailPage: React.FC = () => {
         {/* Image Carousel */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <div 
-            className="relative h-64 overflow-hidden bg-gray-50"
+            className="relative overflow-hidden bg-gray-50"
+            style={{ height: '375px' }} // 固定高度，类似淘宝/拼多多
             onTouchStart={(e) => {
               setAutoPlayEnabled(false); // 用户交互时暂停自动播放
               const touch = e.touches[0];
@@ -422,7 +423,7 @@ const LotteryDetailPage: React.FC = () => {
               <LazyImage
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="w-full h-full object-contain cursor-pointer"
+                className="w-full h-full object-cover cursor-pointer"
                 width={600}
                 height={600}
               />

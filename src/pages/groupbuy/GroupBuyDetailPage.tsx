@@ -72,7 +72,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 
   if (!images || images.length === 0) {
     return (
-      <div className="w-full h-64 bg-gray-200 flex items-center justify-center">
+      <div className="w-full bg-gray-200 flex items-center justify-center" style={{ height: '375px' }}>
         <span className="text-gray-400">No Image</span>
       </div>
     );
@@ -82,13 +82,14 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
     return (
       <>
         <div 
-          className="w-full h-64 bg-gray-50 flex items-center justify-center cursor-pointer"
+          className="w-full bg-gray-50 flex items-center justify-center cursor-pointer"
+          style={{ height: '375px' }}
           onClick={() => setIsModalOpen(true)}
         >
           <img
             src={images[0]}
             alt={alt}
-            className="max-w-full max-h-full object-contain"
+            className="w-full h-full object-cover"
           />
         </div>
         {/* Image Modal */}
@@ -129,7 +130,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
 
   return (
     <>
-      <div className="relative w-full h-64 bg-gray-50">
+      <div className="relative w-full bg-gray-50" style={{ height: '375px' }}>
         {/* Main Image */}
         <div 
           className="w-full h-full flex items-center justify-center cursor-pointer"
@@ -138,7 +139,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           <img
             src={images[currentIndex]}
             alt={`${alt} - ${currentIndex + 1}`}
-            className="max-w-full max-h-full object-contain"
+            className="w-full h-full object-cover"
           />
         </div>
         
@@ -202,7 +203,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={images[currentIndex]}
               alt={`${alt} - ${currentIndex + 1}`}
-              className="max-w-full max-h-full object-contain"
+              className="w-full h-full object-cover"
               onClick={(e) => e.stopPropagation()}
             />
             <button
