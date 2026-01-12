@@ -378,7 +378,7 @@ export default function GroupBuyDetailPage() {
       if (data?.success) {
         alert(t('groupBuy.joinSuccess'));
         // 刷新当前页面数据，不跳转
-        await fetchData();
+        await fetchProductAndSessions();
         // 刷新钱包余额
         if (refreshWallets) {
           await refreshWallets();
