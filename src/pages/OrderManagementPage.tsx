@@ -123,6 +123,8 @@ const OrderManagementPage: React.FC = () => {
       return data;
     },
     enabled: !!user && !!sessionToken,
+    refetchOnMount: 'always', // 修复: 每次挂载都重新获取，确保显示最新数据
+    staleTime: 0, // 修复: 数据立即过期，避免缓存问题
   });
 
   const allOrders = data?.data || [];

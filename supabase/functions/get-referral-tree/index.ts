@@ -76,28 +76,6 @@ serve(async (req) => {
         .select('*')
         .eq('referred_by_id', userId)
 
-      // 获取返利统计
-      const { data: commissions } = await supabaseClient
-        .from('commissions')
-        .select('amount, level')
-        .eq('referred_by_id', userId)
-
-      const stats = {
-        level1_count: 0,
-        level2_count: 0,
-        level3_count: 0,
-        total_commission: 0
-      }
-
-      if (commissions) {
-        commissions.forEach(c => {
-          if (c.level === 1) stats.level1_count++
-          if (c.level === 2) stats.level2_count++
-          if (c.level === 3) stats.level3_count++
-          stats.total_commission += parseFloat(c.amount)
-        })
-      }
-
       // 如果还没到3层，继续递归
       const childNodes: ReferralNode[] = []
       if (currentLevel < 2 && children && children.length > 0) {
@@ -105,6 +83,33 @@ serve(async (req) => {
           const childNode = await buildReferralTree(child.id, currentLevel + 1)
           childNodes.push(childNode)
         }
+      }
+
+      // 修复: 基于递归结果统计人脉数量
+      const stats = {
+        level1_count: childNodes.length, // 一级人脉数量
+        level2_count: 0,
+        level3_count: 0,
+        total_commission: 0
+      }
+
+      // 统计二级和三级人脉
+      childNodes.forEach(child => {
+        stats.level2_count += child.children.length; // 二级人脉
+        
+        child.children.forEach(grandchild => {
+          stats.level3_count += grandchild.children.length; // 三级人脉
+        });
+      });
+
+      // 获取返利统计（佣金总额）
+      const { data: commissions } = await supabaseClient
+        .from('commissions')
+        .select('amount')
+        .eq('referred_by_id', userId)
+
+      if (commissions) {
+        stats.total_commission = commissions.reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0)
       }
 
       return {
