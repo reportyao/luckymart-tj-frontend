@@ -173,7 +173,12 @@
     "originalPrice": "Оригинальная цена",
     "orderSummary": "Итоги заказа",
     "productPrice": "Цена товара",
-    "totalAmount": "Итого"
+    "totalAmount": "Итого",
+    "drawing_in": "Обратный отсчёт до розыгрыша",
+    "drawing_now": "Розыгрыш идёт",
+    "please_wait": "Пожалуйста, подождите...",
+    "countdown_hint": "Автоматический розыгрыш после распродажи",
+    "seconds": "сек"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",

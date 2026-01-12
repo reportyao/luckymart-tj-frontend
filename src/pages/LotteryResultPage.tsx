@@ -119,20 +119,20 @@ const LotteryResultPage: React.FC = () => {
 
       // 转换为统一格式
       const combinedTickets = (entriesData || []).map(e => {
-        // 解析 numbers 字段（可能是jsonb字符串或数字）
-        let ticketNumber: number;
-        if (typeof e.numbers === 'string') {
-          // 如果是带引号的字符串，去掉引号
-          ticketNumber = parseInt(e.numbers.replace(/"/g, '')) || 0;
+        // 使用 participation_code 字段（7位数参与码）
+        let participationCode: string;
+        if (typeof e.participation_code === 'string') {
+          participationCode = e.participation_code;
         } else {
-          ticketNumber = Number(e.numbers) || 0;
+          participationCode = String(e.participation_code || '0000000');
         }
         
         return {
           id: e.id,
           user_id: e.user_id,
           lottery_id: e.lottery_id,
-          ticket_number: ticketNumber, // 7位数参与码
+          ticket_number: parseInt(participationCode) || 0, // 转换为数字用于显示
+          participation_code: participationCode, // 保留原始字符串
           is_winning: e.is_winning,
           created_at: e.created_at
         };
@@ -453,7 +453,7 @@ const LotteryResultPage: React.FC = () => {
             animate={{ opacity: 1, scale: 1 }}
             className="bg-gradient-to-r from-yellow-400 via-orange-400 to-red-400 rounded-2xl shadow-lg p-8 text-center text-white"
           >
-            <h3 className="text-2xl font-bold mb-4">{t('lottery.drawCountdown')}</h3>
+            <h3 className="text-2xl font-bold mb-4">{t('lottery.drawingCountdown')}</h3>
             <CountdownTimer 
               drawTime={lottery.draw_time} 
               onCountdownEnd={handleDrawLottery}

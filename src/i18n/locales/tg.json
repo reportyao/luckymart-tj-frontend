@@ -171,9 +171,14 @@
     "confirmOrder": "Тасдиқ кунид фармоишро",
     "productInfo": "Маълумоти мол",
     "originalPrice": "Қиматии асли",
-    "orderSummary": "Хулосаи фармоиш",
+    "orderSummary": "Ҳулосаи фармоиш",
     "productPrice": "Қиматии мол",
-    "totalAmount": "Ҳамагӣ"
+    "totalAmount": "Ҳамагӣ",
+    "drawing_in": "Ҳисоби бозгашта ба бозӣ",
+    "drawing_now": "Бозӣ дар ҷараён аст",
+    "please_wait": "Лутфан интизор шавед...",
+    "countdown_hint": "Бозии худкор пас аз фурӯш",
+    "seconds": "сония"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
