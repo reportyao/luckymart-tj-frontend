@@ -764,7 +764,7 @@ const LotteryResultPage: React.FC = () => {
                       return (
                         <>
                           <div className="flex justify-between py-1 border-b border-gray-200">
-                            <span className="text-gray-500">总参与条目</span>
+                            <span className="text-gray-500">{t('lottery.totalEntries')}</span>
                             <span className="text-gray-900 font-bold">{totalEntries}</span>
                           </div>
                           <div className="flex flex-col py-1 border-b border-gray-200">
@@ -772,7 +772,7 @@ const LotteryResultPage: React.FC = () => {
                             <span className="text-gray-900 break-all">{timestampSum}</span>
                           </div>
                           <div className="flex flex-col py-1">
-                            <span className="text-gray-500 mb-1">验证公式</span>
+                            <span className="text-gray-500 mb-1">{t('lottery.verificationFormula')}</span>
                             <span className="text-blue-600 font-bold break-words">{formula}</span>
                           </div>
                         </>

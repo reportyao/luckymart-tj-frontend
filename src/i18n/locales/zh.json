@@ -185,7 +185,8 @@
     "originalPrice": "原价",
     "orderSummary": "订单汇总",
     "productPrice": "商品价格",
-    "totalAmount": "合计"
+    "totalAmount": "合计",
+    "totalEntries": "总参与条目"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
