@@ -198,7 +198,7 @@ const LotteryResultPage: React.FC = () => {
           picked_up_at
         `)
         .eq('lottery_id', id)
-        .eq('user_id', currentUser.telegram_id)
+        .eq('user_id', currentUser.id) // 修复: 使用 UUID 而不是 telegram_id
         .maybeSingle(); // 使用maybeSingle()而不是single()，允许没有记录
 
       const data = prizesData;
@@ -802,6 +802,24 @@ const LotteryResultPage: React.FC = () => {
                       const winningIndex = algorithmData.winning_index;
                       const formula = algorithmData.formula;
                       
+                      // 解析formula并翻译
+                      let translatedFormula = formula;
+                      if (formula && typeof formula === 'string') {
+                        // 尝试从中文formula中提取数值
+                        // 格式: "中奖索引 = {sum} % {total} = {index}，对应号码: {number}"
+                        const match = formula.match(/([\d.]+)\s*%\s*([\d.]+)\s*=\s*([\d.]+)[^\d]+(\d+)/);
+                        if (match) {
+                          const [, sum, total, index, number] = match;
+                          // 使用当前语言的模板
+                          if (i18n.language === 'ru') {
+                            translatedFormula = `Индекс победителя = ${sum} % ${total} = ${index}, соответствующий номер: ${number}`;
+                          } else if (i18n.language === 'tg') {
+                            translatedFormula = `Нишонаи баранда = ${sum} % ${total} = ${index}, рақами мувофиқ: ${number}`;
+                          }
+                          // 如果是中文，保持原样
+                        }
+                      }
+                      
                       return (
                         <>
                           <div className="flex justify-between py-1 border-b border-gray-200">
@@ -814,7 +832,7 @@ const LotteryResultPage: React.FC = () => {
                           </div>
                           <div className="flex flex-col py-1">
                             <span className="text-gray-500 mb-1">{t('lottery.verificationFormula')}</span>
-                            <span className="text-blue-600 font-bold break-words">{formula}</span>
+                            <span className="text-blue-600 font-bold break-words">{translatedFormula}</span>
                           </div>
                         </>
                       );

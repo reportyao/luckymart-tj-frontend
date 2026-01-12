@@ -280,6 +280,36 @@ serve(async (req) => {
 
     // 交易记录已通过 wallet_transactions 表记录，不再使用已删除的 transactions 表
 
+    // 7. 创建订单记录 (MARKET_PURCHASE)
+    const orderNumber = `MKT${Date.now()}${Math.floor(Math.random() * 1000)}`
+    const { error: orderError } = await supabaseClient
+      .from('orders')
+      .insert({
+        user_id: userId,
+        order_number: orderNumber,
+        type: 'MARKET_PURCHASE',
+        status: 'COMPLETED',
+        total_amount: resaleItem.resale_price,
+        currency: 'TJS',
+        payment_method: 'LUCKY_COIN',
+        lottery_id: resaleItem.lottery_id,
+        paid_at: new Date().toISOString(),
+        payment_data: {
+          resale_id: resale_item_id,
+          seller_id: resaleItem.seller_id,
+          ticket_id: resaleItem.ticket_id,
+          original_price: resaleItem.original_price
+        },
+        updated_at: new Date().toISOString()
+      })
+
+    if (orderError) {
+      console.error('[PurchaseResale] Create order error:', orderError)
+      // 不回滚，订单记录创建失败不影响核心交易
+    } else {
+      console.log('[PurchaseResale] Order created:', orderNumber)
+    }
+
     console.log('[PurchaseResale] Success!')
 
     return new Response(

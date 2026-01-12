@@ -315,7 +315,7 @@ serve(async (req) => {
       
       const { data: oneYuanOrders, error: oneYuanError } = await supabase
         .from('orders')
-        .select('id, user_id, lottery_id, order_number, total_amount, currency, status, created_at')
+        .select('id, user_id, lottery_id, order_number, total_amount, currency, status, type, payment_data, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -337,19 +337,32 @@ serve(async (req) => {
         
         oneYuanOrders.forEach((order: any) => {
           const lottery = lotteriesMap.get(order.lottery_id);
+          const orderType = order.type || 'LOTTERY_PURCHASE';
+          
+          // 区分一元购物和积分商城订单
+          let displayType = 'lottery';
+          let displayTitle = lottery?.title_i18n || { zh: lottery?.title || '一元购物' };
+          
+          if (orderType === 'MARKET_PURCHASE') {
+            displayType = 'exchange'; // 使用 exchange 类型表示积分商城
+            displayTitle = lottery?.title_i18n || { zh: lottery?.title || '积分商城购买' };
+          }
           
           orders.push({
             id: order.id,
-            order_type: 'lottery',
+            order_type: displayType,
             order_number: order.order_number,
             amount: order.total_amount,
             status: order.status || 'COMPLETED',
             created_at: order.created_at,
-            product_title: lottery?.title_i18n || { zh: lottery?.title || '一元购物' },
+            product_title: displayTitle,
             product_image: lottery?.image_url || '',
-            original_price: lottery?.ticket_price || 0,
-            price_per_person: lottery?.ticket_price || 0,
+            original_price: order.payment_data?.original_price || lottery?.ticket_price || 0,
+            price_per_person: order.total_amount,
             lottery_id: order.lottery_id,
+            // 积分商城订单的额外信息
+            resale_id: order.payment_data?.resale_id || null,
+            seller_id: order.payment_data?.seller_id || null,
           });
         });
       }
