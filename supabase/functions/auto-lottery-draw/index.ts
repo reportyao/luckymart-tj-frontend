@@ -42,7 +42,7 @@ function calculateWinningNumberByTimestamp(entries: any[]) {
     timestampSum += timestamp;
     timestampDetails.push({
       entry_id: entry.id,
-      numbers: entry.numbers,
+      numbers: entry.participation_code || entry.numbers, // 使用 participation_code 字段
       timestamp: timestamp,
     });
   }
@@ -52,7 +52,7 @@ function calculateWinningNumberByTimestamp(entries: any[]) {
   
   // 获取中奖参与记录
   const winningEntry = entries[winningIndex];
-  const winningNumber = winningEntry.numbers; // 7位数参与码
+  const winningNumber = winningEntry.participation_code || winningEntry.numbers; // 7位数参与码
 
   return {
     winningNumber,
@@ -133,8 +133,8 @@ serve(async (req) => {
       .from('lotteries')
       .update({
         status: 'COMPLETED', // 改为 COMPLETED 状态
-        winning_numbers: [winningEntry.numbers], // 7位数参与码
-        winning_ticket_number: parseInt(winningEntry.numbers) || winningEntry.numbers, // 同时设置 winning_ticket_number
+        winning_numbers: [winningEntry.participation_code || winningEntry.numbers], // 7位数参与码
+        winning_ticket_number: parseInt(winningEntry.participation_code || winningEntry.numbers) || winningEntry.participation_code || winningEntry.numbers, // 同时设置 winning_ticket_number
         winning_user_id: winningEntry.user_id,
         draw_time: drawTime,
         actual_draw_time: drawTime,
@@ -171,7 +171,7 @@ serve(async (req) => {
 
     // 创建 lottery_results 记录 - 修复: 使用正确的字段名
     const lotteryResultId = generateUUID();
-    const winningTicketNumber = parseInt(winningEntry.numbers) || 0;
+    const winningTicketNumber = parseInt(winningEntry.participation_code || winningEntry.numbers) || 0;
     
     const { data: lotteryResult, error: resultError } = await supabaseClient
       .from('lottery_results')
@@ -206,7 +206,7 @@ serve(async (req) => {
         lottery_id: lotteryId,
         user_id: winningEntry.user_id,
         ticket_id: winningEntry.id, // 使用 lottery_entry id
-        winning_code: winningEntry.numbers, // 7位数参与码
+        winning_code: winningEntry.participation_code || winningEntry.numbers, // 7位数参与码
         prize_name: lottery.title,
         prize_image: lottery.images?.[0] || lottery.image_url,
         prize_value: lottery.ticket_price * lottery.total_tickets,
@@ -236,7 +236,7 @@ serve(async (req) => {
         user_id: winningEntry.user_id,
         type: 'LOTTERY_RESULT', // 修复: 使用存在的枚举值 (LOTTERY_RESULT 而不是 LOTTERY_WIN)
         title: '🎉 恭喜中奖！',
-        content: `恭喜您在"${lottery.title}"积分商城中中奖！中奖码: ${winningEntry.numbers}`,
+        content: `恭喜您在"${lottery.title}"积分商城中中奖！中奖码: ${winningEntry.participation_code || winningEntry.numbers}`,
         related_id: lotteryId, // 修复: 使用 related_id 而不是 data
         related_type: 'lottery',
         is_read: false,
@@ -256,7 +256,7 @@ serve(async (req) => {
         user_id: userId,
         type: 'LOTTERY_RESULT',
         title: '开奖结果公布',
-        content: `"${lottery.title}"已开奖，中奖码: ${winningEntry.numbers}`,
+        content: `"${lottery.title}"已开奖，中奖码: ${winningEntry.participation_code || winningEntry.numbers}`,
         related_id: lotteryId, // 修复: 使用 related_id 而不是 data
         related_type: 'lottery',
         is_read: false,
@@ -273,8 +273,8 @@ serve(async (req) => {
         success: true,
         data: {
           lottery_id: lotteryId,
-          winning_number: winningEntry.numbers, // 7位数参与码
-          winning_code: winningEntry.numbers,
+          winning_number: winningEntry.participation_code || winningEntry.numbers, // 7位数参与码
+          winning_code: winningEntry.participation_code || winningEntry.numbers,
           winner_user_id: winningEntry.user_id,
           prize_id: prize?.id,
           lottery_result_id: lotteryResult?.id || lotteryResultId,
