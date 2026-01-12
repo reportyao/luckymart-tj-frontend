@@ -262,7 +262,7 @@ export default function GroupBuyDetailPage() {
   const { productId: id } = useParams();
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
-  const { user, wallets } = useUser();
+  const { user, wallets, refreshWallets } = useUser();
   const [product, setProduct] = useState<GroupBuyProduct | null>(null);
   const [sessions, setSessions] = useState<GroupBuySession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -377,7 +377,12 @@ export default function GroupBuyDetailPage() {
 
       if (data?.success) {
         alert(t('groupBuy.joinSuccess'));
-        navigate('/my-group-buys');
+        // 刷新当前页面数据，不跳转
+        await fetchData();
+        // 刷新钱包余额
+        if (refreshWallets) {
+          await refreshWallets();
+        }
       } else {
         alert(data?.error || t('groupBuy.joinFailed'));
       }

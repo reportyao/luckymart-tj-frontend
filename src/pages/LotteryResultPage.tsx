@@ -298,6 +298,19 @@ const LotteryResultPage: React.FC = () => {
       navigate('/orders');
       return;
     }
+    
+    // 检查是否有奖品信息
+    if (!prizeInfo) {
+      toast.error(t('orders.prizeInfoNotLoaded') || '奖品信息加载中，请稍后再试');
+      return;
+    }
+    
+    // 检查是否有可用的自提点
+    if (pickupPoints.length === 0) {
+      toast.error(t('orders.noPickupPoints') || '暂无可用的自提点，请联系客服');
+      return;
+    }
+    
     setShowClaimModal(true);
   };
 
