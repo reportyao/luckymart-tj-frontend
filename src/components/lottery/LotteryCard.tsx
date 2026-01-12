@@ -115,26 +115,24 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
         {/* 抽奖信息 */}
         <div className="space-y-3">
           {/* 价格和参与信息 */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div>
-                <p className="text-xs text-gray-500">单价</p>
-	                <p className="text-lg font-bold text-green-600">
-	                  {formatCurrency('TJS', lottery.ticket_price)}
-	                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">总数</p>
-                <p className="text-sm font-semibold text-gray-900">
-                  {lottery.total_tickets}
-                </p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">限购</p>
-	                <p className="text-sm font-semibold text-gray-900">
-		                  {lottery.total_tickets}
-	                </p>
-              </div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1 truncate">单价</p>
+              <p className="text-base font-bold text-green-600 truncate">
+                {formatCurrency('TJS', lottery.ticket_price)}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1 truncate">总数</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {lottery.total_tickets}
+              </p>
+            </div>
+            <div className="text-center">
+              <p className="text-xs text-gray-500 mb-1 truncate">限购</p>
+              <p className="text-sm font-semibold text-gray-900">
+                {lottery.total_tickets}
+              </p>
             </div>
           </div>
 
