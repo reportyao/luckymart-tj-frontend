@@ -128,9 +128,14 @@ const ShowoffCreatePage: React.FC = () => {
         draw_time: prize.won_at,
       }));
 
+      console.log('[ShowoffCreatePage] Available winning lotteries:', winningLotteries.length);
       setWinningLotteries(winningLotteries);
+      
+      if (winningLotteries.length === 0) {
+        console.log('[ShowoffCreatePage] No winning lotteries available for user');
+      }
     } catch (error) {
-      console.error('Failed to fetch winning lotteries:', error);
+      console.error('[ShowoffCreatePage] Failed to fetch winning lotteries:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoadingLotteries(false);
