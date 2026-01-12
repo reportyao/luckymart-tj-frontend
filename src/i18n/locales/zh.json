@@ -543,7 +543,15 @@
     "winningNumber": "中奖号码",
     "contentPlaceholderLong": "分享你的中奖喜悦,说说你的感受吧...(至少10个字)",
     "prizeNotFound": "未找到选中的中奖记录",
-    "earnedCoins": "获得 {{coins}} 积分奖励"
+    "earnedCoins": "获得 {{coins}} 积分奖励",
+    "maxImages": "最多9张",
+    "tips": "温馨提示",
+    "tip1": "请上传真实的中奖照片,虚假晒单将被删除",
+    "tip2": "晒单内容需经过审核后才会显示",
+    "tip3": "优质晒单有机会获得平台奖励",
+    "tip4": "请勿发布违法违规、广告等不当内容",
+    "preview": "预览",
+    "imageUploadFailed": "图片上传失败"
   },
   "prize": {
     "prizeManagement": "中奖管理",

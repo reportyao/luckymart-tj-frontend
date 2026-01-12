@@ -38,7 +38,10 @@ const ShowoffCreatePage: React.FC = () => {
   const fetchWinningLotteries = useCallback(async () => {
     setIsLoadingLotteries(true);
     try {
+      console.log('[ShowoffCreatePage] Fetching winning lotteries for user:', user?.id);
+      
       if (!user?.id) {
+        console.error('[ShowoffCreatePage] User ID is missing');
         throw new Error('未登录');
       }
 
@@ -46,6 +49,7 @@ const ShowoffCreatePage: React.FC = () => {
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
       // 1. 直接查询 prizes 表获取用户的中奖记录
+      console.log('[ShowoffCreatePage] Fetching prizes...');
       const prizesResponse = await fetch(
         `${supabaseUrl}/rest/v1/prizes?user_id=eq.${user.id}&select=*&order=won_at.desc`,
         {
@@ -57,10 +61,13 @@ const ShowoffCreatePage: React.FC = () => {
       );
 
       if (!prizesResponse.ok) {
-        throw new Error('获取中奖记录失败');
+        const errorText = await prizesResponse.text();
+        console.error('[ShowoffCreatePage] Prizes fetch failed:', errorText);
+        throw new Error(`获取中奖记录失败: ${prizesResponse.status}`);
       }
 
       const prizes = await prizesResponse.json();
+      console.log('[ShowoffCreatePage] Prizes fetched:', prizes.length);
 
       // 获取关联的彩票信息
       const lotteryIds = [...new Set(prizes.map((p: any) => p.lottery_id).filter(Boolean))];
@@ -135,10 +142,16 @@ const ShowoffCreatePage: React.FC = () => {
   }, [fetchWinningLotteries]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    console.log('[ShowoffCreatePage] handleImageUpload triggered');
+    
     const files = e.target.files;
-    if (!files) return;
+    if (!files || files.length === 0) {
+      console.error('[ShowoffCreatePage] No files selected');
+      return;
+    }
 
     const newFiles = Array.from(files);
+    console.log('[ShowoffCreatePage] Files to upload:', newFiles.map(f => ({ name: f.name, size: f.size, type: f.type })));
 
     if (images.length + newFiles.length > 9) {
       toast.error(t('showoff.maxImagesError'));
@@ -150,17 +163,21 @@ const ShowoffCreatePage: React.FC = () => {
       const uploadedUrls: string[] = [];
       
       for (const file of newFiles) {
+        console.log('[ShowoffCreatePage] Uploading file:', file.name);
         // 1. 上传图片 (uploadImage 内部已包含压缩和 WebP 转换)
         const publicUrl = await uploadImage(file, true, 'payment-proofs', 'showoff-images');
+        console.log('[ShowoffCreatePage] File uploaded:', publicUrl);
         uploadedUrls.push(publicUrl);
       }
 
       setImages(prev => [...prev, ...uploadedUrls]);
+      console.log('[ShowoffCreatePage] All images uploaded:', uploadedUrls.length);
       toast.success(t('showoff.imagesUploadedAndOptimized'));
 
     } catch (error) {
-      console.error('Image compression/upload error:', error);
-      toast.error(t('showoff.imageUploadFailed'));
+      console.error('[ShowoffCreatePage] Image compression/upload error:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      toast.error(`${t('showoff.imageUploadFailed')}: ${errorMessage}`);
     } finally {
       setIsLoading(false);
       // 清空文件输入框，以便再次选择相同文件
@@ -173,22 +190,28 @@ const ShowoffCreatePage: React.FC = () => {
   };
 
   const handleSubmit = async () => {
+    console.log('[ShowoffCreatePage] handleSubmit called');
+    
     if (!selectedLottery) {
+      console.error('[ShowoffCreatePage] No lottery selected');
       toast.error(t('showoff.selectWinningRecordError'));
       return;
     }
 
     if (!content.trim()) {
+      console.error('[ShowoffCreatePage] Content is empty');
       toast.error(t('showoff.contentRequiredError'));
       return;
     }
 
     if (content.length < 10) {
+      console.error('[ShowoffCreatePage] Content too short:', content.length);
       toast.error(t('showoff.minContentLengthError'));
       return;
     }
 
     if (images.length === 0) {
+      console.error('[ShowoffCreatePage] No images uploaded');
       toast.error(t('showoff.imageRequiredError'));
       return;
     }
@@ -198,9 +221,18 @@ const ShowoffCreatePage: React.FC = () => {
       // 获取选中的中奖记录
       const selectedLotteryData = winningLotteries.find(l => l.id === selectedLottery);
       if (!selectedLotteryData) {
+        console.error('[ShowoffCreatePage] Selected lottery not found:', selectedLottery);
         toast.error(t('showoff.prizeNotFound'));
         return;
       }
+      
+      console.log('[ShowoffCreatePage] Creating showoff with data:', {
+        prize_id: selectedLotteryData.id,
+        lottery_id: selectedLotteryData.lottery_id,
+        content_length: content.trim().length,
+        images_count: images.length,
+        user_id: user?.id,
+      });
 
       // 调用晒单创建 API
       await showoffService.createShowoff({
@@ -211,10 +243,11 @@ const ShowoffCreatePage: React.FC = () => {
         user_id: user?.id, // 传入 user_id 避免 session 问题
       });
 
+      console.log('[ShowoffCreatePage] Showoff created successfully');
       toast.success(t('showoff.showoffSuccessPending'));
       navigate('/showoff');
     } catch (error) {
-      console.error('Failed to create showoff:', error);
+      console.error('[ShowoffCreatePage] Failed to create showoff:', error);
       toast.error(error instanceof Error ? error.message : t('error.networkError'));
     } finally {
       setIsLoading(false);
@@ -319,13 +352,13 @@ const ShowoffCreatePage: React.FC = () => {
 
         {/* Image Upload */}
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">上传图片 (最多9张)</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.uploadImages')} ({t('showoff.maxImages') || '最多9张'})</h3>
           <div className="grid grid-cols-3 gap-3">
             {images.map((image, index) => (
               <div key={index} className="relative aspect-square">
 	                <LazyImage
 	                  src={image}
-	                  alt={`上传图片${index + 1}`}
+	                  alt={`${t('showoff.uploadImages')} ${index + 1}`}
 	                  className="w-full h-full object-cover rounded-lg"
 	                  width={100} // 假设网格项宽度约为 100px
 	                  height={100}
@@ -342,7 +375,7 @@ const ShowoffCreatePage: React.FC = () => {
             {images.length < 9 && (
               <label className="aspect-square border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-purple-500 hover:bg-purple-50 transition-all">
                 <PhotoIcon className="w-8 h-8 text-gray-400" />
-                <span className="text-xs text-gray-500 mt-2">上传图片</span>
+                <span className="text-xs text-gray-500 mt-2">{t('showoff.uploadImages')}</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -360,19 +393,19 @@ const ShowoffCreatePage: React.FC = () => {
 
         {/* Tips */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h4 className="font-medium text-blue-900 mb-2">温馨提示</h4>
+          <h4 className="font-medium text-blue-900 mb-2">{t('showoff.tips') || '温馨提示'}</h4>
           <ul className="space-y-1 text-sm text-blue-800">
-            <li>• 请上传真实的中奖照片,虚假晒单将被删除</li>
-            <li>• 晒单内容需经过审核后才会显示</li>
-            <li>• 优质晒单有机会获得平台奖励</li>
-            <li>• 请勿发布违法违规、广告等不当内容</li>
+            <li>• {t('showoff.tip1') || '请上传真实的中奖照片,虚假晒单将被删除'}</li>
+            <li>• {t('showoff.tip2') || '晒单内容需经过审核后才会显示'}</li>
+            <li>• {t('showoff.tip3') || '优质晒单有机会获得平台奖励'}</li>
+            <li>• {t('showoff.tip4') || '请勿发布违法违规、广告等不当内容'}</li>
           </ul>
         </div>
 
         {/* Preview */}
         {selectedLotteryData && content && images.length > 0 && (
           <div className="bg-white rounded-xl p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">预览</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.preview') || '预览'}</h3>
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">

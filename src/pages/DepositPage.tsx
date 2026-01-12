@@ -87,8 +87,20 @@ export default function DepositPage() {
     const fileArray = Array.from(files)
     console.log('[DepositPage] Files to upload:', fileArray.map(f => ({ name: f.name, size: f.size, type: f.type })))
     
-    // 验证文件类型
-    const invalidFiles = fileArray.filter(f => !f.type.startsWith('image/'))
+    // 放宽文件类型检查，支持移动端
+    const invalidFiles = fileArray.filter(f => {
+      // 如果有type且不是image，则无效
+      if (f.type && !f.type.startsWith('image/')) {
+        return true
+      }
+      // 如果没有type，检查文件扩展名
+      if (!f.type) {
+        const ext = f.name.split('.').pop()?.toLowerCase()
+        return !['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'].includes(ext || '')
+      }
+      return false
+    })
+    
     if (invalidFiles.length > 0) {
       console.error('[DepositPage] Invalid file types detected:', invalidFiles)
       alert(t('deposit.invalidFileType') || '请选择图片文件')
@@ -100,6 +112,8 @@ export default function DepositPage() {
       setUploading(true)
       setUploadStatus('compressing')
       setUploadProgress(10)
+      
+      console.log('[DepositPage] Starting upload process...')
       
       // 模拟压缩进度
       const progressInterval = setInterval(() => {
@@ -422,6 +436,7 @@ export default function DepositPage() {
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              capture="environment"
               multiple
               onChange={handleImageUpload}
               disabled={uploading}
