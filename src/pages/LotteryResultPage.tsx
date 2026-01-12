@@ -75,6 +75,8 @@ const LotteryResultPage: React.FC = () => {
   const [pickupPoints, setPickupPoints] = useState<any[]>([]);
   const [selectedPointId, setSelectedPointId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingPrizeInfo, setIsLoadingPrizeInfo] = useState(false);
+  const [isLoadingPickupPoints, setIsLoadingPickupPoints] = useState(false);
 
   // 获取本地化文本
   const getLocalText = (text: any): string => {
@@ -177,14 +179,12 @@ const LotteryResultPage: React.FC = () => {
     } catch (error: any) {
       console.error('Failed to fetch tickets:', error);
     }
-  }, [id, supabase]);
-
-  // 获取用户的奖品信息
+  }, [id, supabase]  // 获取奖品信息
   const fetchPrizeInfo = useCallback(async () => {
-    if (!id || !currentUser) return;
-
-    try {
-      const { data: prizesData, error } = await supabase
+    if (!id || !currentUser?.id) return;
+    
+    setIsLoadingPrizeInfo(true);
+    try {      const { data: prizesData, error } = await supabase
         .from('prizes')
         .select(`
           id,
@@ -222,22 +222,29 @@ const LotteryResultPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Failed to fetch prize info:', error);
+    } finally {
+      setIsLoadingPrizeInfo(false);
     }
   }, [id, currentUser, supabase]);
 
   // 加载自提点列表
   const loadPickupPoints = useCallback(async () => {
-    const { data, error } = await supabase
-      .from('pickup_points')
-      .select('*')
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: true });
+    setIsLoadingPickupPoints(true);
+    try {
+      const { data, error } = await supabase
+        .from('pickup_points')
+        .select('*')
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: true });
 
-    if (!error && data) {
-      setPickupPoints(data);
-      if (data.length > 0) {
-        setSelectedPointId(data[0].id);
+      if (!error && data) {
+        setPickupPoints(data);
+        if (data.length > 0) {
+          setSelectedPointId(data[0].id);
+        }
       }
+    } finally {
+      setIsLoadingPickupPoints(false);
     }
   }, [supabase]);
 
@@ -291,26 +298,42 @@ const LotteryResultPage: React.FC = () => {
     }
   };
 
-  // 处理领取奖品
+  // 点击领取按钮
   const handleClaimPrize = () => {
+    console.log('[ClaimPrize] Button clicked', {
+      prizeInfo,
+      pickupPoints: pickupPoints.length,
+      isLoadingPrizeInfo,
+      isLoadingPickupPoints
+    });
+    
     // 如果已经领取过，直接跳转到订单管理页面
     if (prizeInfo?.pickup_code) {
       navigate('/orders');
       return;
     }
     
+    // 检查是否还在加载中
+    if (isLoadingPrizeInfo || isLoadingPickupPoints) {
+      toast.error(t('common.loading') || '加载中，请稍候...');
+      return;
+    }
+    
     // 检查是否有奖品信息
     if (!prizeInfo) {
       toast.error(t('orders.prizeInfoNotLoaded') || '奖品信息加载中，请稍后再试');
+      console.error('[ClaimPrize] Prize info not loaded');
       return;
     }
     
     // 检查是否有可用的自提点
     if (pickupPoints.length === 0) {
       toast.error(t('orders.noPickupPoints') || '暂无可用的自提点，请联系客服');
+      console.error('[ClaimPrize] No pickup points available');
       return;
     }
     
+    console.log('[ClaimPrize] Opening claim modal');
     setShowClaimModal(true);
   };
 
