@@ -394,17 +394,34 @@ export default function GroupBuyDetailPage() {
     }
   };
 
-  const handleShare = (sessionCode: string) => {
-    const shareUrl = `${window.location.origin}/group-buy/${product?.id}?code=${sessionCode}`;
-    if (navigator.share) {
-      navigator.share({
-        title: getLocalizedText(product?.title),
-        text: t('groupBuy.shareText'),
-        url: shareUrl,
-      });
-    } else {
-      navigator.clipboard.writeText(shareUrl);
-      alert(t('common.linkCopied'));
+  const handleShare = async (sessionCode: string) => {
+    try {
+      // 使用标准的带邀请码分享链接
+      const referralCode = user?.referral_code || user?.invite_code;
+      if (!referralCode) {
+        alert(t('common.error') || '错误');
+        return;
+      }
+      
+      const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${referralCode}`;
+      const shareText = `In molro bo 70% takhfif kharidan mumkin ast?!\nMan allakay ishtirok kardam. Ba Shumo ham yak imkoniyati kharidi arzonro tuhfa mekunam, zudtar kushoed va bined!`;
+      
+      if (navigator.share) {
+        await navigator.share({
+          title: getLocalizedText(product?.title),
+          text: shareText,
+          url: inviteLink,
+        });
+      } else {
+        await navigator.clipboard.writeText(inviteLink);
+        alert(t('common.linkCopied') || '链接已复制');
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      // 如果用户取消分享，不显示错误
+      if (error instanceof Error && error.name !== 'AbortError') {
+        alert(t('common.error') || '分享失败');
+      }
     }
   };
 

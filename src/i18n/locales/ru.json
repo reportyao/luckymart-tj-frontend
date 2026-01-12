@@ -813,7 +813,8 @@
     "days": "дн.",
     "hours": "ч.",
     "expired": "Истекло",
-    "noPickupPoints": "Нет доступных пунктов самовывоза"
+    "noPickupPoints": "Нет доступных пунктов самовывоза",
+    "prizeInfoNotLoaded": "Информация о призе загружается, попробуйте позже"
   },
   "notifications": {
     "congratulations": "Поздравляем с выигрышем!",

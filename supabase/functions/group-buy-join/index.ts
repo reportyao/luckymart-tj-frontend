@@ -237,6 +237,7 @@ Deno.serve(async (req) => {
         user_id: user.telegram_id, // 使用 telegram_id 因为外键约束指向 users.telegram_id
         product_id: product.id,
         order_number: orderNumber,
+        order_timestamp: Date.now(),
         amount: pricePerPerson,
         status: 'PAID',
         created_at: new Date().toISOString(),

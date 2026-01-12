@@ -853,7 +853,8 @@
     "days": "天",
     "hours": "小时",
     "expired": "已过期",
-    "noPickupPoints": "暂无可用自提点"
+    "noPickupPoints": "暂无可用自提点",
+    "prizeInfoNotLoaded": "奖品信息加载中，请稍后再试"
   },
   "notifications": {
     "congratulations": "恭喜中奖!",

@@ -818,7 +818,8 @@
     "days": "рӯз",
     "hours": "соат",
     "expired": "Ба охир расид",
-    "noPickupPoints": "Нуқтаҳои худгирӣ дастрас нестанд"
+    "noPickupPoints": "Нуқтаҳои худгирӣ дастрас нестанд",
+    "prizeInfoNotLoaded": "Маълумот дар ҳоли боргирӣ, лутфан баъдан кӯшиш кунед"
   },
   "notifications": {
     "congratulations": "Табрик бо ғалаба!",
