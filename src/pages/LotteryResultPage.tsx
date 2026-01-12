@@ -120,11 +120,12 @@ const LotteryResultPage: React.FC = () => {
       // 转换为统一格式
       const combinedTickets = (entriesData || []).map(e => {
         // 使用 participation_code 字段（7位数参与码）
+        const entry = e as any; // 类型断言以访问 participation_code 字段
         let participationCode: string;
-        if (typeof e.participation_code === 'string') {
-          participationCode = e.participation_code;
+        if (typeof entry.participation_code === 'string') {
+          participationCode = entry.participation_code;
         } else {
-          participationCode = String(e.participation_code || '0000000');
+          participationCode = String(entry.participation_code || '0000000');
         }
         
         return {
