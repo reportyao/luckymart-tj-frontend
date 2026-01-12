@@ -68,6 +68,8 @@ const ShowoffCreatePage: React.FC = () => {
 
       const prizes = await prizesResponse.json();
       console.log('[ShowoffCreatePage] Prizes fetched:', prizes.length);
+      console.log('[ShowoffCreatePage] Prizes data:', JSON.stringify(prizes, null, 2));
+      console.log('[ShowoffCreatePage] Current user.id:', user.id);
 
       // 获取关联的彩票信息
       const lotteryIds = [...new Set(prizes.map((p: any) => p.lottery_id).filter(Boolean))];
@@ -110,7 +112,10 @@ const ShowoffCreatePage: React.FC = () => {
       );
 
       const publishedShowoffs = showoffsResponse.ok ? await showoffsResponse.json() : [];
+      console.log('[ShowoffCreatePage] Published showoffs:', publishedShowoffs.length);
+      console.log('[ShowoffCreatePage] Published showoffs data:', JSON.stringify(publishedShowoffs, null, 2));
       const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id).filter(Boolean));
+      console.log('[ShowoffCreatePage] Published prize IDs:', Array.from(publishedPrizeIds));
 
       // 3. 过滤掉已有 APPROVED 或 PENDING 晒单的中奖记录，并按中奖时间从新到旧排序
       const availablePrizes = enrichedPrizes
@@ -129,6 +134,7 @@ const ShowoffCreatePage: React.FC = () => {
       }));
 
       console.log('[ShowoffCreatePage] Available winning lotteries:', winningLotteries.length);
+      console.log('[ShowoffCreatePage] Winning lotteries data:', JSON.stringify(winningLotteries, null, 2));
       setWinningLotteries(winningLotteries);
       
       if (winningLotteries.length === 0) {
