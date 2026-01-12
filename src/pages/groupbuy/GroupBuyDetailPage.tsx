@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useUser } from '../../contexts/UserContext';
+import toast from 'react-hot-toast';
 import {
   ShoppingBag,
   Users,
