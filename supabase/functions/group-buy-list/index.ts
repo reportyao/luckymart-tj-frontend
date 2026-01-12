@@ -68,10 +68,14 @@ Deno.serve(async (req) => {
         .select('*')
         .eq('id', product_id)
         .eq('status', 'ACTIVE')
-        .single();
+        .maybeSingle();
 
       if (error) {
         return createResponse({ success: false, error: error.message }, 500);
+      }
+
+      if (!product) {
+        return createResponse({ success: false, error: 'Product not found or inactive' }, 404);
       }
 
       return createResponse({ success: true, data: mapProductToFrontend(product) });
@@ -194,10 +198,14 @@ Deno.serve(async (req) => {
           )
         `)
         .eq('session_id', session_id)
-        .single();
+        .maybeSingle();
 
       if (resultError) {
         return createResponse({ success: false, error: resultError.message }, 500);
+      }
+
+      if (!result) {
+        return createResponse({ success: false, error: 'Session result not found' }, 404);
       }
 
       // 获取所有参与者订单

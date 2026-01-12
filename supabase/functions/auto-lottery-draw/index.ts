@@ -226,6 +226,24 @@ serve(async (req) => {
 
     if (prizeError) {
       console.error('Failed to create prize:', prizeError);
+      // Prize创建失败必须回滚开奖结果
+      // 删除lottery_results记录
+      await supabaseClient
+        .from('lottery_results')
+        .delete()
+        .eq('lottery_id', lotteryId);
+      // 回滚 lottery 状态
+      await supabaseClient
+        .from('lotteries')
+        .update({ 
+          status: 'ACTIVE',
+          winning_user_id: null,
+          winning_numbers: null,
+          drawn_at: null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', lotteryId);
+      throw new Error(`Failed to create prize for lottery ${lotteryId}: ${prizeError.message}`);
     }
 
     // 发送中奖通知给中奖用户 - 修复: 使用正确的枚举值和添加必填字段

@@ -246,7 +246,16 @@ Deno.serve(async (req) => {
             if (!createWalletsResponse.ok) {
                 const errorText = await createWalletsResponse.text();
                 console.error('Failed to create wallets:', errorText);
-                // 钱包创建失败不影响用户认证，只记录错误
+                // 钱包创建失败必须回滚用户创建
+                // 删除刚创建的用户
+                await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${user.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${serviceRoleKey}`,
+                        'apikey': serviceRoleKey
+                    }
+                });
+                throw new Error('Failed to create wallets for new user');
             } else {
                 newUserGiftAwarded = true;
                 
