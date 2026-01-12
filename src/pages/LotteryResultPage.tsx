@@ -195,7 +195,7 @@ const LotteryResultPage: React.FC = () => {
           picked_up_at
         `)
         .eq('lottery_id', id)
-        .eq('user_id', currentUser.id)
+        .eq('user_id', currentUser.telegram_id)
         .single();
 
       if (!error && data) {
