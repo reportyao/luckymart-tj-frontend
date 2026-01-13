@@ -62,7 +62,7 @@ serve(async (req) => {
     if (order.lottery_id) {
       const { data: lotteryData } = await supabase
         .from('lotteries')
-        .select('title, title_i18n, image_url, original_price')
+        .select('title, title_i18n, image_url, image_urls, original_price')
         .eq('id', order.lottery_id)
         .single()
       lottery = lotteryData

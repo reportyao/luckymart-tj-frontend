@@ -120,6 +120,53 @@ serve(async (req) => {
       }
     }
 
+    // 查询每个用户的消费总额和佣金收益
+    if (allInvitedUsers.length > 0) {
+      const userIds = allInvitedUsers.map(u => u.id)
+      
+      // 查询每个用户的订单总额（消费总额）
+      const { data: ordersData } = await supabase
+        .from('orders')
+        .select('user_id, total_amount')
+        .in('user_id', userIds)
+        .eq('status', 'COMPLETED')
+      
+      // 统计每个用户的消费总额
+      const userSpending: Record<string, number> = {}
+      if (ordersData) {
+        ordersData.forEach(order => {
+          if (!userSpending[order.user_id]) {
+            userSpending[order.user_id] = 0
+          }
+          userSpending[order.user_id] += Number(order.total_amount)
+        })
+      }
+      
+      // 查询当前用户从每个下级用户获得的佣金
+      const { data: commissionsData } = await supabase
+        .from('commissions')
+        .select('from_user_id, amount')
+        .eq('user_id', user_id)
+        .in('from_user_id', userIds)
+      
+      // 统计每个用户贡献的佣金
+      const userCommissions: Record<string, number> = {}
+      if (commissionsData) {
+        commissionsData.forEach(commission => {
+          if (!userCommissions[commission.from_user_id]) {
+            userCommissions[commission.from_user_id] = 0
+          }
+          userCommissions[commission.from_user_id] += Number(commission.amount)
+        })
+      }
+      
+      // 更新每个用户的消费和佣金数据
+      allInvitedUsers.forEach(user => {
+        user.total_spent = userSpending[user.id] || 0
+        user.commission_earned = userCommissions[user.id] || 0
+      })
+    }
+    
     // 统计各级用户数量
     const level2Count = allInvitedUsers.filter(u => u.level === 2).length
     const level3Count = allInvitedUsers.filter(u => u.level === 3).length

@@ -47,6 +47,7 @@ interface OrderDetail {
     title: string;
     title_i18n: any;
     image_url: string;
+    image_urls?: string[];
     original_price: number;
   } | null;
   pickup_point: {
@@ -263,27 +264,41 @@ const OrderDetailPage: React.FC = () => {
             <h2 className="text-base font-bold text-gray-900">{t('order.productInfo') || '商品信息'}</h2>
           </div>
           
-          <div className="flex space-x-4">
-            {productImage && (
+          {/* 商品标题（多语言支持） */}
+          <h3 className="font-semibold text-gray-900 mb-3 text-lg">{productTitle}</h3>
+          
+          {/* 多图轮播 */}
+          {order.lotteries?.image_urls && order.lotteries.image_urls.length > 0 ? (
+            <div className="mb-4">
+              <div className="grid grid-cols-3 gap-2">
+                {order.lotteries.image_urls.slice(0, 3).map((url, index) => (
+                  <LazyImage
+                    key={index}
+                    src={url}
+                    alt={`${productTitle} - ${index + 1}`}
+                    className="w-full h-24 rounded-lg object-cover"
+                  />
+                ))}
+              </div>
+            </div>
+          ) : productImage ? (
+            <div className="mb-4">
               <LazyImage
                 src={productImage}
                 alt={productTitle}
-                className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
+                className="w-full h-48 rounded-lg object-cover"
               />
-            )}
-            <div className="flex-1 min-w-0 overflow-hidden">
-              <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{productTitle}</h3>
-              <div className="mt-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-sm text-gray-500 flex-shrink-0 whitespace-nowrap">{t('order.paymentAmount') || '支付金额'}</span>
-                  <div className="flex items-baseline gap-1 flex-shrink-0">
-                    <span className="text-xs text-gray-500">{order.currency}</span>
-                    <span className="text-lg font-bold text-purple-600 truncate max-w-[100px]">
-                      {order.total_amount}
-                    </span>
-                  </div>
-                </div>
-              </div>
+            </div>
+          ) : null}
+          
+          {/* 支付金额 */}
+          <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+            <span className="text-sm text-gray-600">{t('order.paymentAmount') || '支付金额'}</span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-sm text-gray-500">{order.currency}</span>
+              <span className="text-xl font-bold text-purple-600">
+                {order.total_amount}
+              </span>
             </div>
           </div>
         </motion.div>

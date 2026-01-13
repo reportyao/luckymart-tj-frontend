@@ -48,7 +48,7 @@ const LotteryDetailPage: React.FC = () => {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [autoPlayEnabled, setAutoPlayEnabled] = useState(true);
 
-  // 自动播放图片
+  // 自动播放图片（修复：移除activeImageIndex依赖，避免定时器冲突）
   useEffect(() => {
     if (!lottery?.image_urls || lottery.image_urls.length <= 1 || !autoPlayEnabled) return;
     
@@ -59,7 +59,7 @@ const LotteryDetailPage: React.FC = () => {
     }, 3000); // 每3秒切换
 
     return () => clearInterval(timer);
-  }, [lottery?.image_urls, lottery?.image_urls?.length, autoPlayEnabled, activeImageIndex]);
+  }, [lottery?.image_urls, lottery?.image_urls?.length, autoPlayEnabled]);
   const [randomShowoffs, setRandomShowoffs] = useState<Showoff[]>([]);
   const [quantity, setQuantity] = useState<number>(1);
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
@@ -625,7 +625,8 @@ const LotteryDetailPage: React.FC = () => {
               </h3>
               <div className="flex flex-wrap gap-2">
                 {Array.from({ length: quantity }, (_, i) => {
-                  const nextCodeNumber = lottery.sold_tickets + i + 1;
+                  // 参与码从0开始，sold_tickets表示已售出数量，下一个参与码就是sold_tickets + i
+                  const nextCodeNumber = lottery.sold_tickets + i;
                   const codeStr = String(nextCodeNumber).padStart(7, '0');
                   return (
                     <span
@@ -830,31 +831,33 @@ const LotteryDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Product Details */}
-        <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
-          {/* Specifications and Material */}
-          {(specifications || material) && (
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              {specifications && (
-                <div>
-                  <p className="font-semibold text-gray-700">{t('lottery.specifications')}</p>
-                  <p className="text-gray-600 whitespace-pre-wrap">{specifications}</p>
-                </div>
-              )}
-              {material && (
-                <div>
-                  <p className="font-semibold text-gray-700">{t('lottery.material')}</p>
-                  <p className="text-gray-600 whitespace-pre-wrap">{material}</p>
-                </div>
-              )}
-            </div>
-          )}
+        {/* Product Details - 只在有内容时显示 */}
+        {(specifications || material || details) && (
+          <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
+            {/* Specifications and Material */}
+            {(specifications || material) && (
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {specifications && (
+                  <div>
+                    <p className="font-semibold text-gray-700">{t('lottery.specifications')}</p>
+                    <p className="text-gray-600 whitespace-pre-wrap">{specifications}</p>
+                  </div>
+                )}
+                {material && (
+                  <div>
+                    <p className="font-semibold text-gray-700">{t('lottery.material')}</p>
+                    <p className="text-gray-600 whitespace-pre-wrap">{material}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Rich Text Details */}
-          {details && (
-            <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: details }} />
-          )}
-        </div>
+            {/* Rich Text Details */}
+            {details && (
+              <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: details }} />
+            )}
+          </div>
+        )}
 
         {/* Random Showoffs Section */}
         <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
