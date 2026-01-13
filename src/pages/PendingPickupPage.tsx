@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
-import { ArrowLeftIcon, PackageIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CubeIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import { motion } from 'framer-motion';
@@ -82,7 +82,7 @@ const PendingPickupPage: React.FC = () => {
       // 2. 获取拼团（GroupBuy）的待提货商品
       // 从group_buy_orders表获取用户参与的拼团订单
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
-        .from('group_buy_orders')
+        .from('group_buy_participants')
         .select(`
           id, 
           product_id, 
@@ -193,7 +193,7 @@ const PendingPickupPage: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-3xl p-12 text-center shadow-sm"
           >
-            <PackageIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
+            <CubeIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <p className="text-gray-500 font-medium">
               {t('profile.noPendingPickup') || '暂无待提货商品'}
             </p>
@@ -223,7 +223,7 @@ const PendingPickupPage: React.FC = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
-                        <PackageIcon className="w-8 h-8 text-gray-300" />
+                        <CubeIcon className="w-8 h-8 text-gray-300" />
                       </div>
                     )}
                   </div>

@@ -17,8 +17,7 @@ import {
   BellIcon,
   UsersIcon,
   TrophyIcon,
-  LanguageIcon,
-  Package2Icon
+  LanguageIcon
 } from '@heroicons/react/24/outline'
 import { copyToClipboard } from '../lib/utils'
 import toast from 'react-hot-toast'
