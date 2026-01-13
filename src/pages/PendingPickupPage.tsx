@@ -100,7 +100,7 @@ const PendingPickupPage: React.FC = () => {
           `)
           .eq('user_id', user.id)
           .eq('status', 'PAID')
-          .neq('logistics_status', 'PICKED_UP')
+          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (fullPurchaseError) {
@@ -149,7 +149,7 @@ const PendingPickupPage: React.FC = () => {
           `)
           .eq('user_id', user.id)
           .eq('status', 'WON')
-          .neq('logistics_status', 'PICKED_UP')
+          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (prizesError) {
@@ -200,7 +200,7 @@ const PendingPickupPage: React.FC = () => {
           `)
           .eq('user_id', user.id)
           .eq('status', 'WON')
-          .neq('logistics_status', 'PICKED_UP')
+          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (groupBuyResultsError) {

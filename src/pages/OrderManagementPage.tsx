@@ -320,11 +320,11 @@ const OrderManagementPage: React.FC = () => {
 
                   {/* 订单内容 */}
                   <div className="flex space-x-4">
-                    <div className="relative w-20 h-20 flex-shrink-0">
+                    <div className="relative w-20 h-20 flex-shrink-0 overflow-hidden rounded-xl">
                       <LazyImage
                         src={order.product_image}
                         alt={getLocalizedText(order.product_title)}
-                        className="w-full h-full object-cover rounded-xl"
+                        className="w-full h-full object-cover"
                       />
                       {order.order_type === 'group_buy' && (
                         <div className="absolute -top-2 -left-2 bg-blue-600 text-white p-1 rounded-lg shadow-lg">

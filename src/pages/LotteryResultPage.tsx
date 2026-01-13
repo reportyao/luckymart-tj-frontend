@@ -878,44 +878,45 @@ const LotteryResultPage: React.FC = () => {
                 </button>
               </div>
 
-              <div className="flex-1 overflow-y-auto">
-                <form onSubmit={handleSubmitClaim} className="p-6 space-y-4">
-                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <GiftIcon className="w-6 h-6 text-purple-600" />
-                    <h4 className="font-bold text-gray-800">{getLocalizedText(lottery.title_i18n, i18n.language)}</h4>
+              <form onSubmit={handleSubmitClaim} className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <GiftIcon className="w-6 h-6 text-purple-600" />
+                      <h4 className="font-bold text-gray-800">{getLocalizedText(lottery.title_i18n, i18n.language)}</h4>
+                    </div>
+                    <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
                   </div>
-                  <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      {t('orders.selectPickupPoint')} *
+                    </label>
+                    <select
+                      value={selectedPointId}
+                      onChange={(e) => setSelectedPointId(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    >
+                      {pickupPoints.map((point) => (
+                        <option key={point.id} value={point.id}>
+                          {getLocalText(point.name_i18n)} - {getLocalText(point.address_i18n)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
+                    <p className="font-medium mb-1">{t('orders.claimNotice')}</p>
+                    <ul className="list-disc list-inside space-y-1 text-xs">
+                      <li>{t('orders.claimNotice1')}</li>
+                      <li>{t('orders.claimNotice2')}</li>
+                      <li>{t('orders.claimNotice3')}</li>
+                    </ul>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('orders.selectPickupPoint')} *
-                  </label>
-                  <select
-                    value={selectedPointId}
-                    onChange={(e) => setSelectedPointId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  >
-                    {pickupPoints.map((point) => (
-                      <option key={point.id} value={point.id}>
-                        {getLocalText(point.name_i18n)} - {getLocalText(point.address_i18n)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
-                  <p className="font-medium mb-1">{t('orders.claimNotice')}</p>
-                  <ul className="list-disc list-inside space-y-1 text-xs">
-                    <li>{t('orders.claimNotice1')}</li>
-                    <li>{t('orders.claimNotice2')}</li>
-                    <li>{t('orders.claimNotice3')}</li>
-                  </ul>
-                </div>
-
-                <div className="sticky bottom-0 bg-white pt-4 pb-safe flex space-x-3 border-t mt-4 -mx-6 px-6">
+                <div className="border-t bg-white p-6 pb-safe flex space-x-3">
                   <button
                     type="button"
                     onClick={() => setShowClaimModal(false)}
@@ -932,7 +933,6 @@ const LotteryResultPage: React.FC = () => {
                   </button>
                 </div>
               </form>
-              </div>
             </motion.div>
           </div>
         )}
