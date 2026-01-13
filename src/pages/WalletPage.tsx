@@ -115,13 +115,17 @@ const WalletPage: React.FC = () => {
       // 5. 去重（避免充值/提现同时在wallet_transactions和单独表中出现）
       const seen = new Set<string>()
       const uniqueTransactions = allTransactions.filter(tx => {
-        // 过滤掉 WITHDRAWAL_FREEZE 类型的记录，因为这是内部冻结记录，不应该显示给用户
-        // 用户只需要看到 withdrawal_requests 表中的提现记录
+        // 过滤掉 WITHDRAWAL_FREEZE/WITHDRAWAL_UNFREEZE 类型的记录，因为这是内部冻结记录，不应该显示给用户
         if (tx.type === 'WITHDRAWAL_FREEZE' || tx.type === 'WITHDRAWAL_UNFREEZE') {
           return false
         }
-        // 如果是充值/提现类型，优先使用单独表的数据
-        if (tx.source === 'wallet_transactions' && (tx.type === 'DEPOSIT' || tx.type === 'WITHDRAWAL')) {
+        // 过滤掉 wallet_transactions 表中的 WITHDRAWAL 记录，因为 withdrawal_requests 表已经有完整的提现记录
+        // 避免重复显示
+        if (tx.source === 'wallet_transactions' && tx.type === 'WITHDRAWAL') {
+          return false
+        }
+        // 如果是充值类型，优先使用单独表的数据
+        if (tx.source === 'wallet_transactions' && tx.type === 'DEPOSIT') {
           // 检查是否已经有来自单独表的同类型记录
           const key = `${tx.type}_${tx.amount}_${new Date(tx.created_at).toDateString()}`
           if (seen.has(key)) {

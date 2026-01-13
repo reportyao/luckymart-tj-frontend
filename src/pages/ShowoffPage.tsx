@@ -376,15 +376,15 @@ const ShowoffPage: React.FC = () => {
                   </div>
 
                   {/* Images */}
-	                  {showoff.images && Array.isArray(showoff.images) && showoff.images.length > 0 && (
+	                  {showoff.image_urls && Array.isArray(showoff.image_urls) && showoff.image_urls.length > 0 && (
                     <div className={`px-4 pb-3 grid gap-2 ${
-                      showoff.images.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+                      showoff.image_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
                     }`}>
-	                      {(showoff.images as string[]).map((image, idx) => (
+	                      {(showoff.image_urls as string[]).map((image, idx) => (
                         <div
                           key={idx}
                           className={`relative rounded-lg overflow-hidden ${
-                            (showoff.images as string[]).length === 1 ? 'aspect-[4/3]' : 'aspect-square'
+                            (showoff.image_urls as string[]).length === 1 ? 'aspect-[4/3]' : 'aspect-square'
                           }`}
                         >
 	                          <LazyImage

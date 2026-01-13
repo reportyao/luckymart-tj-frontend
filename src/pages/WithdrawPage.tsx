@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { supabase } from '../lib/supabase'
 import { useUser } from '../contexts/UserContext'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function WithdrawPage() {
   const { t } = useTranslation()
@@ -38,12 +39,16 @@ export default function WithdrawPage() {
   const handleSubmit = async () => {
     const amountNum = parseFloat(amount)
     if (!amountNum || amountNum <= 0) {
-      alert(t('wallet.pleaseEnterValidAmount'))
+      toast.error(t('wallet.pleaseEnterValidAmount'))
       return
     }
 
-    if (amountNum > balance) {
-      alert(t('wallet.insufficientBalance'))
+    // 检查可用余额（需要考虑冻结余额）
+    const frozenBalance = balanceWallet?.frozen_balance || 0
+    const availableBalance = balance - frozenBalance
+    
+    if (amountNum > availableBalance) {
+      toast.error(`${t('wallet.insufficientBalance')}\n可用余额: ${availableBalance.toFixed(2)} TJS（总余额: ${balance.toFixed(2)} TJS，已冻结: ${frozenBalance.toFixed(2)} TJS）`)
       return
     }
 
@@ -108,7 +113,7 @@ export default function WithdrawPage() {
       }
     } catch (error: any) {
       console.error(t('withdraw.submitFailed') + ':', error)
-      alert(error.message || t('wallet.withdrawRequestFailed'))
+      toast.error(error.message || t('wallet.withdrawRequestFailed'))
     } finally {
       setSubmitting(false)
     }
