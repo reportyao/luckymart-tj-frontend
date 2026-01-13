@@ -161,7 +161,7 @@ const NotificationPage: React.FC = () => {
         // 同时查询user.id和telegram_id
         const userTelegramId = (user as any).telegram_id;
         const groupBuyResponse = await fetch(
-          `${supabaseUrl}/rest/v1/group_buy_orders?or=(user_id.eq.${user.id},user_id.eq.${userTelegramId || user.id})&select=*,session:group_buy_sessions(id,status,winner_id,session_code,product:group_buy_products(title_i18n))&order=created_at.desc&limit=20`,
+          `${supabaseUrl}/rest/v1/group_buy_orders?or=(user_id.eq.${user.id},user_id.eq.${userTelegramId || user.id})&select=*,session:group_buy_sessions(id,status,winner_id,session_code,product:group_buy_products(name_i18n))&order=created_at.desc&limit=20`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
@@ -175,7 +175,7 @@ const NotificationPage: React.FC = () => {
           groupBuyResults.forEach((order: any) => {
             const sessionStatus = order.session?.status;
             const isWinner = order.session?.winner_id === user.id || order.session?.winner_id === userTelegramId;
-            const productTitle = order.session?.product?.title_i18n?.[i18n.language] || order.session?.product?.title_i18n?.zh || '拼团商品';
+            const productTitle = order.session?.product?.name_i18n?.[i18n.language] || order.session?.product?.name_i18n?.zh || '拼团商品';
             
             if (sessionStatus === 'SUCCESS' || sessionStatus === 'COMPLETED') {
               allNotifications.push({
@@ -216,14 +216,29 @@ const NotificationPage: React.FC = () => {
       try {
         const { data: ordersData, error: ordersError } = await supabase
           .from('orders')
-          .select('*, lottery:lotteries(title_i18n), prize:prizes(id, status)')
+          .select('*, lottery:lotteries(title_i18n)')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false })
           .limit(20);
+        
+        // 单独查询中奖记录
+        const { data: prizesData } = await supabase
+          .from('prizes')
+          .select('id, status, order_id')
+          .eq('user_id', user.id);
 
         if (!ordersError && ordersData) {
+          // 创建中奖记录映射
+          const prizeMap = new Map();
+          if (prizesData) {
+            prizesData.forEach(prize => {
+              prizeMap.set(prize.order_id, prize);
+            });
+          }
+          
           ordersData.forEach((order: any) => {
             const lotteryTitle = order.lottery?.title_i18n?.[i18n.language] || order.lottery?.title_i18n?.zh || '积分商品';
+            const prize = prizeMap.get(order.id);
             
             // 购买记录
             allNotifications.push({
@@ -240,8 +255,8 @@ const NotificationPage: React.FC = () => {
             });
 
             // 中奖记录
-            if (order.prize) {
-              const isWon = order.prize.status === 'WON' || order.prize.status === 'CLAIMED' || order.prize.status === 'PENDING_PICKUP';
+            if (prize) {
+              const isWon = prize.status === 'WON' || prize.status === 'CLAIMED' || prize.status === 'PENDING_PICKUP';
               if (isWon) {
                 allNotifications.push({
                   id: `lottery_win_${order.id}`,
@@ -249,7 +264,7 @@ const NotificationPage: React.FC = () => {
                   type: 'LOTTERY_WIN',
                   title: t('notifications.lotteryWin') || '🎉 积分商城中奖!',
                   content: t('notifications.lotteryWinContent', { product: lotteryTitle }) || `恭喜您在积分商城中奖，获得${lotteryTitle}!`,
-                  related_id: order.prize.id,
+                  related_id: prize.id,
                   related_type: 'prize',
                   is_read: true,
                   created_at: order.updated_at || order.created_at,

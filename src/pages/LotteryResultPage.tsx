@@ -866,7 +866,7 @@ const LotteryResultPage: React.FC = () => {
               initial={{ opacity: 0, y: 100 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 100 }}
-              className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg"
+              className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
             >
               <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
                 <h3 className="text-lg font-bold">{t('orders.confirmClaim')}</h3>
@@ -878,7 +878,8 @@ const LotteryResultPage: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmitClaim} className="p-6 pb-24 space-y-4">
+              <div className="flex-1 overflow-y-auto">
+                <form onSubmit={handleSubmitClaim} className="p-6 space-y-4">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3 mb-2">
                     <GiftIcon className="w-6 h-6 text-purple-600" />
@@ -914,7 +915,7 @@ const LotteryResultPage: React.FC = () => {
                   </ul>
                 </div>
 
-                <div className="pt-4 flex space-x-3">
+                <div className="sticky bottom-0 bg-white pt-4 pb-safe flex space-x-3 border-t mt-4 -mx-6 px-6">
                   <button
                     type="button"
                     onClick={() => setShowClaimModal(false)}
@@ -931,6 +932,7 @@ const LotteryResultPage: React.FC = () => {
                   </button>
                 </div>
               </form>
+              </div>
             </motion.div>
           </div>
         )}
