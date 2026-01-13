@@ -1,6 +1,66 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-import { sendTelegramMessage } from '../_shared/sendTelegramMessage.ts'
+
+/**
+ * 内联的 Telegram 消息发送功能
+ * 避免外部依赖导致的部署问题
+ */
+const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
+
+const translations: Record<string, Record<string, (amount: number, level: number) => string>> = {
+  zh: {
+    commission_earned: (amount: number, level: number) => `🎉 恭喜！您获得了 ${amount} 积分的佣金。来自您的 L${level} 朋友的购买。`,
+  },
+  ru: {
+    commission_earned: (amount: number, level: number) => `🎉 Поздравляем! Вы получили комиссию ${amount} баллов от покупки вашего друга уровня L${level}.`,
+  },
+  tg: {
+    commission_earned: (amount: number, level: number) => `🎉 Табрик! Шумо аз хариди дӯсти сатҳи L${level} комиссияи ${amount} балл гирифтед.`,
+  },
+}
+
+async function sendTelegramMessage(userId: string, type: string, data: { amount?: number, level?: number }) {
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    )
+    
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('telegram_id, preferred_language')
+      .eq('id', userId)
+      .single()
+    
+    if (error || !userData?.telegram_id) {
+      console.log('User not found or no telegram_id:', userId)
+      return
+    }
+    
+    const lang = userData.preferred_language || 'ru'
+    const langTranslations = translations[lang] || translations['ru']
+    const messageFunc = langTranslations[type]
+    
+    if (!messageFunc || !BOT_TOKEN) {
+      console.log('No message template or bot token')
+      return
+    }
+    
+    const message = messageFunc(data.amount || 0, data.level || 1)
+    
+    await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: userData.telegram_id,
+        text: message,
+        parse_mode: 'HTML'
+      })
+    })
+  } catch (err) {
+    console.error('Failed to send Telegram message:', err)
+  }
+}
 
 serve(async (req) => {
   // 允许 OPTIONS 请求
@@ -77,18 +137,38 @@ serve(async (req) => {
         continue
       }
 
-      // 插入佣金记录
+      /**
+       * 插入佣金记录
+       * 
+       * commissions 表字段说明：
+       * - user_id: 获得佣金的用户ID（上级）
+       * - from_user_id: 产生佣金的用户ID（下级）
+       * - source_user_id: 同 from_user_id，兼容字段
+       * - beneficiary_id: 同 user_id，兼容字段
+       * - amount: 佣金金额
+       * - source_amount: 订单金额
+       * - rate: 佣金比例
+       * - percent: 佣金百分比（rate * 100）
+       * - level: 佣金级别（1/2/3级）
+       * - type: 佣金类型（REFERRAL_COMMISSION）
+       * - status: 状态（settled）
+       * - order_id: 关联订单ID
+       */
       const { data: commission, error: commissionError } = await supabaseClient
         .from('commissions')
         .insert({
           user_id: currentUserId,
           from_user_id: user_id,
+          source_user_id: user_id,
+          beneficiary_id: currentUserId,
           level: level,
-          commission_rate: rate,
-          order_amount: order_amount,
-          commission_amount: commissionAmount,
+          rate: rate,
+          percent: rate * 100,
+          source_amount: order_amount,
+          amount: commissionAmount,
           order_id: order_id,
-          is_withdrawable: false, // 不可提现
+          related_order_id: order_id,
+          type: 'REFERRAL_COMMISSION',
           status: 'settled'
         })
         .select()
@@ -101,15 +181,58 @@ serve(async (req) => {
       
       commissions.push(commission)
 
-      // 更新上级用户的积分商城币余额（不可提现部分）
-      const { error: rpcError } = await supabaseClient.rpc('add_bonus_balance', {
-        p_user_id: currentUserId,
-        p_amount: commissionAmount
-      })
+      /**
+       * 将佣金发放到上级用户的积分钱包
+       * 
+       * 钱包类型说明（重要）：
+       * - 现金钱包: type='TJS', currency='TJS'
+       * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+       * 
+       * 三级分销佣金发放到积分钱包
+       */
+      const { data: wallet, error: walletError } = await supabaseClient
+        .from('wallets')
+        .select('id, balance')
+        .eq('user_id', currentUserId)
+        .eq('type', 'LUCKY_COIN')
+        .eq('currency', 'POINTS')
+        .single()
 
-      if (rpcError) {
-        console.error('Failed to add bonus balance:', rpcError)
-        throw rpcError
+      if (walletError) {
+        console.error('Failed to find wallet:', walletError)
+        // 如果找不到积分钱包，尝试创建一个
+        const { data: newWallet, error: createError } = await supabaseClient
+          .from('wallets')
+          .insert({
+            user_id: currentUserId,
+            type: 'LUCKY_COIN',
+            currency: 'POINTS',
+            balance: commissionAmount,
+          })
+          .select()
+          .single()
+
+        if (createError) {
+          console.error('Failed to create wallet:', createError)
+          throw createError
+        }
+        console.log('Created new LUCKY_COIN wallet for user:', currentUserId, 'with balance:', commissionAmount)
+      } else {
+        // 更新积分钱包余额
+        const newBalance = parseFloat(wallet.balance || '0') + commissionAmount
+        const { error: updateError } = await supabaseClient
+          .from('wallets')
+          .update({
+            balance: newBalance,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', wallet.id)
+
+        if (updateError) {
+          console.error('Failed to update wallet balance:', updateError)
+          throw updateError
+        }
+        console.log('Updated LUCKY_COIN wallet for user:', currentUserId, 'new balance:', newBalance)
       }
 
       // 4. 推送 Telegram 消息

@@ -314,9 +314,10 @@ serve(async (req) => {
     if (!order_type || order_type === 'all' || order_type === 'lottery' || order_type === 'exchange') {
       console.log('[GetMyOrders] Fetching one-yuan purchase orders for userId:', userId);
       
+      // 查询 orders 表中的订单（包括积分商城购物记录）
       const { data: oneYuanOrders, error: oneYuanError } = await supabase
         .from('orders')
-        .select('id, user_id, lottery_id, order_number, total_amount, currency, status, type, payment_data, created_at')
+        .select('id, user_id, lottery_id, order_number, total_amount, currency, status, type, quantity, payment_method, created_at')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
 
@@ -340,13 +341,27 @@ serve(async (req) => {
           const lottery = lotteriesMap.get(order.lottery_id);
           const orderType = order.type || 'LOTTERY_PURCHASE';
           
-          // 区分一元购物和积分商城订单
-          let displayType = 'lottery';
-          let displayTitle = lottery?.title_i18n || { zh: lottery?.title || '一元购物' };
+          /**
+           * 订单类型说明：
+           * - LOTTERY_PURCHASE: 积分商城购物（使用积分购买商品）
+           * - MARKET_PURCHASE: 市场购买（二手转卖）
+           * 
+           * 支付方式：
+           * - LUCKY_COIN_WALLET: 积分支付
+           * - BALANCE_WALLET: 余额支付
+           */
+          let displayType = 'lottery';  // 积分商城订单统一显示为 lottery 类型
+          let displayTitle = lottery?.title_i18n || { zh: lottery?.title || '积分商城购物' };
+          
+          // 根据支付方式确定显示名称
+          const isPointsPurchase = order.payment_method === 'LUCKY_COIN_WALLET';
+          if (isPointsPurchase) {
+            displayTitle = lottery?.title_i18n || { zh: lottery?.title || '积分商城购物' };
+          }
           
           if (orderType === 'MARKET_PURCHASE') {
-            displayType = 'exchange'; // 使用 exchange 类型表示积分商城
-            displayTitle = lottery?.title_i18n || { zh: lottery?.title || '积分商城购买' };
+            displayType = 'exchange';
+            displayTitle = lottery?.title_i18n || { zh: lottery?.title || '市场购买' };
           }
           
           orders.push({
@@ -358,12 +373,12 @@ serve(async (req) => {
             created_at: order.created_at,
             product_title: displayTitle,
             product_image: lottery?.image_url || '',
-            original_price: order.payment_data?.original_price || lottery?.ticket_price || 0,
+            original_price: lottery?.ticket_price || order.total_amount,
             price_per_person: order.total_amount,
             lottery_id: order.lottery_id,
-            // 积分商城订单的额外信息
-            resale_id: order.payment_data?.resale_id || null,
-            seller_id: order.payment_data?.seller_id || null,
+            // 额外信息
+            quantity: order.quantity || 1,
+            payment_method: order.payment_method,
           });
         });
       }

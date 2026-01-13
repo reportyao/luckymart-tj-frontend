@@ -126,41 +126,49 @@ serve(async (req) => {
     const currentTotalWithdrawals = parseFloat(wallet.total_withdrawals) || 0
 
     if (action === 'APPROVED') {
-      // 审核通过 - 检查余额是否足够
-      // 新的提现流程：提现时已经冻结了余额，审核通过只需要更新状态
+      /**
+       * 审核通过 - 直接扣除余额
+       * 
+       * 流程说明：
+       * 1. 用户提交提现申请时，余额被冻结
+       * 2. 管理员审核通过时，直接扣除余额（不再等待 COMPLETED 状态）
+       * 3. 前端显示的余额会立即减少
+       */
       
       // 计算可用余额（总余额减去已冻结的金额）
       const availableBalance = currentBalance - currentFrozenBalance
       
-      console.log('Withdrawal check:', {
+      console.log('Withdrawal APPROVED check:', {
         withdrawAmount,
         currentBalance,
         currentFrozenBalance,
         availableBalance
       })
       
-      // 如果冻结余额不足（兼容旧的没有冻结的提现请求），需要冻结
-      if (currentFrozenBalance < withdrawAmount) {
-        const needToFreeze = withdrawAmount - currentFrozenBalance
-        // 检查可用余额是否足够冻结
-        if (availableBalance < needToFreeze) {
-          throw new Error(`可用余额不足，当前可用余额: ${availableBalance}，需要冻结: ${needToFreeze}`)
-        }
-        
-        // 冻结差额
-        const newFrozenBalance = currentFrozenBalance + needToFreeze
-        const { error: freezeError } = await supabaseClient
-          .from('wallets')
-          .update({
-            frozen_balance: newFrozenBalance,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', wallet.id)
+      // 检查余额是否足够
+      if (currentBalance < withdrawAmount) {
+        throw new Error(`余额不足，当前余额: ${currentBalance}，提现金额: ${withdrawAmount}`)
+      }
+      
+      // 直接扣除余额，同时清除冻结金额
+      const newBalance = currentBalance - withdrawAmount
+      // 从冻结余额中扣除（如果有冻结的话）
+      const amountToUnfreeze = Math.min(currentFrozenBalance, withdrawAmount)
+      const newFrozenBalance = Math.max(0, currentFrozenBalance - amountToUnfreeze)
+      
+      const { error: deductError } = await supabaseClient
+        .from('wallets')
+        .update({
+          balance: newBalance,
+          frozen_balance: newFrozenBalance,
+          total_withdrawals: currentTotalWithdrawals + withdrawAmount,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', wallet.id)
 
-        if (freezeError) {
-          console.error('冻结余额失败:', freezeError)
-          throw new Error('冻结余额失败')
-        }
+      if (deductError) {
+        console.error('扣除余额失败:', deductError)
+        throw new Error('扣除余额失败')
       }
 
       const { error: updateError } = await supabaseClient
@@ -179,12 +187,23 @@ serve(async (req) => {
         throw new Error('审核失败')
       }
 
+      // 创建钱包交易记录 - 审核通过时就扣款
+      await supabaseClient.from('wallet_transactions').insert({
+        wallet_id: wallet.id,
+        type: 'WITHDRAWAL',
+        amount: -withdrawAmount,
+        balance_after: newBalance,
+        status: 'COMPLETED',
+        description: `提现审核通过 - 订单号: ${withdrawalRequest.order_number}`,
+        related_id: requestId,
+      })
+
       // 发送通知给用户
       await supabaseClient.from('notifications').insert({
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '提现审核通过',
-        content: `您的提现申请已审核通过,金额${withdrawalRequest.amount} ${withdrawalRequest.currency},正在处理中`,
+        content: `您的提现申请已审核通过，金额${withdrawalRequest.amount} ${withdrawalRequest.currency}已扣除，正在处理转账中`,
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
@@ -197,6 +216,7 @@ serve(async (req) => {
             type: 'wallet_withdraw_pending',
             data: {
               transaction_amount: withdrawalRequest.amount,
+              current_balance: newBalance,
             },
             priority: 2,
           },
@@ -276,36 +296,14 @@ serve(async (req) => {
         console.error('Failed to send Telegram notification:', error);
       }
     } else if (action === 'COMPLETED') {
-      // 转账完成 - 真正扣除余额
-      // 从冻结余额中扣除，同时从总余额中扣除
-      let newFrozenBalance = Math.max(0, currentFrozenBalance - withdrawAmount)
-      let newBalance = currentBalance - withdrawAmount
+      /**
+       * 转账完成 - 只更新状态，不再扣款
+       * 
+       * 流程说明：
+       * 1. 余额已在 APPROVED 状态时扣除
+       * 2. COMPLETED 只是标记转账已完成，不再扣款
+       */
       
-      // 如果冻结余额不足以覆盖提现金额（不应该发生，但做兼容处理）
-      if (currentFrozenBalance < withdrawAmount) {
-        console.warn(`Frozen balance (${currentFrozenBalance}) less than withdraw amount (${withdrawAmount}), adjusting...`)
-        newFrozenBalance = 0
-      }
-      
-      if (newBalance < 0) {
-        throw new Error(`余额不足，无法完成提现`)
-      }
-      
-      const { error: deductError } = await supabaseClient
-        .from('wallets')
-        .update({
-          balance: newBalance,
-          frozen_balance: newFrozenBalance,
-          total_withdrawals: currentTotalWithdrawals + withdrawAmount,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', wallet.id)
-
-      if (deductError) {
-        console.error('扣除余额失败:', deductError)
-        throw new Error('扣除余额失败')
-      }
-
       const { error: updateError } = await supabaseClient
         .from('withdrawal_requests')
         .update({
@@ -322,23 +320,12 @@ serve(async (req) => {
         throw new Error('更新失败')
       }
 
-      // 创建钱包交易记录 - 这是真正的扣款记录
-      await supabaseClient.from('wallet_transactions').insert({
-        wallet_id: wallet.id,
-        type: 'WITHDRAWAL',
-        amount: -withdrawAmount,
-        balance_after: newBalance,
-        status: 'COMPLETED',
-        description: `提现完成 - 订单号: ${withdrawalRequest.order_number}`,
-        related_id: requestId,
-      })
-
       // 发送通知给用户
       await supabaseClient.from('notifications').insert({
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '提现成功',
-        content: `您的提现已完成,金额${withdrawalRequest.amount} ${withdrawalRequest.currency}已转账`,
+        content: `您的提现已完成，金额${withdrawalRequest.amount} ${withdrawalRequest.currency}已转账到账`,
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
