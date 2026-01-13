@@ -142,18 +142,27 @@ const commands: BotCommand[] = [
           return messages[lang as keyof typeof messages]?.user_not_found || messages.zh.user_not_found;
         }
 
-        // 获取钱包信息
+        /**
+         * 获取钱包信息
+         * 
+         * 钱包类型说明（重要）：
+         * - 现金钱包: type='TJS', currency='TJS'
+         * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+         * 
+         * 注意：数据库字段名是 'type'，不是 'wallet_type'
+         */
         const { data: wallets } = await supabase
           .from('wallets')
-          .select('wallet_type, balance')
+          .select('type, balance')    // 修复：字段名是'type'，不是'wallet_type'
           .eq('user_id', user.id);
 
         if (!wallets || wallets.length === 0) {
           return messages[lang as keyof typeof messages]?.balance_error || messages.zh.balance_error;
         }
 
-        const balanceWallet = wallets.find(w => w.wallet_type === 'TJS')?.balance || 0;
-        const luckyCoinWallet = wallets.find(w => w.wallet_type === 'LUCKY_COIN')?.balance || 0;
+        // 修复：使用正确的字段名 'type'
+        const balanceWallet = wallets.find(w => w.type === 'TJS')?.balance || 0;
+        const luckyCoinWallet = wallets.find(w => w.type === 'LUCKY_COIN')?.balance || 0;
 
         const balanceText = {
           zh: `💰 您的钱包余额：\n\n💵 余额钱包：${balanceWallet} 元\n🍀 积分：${luckyCoinWallet} 枚\n\n点击打开小程序进行充值或交易 →`,

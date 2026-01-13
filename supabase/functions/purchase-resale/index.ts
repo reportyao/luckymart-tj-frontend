@@ -144,14 +144,23 @@ serve(async (req) => {
       throw new Error('不能购买自己的商品')
     }
 
-    // 查询买家钱包余额 (使用 wallets 表)
-    // 修复：LUCKY_COIN钱包的currency应为POINTS
+    /**
+     * 查询买家积分钱包余额
+     * 
+     * 钱包类型说明（重要）：
+     * - 现金钱包: type='TJS', currency='TJS'
+     * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+     * 
+     * 历史遗留问题：
+     * - LUCKY_COIN 是历史名称（幸运币），现在前端统一显示为"积分"
+     * - 积分钱包的 currency 必须是 'POINTS'，不能是 'TJS' 或 'LUCKY_COIN'
+     */
     const { data: buyerWallet, error: walletError } = await supabaseClient
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
-      .eq('type', 'LUCKY_COIN')
-      .eq('currency', 'POINTS')
+      .eq('type', 'LUCKY_COIN')      // 积分钱包类型
+      .eq('currency', 'POINTS')      // 积分货币单位
       .single()
 
     if (walletError || !buyerWallet) {
@@ -169,12 +178,20 @@ serve(async (req) => {
     const buyerBalanceBefore = buyerWallet.balance
     const buyerBalanceAfter = buyerWallet.balance - resaleItem.resale_price
 
-    // 查询卖家钱包
+    /**
+     * 查询卖家现金钱包
+     * 
+     * 钱包类型说明（重要）：
+     * - 现金钱包: type='TJS', currency='TJS'
+     * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+     * 
+     * 注意：数据库枚举 WalletType 只有 'TJS' 和 'LUCKY_COIN'，没有 'BALANCE'
+     */
     const { data: sellerWallet, error: sellerWalletError } = await supabaseClient
       .from('wallets')
       .select('*')
       .eq('user_id', resaleItem.seller_id)
-      .eq('type', 'BALANCE')
+      .eq('type', 'TJS')  // 修复：现金钱包的type是'TJS'，不是'BALANCE'
       .eq('currency', 'TJS')
       .single()
 

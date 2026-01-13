@@ -142,15 +142,25 @@ serve(async (req) => {
     const paidCommission = commissionsData?.filter(c => c.status === 'PAID').reduce((sum, c) => sum + Number(c.amount), 0) || 0
     const pendingCommission = commissionsData?.filter(c => c.status === 'PENDING').reduce((sum, c) => sum + Number(c.amount), 0) || 0
 
-    // 获取奖金余额
+    /**
+     * 获取用户现金余额（佣金奖励统一发放到现金钱包）
+     * 
+     * 钱包类型说明（重要）：
+     * - 现金钱包: type='TJS', currency='TJS'
+     * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+     * 
+     * 注意：数据库枚举 WalletType 只有 'TJS' 和 'LUCKY_COIN'，没有 'BONUS'
+     * 佣金奖励统一发放到现金钱包(TJS)，不是单独的奖金钱包
+     */
     const { data: walletData } = await supabase
       .from('wallets')
       .select('balance')
       .eq('user_id', user_id)
-      .eq('type', 'BONUS')
+      .eq('type', 'TJS')           // 修复：现金钱包类型，不是'BONUS'
       .eq('currency', 'TJS')
       .single()
 
+    // 佣金余额就是现金钱包余额
     const bonusBalance = walletData?.balance || 0
 
     const stats = {

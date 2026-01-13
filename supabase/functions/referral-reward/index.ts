@@ -116,12 +116,21 @@ serve(async (req) => {
         continue
       }
 
-      // 2. 更新推荐人钱包余额
+      /**
+       * 2. 更新推荐人现金钱包余额
+       * 
+       * 钱包类型说明（重要）：
+       * - 现金钱包: type='TJS', currency='TJS'
+       * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+       * 
+       * 佣金奖励统一发放到现金钱包
+       */
       const { data: wallet, error: walletError } = await supabaseClient
         .from('wallets')
-        .select('balance')
+        .select('id, balance')
         .eq('user_id', reward.referrer_id)
-        .eq('currency', currency)
+        .eq('type', 'TJS')             // 现金钱包类型
+        .eq('currency', currency)      // 使用请求中的货币类型
         .single()
 
       if (wallet && !walletError) {
@@ -132,6 +141,7 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('user_id', reward.referrer_id)
+          .eq('type', 'TJS')           // 现金钱包类型
           .eq('currency', currency)
 
         if (updateError) {

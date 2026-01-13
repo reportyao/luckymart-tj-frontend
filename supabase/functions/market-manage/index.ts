@@ -115,12 +115,19 @@ serve(async (req) => {
           )
         }
 
-        // 检查买家余额
+        /**
+         * 检查买家现金余额
+         * 
+         * 钱包类型说明（重要）：
+         * - 现金钱包: type='TJS', currency='TJS'
+         * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+         */
         const { data: buyerWallet } = await supabaseClient
           .from('wallets')
           .select('balance')
           .eq('user_id', user_id)
-          .eq('currency', 'TJS')
+          .eq('type', 'TJS')           // 现金钱包类型
+          .eq('currency', 'TJS')       // 现金货币单位
           .single()
 
         if (!buyerWallet || buyerWallet.balance < listing.selling_price) {
@@ -132,7 +139,7 @@ serve(async (req) => {
 
         // 开始事务处理
 
-        // 1. 扣除买家余额
+        // 1. 扣除买家现金余额
         await supabaseClient
           .from('wallets')
           .update({
@@ -140,13 +147,15 @@ serve(async (req) => {
             updated_at: new Date().toISOString()
           })
           .eq('user_id', user_id)
+          .eq('type', 'TJS')           // 现金钱包类型
           .eq('currency', 'TJS')
 
-        // 2. 增加卖家余额
+        // 2. 查询并增加卖家现金余额
         const { data: sellerWallet } = await supabaseClient
           .from('wallets')
           .select('balance')
           .eq('user_id', listing.seller_id)
+          .eq('type', 'TJS')           // 现金钱包类型
           .eq('currency', 'TJS')
           .single()
 
@@ -158,6 +167,7 @@ serve(async (req) => {
               updated_at: new Date().toISOString()
             })
             .eq('user_id', listing.seller_id)
+            .eq('type', 'TJS')         // 现金钱包类型
             .eq('currency', 'TJS')
         }
 

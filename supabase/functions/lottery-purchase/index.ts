@@ -153,8 +153,21 @@ Deno.serve(async (req) => {
     // 计算总金额
     const totalAmount = lottery.ticket_price * quantity;
 
-    // 获取用户钱包
-    // 注意：数据库中现金余额的type是'TJS'，积分的currency是'POINTS'
+    /**
+     * 获取用户钱包
+     * 
+     * 钱包类型说明（重要）：
+     * - 现金钱包: type='TJS', currency='TJS'
+     * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
+     * 
+     * 支付方式映射：
+     * - BALANCE_WALLET (余额支付) -> 现金钱包 (TJS/TJS)
+     * - LUCKY_COIN_WALLET (积分支付) -> 积分钱包 (LUCKY_COIN/POINTS)
+     * 
+     * 历史遗留问题：
+     * - LUCKY_COIN 是历史名称（幸运币），现在前端统一显示为"积分"
+     * - 积分钱包的 currency 必须是 'POINTS'，不能是 'TJS' 或 'LUCKY_COIN'
+     */
     const walletType = paymentMethod === 'BALANCE_WALLET' ? 'TJS' : 'LUCKY_COIN';
     const walletCurrency = paymentMethod === 'BALANCE_WALLET' ? lottery.currency : 'POINTS';
     const walletResponse = await fetch(
