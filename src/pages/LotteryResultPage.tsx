@@ -878,7 +878,7 @@ const LotteryResultPage: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmitClaim} className="p-6 space-y-4">
+              <form onSubmit={handleSubmitClaim} className="p-6 pb-24 space-y-4">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3 mb-2">
                     <GiftIcon className="w-6 h-6 text-purple-600" />

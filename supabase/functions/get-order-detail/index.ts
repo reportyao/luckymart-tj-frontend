@@ -43,7 +43,9 @@ serve(async (req) => {
         created_at,
         metadata,
         lottery_id,
-        pickup_point_id
+        pickup_point_id,
+        logistics_status,
+        batch_id
       `)
       .eq('id', order_id)
       .eq('user_id', user_id)
@@ -79,6 +81,17 @@ serve(async (req) => {
       pickupPoint = pointData
     }
 
+    // 查询批次信息
+    let shipmentBatch = null
+    if (order.batch_id) {
+      const { data: batchData } = await supabase
+        .from('shipment_batches')
+        .select('batch_no, china_tracking_no, tajikistan_tracking_no, estimated_arrival_date, status')
+        .eq('id', order.batch_id)
+        .single()
+      shipmentBatch = batchData
+    }
+
     // 计算 pickup_status
     const pickup_status = order.pickup_code 
       ? (order.claimed_at ? 'PICKED_UP' : 'PENDING_PICKUP') 
@@ -89,7 +102,8 @@ serve(async (req) => {
       ...order,
       pickup_status,
       lotteries: lottery,
-      pickup_point: pickupPoint
+      pickup_point: pickupPoint,
+      shipment_batch: shipmentBatch
     }
 
     return new Response(

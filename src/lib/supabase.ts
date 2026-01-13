@@ -122,7 +122,7 @@ export const likeService = {
 
     const { error } = await supabase
       .from('likes')
-      .insert({ user_id: user.id, post_id: showoffId });
+      .insert({ user_id: user.id, post_id: showoffId, target_type: 'showoff', target_id: showoffId });
 
     if (error) {
       console.error('Failed to like showoff:', error);
@@ -689,7 +689,7 @@ export const referralService = {
 
     const { error } = await supabase
       .from('likes')
-      .insert({ post_id: showoffId, user_id: uid });
+      .insert({ post_id: showoffId, user_id: uid, target_type: 'showoff', target_id: showoffId });
 
     // 如果是重复点赞错误，忽略它（用户已经点赞过）
     if (error && error.code !== '23505') {

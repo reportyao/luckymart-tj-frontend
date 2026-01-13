@@ -342,21 +342,19 @@ const OrderDetailPage: React.FC = () => {
         </motion.div>
 
         {/* 物流状态卡片 */}
-        {order.logistics_status && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-          >
-            <LogisticsStatus
-              status={order.logistics_status}
-              chinaTrackingNo={order.shipment_batch?.china_tracking_no}
-              tajikistanTrackingNo={order.shipment_batch?.tajikistan_tracking_no}
-              estimatedArrivalDate={order.shipment_batch?.estimated_arrival_date}
-              pickupCode={order.pickup_code}
-            />
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.15 }}
+        >
+          <LogisticsStatus
+            status={order.logistics_status || 'PENDING_SHIPMENT'}
+            chinaTrackingNo={order.shipment_batch?.china_tracking_no}
+            tajikistanTrackingNo={order.shipment_batch?.tajikistan_tracking_no}
+            estimatedArrivalDate={order.shipment_batch?.estimated_arrival_date}
+            pickupCode={order.pickup_code}
+          />
+        </motion.div>
 
         {/* 提货码卡片 */}
         {order.pickup_code && order.logistics_status === 'READY_FOR_PICKUP' && (
