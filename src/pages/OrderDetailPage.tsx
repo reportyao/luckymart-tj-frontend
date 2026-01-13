@@ -271,14 +271,14 @@ const OrderDetailPage: React.FC = () => {
                 className="w-24 h-24 rounded-xl object-cover flex-shrink-0"
               />
             )}
-            <div className="flex-1 min-w-0">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{productTitle}</h3>
               <div className="mt-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
-                  <div className="flex items-baseline space-x-1">
-                    <span className="text-sm text-gray-500">{order.currency}</span>
-                    <span className="text-xl font-bold text-purple-600">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm text-gray-500 flex-shrink-0 whitespace-nowrap">{t('order.paymentAmount') || '支付金额'}</span>
+                  <div className="flex items-baseline gap-1 flex-shrink-0">
+                    <span className="text-xs text-gray-500">{order.currency}</span>
+                    <span className="text-lg font-bold text-purple-600 truncate max-w-[100px]">
                       {order.total_amount}
                     </span>
                   </div>

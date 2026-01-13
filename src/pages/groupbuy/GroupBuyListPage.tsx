@@ -9,6 +9,7 @@ interface GroupBuyProduct {
   title: { zh: string; ru: string; tg: string };
   description: { zh: string; ru: string; tg: string };
   image_url: string;
+  images?: string[]; // 多张图片数组
   original_price: number;
   price_per_person: number;
   group_size: number; // 数据库字段名
@@ -112,13 +113,42 @@ export default function GroupBuyListPage() {
               onClick={() => navigate(`/group-buy/${product.id}`)}
               className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
             >
-              {/* Product Image */}
+              {/* Product Images - 展示前三张图片 */}
               <div className="relative">
-                <img
-                  src={product.image_url}
-                  alt={getLocalizedText(product.title)}
-                  className="w-full h-48 object-cover"
-                />
+                {(() => {
+                  const images = product.images && product.images.length > 0 
+                    ? product.images.slice(0, 3) 
+                    : [product.image_url];
+                  
+                  if (images.length === 1) {
+                    return (
+                      <img
+                        src={images[0]}
+                        alt={getLocalizedText(product.title)}
+                        className="w-full h-48 object-cover"
+                      />
+                    );
+                  }
+                  
+                  return (
+                    <div className="flex h-48 gap-0.5 overflow-hidden">
+                      {images.map((img, index) => (
+                        <div 
+                          key={index} 
+                          className={`relative overflow-hidden ${
+                            images.length === 2 ? 'w-1/2' : 'w-1/3'
+                          }`}
+                        >
+                          <img
+                            src={img}
+                            alt={`${getLocalizedText(product.title)} ${index + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 {product.active_sessions_count > 0 && (
                   <div className="absolute top-3 right-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white px-3 py-1 rounded-full text-sm font-bold flex items-center gap-1">

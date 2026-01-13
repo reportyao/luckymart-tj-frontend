@@ -439,24 +439,34 @@ const LotteryDetailPage: React.FC = () => {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     setActiveImageIndex((prev) => prev === 0 ? lottery.image_urls.length - 1 : prev - 1);
                     setAutoPlayEnabled(false);
                     setTimeout(() => setAutoPlayEnabled(true), 5000);
                   }}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-10"
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 active:bg-black/80 transition-colors z-20"
+                  aria-label="上一张图片"
                 >
-                  <ChevronLeftIcon className="w-5 h-5" />
+                  <ChevronLeftIcon className="w-6 h-6" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
+                    e.preventDefault();
                     setActiveImageIndex((prev) => prev === lottery.image_urls.length - 1 ? 0 : prev + 1);
                     setAutoPlayEnabled(false);
                     setTimeout(() => setAutoPlayEnabled(true), 5000);
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition-colors z-10"
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 active:bg-black/80 transition-colors z-20"
+                  aria-label="下一张图片"
                 >
-                  <ChevronRightIcon className="w-5 h-5" />
+                  <ChevronRightIcon className="w-6 h-6" />
                 </button>
               </>
             )}
@@ -469,14 +479,19 @@ const LotteryDetailPage: React.FC = () => {
                     key={index}
                     onClick={(e) => {
                       e.stopPropagation();
+                      e.preventDefault();
                       setActiveImageIndex(index);
                       setAutoPlayEnabled(false);
                       setTimeout(() => setAutoPlayEnabled(true), 5000);
                     }}
+                    onTouchEnd={(e) => {
+                      e.stopPropagation();
+                    }}
                     className={cn(
-                      "w-2 h-2 rounded-full transition-all",
-                      index === activeImageIndex ? "bg-white w-4" : "bg-white/60"
+                      "w-2.5 h-2.5 rounded-full transition-all",
+                      index === activeImageIndex ? "bg-white w-5" : "bg-white/60"
                     )}
+                    aria-label={`切换到第${index + 1}张图片`}
                   />
                 ))}
               </div>
@@ -542,6 +557,40 @@ const LotteryDetailPage: React.FC = () => {
               )}
             </div>
           </div>
+        )}
+
+        {/* 用户购买后将获得的参与码展示 - 仅在商品未售罄时显示 */}
+        {isActive && remainingTickets > 0 && quantity > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md p-4 border border-purple-200"
+          >
+            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+              </svg>
+              {t('lottery.yourParticipationCodes') || '您将获得的参与码'}
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: quantity }, (_, i) => {
+                // 计算当前用户购买后将获得的参与码号码
+                const nextCodeNumber = lottery.sold_tickets + i + 1;
+                const codeStr = String(nextCodeNumber).padStart(7, '0');
+                return (
+                  <span
+                    key={i}
+                    className="px-3 py-1.5 rounded-lg font-mono text-sm font-semibold bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-sm"
+                  >
+                    {codeStr}
+                  </span>
+                );
+              })}
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              {t('lottery.participationCodeHint') || '购买后您将获得以上参与码，可用于开奖抽取'}
+            </p>
+          </motion.div>
         )}
 
         {/* Lottery Info Card */}

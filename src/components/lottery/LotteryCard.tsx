@@ -75,25 +75,57 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	        className
 	      )}
 	    >
-      {/* 抽奖图片 */}
+      {/* 抽奖图片 - 展示前三张图片 */}
       <div className="relative h-32 bg-gradient-to-r from-purple-400 to-pink-400">
-        {lottery.image_url ? (
-          <LazyImage 
-            src={lottery.image_url} 
-            alt={lottery.title}
-            className="w-full h-full object-cover"
-            width={300} // 假设卡片宽度为 300px
-            height={128} // 假设卡片高度为 128px (h-32)
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <div className="text-center text-white">
-              <StarIcon className="w-12 h-12 mx-auto mb-2" />
-              <p className="text-sm font-medium">{lottery.title}</p>
+        {(() => {
+          const images = lottery.image_urls && lottery.image_urls.length > 0 
+            ? lottery.image_urls.slice(0, 3) 
+            : (lottery.image_url ? [lottery.image_url] : []);
+          
+          if (images.length === 0) {
+            return (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center text-white">
+                  <StarIcon className="w-12 h-12 mx-auto mb-2" />
+                  <p className="text-sm font-medium">{lottery.title}</p>
+                </div>
+              </div>
+            );
+          }
+          
+          if (images.length === 1) {
+            return (
+              <LazyImage 
+                src={images[0]} 
+                alt={lottery.title}
+                className="w-full h-full object-cover"
+                width={300}
+                height={128}
+              />
+            );
+          }
+          
+          return (
+            <div className="flex h-full gap-0.5 overflow-hidden">
+              {images.map((img, index) => (
+                <div 
+                  key={index} 
+                  className={`relative overflow-hidden ${
+                    images.length === 2 ? 'w-1/2' : 'w-1/3'
+                  }`}
+                >
+                  <LazyImage
+                    src={img}
+                    alt={`${lottery.title} ${index + 1}`}
+                    className="w-full h-full object-cover"
+                    width={images.length === 2 ? 150 : 100}
+                    height={128}
+                  />
+                </div>
+              ))}
             </div>
-          </div>
-        )}
-
+          );
+        })()}
       </div>
 
       <div className="p-4">
