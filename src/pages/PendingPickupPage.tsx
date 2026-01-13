@@ -90,12 +90,12 @@ const PendingPickupPage: React.FC = () => {
           .select(`
             id, 
             lottery_id, 
-            quantity, 
             total_amount,
             created_at, 
             status,
             logistics_status,
             pickup_code,
+            metadata,
             lotteries(id, title, title_i18n, image_url, image_urls, currency)
           `)
           .eq('user_id', user.id)
@@ -120,7 +120,7 @@ const PendingPickupPage: React.FC = () => {
                 productImage: image,
                 price: order.total_amount,
                 currency: lottery.currency || 'TJS',
-                quantity: order.quantity,
+                quantity: order.metadata?.quantity || 1,
                 pickupCode: order.pickup_code,
                 createdAt: order.created_at,
                 status: order.status,
@@ -195,7 +195,7 @@ const PendingPickupPage: React.FC = () => {
             status,
             logistics_status,
             pickup_code,
-            group_buy_products(id, title, description, image_url, images, price_per_person, group_size),
+            group_buy_products(id, title, description, image_url, image_urls, price_per_person, group_size),
             group_buy_sessions(id, session_code, current_participants, expires_at)
           `)
           .eq('user_id', user.id)
@@ -219,7 +219,7 @@ const PendingPickupPage: React.FC = () => {
                 title = product.title || '';
               }
 
-              const image = product.images?.[0] || product.image_url || '';
+              const image = product.image_urls?.[0] || product.image_url || '';
               
               pendingItems.push({
                 id: result.id,
