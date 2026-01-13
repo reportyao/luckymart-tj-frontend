@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
-import { ArrowLeftIcon, CubeIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, CubeIcon, TruckIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import { motion } from 'framer-motion';
 
 interface PendingPickupItem {
   id: string;
-  type: 'lottery' | 'groupbuy'; // 类型：积分商城或拼团
+  type: 'lottery' | 'groupbuy' | 'full_purchase' | 'prize'; // 类型：积分商城抽奖、拼团、全款购买、中奖
   productId: string;
   productTitle: string;
   productImage: string;
@@ -19,10 +19,48 @@ interface PendingPickupItem {
   quantity: number;
   participationCode?: string; // 参与码（积分商城）
   sessionCode?: string; // 会话码（拼团）
+  pickupCode?: string; // 提货码
   createdAt: string;
-  status: string; // PENDING（待提货）、COMPLETED（已提货）等
+  status: string; // 物流状态
+  logisticsStatus?: string; // 物流状态
   orderDetailLink?: string; // 进入详情页的链接
 }
+
+// 物流状态映射
+const getLogisticsStatusText = (status: string | undefined, t: any): string => {
+  switch (status) {
+    case 'PENDING_SHIPMENT':
+      return t('logistics.pendingShipment') || '待发货';
+    case 'IN_TRANSIT_CHINA':
+      return t('logistics.inTransitChina') || '中国段运输中';
+    case 'IN_TRANSIT_TAJIKISTAN':
+      return t('logistics.inTransitTajikistan') || '塔吉克斯坦段运输中';
+    case 'READY_FOR_PICKUP':
+      return t('logistics.readyForPickup') || '已到达，待提货';
+    case 'PICKED_UP':
+      return t('logistics.pickedUp') || '已提货';
+    default:
+      return t('logistics.pendingShipment') || '待发货';
+  }
+};
+
+// 物流状态颜色
+const getLogisticsStatusColor = (status: string | undefined): string => {
+  switch (status) {
+    case 'PENDING_SHIPMENT':
+      return 'bg-gray-100 text-gray-600';
+    case 'IN_TRANSIT_CHINA':
+      return 'bg-blue-100 text-blue-600';
+    case 'IN_TRANSIT_TAJIKISTAN':
+      return 'bg-purple-100 text-purple-600';
+    case 'READY_FOR_PICKUP':
+      return 'bg-green-100 text-green-600';
+    case 'PICKED_UP':
+      return 'bg-gray-100 text-gray-500';
+    default:
+      return 'bg-gray-100 text-gray-600';
+  }
+};
 
 const PendingPickupPage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -45,66 +83,134 @@ const PendingPickupPage: React.FC = () => {
     try {
       const pendingItems: PendingPickupItem[] = [];
 
-      // 1. 获取积分商城（Lottery）的待提货商品
-      const { data: lotteryOrders, error: lotteryError } = await supabase
-        .from('orders')
-        .select('id, lottery_id, quantity, created_at, status, lotteries(id, title, title_i18n, image_url, image_urls, currency, ticket_price)')
-        .eq('user_id', user.id)
-        .eq('status', 'COMPLETED') // 只获取已完成的订单
-        .order('created_at', { ascending: false });
+      // 1. 获取全款购买订单（full_purchase_orders）- 未提货的
+      try {
+        const { data: fullPurchaseOrders, error: fullPurchaseError } = await (supabase as any)
+          .from('full_purchase_orders')
+          .select(`
+            id, 
+            lottery_id, 
+            quantity, 
+            total_amount,
+            created_at, 
+            status,
+            logistics_status,
+            pickup_code,
+            lotteries(id, title, title_i18n, image_url, image_urls, currency)
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'PAID')
+          .neq('logistics_status', 'PICKED_UP')
+          .order('created_at', { ascending: false });
 
-      if (lotteryError) {
-        console.error('Failed to fetch lottery orders:', lotteryError);
-      } else if (lotteryOrders && Array.isArray(lotteryOrders)) {
-        lotteryOrders.forEach((order: any) => {
-          const lottery = order.lotteries;
-          if (lottery) {
-            const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
-            const image = lottery.image_urls?.[0] || lottery.image_url || '';
-            
-            pendingItems.push({
-              id: order.id,
-              type: 'lottery',
-              productId: lottery.id,
-              productTitle: title,
-              productImage: image,
-              price: lottery.ticket_price * order.quantity,
-              currency: lottery.currency || 'TJS',
-              quantity: order.quantity,
-              createdAt: order.created_at,
-              status: 'PENDING',
-              orderDetailLink: `/orders/${order.id}`
-            });
-          }
-        });
+        if (fullPurchaseError) {
+          console.error('Failed to fetch full purchase orders:', fullPurchaseError);
+        } else if (fullPurchaseOrders && Array.isArray(fullPurchaseOrders)) {
+          fullPurchaseOrders.forEach((order: any) => {
+            const lottery = order.lotteries;
+            if (lottery) {
+              const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
+              const image = lottery.image_urls?.[0] || lottery.image_url || '';
+              
+              pendingItems.push({
+                id: order.id,
+                type: 'full_purchase',
+                productId: lottery.id,
+                productTitle: title,
+                productImage: image,
+                price: order.total_amount,
+                currency: lottery.currency || 'TJS',
+                quantity: order.quantity,
+                pickupCode: order.pickup_code,
+                createdAt: order.created_at,
+                status: order.status,
+                logisticsStatus: order.logistics_status,
+                orderDetailLink: `/full-purchase-orders/${order.id}`
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching full purchase orders:', err);
       }
 
-      // 2. 获取拼团（GroupBuy）的待提货商品
-      // 使用 any 类型绕过 TypeScript 严格检查
+      // 2. 获取中奖记录（prizes）- 未提货的
       try {
-        const { data: groupBuyOrders, error: groupBuyError } = await (supabase as any)
-          .from('group_buy_orders')
+        const { data: prizes, error: prizesError } = await (supabase as any)
+          .from('prizes')
+          .select(`
+            id, 
+            lottery_id, 
+            created_at, 
+            status,
+            logistics_status,
+            pickup_code,
+            lotteries(id, title, title_i18n, image_url, image_urls, currency, ticket_price)
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'WON')
+          .neq('logistics_status', 'PICKED_UP')
+          .order('created_at', { ascending: false });
+
+        if (prizesError) {
+          console.error('Failed to fetch prizes:', prizesError);
+        } else if (prizes && Array.isArray(prizes)) {
+          prizes.forEach((prize: any) => {
+            const lottery = prize.lotteries;
+            if (lottery) {
+              const title = getLocalizedText(lottery.title_i18n, i18n.language) || lottery.title;
+              const image = lottery.image_urls?.[0] || lottery.image_url || '';
+              
+              pendingItems.push({
+                id: prize.id,
+                type: 'prize',
+                productId: lottery.id,
+                productTitle: title,
+                productImage: image,
+                price: lottery.ticket_price || 0,
+                currency: lottery.currency || 'TJS',
+                quantity: 1,
+                pickupCode: prize.pickup_code,
+                createdAt: prize.created_at,
+                status: prize.status,
+                logisticsStatus: prize.logistics_status,
+                orderDetailLink: `/prizes/${prize.id}`
+              });
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching prizes:', err);
+      }
+
+      // 3. 获取拼团中奖记录（group_buy_results）- 未提货的
+      try {
+        const { data: groupBuyResults, error: groupBuyResultsError } = await (supabase as any)
+          .from('group_buy_results')
           .select(`
             id, 
             product_id, 
             session_id, 
             created_at, 
             status,
+            logistics_status,
+            pickup_code,
             group_buy_products(id, title, description, image_url, images, price_per_person, group_size),
             group_buy_sessions(id, session_code, current_participants, expires_at)
           `)
           .eq('user_id', user.id)
-          .eq('status', 'COMPLETED')
+          .eq('status', 'WON')
+          .neq('logistics_status', 'PICKED_UP')
           .order('created_at', { ascending: false });
 
-        if (groupBuyError) {
-          console.error('Failed to fetch group buy orders:', groupBuyError);
-        } else if (groupBuyOrders && Array.isArray(groupBuyOrders)) {
-          groupBuyOrders.forEach((order: any) => {
-            const product = order.group_buy_products;
-            const session = order.group_buy_sessions;
+        if (groupBuyResultsError) {
+          console.error('Failed to fetch group buy results:', groupBuyResultsError);
+        } else if (groupBuyResults && Array.isArray(groupBuyResults)) {
+          groupBuyResults.forEach((result: any) => {
+            const product = result.group_buy_products;
+            const session = result.group_buy_sessions;
             
-            if (product && session) {
+            if (product) {
               // 处理多语言标题
               let title = '';
               if (typeof product.title === 'object') {
@@ -116,7 +222,7 @@ const PendingPickupPage: React.FC = () => {
               const image = product.images?.[0] || product.image_url || '';
               
               pendingItems.push({
-                id: order.id,
+                id: result.id,
                 type: 'groupbuy',
                 productId: product.id,
                 productTitle: title,
@@ -124,16 +230,18 @@ const PendingPickupPage: React.FC = () => {
                 price: product.price_per_person,
                 currency: 'TJS',
                 quantity: 1,
-                sessionCode: session.session_code,
-                createdAt: order.created_at,
-                status: 'PENDING',
-                orderDetailLink: `/groupbuy/${product.id}`
+                sessionCode: session?.session_code,
+                pickupCode: result.pickup_code,
+                createdAt: result.created_at,
+                status: result.status,
+                logisticsStatus: result.logistics_status,
+                orderDetailLink: `/groupbuy-results/${result.id}`
               });
             }
           });
         }
       } catch (groupBuyErr) {
-        console.error('Error fetching group buy orders:', groupBuyErr);
+        console.error('Error fetching group buy results:', groupBuyErr);
       }
 
       // 按创建时间倒序排列（新到旧）
@@ -153,6 +261,22 @@ const PendingPickupPage: React.FC = () => {
   const handleItemClick = (item: PendingPickupItem) => {
     if (item.orderDetailLink) {
       navigate(item.orderDetailLink);
+    }
+  };
+
+  // 获取类型显示文本
+  const getTypeText = (type: string): string => {
+    switch (type) {
+      case 'full_purchase':
+        return t('order.fullPurchase') || '全款购买';
+      case 'prize':
+        return t('order.prize') || '中奖商品';
+      case 'groupbuy':
+        return t('order.groupBuy') || '拼团中奖';
+      case 'lottery':
+        return t('order.lottery') || '积分商城';
+      default:
+        return '';
     }
   };
 
@@ -209,7 +333,7 @@ const PendingPickupPage: React.FC = () => {
           <div className="space-y-4">
             {items.map((item, index) => (
               <motion.button
-                key={item.id}
+                key={`${item.type}-${item.id}`}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
@@ -240,7 +364,7 @@ const PendingPickupPage: React.FC = () => {
                           {item.productTitle}
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
-                          {item.type === 'lottery' ? '积分商城' : '拼团'}
+                          {getTypeText(item.type)}
                           {item.participationCode && ` • 参与码: ${item.participationCode}`}
                           {item.sessionCode && ` • 会话码: ${item.sessionCode}`}
                         </p>
@@ -258,11 +382,17 @@ const PendingPickupPage: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* 状态标签 */}
+                    {/* 物流状态标签 */}
                     <div className="flex items-center gap-2 mt-3">
-                      <span className="px-2 py-1 bg-yellow-50 text-yellow-700 text-xs font-medium rounded-full">
-                        {t('profile.pendingPickupStatus') || '待提货'}
+                      <span className={`px-2 py-1 text-xs font-medium rounded-full flex items-center gap-1 ${getLogisticsStatusColor(item.logisticsStatus)}`}>
+                        <TruckIcon className="w-3 h-3" />
+                        {getLogisticsStatusText(item.logisticsStatus, t)}
                       </span>
+                      {item.pickupCode && item.logisticsStatus === 'READY_FOR_PICKUP' && (
+                        <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
+                          提货码: {item.pickupCode}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

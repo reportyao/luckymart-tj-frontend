@@ -150,6 +150,31 @@ const OrderDetailPage: React.FC = () => {
         bgColor: 'bg-red-100',
         icon: <ClockIcon className="w-5 h-5" />
       },
+      // 物流状态
+      'PENDING_SHIPMENT': { 
+        text: t('logistics.pendingShipment') || '待发货', 
+        color: 'text-gray-700', 
+        bgColor: 'bg-gray-100',
+        icon: <ClockIcon className="w-5 h-5" />
+      },
+      'IN_TRANSIT_CHINA': { 
+        text: t('logistics.inTransitChina') || '中国段运输中', 
+        color: 'text-blue-700', 
+        bgColor: 'bg-blue-100',
+        icon: <TruckIcon className="w-5 h-5" />
+      },
+      'IN_TRANSIT_TAJIKISTAN': { 
+        text: t('logistics.inTransitTajikistan') || '塔吉克斯坦段运输中', 
+        color: 'text-purple-700', 
+        bgColor: 'bg-purple-100',
+        icon: <TruckIcon className="w-5 h-5" />
+      },
+      'READY_FOR_PICKUP': { 
+        text: t('logistics.readyForPickup') || '已到达，待提货', 
+        color: 'text-green-700', 
+        bgColor: 'bg-green-100',
+        icon: <MapPinIcon className="w-5 h-5" />
+      },
     };
 
     return statusMap[status] || { 
@@ -208,7 +233,9 @@ const OrderDetailPage: React.FC = () => {
     );
   }
 
-  const statusInfo = getStatusInfo(order.pickup_status || order.status);
+  // 优先显示物流状态，其次是提货状态
+  const displayStatus = order.logistics_status || order.pickup_status || order.status;
+  const statusInfo = getStatusInfo(displayStatus);
   const productTitle = getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title || t('order.unknownProduct') || '未知商品';
   const productImage = order.lotteries?.image_url || order.metadata?.product_image;
   const remainingDays = getRemainingDays();
@@ -241,10 +268,21 @@ const OrderDetailPage: React.FC = () => {
             <div className={`p-2 rounded-full bg-white/50 ${statusInfo.color}`}>
               {statusInfo.icon}
             </div>
-            <div>
+            <div className="flex-1">
               <h2 className={`text-lg font-bold ${statusInfo.color}`}>{statusInfo.text}</h2>
-              {order.pickup_status === 'PENDING_PICKUP' && !isExpired() && (
+              {/* 显示物流状态描述 */}
+              {order.logistics_status && (
                 <p className="text-sm text-gray-600 mt-1">
+                  {order.logistics_status === 'PENDING_SHIPMENT' && (t('logistics.pendingShipmentDesc') || '您的订单正在等待发货，请耐心等待。')}
+                  {order.logistics_status === 'IN_TRANSIT_CHINA' && (t('logistics.inTransitChinaDesc') || '您的包裹正在中国境内运输，即将发往塔吉克斯坦。')}
+                  {order.logistics_status === 'IN_TRANSIT_TAJIKISTAN' && (t('logistics.inTransitTajikistanDesc') || '您的包裹已到达塔吉克斯坦，正在派送至自提点。')}
+                  {order.logistics_status === 'READY_FOR_PICKUP' && (t('logistics.readyForPickupDesc') || '您的包裹已到达自提点，请携带提货码前往提货。')}
+                  {order.logistics_status === 'PICKED_UP' && (t('logistics.pickedUpDesc') || '您已成功提货，感谢您的购买！')}
+                </p>
+              )}
+              {/* 显示剩余提货天数 */}
+              {order.logistics_status === 'READY_FOR_PICKUP' && !isExpired() && remainingDays > 0 && (
+                <p className="text-sm text-orange-600 mt-1 font-medium">
                   {t('order.remainingDays', { days: remainingDays }) || `剩余 ${remainingDays} 天提货`}
                 </p>
               )}

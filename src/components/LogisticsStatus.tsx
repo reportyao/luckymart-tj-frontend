@@ -13,7 +13,7 @@ import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/sol
 export type LogisticsStatusType = 
   | 'PENDING_SHIPMENT'      // 待发货
   | 'IN_TRANSIT_CHINA'      // 中国段运输中
-  | 'IN_TRANSIT_TAJIKISTAN' // 塔国段运输中
+  | 'IN_TRANSIT_TAJIKISTAN' // 塔吉克斯坦段运输中
   | 'READY_FOR_PICKUP'      // 待自提
   | 'PICKED_UP';            // 已提货
 
@@ -58,13 +58,13 @@ export const LogisticsStatus: React.FC<LogisticsStatusProps> = ({
     },
     {
       key: 'IN_TRANSIT_TAJIKISTAN',
-      label: t('logistics.inTransitTajikistan') || '塔国段运输中',
+      label: t('logistics.inTransitTajikistan') || '塔吉克斯坦段运输中',
       icon: <GlobeAltIcon className="w-5 h-5" />,
       activeIcon: <CheckCircleSolidIcon className="w-5 h-5" />,
     },
     {
       key: 'READY_FOR_PICKUP',
-      label: t('logistics.readyForPickup') || '待自提',
+      label: t('logistics.readyForPickup') || '已到达，待提货',
       icon: <MapPinIcon className="w-5 h-5" />,
       activeIcon: <CheckCircleSolidIcon className="w-5 h-5" />,
     },
@@ -93,6 +93,24 @@ export const LogisticsStatus: React.FC<LogisticsStatusProps> = ({
   const getLineColor = (index: number): string => {
     if (index < currentIndex) return 'bg-green-500';
     return 'bg-gray-200';
+  };
+
+  // 获取当前状态的描述文本
+  const getStatusDescription = (): string => {
+    switch (status) {
+      case 'PENDING_SHIPMENT':
+        return t('logistics.pendingShipmentDesc') || '您的订单正在等待发货，请耐心等待。';
+      case 'IN_TRANSIT_CHINA':
+        return t('logistics.inTransitChinaDesc') || '您的包裹正在中国境内运输，即将发往塔吉克斯坦。';
+      case 'IN_TRANSIT_TAJIKISTAN':
+        return t('logistics.inTransitTajikistanDesc') || '您的包裹已到达塔吉克斯坦，正在派送至自提点。';
+      case 'READY_FOR_PICKUP':
+        return t('logistics.readyForPickupDesc') || '您的包裹已到达自提点，请携带提货码前往提货。';
+      case 'PICKED_UP':
+        return t('logistics.pickedUpDesc') || '您已成功提货，感谢您的购买！';
+      default:
+        return t('logistics.pendingShipmentDesc') || '您的订单正在等待发货，请耐心等待。';
+    }
   };
 
   return (
@@ -157,7 +175,7 @@ export const LogisticsStatus: React.FC<LogisticsStatusProps> = ({
         {tajikistanTrackingNo && (
           <div className="flex items-center justify-between py-2 border-b border-gray-100">
             <span className="text-sm text-gray-500">
-              {t('logistics.tajikistanTrackingNo') || '塔国段物流单号'}
+              {t('logistics.tajikistanTrackingNo') || '塔吉克斯坦段物流单号'}
             </span>
             <span className="font-medium text-gray-900 text-sm">{tajikistanTrackingNo}</span>
           </div>
@@ -185,11 +203,7 @@ export const LogisticsStatus: React.FC<LogisticsStatusProps> = ({
       {/* 状态说明 */}
       <div className="mt-4 p-3 bg-gray-50 rounded-lg">
         <p className="text-sm text-gray-600">
-          {status === 'PENDING_SHIPMENT' && (t('logistics.pendingShipmentDesc') || '您的订单正在等待发货，请耐心等待。')}
-          {status === 'IN_TRANSIT_CHINA' && (t('logistics.inTransitChinaDesc') || '您的包裹正在中国境内运输，即将发往塔吉克斯坦。')}
-          {status === 'IN_TRANSIT_TAJIKISTAN' && (t('logistics.inTransitTajikistanDesc') || '您的包裹已到达塔吉克斯坦，正在派送至自提点。')}
-          {status === 'READY_FOR_PICKUP' && (t('logistics.readyForPickupDesc') || '您的包裹已到达自提点，请携带提货码前往提货。')}
-          {status === 'PICKED_UP' && (t('logistics.pickedUpDesc') || '您已成功提货，感谢您的购买！')}
+          {getStatusDescription()}
         </p>
       </div>
     </div>
