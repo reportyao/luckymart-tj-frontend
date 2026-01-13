@@ -80,7 +80,8 @@ const PendingPickupPage: React.FC = () => {
       }
 
       // 2. 获取拼团（GroupBuy）的待提货商品
-      // 从group_buy_orders表获取用户参与的拼团订单
+      // TODO: 暂时注释掉拼团查询，等待数据库类型更新
+      /*
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
         .from('group_buy_orders')
         .select(`
@@ -93,7 +94,7 @@ const PendingPickupPage: React.FC = () => {
           group_buy_sessions(id, session_code, current_participants, expires_at)
         `)
         .eq('user_id', user.id)
-        .eq('status', 'COMPLETED') // 只获取已完成的拼团订单
+        .eq('status', 'COMPLETED')
         .order('created_at', { ascending: false });
 
       if (groupBuyError) {
@@ -104,7 +105,6 @@ const PendingPickupPage: React.FC = () => {
           const session = order.group_buy_sessions;
           
           if (product && session) {
-            // 处理多语言标题
             let title = '';
             if (typeof product.title === 'object') {
               title = product.title[i18n.language] || product.title.zh || product.title.en || '';
@@ -131,6 +131,7 @@ const PendingPickupPage: React.FC = () => {
           }
         });
       }
+      */
 
       // 按创建时间倒序排列（新到旧）
       pendingItems.sort((a, b) => 
