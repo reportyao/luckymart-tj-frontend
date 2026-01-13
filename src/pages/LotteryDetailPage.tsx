@@ -25,6 +25,7 @@ import { useState, useEffect, useCallback } from 'react';
 type Lottery = Tables<'lotteries'>;
 type Showoff = Tables<'showoffs'> & {
   user: Tables<'profiles'>;
+  image_urls?: string[];
 };
 
 // 比价清单项类型

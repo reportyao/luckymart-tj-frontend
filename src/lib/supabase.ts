@@ -46,6 +46,7 @@ export type ShowoffWithDetails = Showoff & {
   likes_count: number;
   lottery_title?: string;
   reward_coins?: number;
+  image_urls?: string[]; // 晒单图片数组
 };
 
 
