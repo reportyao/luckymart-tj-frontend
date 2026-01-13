@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
 import { Tables, Enums } from '../types/supabase';
-import { ArrowLeftIcon, ClockIcon, UserGroupIcon, StarIcon, XCircleIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import { ArrowLeftIcon, ClockIcon, UserGroupIcon, StarIcon, XCircleIcon, ChevronLeftIcon, ChevronRightIcon, TicketIcon } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { Button } from '../components/ui/button';
 import { Separator } from '../components/ui/separator';
@@ -76,7 +76,7 @@ const LotteryDetailPage: React.FC = () => {
 
       if (error) throw error;
       if (data) {
-        setMyTickets(data.map(entry => entry.participation_code).filter(Boolean));
+        setMyTickets(data.map((entry: any) => entry.participation_code).filter(Boolean));
       }
     } catch (error) {
       console.error('Failed to fetch my tickets:', error);
