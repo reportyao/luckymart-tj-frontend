@@ -224,21 +224,21 @@ const NotificationPage: React.FC = () => {
         // 单独查询中奖记录
         const { data: prizesData } = await supabase
           .from('prizes')
-          .select('id, status, order_id')
+          .select('id, status, lottery_id')
           .eq('user_id', user.id);
 
         if (!ordersError && ordersData) {
-          // 创建中奖记录映射
+          // 创建中奖记录映射 (通过lottery_id)
           const prizeMap = new Map();
           if (prizesData) {
             prizesData.forEach(prize => {
-              prizeMap.set(prize.order_id, prize);
+              prizeMap.set(prize.lottery_id, prize);
             });
           }
           
           ordersData.forEach((order: any) => {
             const lotteryTitle = order.lottery?.title_i18n?.[i18n.language] || order.lottery?.title_i18n?.zh || '积分商品';
-            const prize = prizeMap.get(order.id);
+            const prize = prizeMap.get(order.lottery_id);
             
             // 购买记录
             allNotifications.push({
