@@ -14,18 +14,22 @@ import {
   Gift,
   MapPin,
   Ticket,
+  AlertTriangle,
+  RefreshCw,
+  Coins,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 
 interface GroupBuyResult {
-  id: string;
+  id?: string;
   session_id: string;
-  winner_id: string;
-  winner_username: string | null;
-  created_at: string;
-  timestamp_sum: number;
-  winning_index: number;
+  status: string; // 'SUCCESS', 'TIMEOUT', 'ACTIVE'
+  winner_id?: string;
+  winner_username?: string | null;
+  created_at?: string;
+  timestamp_sum?: number;
+  winning_index?: number;
   pickup_status?: string;
   pickup_code?: string;
   pickup_point_id?: string;
@@ -39,26 +43,41 @@ interface GroupBuyResult {
     address_i18n: { zh?: string; ru?: string; tg?: string };
     contact_phone?: string;
   };
-  session: {
+  session?: {
     id: string;
     session_code: string;
     product_id: string;
     current_participants: number;
     max_participants: number;
+    status: string;
+    expires_at: string;
   };
-  product: {
+  product?: {
     id: string;
     title: { zh: string; ru: string; tg: string };
     image_url: string;
     original_price: number;
     price_per_person: number;
   };
-  participants: Array<{
+  participants?: Array<{
     user_id: string;
     username: string;
+    avatar_url?: string;
     order_number: string;
+    order_timestamp?: number;
+    status?: string;
     created_at: string;
   }>;
+  orders?: Array<{
+    id: string;
+    user_id: string;
+    amount: number;
+    status: string;
+    refund_amount?: number;
+    refund_lucky_coins?: number;
+    refunded_at?: string;
+  }>;
+  message?: string;
 }
 
 interface PickupPoint {
@@ -79,6 +98,8 @@ export default function GroupBuyResultPage() {
   const [result, setResult] = useState<GroupBuyResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [isWinner, setIsWinner] = useState(false);
+  const [isParticipant, setIsParticipant] = useState(false);
+  const [userOrder, setUserOrder] = useState<any>(null);
   const [showClaimModal, setShowClaimModal] = useState(false);
   const [pickupPoints, setPickupPoints] = useState<PickupPoint[]>([]);
   const [selectedPointId, setSelectedPointId] = useState<string>('');
@@ -91,15 +112,33 @@ export default function GroupBuyResultPage() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (result && user && result.winner_id === user.id) {
-      setIsWinner(true);
-      // Trigger confetti animation only if not already claimed
-      if (!result.pickup_code) {
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { y: 0.6 },
-        });
+    if (result && user) {
+      // 检查当前用户是否是中奖者
+      if (result.winner_id === user.id || result.winner_id === user.telegram_id) {
+        setIsWinner(true);
+        // Trigger confetti animation only if not already claimed
+        if (!result.pickup_code) {
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+          });
+        }
+      }
+      
+      // 检查当前用户是否是参与者
+      const participants = result.participants || [];
+      const orders = result.orders || [];
+      const userParticipant = participants.find(p => 
+        p.user_id === user.id || p.user_id === user.telegram_id
+      );
+      const userOrderData = orders.find(o => 
+        o.user_id === user.id || o.user_id === user.telegram_id
+      );
+      
+      if (userParticipant || userOrderData) {
+        setIsParticipant(true);
+        setUserOrder(userOrderData);
       }
     }
   }, [result, user]);
@@ -219,6 +258,175 @@ export default function GroupBuyResultPage() {
     );
   }
 
+  // 【新增】超时未开奖的情况
+  if (result.status === 'TIMEOUT') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-6 rounded-b-3xl shadow-lg">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-white hover:text-gray-200 mb-4"
+          >
+            <ChevronLeft className="w-6 h-6" />
+            {t('common.back')}
+          </button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Clock className="w-7 h-7" />
+            {t('groupBuy.sessionTimeout')}
+          </h1>
+        </div>
+
+        {/* Timeout Notice */}
+        <div className="p-4">
+          <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
+            <AlertTriangle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {t('groupBuy.timeoutTitle')}
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {t('groupBuy.timeoutDescription')}
+            </p>
+            
+            {/* 退款信息 */}
+            <div className="bg-green-50 rounded-xl p-4 mt-4">
+              <div className="flex items-center justify-center gap-2 text-green-700 mb-2">
+                <RefreshCw className="w-5 h-5" />
+                <span className="font-bold">{t('groupBuy.refundNotice')}</span>
+              </div>
+              <p className="text-green-600 text-sm">
+                {t('groupBuy.timeoutRefundDescription')}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Product Info */}
+        {result.product && (
+          <div className="p-4">
+            <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+              <img
+                src={result.product.image_url}
+                alt={getLocalizedText(result.product.title)}
+                className="w-full h-48 object-cover opacity-75"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
+                }}
+              />
+              <div className="p-4">
+                <h3 className="font-bold text-lg text-gray-800 mb-2">
+                  {getLocalizedText(result.product.title)}
+                </h3>
+                <div className="flex items-center justify-between text-sm text-gray-600">
+                  <span>{t('groupBuy.pricePerPerson')}</span>
+                  <span className="text-gray-500 font-bold">
+                    ₽{result.product.price_per_person}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Session Info */}
+        {result.session && (
+          <div className="p-4">
+            <div className="bg-white rounded-2xl shadow-md p-6">
+              <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-gray-500" />
+                {t('groupBuy.sessionInfo')}
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-600">{t('groupBuy.sessionCode')}:</span>
+                  <span className="font-mono text-gray-800">{result.session.session_code}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">{t('groupBuy.participants')}:</span>
+                  <span className="text-gray-800">
+                    {result.session.current_participants} / {result.session.max_participants}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">{t('groupBuy.expiredAt')}:</span>
+                  <span className="text-gray-800">{formatDateTime(result.session.expires_at)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="p-4 space-y-3">
+          <button
+            onClick={() => navigate('/group-buy')}
+            className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
+          >
+            {t('groupBuy.browseProducts')}
+          </button>
+          <button
+            onClick={() => navigate('/wallet')}
+            className="w-full bg-white text-purple-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
+          >
+            {t('wallet.checkBalance')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 【新增】会话仍在进行中
+  if (result.status === 'ACTIVE') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 pb-20">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-500 text-white p-6 rounded-b-3xl shadow-lg">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-white hover:text-blue-100 mb-4"
+          >
+            <ChevronLeft className="w-6 h-6" />
+            {t('common.back')}
+          </button>
+          <h1 className="text-2xl font-bold flex items-center gap-2">
+            <Clock className="w-7 h-7" />
+            {t('groupBuy.sessionInProgress')}
+          </h1>
+        </div>
+
+        {/* In Progress Notice */}
+        <div className="p-4">
+          <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
+            <Clock className="w-16 h-16 text-blue-500 mx-auto mb-4 animate-pulse" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {t('groupBuy.waitingForParticipants')}
+            </h2>
+            <p className="text-gray-600">
+              {t('groupBuy.waitingDescription')}
+            </p>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="p-4 space-y-3">
+          <button
+            onClick={() => navigate(`/group-buy/session/${sessionId}`)}
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
+          >
+            {t('groupBuy.viewSession')}
+          </button>
+          <button
+            onClick={() => navigate('/group-buy')}
+            className="w-full bg-white text-purple-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
+          >
+            {t('groupBuy.browseProducts')}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 已开奖的情况（SUCCESS）
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
       {/* Header */}
@@ -275,13 +483,46 @@ export default function GroupBuyResultPage() {
               </div>
             )}
           </div>
+        ) : isParticipant ? (
+          // 【新增】未中奖参与者的提示
+          <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
+            <Coins className="w-16 h-16 text-purple-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">
+              {t('groupBuy.notWinnerTitle')}
+            </h2>
+            <p className="text-gray-600 mb-4">{t('groupBuy.betterLuckNextTime')}</p>
+            
+            {/* 积分退回提示 */}
+            <div className="bg-purple-50 rounded-xl p-4 mt-4">
+              <div className="flex items-center justify-center gap-2 text-purple-700 mb-2">
+                <Coins className="w-5 h-5" />
+                <span className="font-bold">{t('groupBuy.pointsRefundNotice')}</span>
+              </div>
+              <p className="text-purple-600 text-sm">
+                {t('groupBuy.pointsRefundDescription')}
+              </p>
+              {userOrder?.refund_lucky_coins && (
+                <p className="text-purple-700 font-bold mt-2">
+                  +{userOrder.refund_lucky_coins} {t('wallet.luckyCoins')}
+                </p>
+              )}
+            </div>
+            
+            {/* 引导去积分商城 */}
+            <button
+              onClick={() => navigate('/lottery')}
+              className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold shadow-lg hover:shadow-xl transition-shadow"
+            >
+              {t('groupBuy.goToPointsMall')}
+            </button>
+          </div>
         ) : (
           <div className="bg-white rounded-3xl p-8 text-center shadow-lg">
             <Trophy className="w-16 h-16 text-purple-500 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
               {t('groupBuy.drawCompleted')}
             </h2>
-            <p className="text-gray-600">{t('groupBuy.betterLuckNextTime')}</p>
+            <p className="text-gray-600">{t('groupBuy.viewResultDetails')}</p>
           </div>
         )}
       </div>
@@ -315,29 +556,31 @@ export default function GroupBuyResultPage() {
       )}
 
       {/* Product Info */}
-      <div className="p-4">
-        <div className="bg-white rounded-2xl shadow-md overflow-hidden">
-          <img
-            src={result.product.image_url}
-            alt={getLocalizedText(result.product.title)}
-            className="w-full h-48 object-cover"
-            onError={(e) => {
-              (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
-            }}
-          />
-          <div className="p-4">
-            <h3 className="font-bold text-lg text-gray-800 mb-2">
-              {getLocalizedText(result.product.title)}
-            </h3>
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>{t('groupBuy.pricePerPerson')}</span>
-              <span className="text-purple-600 font-bold">
-                ₽{result.product.price_per_person}
-              </span>
+      {result.product && (
+        <div className="p-4">
+          <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+            <img
+              src={result.product.image_url}
+              alt={getLocalizedText(result.product.title)}
+              className="w-full h-48 object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
+              }}
+            />
+            <div className="p-4">
+              <h3 className="font-bold text-lg text-gray-800 mb-2">
+                {getLocalizedText(result.product.title)}
+              </h3>
+              <div className="flex items-center justify-between text-sm text-gray-600">
+                <span>{t('groupBuy.pricePerPerson')}</span>
+                <span className="text-purple-600 font-bold">
+                  ₽{result.product.price_per_person}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Winner Info */}
       <div className="p-4">
@@ -351,70 +594,76 @@ export default function GroupBuyResultPage() {
               <Trophy className="w-6 h-6 text-white" />
             </div>
             <div>
-              <p className="font-bold text-gray-800">{result.winner_username}</p>
-              <p className="text-sm text-gray-600">
-                {t('groupBuy.drawTime')}: {formatDateTime(result.created_at)}
-              </p>
+              <p className="font-bold text-gray-800">{result.winner_username || 'Winner'}</p>
+              {result.created_at && (
+                <p className="text-sm text-gray-600">
+                  {t('groupBuy.drawTime')}: {formatDateTime(result.created_at)}
+                </p>
+              )}
             </div>
           </div>
         </div>
       </div>
 
       {/* All Participants */}
-      <div className="p-4">
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
-            <Users className="w-5 h-5 text-purple-500" />
-            {t('groupBuy.allParticipants')}
-          </h3>
-          <div className="space-y-3">
-            {result.participants.map((participant, index) => (
-              <div
-                key={participant.order_number}
-                className={`flex items-center gap-4 p-3 rounded-xl ${
-                  participant.user_id === result.winner_id
-                    ? 'bg-yellow-50 border-2 border-yellow-400'
-                    : 'bg-gray-50'
-                }`}
-              >
-                <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                  <span className="font-bold text-purple-600">{index + 1}</span>
+      {result.participants && result.participants.length > 0 && (
+        <div className="p-4">
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h3 className="font-bold text-lg text-gray-800 mb-4 flex items-center gap-2">
+              <Users className="w-5 h-5 text-purple-500" />
+              {t('groupBuy.allParticipants')}
+            </h3>
+            <div className="space-y-3">
+              {result.participants.map((participant, index) => (
+                <div
+                  key={participant.order_number || index}
+                  className={`flex items-center gap-4 p-3 rounded-xl ${
+                    participant.user_id === result.winner_id
+                      ? 'bg-yellow-50 border-2 border-yellow-400'
+                      : 'bg-gray-50'
+                  }`}
+                >
+                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-purple-600">{index + 1}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-gray-800">{participant.username}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatDateTime(participant.created_at)}
+                    </p>
+                  </div>
+                  {participant.user_id === result.winner_id && (
+                    <CheckCircle className="w-6 h-6 text-yellow-500" />
+                  )}
                 </div>
-                <div className="flex-1">
-                  <p className="font-medium text-gray-800">{participant.username}</p>
-                  <p className="text-xs text-gray-500">
-                    {formatDateTime(participant.created_at)}
-                  </p>
-                </div>
-                {participant.user_id === result.winner_id && (
-                  <CheckCircle className="w-6 h-6 text-yellow-500" />
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Verification Data */}
-      <div className="p-4">
-        <div className="bg-white rounded-2xl shadow-md p-6">
-          <h3 className="font-bold text-lg text-gray-800 mb-4">
-            {t('groupBuy.verificationTitle')}
-          </h3>
-          <div className="space-y-2 text-sm">
-            <div className="flex justify-between">
-              <span className="text-gray-600">{t('groupBuy.timestampSum')}:</span>
-              <span className="font-mono text-gray-800">{result.timestamp_sum}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-600">{t('groupBuy.verificationFormula')}:</span>
-              <span className="font-mono text-gray-800">
-                {result.timestamp_sum} % {result.session.max_participants} = {result.winning_index}
-              </span>
+      {result.timestamp_sum && result.session && (
+        <div className="p-4">
+          <div className="bg-white rounded-2xl shadow-md p-6">
+            <h3 className="font-bold text-lg text-gray-800 mb-4">
+              {t('groupBuy.verificationTitle')}
+            </h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between">
+                <span className="text-gray-600">{t('groupBuy.timestampSum')}:</span>
+                <span className="font-mono text-gray-800">{result.timestamp_sum}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600">{t('groupBuy.verificationFormula')}:</span>
+                <span className="font-mono text-gray-800">
+                  {result.timestamp_sum} % {result.session.max_participants} = {result.winning_index}
+                </span>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Action Buttons */}
       <div className="p-4 space-y-3">
@@ -456,32 +705,40 @@ export default function GroupBuyResultPage() {
             </div>
 
             <div className="p-6 space-y-4">
-              <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
-                <div className="flex items-center space-x-3 mb-2">
-                  <Gift className="w-6 h-6 text-purple-600" />
-                  <h4 className="font-bold text-gray-800">
-                    {getLocalizedText(result.product.title)}
-                  </h4>
+              {result.product && (
+                <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
+                  <div className="flex items-center space-x-3 mb-2">
+                    <Gift className="w-6 h-6 text-purple-600" />
+                    <h4 className="font-bold text-gray-800">
+                      {getLocalizedText(result.product.title)}
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
                 </div>
-                <p className="text-sm text-gray-600">{t('orders.claimDescription')}</p>
-              </div>
+              )}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('orders.selectPickupPoint')} *
                 </label>
-                <select
-                  value={selectedPointId}
-                  onChange={(e) => setSelectedPointId(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                >
-                  {pickupPoints.map((point) => (
-                    <option key={point.id} value={point.id}>
-                      {getLocalizedText(point.name_i18n) || point.name} - {getLocalizedText(point.address_i18n) || point.address}
-                    </option>
-                  ))}
-                </select>
+                {pickupPoints.length > 0 ? (
+                  <select
+                    value={selectedPointId}
+                    onChange={(e) => setSelectedPointId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  >
+                    {pickupPoints.map((point) => (
+                      <option key={point.id} value={point.id}>
+                        {getLocalizedText(point.name_i18n) || point.name} - {getLocalizedText(point.address_i18n) || point.address}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="text-center py-4 text-gray-500">
+                    {t('orders.noPickupPoints')}
+                  </div>
+                )}
               </div>
 
               <div className="bg-blue-50 rounded-xl p-4 text-sm text-blue-800">
@@ -503,7 +760,7 @@ export default function GroupBuyResultPage() {
                 </button>
                 <button
                   onClick={handleClaimPrize}
-                  disabled={isSubmitting || !selectedPointId}
+                  disabled={isSubmitting || !selectedPointId || pickupPoints.length === 0}
                   className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? t('common.submitting') : t('common.confirm')}

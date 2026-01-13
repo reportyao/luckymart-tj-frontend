@@ -312,7 +312,8 @@
       "failed": "失败"
     },
     "noTransactions": "暂无交易记录",
-    "balanceUpdated": "余额已更新"
+    "balanceUpdated": "余额已更新",
+    "checkBalance": "查看钱包余额"
   },
   "order": {
     "myOrders": "我的订单",
@@ -971,6 +972,22 @@
     "drawResult": "开奖结果",
     "drawCompleted": "开奖完成",
     "betterLuckNextTime": "下次一定有好运！",
+    "sessionTimeout": "拼团已过期",
+    "timeoutTitle": "拼团超时未成团",
+    "timeoutDescription": "很抱歉，该拼团在24小时内未能凑满人数，已自动取消。",
+    "refundNotice": "退款通知",
+    "timeoutRefundDescription": "您支付的金额已原路退回到您的账户余额，可在钱包中查看。",
+    "sessionInProgress": "拼团进行中",
+    "waitingForParticipants": "等待更多参与者",
+    "waitingDescription": "该拼团正在进行中，请耐心等待其他用户加入。",
+    "viewSession": "查看拼团详情",
+    "sessionInfo": "拼团信息",
+    "expiredAt": "过期时间",
+    "notWinnerTitle": "很遗憾，未中奖",
+    "pointsRefundNotice": "积分补偿",
+    "pointsRefundDescription": "您支付的金额已转换为积分退还到您的账户，可在积分商城继续购物。",
+    "goToPointsMall": "前往积分商城",
+    "viewResultDetails": "查看开奖详情",
     "subtitle": "多人拼团，一人中奖",
     "people": "人",
     "activeGroups": "进行中的拼团",

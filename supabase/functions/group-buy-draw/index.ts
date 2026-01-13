@@ -104,6 +104,7 @@ Deno.serve(async (req) => {
     const winnerUUID = await resolveUserIdToUUID(supabase, winnerOrder.user_id);
     if (!winnerUUID) {
       console.error('Failed to resolve winner UUID for user_id:', winnerOrder.user_id);
+      return createResponse({ success: false, error: 'Failed to resolve winner user' }, 500);
     }
 
     // 5. 更新拼团会话状态（使用UUID）
@@ -113,8 +114,9 @@ Deno.serve(async (req) => {
         status: 'SUCCESS',
         completed_at: new Date().toISOString(),
         drawn_at: new Date().toISOString(),
-        winner_id: winnerUUID || winnerOrder.user_id, // 优先使用UUID
+        winner_id: winnerUUID,
         winning_timestamp_sum: timestampSum.toString(),
+        updated_at: new Date().toISOString(),
       })
       .eq('id', session_id);
 
@@ -126,28 +128,35 @@ Deno.serve(async (req) => {
     // 6. 更新中奖订单状态
     await supabase
       .from('group_buy_orders')
-      .update({ status: 'WON' })
+      .update({ 
+        status: 'WON',
+        updated_at: new Date().toISOString()
+      })
       .eq('id', winnerOrder.id);
 
     // 7. 创建开奖结果记录
     const claimExpiresAt = new Date();
     claimExpiresAt.setDate(claimExpiresAt.getDate() + 30);
     
+    // 【关键】使用正确的user_id字段（group_buy_results表需要user_id字段）
     const { data: result, error: resultError } = await supabase
       .from('group_buy_results')
       .insert({
         session_id: session_id,
         product_id: session.product_id,
-        winner_id: winnerUUID || winnerOrder.user_id, // 优先使用UUID
+        user_id: winnerUUID, // 添加user_id字段
+        winner_id: winnerUUID,
         winner_order_id: winnerOrder.id,
         total_participants: totalParticipants,
         timestamp_sum: timestampSum.toString(),
         winning_index: winningIndex,
         pickup_status: 'PENDING_CLAIM',
+        status: 'PENDING', // 添加status字段
         expires_at: claimExpiresAt.toISOString(),
         algorithm_data: {
           orders: orders.map((o) => ({
             user_id: o.user_id,
+            order_number: o.order_number,
             timestamp: o.order_timestamp || new Date(o.created_at).getTime(),
           })),
           calculation: {
@@ -157,16 +166,25 @@ Deno.serve(async (req) => {
             formula: 'winning_index = timestamp_sum % total_participants',
           },
         },
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (resultError) {
       console.error('Failed to create result:', resultError);
-      // 不回滚，继续处理退款
+      // 继续处理，但记录错误
+    } else {
+      console.log('Created group_buy_result:', result?.id);
     }
 
-    // 8. Refund non-winners (convert to Points/Lucky Coins)
+    // 8. 【关键逻辑】处理中奖者 - 中奖者的余额已经在参与时扣除，现在执行发货流程
+    // 中奖者不需要额外扣款，因为参与时已经扣除了TJS余额
+    // 只需要更新订单状态为等待发货
+    console.log(`Winner ${winnerUUID} - balance already deducted during participation, ready for delivery`);
+
+    // 9. 【关键逻辑】处理未中奖者 - 退回到积分（LUCKY_COIN）
     for (const order of orders) {
       if (order.id !== winnerOrder.id) {
         // 解析用户UUID
@@ -175,19 +193,42 @@ Deno.serve(async (req) => {
         if (userUUID) {
           const refundAmount = Number(order.amount);
           
-          // Get user's LUCKY_COIN wallet
-          const { data: luckyWallet } = await supabase
+          // 获取用户的LUCKY_COIN钱包
+          let { data: luckyWallet } = await supabase
             .from('wallets')
             .select('*')
             .eq('user_id', userUUID)
             .eq('type', 'LUCKY_COIN')
             .single();
 
+          // 如果LUCKY_COIN钱包不存在，创建一个
+          if (!luckyWallet) {
+            const { data: newWallet, error: createWalletError } = await supabase
+              .from('wallets')
+              .insert({
+                user_id: userUUID,
+                type: 'LUCKY_COIN',
+                currency: 'LUCKY_COIN',
+                balance: 0,
+                version: 1,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .select()
+              .single();
+
+            if (createWalletError) {
+              console.error(`Failed to create LUCKY_COIN wallet for user ${userUUID}:`, createWalletError);
+              continue;
+            }
+            luckyWallet = newWallet;
+          }
+
           if (luckyWallet) {
-            // Update LUCKY_COIN wallet balance
+            // 更新LUCKY_COIN钱包余额
             const newBalance = Number(luckyWallet.balance) + refundAmount;
             
-            await supabase
+            const { error: updateWalletError } = await supabase
               .from('wallets')
               .update({ 
                 balance: newBalance,
@@ -197,7 +238,12 @@ Deno.serve(async (req) => {
               .eq('id', luckyWallet.id)
               .eq('version', luckyWallet.version);
 
-            // Create wallet transaction record
+            if (updateWalletError) {
+              console.error(`Failed to update LUCKY_COIN wallet for user ${userUUID}:`, updateWalletError);
+              continue;
+            }
+
+            // 创建钱包交易记录
             const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             await supabase.from('wallet_transactions').insert({
               id: transactionId,
@@ -207,24 +253,27 @@ Deno.serve(async (req) => {
               balance_before: Number(luckyWallet.balance),
               balance_after: newBalance,
               status: 'COMPLETED',
-              description: `拼团未中奖退积分`,
+              description: `拼团未中奖，余额转为积分`,
               reference_id: order.id,
               processed_at: new Date().toISOString(),
               created_at: new Date().toISOString(),
             });
+
+            console.log(`Refunded ${refundAmount} to LUCKY_COIN for user ${userUUID}`);
           }
 
-          // Update order refund info
+          // 更新订单退款信息
           await supabase
             .from('group_buy_orders')
             .update({
               status: 'REFUNDED',
               refund_lucky_coins: refundAmount,
               refunded_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             })
             .eq('id', order.id);
 
-          // Send Telegram notification (non-winner)
+          // 发送Telegram通知（未中奖）
           try {
             const { data: product } = await supabase
               .from('group_buy_products')
@@ -249,6 +298,7 @@ Deno.serve(async (req) => {
                   session_code: session.session_code,
                   refund_amount: refundAmount,
                   lucky_coins_balance: Number(updatedWallet?.balance || 0),
+                  refund_type: 'points', // 标识退回到积分
                 },
               },
             });
@@ -259,49 +309,53 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 9. 发送中奖通知
-    if (winnerUUID) {
-      try {
-        const { data: product } = await supabase
-          .from('group_buy_products')
-          .select('name, image_url')
-          .eq('id', session.product_id)
-          .single();
+    // 10. 发送中奖通知
+    try {
+      const { data: product } = await supabase
+        .from('group_buy_products')
+        .select('name, image_url')
+        .eq('id', session.product_id)
+        .single();
 
-        await supabase.functions.invoke('send-telegram-notification', {
-          body: {
-            user_id: winnerUUID,
-            type: 'group_buy_win',
-            data: {
-              product_name: product?.name || 'Unknown Product',
-              product_image: product?.image_url || '',
-              session_code: session.session_code,
-              won_at: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' }),
-            },
+      await supabase.functions.invoke('send-telegram-notification', {
+        body: {
+          user_id: winnerUUID,
+          type: 'group_buy_win',
+          data: {
+            product_name: product?.name || 'Unknown Product',
+            product_image: product?.image_url || '',
+            session_code: session.session_code,
+            won_at: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' }),
+            result_id: result?.id,
           },
-        });
-      } catch (error) {
-        console.error('Failed to send win notification:', error);
-      }
+        },
+      });
+    } catch (error) {
+      console.error('Failed to send win notification:', error);
     }
 
-    // 10. Update product sold quantity
-    const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
-      product_id: session.product_id,
-      amount: 1
-    });
-    
-    if (incrementError) {
-      console.error('Failed to increment sold_quantity:', incrementError);
+    // 11. Update product sold quantity
+    try {
+      const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
+        product_id: session.product_id,
+        amount: 1
+      });
+      
+      if (incrementError) {
+        console.error('Failed to increment sold_quantity:', incrementError);
+      }
+    } catch (error) {
+      console.error('Failed to call increment_sold_quantity:', error);
     }
 
     return createResponse({
       success: true,
       data: {
-        winner_id: winnerUUID || winnerOrder.user_id,
+        winner_id: winnerUUID,
         winning_index: winningIndex,
         total_participants: totalParticipants,
         timestamp_sum: timestampSum.toString(),
+        result_id: result?.id,
         result,
       },
     });

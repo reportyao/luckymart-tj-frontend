@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-// 使用环境变量获取Supabase配置（移除硬编码fallback以避免连接到错误的数据库）
+// 使用环境变量获取Supabase配置
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -21,6 +21,30 @@ function createResponse(data: any, status: number = 200) {
     status,
     headers: { 'Content-Type': 'application/json', ...corsHeaders },
   });
+}
+
+// 辅助函数：将user_id（可能是telegram_id或UUID）转换为UUID
+async function resolveUserIdToUUID(supabase: any, userId: string): Promise<string | null> {
+  // 检查是否是UUID格式
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  if (uuidRegex.test(userId)) {
+    // 已经是UUID，验证用户存在
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    return user?.id || null;
+  } else {
+    // 是telegram_id，查找对应的UUID
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('telegram_id', userId)
+      .single();
+    return user?.id || null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -48,6 +72,7 @@ Deno.serve(async (req) => {
     }
 
     let processedCount = 0;
+    const refundResults: any[] = [];
 
     // 2. 处理每个超时的会话
     for (const session of timeoutSessions) {
@@ -55,7 +80,10 @@ Deno.serve(async (req) => {
         // 更新会话状态为TIMEOUT
         await supabase
           .from('group_buy_sessions')
-          .update({ status: 'TIMEOUT' })
+          .update({ 
+            status: 'TIMEOUT',
+            updated_at: new Date().toISOString()
+          })
           .eq('id', session.id);
 
         // 获取该会话的所有订单
@@ -69,41 +97,30 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        // Refund all participants (return to wallet balance)
+        // 【关键修复】超时退款：退回到TJS余额钱包（原路退回）
         for (const order of orders) {
-          // 先获取用户信息（同时支持 id 和 telegram_id）
-          let userId = order.user_id;
-          const { data: userById } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', order.user_id)
-            .single();
+          // 解析用户UUID
+          const userUUID = await resolveUserIdToUUID(supabase, order.user_id);
           
-          if (!userById) {
-            const { data: userByTelegramId } = await supabase
-              .from('users')
-              .select('id')
-              .eq('telegram_id', order.user_id)
-              .single();
-            if (userByTelegramId) {
-              userId = userByTelegramId.id;
-            }
+          if (!userUUID) {
+            console.error(`Failed to resolve user UUID for user_id: ${order.user_id}`);
+            continue;
           }
 
-          // Get user's wallet - 使用 type='TJS'
+          // 【修复】获取用户的TJS钱包（使用正确的type='TJS'）
           const { data: wallet } = await supabase
             .from('wallets')
             .select('*')
-            .eq('user_id', userId)
-            .eq('type', 'BALANCE')
+            .eq('user_id', userUUID)
+            .eq('type', 'TJS')
             .single();
 
           if (wallet) {
             const refundAmount = Number(order.amount);
             const newBalance = Number(wallet.balance) + refundAmount;
 
-            // Update wallet balance
-            await supabase
+            // 更新钱包余额
+            const { error: updateError } = await supabase
               .from('wallets')
               .update({ 
                 balance: newBalance,
@@ -113,7 +130,12 @@ Deno.serve(async (req) => {
               .eq('id', wallet.id)
               .eq('version', wallet.version);
 
-            // Create wallet transaction record
+            if (updateError) {
+              console.error(`Failed to update wallet for user ${userUUID}:`, updateError);
+              continue;
+            }
+
+            // 创建钱包交易记录
             const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
             await supabase.from('wallet_transactions').insert({
               id: transactionId,
@@ -123,53 +145,64 @@ Deno.serve(async (req) => {
               balance_before: Number(wallet.balance),
               balance_after: newBalance,
               status: 'COMPLETED',
-              description: `拼团超时退款 - ${session.session_code}`,
+              description: `拼团超时退款（原路退回余额）- ${session.session_code}`,
               reference_id: order.id,
               processed_at: new Date().toISOString(),
               created_at: new Date().toISOString(),
             });
 
-            // Update order status
+            // 更新订单状态
             await supabase
               .from('group_buy_orders')
               .update({
-                status: 'REFUNDED',
+                status: 'TIMEOUT_REFUNDED',
                 refund_amount: refundAmount,
                 refunded_at: new Date().toISOString(),
               })
               .eq('id', order.id);
 
-            // Send Telegram notification
+            refundResults.push({
+              user_id: userUUID,
+              order_id: order.id,
+              refund_amount: refundAmount,
+              refund_type: 'TJS_BALANCE'
+            });
+
+            // 发送Telegram通知
             try {
-              // Get product info and user's lucky coins balance
               const { data: product } = await supabase
                 .from('group_buy_products')
                 .select('name, image_url')
                 .eq('id', session.product_id)
                 .single();
 
-              const { data: user } = await supabase
-                .from('users')
-                .select('lucky_coins')
-                .eq('telegram_id', order.user_id)
+              // 获取更新后的钱包余额
+              const { data: updatedWallet } = await supabase
+                .from('wallets')
+                .select('balance')
+                .eq('user_id', userUUID)
+                .eq('type', 'TJS')
                 .single();
 
               await supabase.functions.invoke('send-telegram-notification', {
                 body: {
-                  user_id: order.user_id,
+                  user_id: userUUID,
                   type: 'group_buy_timeout',
                   data: {
                     product_name: product?.name || 'Unknown Product',
                     product_image: product?.image_url || '',
                     session_code: session.session_code,
                     refund_amount: refundAmount,
-                    lucky_coins_balance: Number(user?.lucky_coins || 0),
+                    wallet_balance: Number(updatedWallet?.balance || 0),
+                    refund_type: 'balance', // 标识退回到余额
                   },
                 },
               });
             } catch (error) {
               console.error('Failed to send notification:', error);
             }
+          } else {
+            console.error(`TJS wallet not found for user ${userUUID}`);
           }
         }
 
@@ -184,6 +217,7 @@ Deno.serve(async (req) => {
       message: `Processed ${processedCount} timeout sessions`,
       processed: processedCount,
       total: timeoutSessions.length,
+      refund_results: refundResults,
     });
   } catch (error) {
     console.error('Group buy timeout check error:', error);

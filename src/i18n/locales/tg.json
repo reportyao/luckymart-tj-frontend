@@ -304,7 +304,8 @@
       "pending": "Дар коркард",
       "failed": "Ноком"
     },
-    "noTransactions": "Сабтҳои амалиёт нест"
+    "noTransactions": "Сабтҳои амалиёт нест",
+    "checkBalance": "Тавозунро тафтиш кунед"
   },
   "order": {
     "myOrders": "Фармоишҳои ман",
@@ -937,6 +938,22 @@
     "drawResult": "Натиҷаи бозӣ",
     "drawCompleted": "Бозӣ анҷом ёфт",
     "betterLuckNextTime": "Бори оянда бахт ба шумо!",
+    "sessionTimeout": "Вақти гурӯҳ гузашт",
+    "timeoutTitle": "Гурӯҳ ҷамъ нашуд",
+    "timeoutDescription": "Мутаассифона, гурӯҳ дар мӯҳлати 24 соат ҷамъ нашуд ва худкор бекор карда шуд.",
+    "refundNotice": "Огоҳии баргашт",
+    "timeoutRefundDescription": "Маблағи шумо ба тавозуни ҳисоби шумо баргашта шуд. Дар ҳамён тафтиш кунед.",
+    "sessionInProgress": "Гурӯҳ давом дорад",
+    "waitingForParticipants": "Интизори иштирокчиён",
+    "waitingDescription": "Гурӯҳ фаъол аст. Лутфан интизор шавед, то дигарон ҳамроҳ шаванд.",
+    "viewSession": "Тафсилоти гурӯҳ",
+    "sessionInfo": "Маълумоти гурӯҳ",
+    "expiredAt": "Вақти анҷом",
+    "notWinnerTitle": "Мутаассифона, шумо набурдед",
+    "pointsRefundNotice": "Товони холҳо",
+    "pointsRefundDescription": "Маблағи шумо ба холҳо табдил шуда ба ҳисоби шумо баргашта шуд. Дар мағозаи холҳо истифода баред.",
+    "goToPointsMall": "Ба мағозаи холҳо",
+    "viewResultDetails": "Тафсилоти бозӣ",
     "subtitle": "Хариди гурӯҳӣ, як ғолиб",
     "people": "наф.",
     "activeGroups": "Гурӯҳҳои фаъол",

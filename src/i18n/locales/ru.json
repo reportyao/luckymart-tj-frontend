@@ -304,7 +304,8 @@
       "pending": "В обработке",
       "failed": "Не удалось"
     },
-    "noTransactions": "Нет транзакций"
+    "noTransactions": "Нет транзакций",
+    "checkBalance": "Проверить баланс"
   },
   "order": {
     "myOrders": "Мои заказы",
@@ -932,6 +933,22 @@
     "drawResult": "Результат розыгрыша",
     "drawCompleted": "Розыгрыш завершён",
     "betterLuckNextTime": "Удачи в следующий раз!",
+    "sessionTimeout": "Группа истекла",
+    "timeoutTitle": "Группа не собрана",
+    "timeoutDescription": "К сожалению, группа не собралась в течение 24 часов и была автоматически отменена.",
+    "refundNotice": "Уведомление о возврате",
+    "timeoutRefundDescription": "Ваша оплата возвращена на баланс вашего счёта. Проверьте в кошельке.",
+    "sessionInProgress": "Группа в процессе",
+    "waitingForParticipants": "Ожидание участников",
+    "waitingDescription": "Группа активна. Пожалуйста, подождите, пока присоединятся другие.",
+    "viewSession": "Подробнее о группе",
+    "sessionInfo": "Информация о группе",
+    "expiredAt": "Истекает",
+    "notWinnerTitle": "К сожалению, вы не выиграли",
+    "pointsRefundNotice": "Компенсация баллами",
+    "pointsRefundDescription": "Ваша оплата конвертирована в баллы и возвращена на ваш счёт. Используйте их в магазине баллов.",
+    "goToPointsMall": "В магазин баллов",
+    "viewResultDetails": "Подробнее о розыгрыше",
     "subtitle": "Групповая покупка, один победитель",
     "people": "чел.",
     "activeGroups": "Активные группы",

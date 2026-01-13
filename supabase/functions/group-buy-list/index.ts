@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
-// 使用环境变量获取Supabase配置（移除硬编码fallback以避免连接到错误的数据库）
+// 使用环境变量获取Supabase配置
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -34,9 +34,9 @@ function mapProductToFrontend(product: any) {
     image_url: product.image_url,
     images: product.image_urls || (product.image_url ? [product.image_url] : []),
     original_price: product.original_price,
-    price_per_person: product.group_price, // 数据库: group_price -> 前端: price_per_person
-    group_size: product.max_participants || product.min_participants, // 数据库: max_participants -> 前端: group_size
-    timeout_hours: product.duration_hours, // 数据库: duration_hours -> 前端: timeout_hours
+    price_per_person: product.group_price,
+    group_size: product.max_participants || product.min_participants,
+    timeout_hours: product.duration_hours,
     product_type: product.status || 'ACTIVE',
     price_comparisons: product.price_comparisons || [],
     currency: product.currency || 'TJS',
@@ -45,6 +45,27 @@ function mapProductToFrontend(product: any) {
     created_at: product.created_at,
     updated_at: product.updated_at,
   };
+}
+
+// 辅助函数：将user_id（可能是telegram_id或UUID）转换为UUID
+async function resolveUserIdToUUID(supabase: any, userId: string): Promise<string | null> {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  
+  if (uuidRegex.test(userId)) {
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('id', userId)
+      .single();
+    return user?.id || null;
+  } else {
+    const { data: user } = await supabase
+      .from('users')
+      .select('id')
+      .eq('telegram_id', userId)
+      .single();
+    return user?.id || null;
+  }
 }
 
 Deno.serve(async (req) => {
@@ -145,19 +166,16 @@ Deno.serve(async (req) => {
       if (allUserIds.size > 0) {
         const userIdArray = Array.from(allUserIds);
         
-        // 先尝试用 id 匹配（UUID）
         const { data: usersByUuid } = await supabase
           .from('users')
           .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
           .in('id', userIdArray);
         
-        // 再尝试用 telegram_id 匹配
         const { data: usersByTelegramId } = await supabase
           .from('users')
           .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
           .in('telegram_id', userIdArray);
         
-        // 合并结果
         usersByUuid?.forEach((u: any) => {
           usersMap[u.id] = u;
         });
@@ -176,18 +194,131 @@ Deno.serve(async (req) => {
       }));
 
       return createResponse({ success: true, data: sessionsWithUsers });
+    } else if (type === 'session-detail') {
+      // 【新增】获取会话详情（包括超时会话）
+      if (!session_id) {
+        return createResponse({ success: false, error: 'Session ID required' }, 400);
+      }
+
+      const { data: session, error: sessionError } = await supabase
+        .from('group_buy_sessions')
+        .select(`
+          *,
+          product:group_buy_products(*)
+        `)
+        .eq('id', session_id)
+        .single();
+
+      if (sessionError || !session) {
+        return createResponse({ success: false, error: 'Session not found' }, 404);
+      }
+
+      // 获取该会话的所有订单
+      const { data: orders } = await supabase
+        .from('group_buy_orders')
+        .select('*')
+        .eq('session_id', session_id)
+        .order('created_at', { ascending: true });
+
+      // 获取用户信息
+      const userIds = orders?.map(o => o.user_id) || [];
+      let usersMap: Record<string, any> = {};
+      
+      if (userIds.length > 0) {
+        const { data: usersByUuid } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('id', userIds);
+        
+        const { data: usersByTelegramId } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('telegram_id', userIds);
+        
+        usersByUuid?.forEach((u: any) => {
+          usersMap[u.id] = u;
+        });
+        usersByTelegramId?.forEach((u: any) => {
+          usersMap[u.telegram_id] = u;
+        });
+      }
+
+      // 合并用户信息到订单
+      const ordersWithUsers = orders?.map(order => ({
+        ...order,
+        user: usersMap[order.user_id] || null,
+      })) || [];
+
+      return createResponse({ 
+        success: true, 
+        data: {
+          ...session,
+          product: session.product ? mapProductToFrontend(session.product) : null,
+          orders: ordersWithUsers,
+        }
+      });
     } else if (type === 'session-result') {
       // 获取拼团会话的开奖结果
       if (!session_id) {
         return createResponse({ success: false, error: 'Session ID required' }, 400);
       }
 
+      // 首先获取会话信息
+      const { data: session, error: sessionError } = await supabase
+        .from('group_buy_sessions')
+        .select(`
+          *,
+          product:group_buy_products(*)
+        `)
+        .eq('id', session_id)
+        .single();
+
+      if (sessionError || !session) {
+        return createResponse({ success: false, error: 'Session not found' }, 404);
+      }
+
+      // 【关键修复】检查会话状态，处理不同情况
+      if (session.status === 'TIMEOUT') {
+        // 超时未开奖的会话
+        // 获取该会话的所有订单
+        const { data: orders } = await supabase
+          .from('group_buy_orders')
+          .select('*')
+          .eq('session_id', session_id)
+          .order('created_at', { ascending: true });
+
+        return createResponse({ 
+          success: true, 
+          data: {
+            session_id: session.id,
+            status: 'TIMEOUT',
+            session: session,
+            product: session.product ? mapProductToFrontend(session.product) : null,
+            orders: orders || [],
+            message: 'Session timed out without enough participants',
+          }
+        });
+      }
+
+      if (session.status === 'ACTIVE') {
+        // 会话仍在进行中
+        return createResponse({ 
+          success: true, 
+          data: {
+            session_id: session.id,
+            status: 'ACTIVE',
+            session: session,
+            product: session.product ? mapProductToFrontend(session.product) : null,
+            message: 'Session is still active',
+          }
+        });
+      }
+
+      // 已开奖的会话，查询结果
       const { data: result, error: resultError } = await supabase
         .from('group_buy_results')
         .select(`
           *,
-          session:group_buy_sessions(*),
-          product:group_buy_products(*),
           pickup_point:pickup_points(
             id,
             name,
@@ -204,14 +335,10 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: resultError.message }, 500);
       }
 
-      if (!result) {
-        return createResponse({ success: false, error: 'Session result not found' }, 404);
-      }
-
       // 获取所有参与者订单
       const { data: orders, error: ordersError } = await supabase
         .from('group_buy_orders')
-        .select('user_id, order_number, order_timestamp, created_at')
+        .select('*')
         .eq('session_id', session_id)
         .order('created_at', { ascending: true });
 
@@ -219,35 +346,64 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: ordersError.message }, 500);
       }
 
-      // 获取参与者的用户信息
+      // 获取参与者的用户信息（同时支持UUID和telegram_id）
       const userIds = orders?.map(o => o.user_id) || [];
-      const { data: users } = await supabase
-        .from('users')
-        .select('telegram_id, telegram_username, first_name, last_name')
-        .in('telegram_id', userIds);
+      let usersMap: Record<string, any> = {};
+      
+      if (userIds.length > 0) {
+        const { data: usersByUuid } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('id', userIds);
+        
+        const { data: usersByTelegramId } = await supabase
+          .from('users')
+          .select('id, telegram_id, telegram_username, first_name, last_name, avatar_url')
+          .in('telegram_id', userIds);
+        
+        usersByUuid?.forEach((u: any) => {
+          usersMap[u.id] = u;
+        });
+        usersByTelegramId?.forEach((u: any) => {
+          usersMap[u.telegram_id] = u;
+        });
+      }
 
       // 合并用户信息到订单
       const participants = orders?.map(order => {
-        const user = users?.find(u => u.telegram_id === order.user_id);
+        const user = usersMap[order.user_id];
         return {
           user_id: order.user_id,
           username: user?.telegram_username || user?.first_name || `User ${order.user_id.slice(-4)}`,
+          avatar_url: user?.avatar_url,
           order_number: order.order_number,
+          order_timestamp: order.order_timestamp,
+          status: order.status,
           created_at: order.created_at,
         };
       }) || [];
 
       // 获取中奖者用户名
-      const winner = users?.find(u => u.telegram_id === result.winner_id);
-      const winnerUsername = winner?.telegram_username || winner?.first_name || `User ${result.winner_id?.slice(-4) || 'Unknown'}`;
+      let winnerUsername = 'Unknown';
+      const winnerId = result?.winner_id || session.winner_id;
+      if (winnerId) {
+        const winnerUser = usersMap[winnerId];
+        if (winnerUser) {
+          winnerUsername = winnerUser.telegram_username || winnerUser.first_name || `User ${winnerId.slice(-4)}`;
+        }
+      }
 
       return createResponse({ 
         success: true, 
         data: { 
-          ...result, 
+          ...result,
+          session_id: session.id,
+          status: session.status,
+          session: session,
+          winner_id: winnerId,
           winner_username: winnerUsername,
           participants,
-          product: result.product ? mapProductToFrontend(result.product) : null,
+          product: session.product ? mapProductToFrontend(session.product) : null,
         } 
       });
     } else if (type === 'my-orders') {
@@ -256,15 +412,27 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: 'User ID required' }, 400);
       }
 
-      const { data: orders, error } = await supabase
+      // 解析用户UUID
+      const userUUID = await resolveUserIdToUUID(supabase, user_id);
+      
+      // 查询订单（同时使用原始user_id和解析后的UUID）
+      let ordersQuery = supabase
         .from('group_buy_orders')
         .select(`
           *,
           session:group_buy_sessions(*),
           product:group_buy_products(*)
         `)
-        .eq('user_id', user_id)
         .order('created_at', { ascending: false });
+
+      // 使用OR条件同时匹配
+      if (userUUID && userUUID !== user_id) {
+        ordersQuery = ordersQuery.or(`user_id.eq.${user_id},user_id.eq.${userUUID}`);
+      } else {
+        ordersQuery = ordersQuery.eq('user_id', user_id);
+      }
+
+      const { data: orders, error } = await ordersQuery;
 
       if (error) {
         return createResponse({ success: false, error: error.message }, 500);
