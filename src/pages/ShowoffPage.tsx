@@ -275,17 +275,23 @@ const ShowoffPage: React.FC = () => {
   };
 
   const handleShare = (showoff: ShowoffWithDetails) => {
-    const text = `${showoff.user?.telegram_username || t('common.aUser')}在TezBarakat${t('showoff.won')}了!快来看看吧!`;
-    const url = `${window.location.origin}/showoff/${showoff.id}`;
-
-    if (navigator.share) {
-      navigator.share({
-        title: t('showoff.shareTitle'),
-        text: text,
-        url: url
-      }).catch(err => console.log('分享失败:', err));
+    const code = user?.referral_code || user?.invite_code;
+    if (!code) {
+      toast.error(t('error.unknownError'));
+      return;
+    }
+    
+    const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${code}`;
+    const shareText = `🎁 Барои Шумо 10 сомонӣ тӯҳфа!\nБо истиноди ман ворид шавед ва бонус гиред. Дар TezBarakat арзон харед ва бурд кунед!`;
+    
+    // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面
+    if (window.Telegram?.WebApp?.openTelegramLink) {
+      // 使用 Telegram 的分享链接
+      const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
+      window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
-      navigator.clipboard.writeText(url);
+      // 降级方案：复制链接
+      navigator.clipboard.writeText(inviteLink);
       toast.success(t('common.linkCopied'));
     }
   };
