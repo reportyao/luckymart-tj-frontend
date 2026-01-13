@@ -216,19 +216,19 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           {/* 价格和参与信息 */}
           <div className="grid grid-cols-3 gap-2">
             <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1 truncate">单价</p>
+              <p className="text-xs text-gray-500 mb-1 truncate">{t("lottery.unitPrice")}</p>
               <p className="text-base font-bold text-green-600 truncate">
                 {formatCurrency('TJS', lottery.ticket_price)}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1 truncate">总数</p>
+              <p className="text-xs text-gray-500 mb-1 truncate">{t("lottery.totalQuantity")}</p>
               <p className="text-sm font-semibold text-gray-900">
                 {lottery.total_tickets}
               </p>
             </div>
             <div className="text-center">
-              <p className="text-xs text-gray-500 mb-1 truncate">限购</p>
+              <p className="text-xs text-gray-500 mb-1 truncate">{t("lottery.purchaseLimit")}</p>
               <p className="text-sm font-semibold text-gray-900">
                 {lottery.total_tickets}
               </p>

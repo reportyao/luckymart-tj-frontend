@@ -411,7 +411,7 @@ export default function GroupBuyDetailPage() {
       }
       
       const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${referralCode}`;
-      const shareText = `In molro bo 70% takhfif kharidan mumkin ast?!\nMan allakay ishtirok kardam. Ba Shumo ham yak imkoniyati kharidi arzonro tuhfa mekunam, zudtar kushoed va bined!`;
+      const shareText = `Барои Шумо тӯҳфа: Хариди мол бо нархи 3 маротиба арзонтар!\nМан худам санҷидам — кор мекунад! Ин шонсро аз даст надиҳед, ҳоло зер кунед`;
       
       // 优先使用 Telegram WebApp 的分享功能
       if (window.Telegram?.WebApp?.openTelegramLink) {

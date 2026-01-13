@@ -42,6 +42,7 @@ import GroupBuyResultPage from "./pages/groupbuy/GroupBuyResultPage"
 import FullPurchaseConfirmPage from "./pages/FullPurchaseConfirmPage"
 import SpinLotteryPage from "./pages/SpinLotteryPage"
 import AIPage from "./pages/AIPage"
+import PendingPickupPage from "./pages/PendingPickupPage"
 
 function App() {
   return (
@@ -88,6 +89,9 @@ function App() {
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/debug" element={<DebugPage />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />
+              <Route path="/pending-pickup" element={<PendingPickupPage />} />
+              <Route path="/orders/:id" element={<OrderDetailPage />} />
+              <Route path="/groupbuy/:productId" element={<GroupBuyDetailPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Layout>

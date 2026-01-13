@@ -154,6 +154,8 @@
     "specifications": "Характеристики",
     "material": "Материал",
     "winningCodeCopied": "Выигрышный код скопирован",
+    "willGetParticipationCodes": "Ваши коды участия",
+    "participationCodeHint": "После покупки вы получите вышеуказанные коды участия, которые можно использовать для розыгрыша"
     "ongoing": "В процессе",
     "ended": "Завершено",
     "orderManagement": "Управление заказами",
@@ -179,7 +181,10 @@
     "please_wait": "Пожалуйста, подождите...",
     "countdown_hint": "Автоматический розыгрыш после распродажи",
     "seconds": "сек",
-    "totalEntries": "Всего участников"
+    "totalEntries": "Всего участников",
+    "unitPrice": "Цена за единицу",
+    "totalQuantity": "Общее количество",
+    "purchaseLimit": "Лимит покупки"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",
@@ -426,9 +431,14 @@
     "linkCopied": "Ссылка скопирована в буфер обмена",
     "codeCopied": "Код приглашения скопирован"
   },
-  "profile": {
+    "profile": {
+    "pendingPickup": "Ожидающие выдачи",
+    "viewPendingPickup": "Посмотреть ожидающие выдачи",
+    "noPendingPickup": "Нет ожидающих выдач",
+    "pendingPickupHint": "После завершения заказа, товары будут отображены здесь",
+    "pendingPickupStatus": "Ожидающая выдача",
     "myProfile": "Мой профиль",
-    "accountInfo": "Информация об аккаунте",
+    "accountInfo": "Информация о счете",",
     "statistics": "Статистика",
     "settings": "Настройки",
     "language": "Язык",

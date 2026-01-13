@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
-import { 
+import {
   UserCircleIcon,
   CogIcon,
   ShoppingBagIcon,
@@ -17,7 +17,8 @@ import {
   BellIcon,
   UsersIcon,
   TrophyIcon,
-  LanguageIcon
+  LanguageIcon,
+  Package2Icon
 } from '@heroicons/react/24/outline'
 import { copyToClipboard } from '../lib/utils'
 import toast from 'react-hot-toast'
@@ -68,10 +69,10 @@ const ProfilePage: React.FC = () => {
   const featureCards = [
     {
       icon: ShoppingBagIcon,
-      title: t('market.resaleMarket'),
-      subtitle: t('market.buyResaleItems'),
+      title: t('profile.pendingPickup') || '待提货',
+      subtitle: t('profile.viewPendingPickup') || '查看待提货',
       color: 'from-blue-500 to-blue-600',
-      action: () => navigate('/market'),
+      action: () => navigate('/pending-pickup'),
     },
     {
       icon: UsersIcon,

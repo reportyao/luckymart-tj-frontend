@@ -168,7 +168,6 @@
     "specifications": "规格",
     "material": "材质",
     "winningCodeCopied": "中奖码已复制",
-    "yourParticipationCodes": "您的参与码",
     "willGetParticipationCodes": "您将获得的参与码",
     "participationCodeHint": "购买后您将获得以上参与码，可用于开奖抽取",
     "ongoing": "进行中",
@@ -191,7 +190,10 @@
     "orderSummary": "订单汇总",
     "productPrice": "商品价格",
     "totalAmount": "合计",
-    "totalEntries": "总参与条目"
+    "totalEntries": "总参与条目",
+    "unitPrice": "单价",
+    "totalQuantity": "总数",
+    "purchaseLimit": "限购"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -475,7 +477,11 @@
     "codeCopied": "邀请码已复制到剪贴板"
   },
   "profile": {
-    "myProfile": "个人中心",
+    "pendingPickup": "待提货",
+    "viewPendingPickup": "查看待提货",
+    "noPendingPickup": "暂无待提货商品",
+    "pendingPickupHint": "完成订单后，商品将在此显示",
+    "pendingPickupStatus": "待提货",
     "accountInfo": "账户信息",
     "statistics": "统计数据",
     "settings": "设置",

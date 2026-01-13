@@ -154,6 +154,8 @@
     "specifications": "Тавсифот",
     "material": "Материал",
     "winningCodeCopied": "Рамзи бурдан нусхабардорӣ шуд",
+    "willGetParticipationCodes": "Рамзҳои иштироки шумо",
+    "participationCodeHint": "Пас аз харид, шумо рамзҳои иштироки дар боло зикршударо мегиред, ки онҳоро барои иштирок дар бозӣ истифода бурдан мумкин аст."
     "ongoing": "Дар ҷараён",
     "ended": "Анҷом ёфта",
     "orderManagement": "Идораи фармоишҳо",
@@ -179,7 +181,10 @@
     "please_wait": "Лутфан интизор шавед...",
     "countdown_hint": "Бозии худкор пас аз фурӯш",
     "seconds": "сония",
-    "totalEntries": "Ҳамаи иштирокчиён"
+    "totalEntries": "Ҳамаи иштирокчиён",
+    "unitPrice": "Нархи воҳид",
+    "totalQuantity": "Миқдори умумӣ",
+    "purchaseLimit": "Маҳдудияти харид"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -429,6 +434,11 @@
     "viewTeamInfo": "Дидани маълумоти даста"
   },
   "profile": {
+    "pendingPickup": "Мантазар барабари",
+    "viewPendingPickup": "дидани мантазаррои барабари",
+    "noPendingPickup": "асюр мантазаррои барабари нист",
+    "pendingPickupHint": "Пас аз тамом кардан, маллахо дар инҷо нишон дада мишавад",
+    "pendingPickupStatus": "Мантазар барабари",
     "myProfile": "Профили ман",
     "accountInfo": "Маълумоти суратҳисоб",
     "statistics": "Омор",
