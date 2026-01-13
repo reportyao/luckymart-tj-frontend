@@ -145,12 +145,13 @@ serve(async (req) => {
     }
 
     // 查询买家钱包余额 (使用 wallets 表)
+    // 修复：LUCKY_COIN钱包的currency应为POINTS
     const { data: buyerWallet, error: walletError } = await supabaseClient
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
       .eq('type', 'LUCKY_COIN')
-      .eq('currency', 'TJS')
+      .eq('currency', 'POINTS')
       .single()
 
     if (walletError || !buyerWallet) {

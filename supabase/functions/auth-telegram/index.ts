@@ -221,7 +221,7 @@ Deno.serve(async (req) => {
                 {
                     user_id: user.id,
                     type: 'LUCKY_COIN',
-                    currency: 'TJS',
+                    currency: 'POINTS',  // 修复：LUCKY_COIN钱包的currency应为POINTS
                     balance: 10, // 【新增】新用户赠送10积分
                     frozen_balance: 0,
                     total_deposits: 0,
