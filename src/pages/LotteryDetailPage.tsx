@@ -63,6 +63,25 @@ const LotteryDetailPage: React.FC = () => {
   const [quantity, setQuantity] = useState<number>(1);
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
   const [isFullPurchasing, setIsFullPurchasing] = useState<boolean>(false);
+  const [myTickets, setMyTickets] = useState<string[]>([]);
+
+  const fetchMyTickets = useCallback(async () => {
+    if (!id || !user) return;
+    try {
+      const { data, error } = await supabase
+        .from('lottery_entries')
+        .select('participation_code')
+        .eq('lottery_id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+      if (data) {
+        setMyTickets(data.map(entry => entry.participation_code).filter(Boolean));
+      }
+    } catch (error) {
+      console.error('Failed to fetch my tickets:', error);
+    }
+  }, [id, user, supabase]);
 
   const fetchLottery = useCallback(async () => {
     if (!id) return;
@@ -101,13 +120,18 @@ const LotteryDetailPage: React.FC = () => {
       if (data && (data.status === 'SOLD_OUT' || data.status === 'COMPLETED')) {
         navigate(`/lottery/${id}/result`);
       }
+
+      // 获取我的参与码
+      if (user) {
+        fetchMyTickets();
+      }
     } catch (error) {
       console.error('Failed to fetch lottery:', error);
       toast.error(t('error.networkError'));
     } finally {
       setIsLoading(false);
     }
-  }, [id, supabase, t]);
+  }, [id, supabase, t, user, fetchMyTickets]);
 
   const fetchRandomShowoffs = useCallback(async () => {
     try {
@@ -559,39 +583,65 @@ const LotteryDetailPage: React.FC = () => {
           </div>
         )}
 
-        {/* 用户购买后将获得的参与码展示 - 仅在商品未售罄时显示 */}
-        {isActive && remainingTickets > 0 && quantity > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md p-4 border border-purple-200"
-          >
-            <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
-              </svg>
-              {t('lottery.yourParticipationCodes') || '您将获得的参与码'}
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: quantity }, (_, i) => {
-                // 计算当前用户购买后将获得的参与码号码
-                const nextCodeNumber = lottery.sold_tickets + i + 1;
-                const codeStr = String(nextCodeNumber).padStart(7, '0');
-                return (
+        {/* 参与码展示区域 */}
+        <div className="space-y-4">
+          {/* 用户已拥有的参与码 */}
+          {user && myTickets.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white rounded-xl shadow-md p-4 border border-blue-100"
+            >
+              <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <TicketIcon className="w-5 h-5 text-blue-600" />
+                {t('lottery.myTickets')}
+              </h3>
+              <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1">
+                {myTickets.map((code, index) => (
                   <span
-                    key={i}
-                    className="px-3 py-1.5 rounded-lg font-mono text-sm font-semibold bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-sm"
+                    key={index}
+                    className="px-3 py-1.5 rounded-lg font-mono text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200"
                   >
-                    {codeStr}
+                    {code}
                   </span>
-                );
-              })}
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              {t('lottery.participationCodeHint') || '购买后您将获得以上参与码，可用于开奖抽取'}
-            </p>
-          </motion.div>
-        )}
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* 用户购买后将获得的参与码展示 - 仅在商品未售罄时显示 */}
+          {isActive && remainingTickets > 0 && quantity > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl shadow-md p-4 border border-purple-200"
+            >
+              <h3 className="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
+                </svg>
+                {t('lottery.willGetParticipationCodes')}
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {Array.from({ length: quantity }, (_, i) => {
+                  const nextCodeNumber = lottery.sold_tickets + i + 1;
+                  const codeStr = String(nextCodeNumber).padStart(7, '0');
+                  return (
+                    <span
+                      key={i}
+                      className="px-3 py-1.5 rounded-lg font-mono text-sm font-semibold bg-gradient-to-br from-purple-500 to-pink-500 text-white shadow-sm"
+                    >
+                      {codeStr}
+                    </span>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-2">
+                {t('lottery.participationCodeHint')}
+              </p>
+            </motion.div>
+          )}
+        </div>
 
         {/* Lottery Info Card */}
         <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
@@ -781,8 +831,6 @@ const LotteryDetailPage: React.FC = () => {
 
         {/* Product Details */}
         <div className="bg-white rounded-xl shadow-md p-4 space-y-4">
-          <h3 className="text-xl font-bold text-gray-900 border-b pb-2">{t('lottery.productDetails')}</h3>
-
           {/* Specifications and Material */}
           {(specifications || material) && (
             <div className="grid grid-cols-2 gap-4 text-sm">

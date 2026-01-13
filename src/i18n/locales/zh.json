@@ -29,7 +29,8 @@
     "user": "用户",
     "aUser": "一位用户",
     "processing": "处理中...",
-    "pleaseLogin": "请先登录"
+    "pleaseLogin": "请先登录",
+    "delete": "删除"
   },
   "nav": {
     "home": "首页",
@@ -39,7 +40,8 @@
     "bot": "Bot管理",
     "monitoring": "系统监控",
     "orders": "订单",
-    "notifications": "通知"
+    "notifications": "通知",
+    "messages": "消息"
   },
   "home": {
     "welcome": "你好",
@@ -166,6 +168,9 @@
     "specifications": "规格",
     "material": "材质",
     "winningCodeCopied": "中奖码已复制",
+    "yourParticipationCodes": "您的参与码",
+    "willGetParticipationCodes": "您将获得的参与码",
+    "participationCodeHint": "购买后您将获得以上参与码，可用于开奖抽取",
     "ongoing": "进行中",
     "ended": "已结束",
     "orderManagement": "订单管理",
@@ -316,6 +321,33 @@
     "noTransactions": "暂无交易记录",
     "balanceUpdated": "余额已更新",
     "checkBalance": "查看钱包余额"
+  },
+  "notification": {
+    "notifications": "消息通知",
+    "all": "全部",
+    "unread": "未读",
+    "read": "已读",
+    "noNotifications": "暂无消息通知",
+    "markAllRead": "全部标记为已读",
+    "markRead": "标记已读",
+    "depositSuccess": "充值成功",
+    "depositFailed": "充值失败",
+    "depositProcessing": "充值处理中",
+    "withdrawSuccess": "提现成功",
+    "withdrawFailed": "提现失败",
+    "withdrawProcessing": "提现处理中",
+    "groupBuyWin": "🎉 拼团中奖!",
+    "groupBuyLose": "拼团未中奖",
+    "groupBuyWinContent": "恭喜您在拼团中中奖，获得{{product}}!",
+    "groupBuyLoseContent": "很遗憾，本次拼团未中奖，已退还积分",
+    "groupBuyTimeout": "拼团未成团",
+    "groupBuyTimeoutContent": "拼团超时未成团，资金已原路退回余额",
+    "lotteryPurchase": "积分商城参与",
+    "lotteryPurchaseContent": "您已参与{{product}}，购买{{count}}张彩票",
+    "lotteryWin": "🎉 积分商城中奖!",
+    "lotteryWinContent": "恭喜您在积分商城中奖，获得{{product}}!",
+    "referralBonus": "推荐奖励",
+    "spinReward": "转盘奖励"
   },
   "order": {
     "myOrders": "我的订单",

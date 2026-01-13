@@ -613,7 +613,7 @@ const NotificationPage: React.FC = () => {
                           className="flex items-center space-x-1 text-xs font-medium text-blue-600 hover:text-blue-700"
                         >
                           <CheckIcon className="w-4 h-4" />
-                          <span>标记已读</span>
+                          <span>{t('notification.markRead') || '标记已读'}</span>
                         </button>
                       )}
                       {!notification.id.includes('_') && (
@@ -621,7 +621,7 @@ const NotificationPage: React.FC = () => {
                           onClick={() => deleteNotification(notification.id)}
                           className="text-xs font-medium text-red-600 hover:text-red-700"
                         >
-                          删除
+                          {t('common.delete') || '删除'}
                         </button>
                       )}
                     </div>
