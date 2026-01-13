@@ -268,7 +268,7 @@ const NotificationPage: React.FC = () => {
         const { data: referralData, error: referralError } = await supabase
           .from('wallet_transactions')
           .select('*')
-          .in('type', ['REFERRAL_BONUS', 'FRIEND_CASHBACK', 'SPIN_REWARD'])
+          .in('type', ['REFERRAL_BONUS', 'FRIEND_CASHBACK', 'SPIN_REWARD'] as any)
           .order('created_at', { ascending: false })
           .limit(20);
 
