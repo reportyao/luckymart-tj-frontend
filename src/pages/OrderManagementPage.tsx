@@ -205,7 +205,8 @@ const OrderManagementPage: React.FC = () => {
 
   const handleOrderClick = (order: UnifiedOrder) => {
     if (order.order_type === 'group_buy' && order.session_id) {
-      navigate(order.status === 'WON' || order.status === 'LOST' ? `/group-buy/result/${order.session_id}` : `/group-buy/${order.session_id}`);
+      // 拼团订单始终跳转到结果页，因为用户已经参与了拼团
+      navigate(`/group-buy/result/${order.session_id}`);
     } else if (order.order_type === 'lottery' && order.lottery_id) {
       navigate(`/lottery/${order.lottery_id}`);
     } else if (order.order_type === 'full_purchase') {

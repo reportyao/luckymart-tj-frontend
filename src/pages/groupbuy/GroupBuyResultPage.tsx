@@ -91,7 +91,7 @@ export default function GroupBuyResultPage() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (result && user && result.winner_id === user.telegram_id.toString()) {
+    if (result && user && result.winner_id === user.id) {
       setIsWinner(true);
       // Trigger confetti animation only if not already claimed
       if (!result.pickup_code) {
