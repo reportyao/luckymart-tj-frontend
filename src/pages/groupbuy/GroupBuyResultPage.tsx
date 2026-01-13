@@ -410,7 +410,7 @@ export default function GroupBuyResultPage() {
         {/* Action Buttons */}
         <div className="p-4 space-y-3">
           <button
-            onClick={() => navigate(`/group-buy/session/${sessionId}`)}
+            onClick={() => navigate(`/group-buy/${result.session?.product_id || result.product?.id}`)}
             className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
           >
             {t('groupBuy.viewSession')}
