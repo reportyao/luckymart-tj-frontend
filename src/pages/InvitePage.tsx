@@ -236,60 +236,7 @@ const InvitePage: React.FC = () => {
         </div>
       </div>
 
-      {/* First Deposit Bonus Card (New) */}
-      {stats && stats.first_deposit_bonus_status !== 'none' && (
-        <div className="px-4 -mt-6 mb-4">
-          <div className="bg-white rounded-xl p-4 shadow-lg border-l-4 border-yellow-500">
-            <h3 className="font-bold text-lg text-yellow-800 mb-2">{t('invite.firstDepositBonus')}</h3>
-            <p className="text-sm text-gray-600 mb-3">
-              {t('invite.bonusAmount', { amount: stats.first_deposit_bonus_amount })}
-            </p>
 
-            {stats.first_deposit_bonus_status === 'pending' && (
-              <>
-                <p className="text-xs text-red-500 mb-3">
-                  {t('invite.activationDeadline', { date: stats.first_deposit_bonus_expire_at ? formatDateTime(stats.first_deposit_bonus_expire_at) : 'N/A' })}
-                </p>
-                <div className="space-y-2 mb-3">
-                  <p className="font-medium text-gray-700">{t('invite.activationCondition')}</p>
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">
-                      {t('invite.shareCount', { count: stats.activation_share_count })}
-                    </span>
-                    <button
-                      onClick={handleShare}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      {t('invite.goShare')}
-                    </button>
-                  </div>
-                  <div className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
-                    <span className="text-sm text-gray-600">
-                      {t('invite.inviteCount', { count: stats.activation_invite_count })}
-                    </span>
-                    <span className="text-sm text-gray-500">{t('invite.inviteHint')}</span>
-                  </div>
-                </div>
-                <button
-                  onClick={handleActivateBonus}
-                  disabled={isActivating}
-                  className="w-full py-3 bg-green-500 text-white rounded-xl font-bold disabled:bg-green-300 transition-colors"
-                >
-                  {isActivating ? t('invite.activating') : t('invite.activateNow')}
-                </button>
-              </>
-            )}
-
-            {stats.first_deposit_bonus_status === 'activated' && (
-              <p className="text-green-600 font-bold">{t('invite.activated')}</p>
-            )}
-
-            {stats.first_deposit_bonus_status === 'expired' && (
-              <p className="text-red-600 font-bold">{t('invite.expired')}</p>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -347,24 +294,7 @@ const InvitePage: React.FC = () => {
               </div>
             </motion.div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white rounded-xl p-4 shadow-sm"
-            >
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <GiftIcon className="w-5 h-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-2xl font-bold text-purple-600">
-                    {formatCurrency('TJS', stats.bonus_balance)}
-                  </p>
-                  <p className="text-xs text-gray-500">{t('invite.bonusBalance')}</p>
-                </div>
-              </div>
-            </motion.div>
+
           </div>
         </div>
       )}
