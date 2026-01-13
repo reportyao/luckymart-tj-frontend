@@ -963,6 +963,7 @@
     "groupPrice": "Групповая цена",
     "peopleGroup": "чел. группа",
     "hoursLimit": "час. лимит",
+    "waitingSlot": "Свободно",
     "rules": {
       "title": "Правила",
       "rule1": "Каждый платит 1/N цены",

@@ -124,8 +124,9 @@ serve(async (req) => {
 
     // 1. 获取拼团订单
     if (!order_type || order_type === 'all' || order_type === 'group_buy') {
-      console.log('[GetMyOrders] Fetching group buy orders for telegramId:', telegramId);
+      console.log('[GetMyOrders] Fetching group buy orders for telegramId:', telegramId, 'and userId:', userId);
       
+      // 同时使用 telegramId 和 userId 查询，因为 group_buy_orders 中的 user_id 可能是两者之一
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
         .from('group_buy_orders')
         .select(`
@@ -140,7 +141,7 @@ serve(async (req) => {
           refund_lucky_coins,
           created_at
         `)
-        .eq('user_id', telegramId)
+        .or(`user_id.eq.${telegramId},user_id.eq.${userId}`)
         .order('created_at', { ascending: false });
 
       if (groupBuyError) {
@@ -164,14 +165,14 @@ serve(async (req) => {
           .select('id, title, image_url, original_price, price_per_person')
           .in('id', productIds);
         
-        // 批量查询中奖结果
+        // 批量查询中奖结果（同时使用 telegramId 和 userId 匹配 winner_id）
         const { data: groupBuyResults } = await supabase
           .from('group_buy_results')
           .select(`
             id, session_id, winner_id, pickup_code, pickup_status, 
             pickup_point_id, expires_at, claimed_at, picked_up_at
           `)
-          .eq('winner_id', telegramId);
+          .or(`winner_id.eq.${telegramId},winner_id.eq.${userId}`);
         
         // 如果有中奖结果，批量查询自提点
         let pickupPoints: any[] = [];
@@ -431,17 +432,20 @@ serve(async (req) => {
           // 确定状态
           let displayStatus = prize.status || 'PENDING';
 
+          // 计算显示金额：优先使用 ticket_price，否则使用 prize_value
+          const displayAmount = lottery?.ticket_price || prize.prize_value || 0;
+          
           orders.push({
             id: prize.id,
             order_type: 'lottery',
             order_number: prize.winning_code,
-            amount: prize.prize_value,
+            amount: displayAmount,
             status: displayStatus,
             created_at: prize.won_at || prize.created_at,
             // 商品信息 - 优先使用 lottery 数据，否则使用 prize 自身数据
             product_title: lottery?.title_i18n || { zh: lottery?.title || prize.prize_name || '奖品' },
             product_image: lottery?.image_url || prize.prize_image || '',
-            original_price: prize.prize_value || 0,
+            original_price: lottery?.ticket_price || prize.prize_value || 0,
             price_per_person: lottery?.ticket_price || 0,
             // 抽奖信息
             lottery_period: lottery?.period || '',

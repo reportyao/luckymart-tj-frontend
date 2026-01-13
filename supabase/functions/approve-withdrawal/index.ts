@@ -126,21 +126,33 @@ serve(async (req) => {
     const currentTotalWithdrawals = parseFloat(wallet.total_withdrawals) || 0
 
     if (action === 'APPROVED') {
-      // 审核通过 - 检查冻结余额是否足够
+      // 审核通过 - 检查余额是否足够
       // 新的提现流程：提现时已经冻结了余额，审核通过只需要更新状态
+      
+      // 计算可用余额（总余额减去已冻结的金额）
+      const availableBalance = currentBalance - currentFrozenBalance
+      
+      console.log('Withdrawal check:', {
+        withdrawAmount,
+        currentBalance,
+        currentFrozenBalance,
+        availableBalance
+      })
       
       // 如果冻结余额不足（兼容旧的没有冻结的提现请求），需要冻结
       if (currentFrozenBalance < withdrawAmount) {
         const needToFreeze = withdrawAmount - currentFrozenBalance
-        if (currentBalance < needToFreeze) {
-          throw new Error(`余额不足，当前余额: ${currentBalance}`)
+        // 检查可用余额是否足够冻结
+        if (availableBalance < needToFreeze) {
+          throw new Error(`可用余额不足，当前可用余额: ${availableBalance}，需要冻结: ${needToFreeze}`)
         }
         
         // 冻结差额
+        const newFrozenBalance = currentFrozenBalance + needToFreeze
         const { error: freezeError } = await supabaseClient
           .from('wallets')
           .update({
-            frozen_balance: withdrawAmount,
+            frozen_balance: newFrozenBalance,
             updated_at: new Date().toISOString(),
           })
           .eq('id', wallet.id)

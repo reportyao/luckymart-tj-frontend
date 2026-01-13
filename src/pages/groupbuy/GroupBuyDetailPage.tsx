@@ -306,10 +306,16 @@ export default function GroupBuyDetailPage() {
       const sessionsData = sessionsResponse?.success ? sessionsResponse.data : [];
       
       // 检查用户已参与的session
+      // 注意：订单中的user_id可能是telegram_id或UUID，需要同时匹配
       if (user && sessionsData && Array.isArray(sessionsData)) {
         const participatedSet = new Set<string>();
         sessionsData.forEach((session: any) => {
-          if (session.orders?.some((order: any) => order.user_id === user.telegram_id)) {
+          if (session.orders?.some((order: any) => 
+            order.user_id === user.telegram_id || 
+            order.user_id === user.id ||
+            order.users?.telegram_id === user.telegram_id ||
+            order.users?.id === user.id
+          )) {
             participatedSet.add(session.id);
           }
         });
@@ -600,26 +606,36 @@ export default function GroupBuyDetailPage() {
                       </div>
                     </div>
 
-                    {/* 显示参与用户头像和昵称 - 垂直布局 */}
-                    {session.orders && session.orders.length > 0 && (
-                      <div className="flex justify-center gap-4 mb-3">
-                        {session.orders.map((order: any) => (
-                          <div key={order.id} className="flex flex-col items-center">
-                            <img
-                              src={order.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`}
-                              alt={order.users?.telegram_username || order.users?.first_name || 'User'}
-                              className="w-12 h-12 rounded-full border-2 border-purple-200 object-cover"
-                              onError={(e) => {
-                                (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`;
-                              }}
-                            />
-                            <span className="text-xs text-gray-600 mt-1 max-w-[60px] truncate text-center">
-                              {order.users?.telegram_username || order.users?.first_name || `User ${order.user_id?.slice(-4) || ''}`}
-                            </span>
+                    {/* 显示参与用户头像和剩余位置 - 虚席以待效果 */}
+                    <div className="flex justify-center gap-4 mb-3">
+                      {/* 已参与的用户 */}
+                      {session.orders?.map((order: any) => (
+                        <div key={order.id} className="flex flex-col items-center">
+                          <img
+                            src={order.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`}
+                            alt={order.users?.telegram_username || order.users?.first_name || 'User'}
+                            className="w-12 h-12 rounded-full border-2 border-purple-200 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`;
+                            }}
+                          />
+                          <span className="text-xs text-gray-600 mt-1 max-w-[60px] truncate text-center">
+                            {order.users?.telegram_username || order.users?.first_name || `User ${order.user_id?.slice(-4) || ''}`}
+                          </span>
+                        </div>
+                      ))}
+                      {/* 剩余空位 - 虚席以待 */}
+                      {Array.from({ length: session.max_participants - (session.orders?.length || 0) }).map((_, index) => (
+                        <div key={`empty-${index}`} className="flex flex-col items-center">
+                          <div className="w-12 h-12 rounded-full border-2 border-dashed border-gray-300 bg-gray-50 flex items-center justify-center">
+                            <span className="text-gray-400 text-lg">?</span>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <span className="text-xs text-gray-400 mt-1">
+                            {t('groupBuy.waitingSlot')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
 
                     <div className="flex gap-2">
                       {isParticipated ? (

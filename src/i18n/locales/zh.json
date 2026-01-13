@@ -1002,6 +1002,7 @@
     "groupPrice": "拼团价",
     "peopleGroup": "人团",
     "hoursLimit": "小时限时",
+    "waitingSlot": "虚位以待",
     "rules": {
       "title": "拼团规则",
       "rule1": "每人支付商品价格的1/N参与拼团",
