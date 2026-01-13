@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { formatDateTime } from '../lib/utils';
+import { formatDateTime, getLocalizedText } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 const ITEMS_PER_PAGE = 10;
@@ -33,7 +33,7 @@ let showoffCache: ShowoffCache | null = null;
 const CACHE_DURATION = 2 * 60 * 1000; // 2分钟缓存
 
 const ShowoffPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
   const { showoffService } = useSupabase();
@@ -153,7 +153,7 @@ const ShowoffPage: React.FC = () => {
       let lotteriesMap: Record<string, any> = {};
       if (lotteryIds.length > 0) {
         const lotteriesResponse = await fetch(
-          `${supabaseUrl}/rest/v1/lotteries?id=in.(${lotteryIds.join(',')})&select=id,title,image_url`,
+          `${supabaseUrl}/rest/v1/lotteries?id=in.(${lotteryIds.join(",")})&select=id,title,title_i18n,image_url`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
@@ -364,7 +364,7 @@ const ShowoffPage: React.FC = () => {
                       <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {showoff.lottery?.title || showoff.lottery_title || t('showoff.unknownLottery')}
+                          {getLocalizedText(showoff.lottery?.title_i18n, i18n.language) || showoff.lottery?.title || showoff.lottery_title || t('showoff.unknownLottery')}
                         </p>
                       </div>
                     </div>
@@ -458,7 +458,7 @@ const ShowoffPage: React.FC = () => {
             {/* No More Data */}
             {!hasMore && showoffs.length > 0 && (
               <div className="py-8 text-center text-gray-400 text-sm">
-                没有更多晒单了
+                {t('showoff.noMoreShowoffs')}
               </div>
             )}
           </>
