@@ -8,6 +8,7 @@ import { useUser } from '../contexts/UserContext'
 import { uploadImages } from '../lib/uploadImage'
 import { ArrowLeft, Upload, CheckCircle2, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import { formatCurrency } from '../lib/utils'
+import { FirstDepositNoticeModal } from '../components/wallet/FirstDepositNoticeModal'
 
 interface PaymentConfig {
   id: string
@@ -47,10 +48,60 @@ export default function DepositPage() {
   const [submitting, setSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [showFirstDepositNotice, setShowFirstDepositNotice] = useState(false)
+  const [hasCheckedFirstDeposit, setHasCheckedFirstDeposit] = useState(false)
 
   useEffect(() => {
     fetchPaymentConfigs()
+    checkFirstDeposit()
   }, [])
+
+  /**
+   * 检查是否为首次充值
+   * 查询用户是否有已审核通过的充值记录
+   */
+  const checkFirstDeposit = async () => {
+    if (!user?.id) return
+
+    try {
+      // 查询用户是否有已审核通过的充值记录
+      const { data, error } = await supabase
+        .from('deposit_requests')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'APPROVED')
+        .limit(1)
+
+      if (error) {
+        console.error('Failed to check first deposit:', error)
+        return
+      }
+
+      // 如果没有充值记录，显示首次充值提示
+      if (!data || data.length === 0) {
+        // 检查 localStorage 是否已经确认过
+        const hasConfirmed = localStorage.getItem(`first_deposit_notice_confirmed_${user.id}`)
+        if (!hasConfirmed) {
+          setShowFirstDepositNotice(true)
+        }
+      }
+
+      setHasCheckedFirstDeposit(true)
+    } catch (error) {
+      console.error('Error checking first deposit:', error)
+      setHasCheckedFirstDeposit(true)
+    }
+  }
+
+  /**
+   * 用户确认首次充值提示
+   */
+  const handleConfirmFirstDepositNotice = () => {
+    if (user?.id) {
+      localStorage.setItem(`first_deposit_notice_confirmed_${user.id}`, 'true')
+    }
+    setShowFirstDepositNotice(false)
+  }
 
   const fetchPaymentConfigs = async () => {
     try {
@@ -269,7 +320,15 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 pb-20">
+    <>
+      {/* 首次充值提示弹窗 */}
+      <FirstDepositNoticeModal
+        isOpen={showFirstDepositNotice}
+        onClose={() => setShowFirstDepositNotice(false)}
+        onConfirm={handleConfirmFirstDepositNotice}
+      />
+
+      <div className="min-h-screen bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 pb-20">
       {/* Header */}
       <div className="bg-white/10 backdrop-blur-md p-4 flex items-center">
         <button onClick={() => navigate(-1)} className="text-white">
@@ -502,5 +561,6 @@ export default function DepositPage() {
         </button>
       </div>
     </div>
+    </>
   )
 }
