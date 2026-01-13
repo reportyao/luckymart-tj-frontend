@@ -796,7 +796,7 @@ export const referralService = {
         prize_id: params.prize_id,
         lottery_id: params.lottery_id,
         content: params.content,
-        images: params.images,
+        image_urls: params.images, // 数据库字段名是 image_urls
         status: 'PENDING',
       })
       .select()

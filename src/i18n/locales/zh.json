@@ -302,6 +302,8 @@
       "friendCashback": "好友消费返现",
       "groupBuyPurchase": "参与拼团",
       "groupBuyRefund": "拼团退款",
+      "groupBuyRefundTimeout": "拼团未成团退款（退回余额）",
+      "groupBuyRefundLost": "拼团未中奖退款（退回积分）",
       "groupBuyPrize": "拼团中奖",
       "spinReward": "邀请奖励-转盘抽奖",
       "fullPurchase": "全款购买"
@@ -873,7 +875,23 @@
     "inviteReward": "邀请奖励到账",
     "drawReminder": "开奖提醒",
     "maintenanceNotice": "系统维护通知",
-    "securityTip": "安全提示"
+    "securityTip": "安全提示",
+    "groupBuyWin": "🎉 拼团中奖!",
+    "groupBuyWinContent": "恭喜您在拼团中中奖，获得{{product}}!",
+    "groupBuyLose": "拼团未中奖",
+    "groupBuyLoseContent": "很遗憾，本次拼团未中奖，已退还积分",
+    "groupBuyTimeout": "拼团未成团",
+    "groupBuyTimeoutContent": "拼团超时未成团，资金已原路退回余额",
+    "lotteryPurchase": "积分商城参与",
+    "lotteryPurchaseContent": "您已参与{{product}}，购买{{count}}张彩票",
+    "lotteryWin": "🎉 积分商城中奖!",
+    "lotteryWinContent": "恭喜您在积分商城中奖，获得{{product}}!",
+    "referralReward": "推荐奖励",
+    "referralRewardContent": "您获得推荐奖励 {{amount}} TJS",
+    "friendCashback": "消费返现",
+    "friendCashbackContent": "好友消费返现 {{amount}} TJS",
+    "spinReward": "转盘奖励",
+    "spinRewardContent": "转盘抽奖获得 {{amount}}"
   },
   "cities": {
     "dushanbe": "杜尚别",

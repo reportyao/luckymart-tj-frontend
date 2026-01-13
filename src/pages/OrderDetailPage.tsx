@@ -273,12 +273,15 @@ const OrderDetailPage: React.FC = () => {
             )}
             <div className="flex-1 min-w-0">
               <h3 className="font-medium text-gray-900 mb-2 line-clamp-2">{productTitle}</h3>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
-                  <span className="text-lg font-bold text-purple-600">
-                    {formatCurrency(order.currency, order.total_amount)}
-                  </span>
+              <div className="mt-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
+                  <div className="flex items-baseline space-x-1">
+                    <span className="text-sm text-gray-500">{order.currency}</span>
+                    <span className="text-xl font-bold text-purple-600">
+                      {order.total_amount}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>

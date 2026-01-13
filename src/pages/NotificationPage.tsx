@@ -153,13 +153,15 @@ const NotificationPage: React.FC = () => {
         });
       }
 
-      // 5. 获取拼团开奖结果
+      // 5. 获取拼团记录（包括成功、失败、超时）
       try {
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
         const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
         
+        // 同时查询user.id和telegram_id
+        const userTelegramId = (user as any).telegram_id;
         const groupBuyResponse = await fetch(
-          `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user.id}&select=*,session:group_buy_sessions(id,status,winner_id)&order=created_at.desc&limit=20`,
+          `${supabaseUrl}/rest/v1/group_buy_orders?or=(user_id.eq.${user.id},user_id.eq.${userTelegramId || user.id})&select=*,session:group_buy_sessions(id,status,winner_id,session_code,product:group_buy_products(title_i18n))&order=created_at.desc&limit=20`,
           {
             headers: {
               'Authorization': `Bearer ${supabaseKey}`,
@@ -171,15 +173,32 @@ const NotificationPage: React.FC = () => {
         if (groupBuyResponse.ok) {
           const groupBuyResults = await groupBuyResponse.json();
           groupBuyResults.forEach((order: any) => {
-            if (order.session?.status === 'SUCCESS' || order.session?.status === 'COMPLETED') {
-              // 检查用户是否是中奖者
-              const isWinner = order.session?.winner_id === user.id || order.session?.winner_id === (user as any).telegram_id;
+            const sessionStatus = order.session?.status;
+            const isWinner = order.session?.winner_id === user.id || order.session?.winner_id === userTelegramId;
+            const productTitle = order.session?.product?.title_i18n?.[i18n.language] || order.session?.product?.title_i18n?.zh || '拼团商品';
+            
+            if (sessionStatus === 'SUCCESS' || sessionStatus === 'COMPLETED') {
               allNotifications.push({
                 id: `groupbuy_${order.id}`,
                 user_id: user.id,
                 type: isWinner ? 'GROUP_BUY_WIN' : 'GROUP_BUY_LOSE',
-                title: isWinner ? '🎉 拼团中奖!' : '拼团未中奖',
-                content: isWinner ? '恭喜您在拼团中中奖!' : '很遗憾，本次拼团未中奖，已退还积分',
+                title: isWinner ? t('notifications.groupBuyWin') || '🎉 拼团中奖!' : t('notifications.groupBuyLose') || '拼团未中奖',
+                content: isWinner 
+                  ? t('notifications.groupBuyWinContent', { product: productTitle }) || `恭喜您在拼团中中奖，获得${productTitle}!` 
+                  : t('notifications.groupBuyLoseContent') || '很遗憾，本次拼团未中奖，已退还积分',
+                related_id: order.session_id,
+                related_type: 'group_buy',
+                is_read: true,
+                created_at: order.updated_at || order.created_at,
+                source: 'group_buy_orders'
+              });
+            } else if (sessionStatus === 'TIMEOUT') {
+              allNotifications.push({
+                id: `groupbuy_timeout_${order.id}`,
+                user_id: user.id,
+                type: 'GROUP_BUY_TIMEOUT',
+                title: t('notifications.groupBuyTimeout') || '拼团未成团',
+                content: t('notifications.groupBuyTimeoutContent') || '拼团超时未成团，资金已原路退回余额',
                 related_id: order.session_id,
                 related_type: 'group_buy',
                 is_read: true,
@@ -193,12 +212,123 @@ const NotificationPage: React.FC = () => {
         console.error('Failed to fetch group buy results:', e);
       }
 
-      // 6. 按时间排序
+      // 6. 获取积分商城记录（购买、中奖、未中）
+      try {
+        const { data: ordersData, error: ordersError } = await supabase
+          .from('orders')
+          .select('*, lottery:lotteries(title_i18n), prize:prizes(id, status)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (!ordersError && ordersData) {
+          ordersData.forEach((order: any) => {
+            const lotteryTitle = order.lottery?.title_i18n?.[i18n.language] || order.lottery?.title_i18n?.zh || '积分商品';
+            
+            // 购买记录
+            allNotifications.push({
+              id: `lottery_purchase_${order.id}`,
+              user_id: user.id,
+              type: 'LOTTERY_PURCHASE',
+              title: t('notifications.lotteryPurchase') || '积分商城参与',
+              content: t('notifications.lotteryPurchaseContent', { product: lotteryTitle, count: order.ticket_count || 1 }) || `您已参与${lotteryTitle}，购买${order.ticket_count || 1}张彩票`,
+              related_id: order.id,
+              related_type: 'lottery',
+              is_read: true,
+              created_at: order.created_at,
+              source: 'orders'
+            });
+
+            // 中奖记录
+            if (order.prize) {
+              const isWon = order.prize.status === 'WON' || order.prize.status === 'CLAIMED' || order.prize.status === 'PENDING_PICKUP';
+              if (isWon) {
+                allNotifications.push({
+                  id: `lottery_win_${order.id}`,
+                  user_id: user.id,
+                  type: 'LOTTERY_WIN',
+                  title: t('notifications.lotteryWin') || '🎉 积分商城中奖!',
+                  content: t('notifications.lotteryWinContent', { product: lotteryTitle }) || `恭喜您在积分商城中奖，获得${lotteryTitle}!`,
+                  related_id: order.prize.id,
+                  related_type: 'prize',
+                  is_read: true,
+                  created_at: order.updated_at || order.created_at,
+                  source: 'prizes'
+                });
+              }
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to fetch lottery orders:', e);
+      }
+
+      // 7. 获取邀请奖励记录
+      try {
+        const { data: referralData, error: referralError } = await supabase
+          .from('wallet_transactions')
+          .select('*')
+          .in('type', ['REFERRAL_BONUS', 'FRIEND_CASHBACK', 'SPIN_REWARD'])
+          .order('created_at', { ascending: false })
+          .limit(20);
+
+        if (!referralError && referralData) {
+          const { data: userWallets } = await supabase
+            .from('wallets')
+            .select('id')
+            .eq('user_id', user.id);
+          
+          const walletIds = userWallets?.map(w => w.id) || [];
+          
+          referralData.forEach((tx: any) => {
+            if (walletIds.includes(tx.wallet_id)) {
+              let title = '';
+              let content = '';
+              let type = '';
+              
+              switch (tx.type) {
+                case 'REFERRAL_BONUS':
+                  type = 'REFERRAL_REWARD';
+                  title = t('notifications.referralReward') || '推荐奖励';
+                  content = t('notifications.referralRewardContent', { amount: tx.amount }) || `您获得推荐奖励 ${tx.amount} TJS`;
+                  break;
+                case 'FRIEND_CASHBACK':
+                  type = 'FRIEND_CASHBACK';
+                  title = t('notifications.friendCashback') || '消费返现';
+                  content = t('notifications.friendCashbackContent', { amount: tx.amount }) || `好友消费返现 ${tx.amount} TJS`;
+                  break;
+                case 'SPIN_REWARD':
+                  type = 'SPIN_REWARD';
+                  title = t('notifications.spinReward') || '转盘奖励';
+                  content = t('notifications.spinRewardContent', { amount: tx.amount }) || `转盘抽奖获得 ${tx.amount}`;
+                  break;
+              }
+              
+              allNotifications.push({
+                id: `reward_${tx.id}`,
+                user_id: user.id,
+                type,
+                title,
+                content,
+                related_id: tx.id,
+                related_type: 'reward',
+                is_read: true,
+                created_at: tx.created_at,
+                source: 'wallet_transactions'
+              });
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Failed to fetch referral rewards:', e);
+      }
+
+      // 8. 按时间排序
       allNotifications.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
-      // 7. 去重（基于 id）
+      // 9. 去重（基于 id）
       const uniqueNotifications = allNotifications.filter((n, index, self) =>
         index === self.findIndex(t => t.id === n.id)
       );
@@ -317,6 +447,16 @@ const NotificationPage: React.FC = () => {
         return <ArrowPathIcon className={`${iconClass} text-blue-600`} />;
       case 'GROUP_BUY_LOSE':
         return <UsersIcon className={`${iconClass} text-gray-600`} />;
+      case 'GROUP_BUY_TIMEOUT':
+        return <UsersIcon className={`${iconClass} text-orange-600`} />;
+      case 'LOTTERY_PURCHASE':
+        return <TicketIcon className={`${iconClass} text-purple-600`} />;
+      case 'LOTTERY_WIN':
+        return <TrophyIcon className={`${iconClass} text-yellow-600`} />;
+      case 'FRIEND_CASHBACK':
+        return <BanknotesIcon className={`${iconClass} text-green-600`} />;
+      case 'SPIN_REWARD':
+        return <TrophyIcon className={`${iconClass} text-purple-600`} />;
       default:
         return <BellIcon className={`${iconClass} text-gray-600`} />;
     }
@@ -351,6 +491,16 @@ const NotificationPage: React.FC = () => {
         return 'bg-blue-50';
       case 'GROUP_BUY_LOSE':
         return 'bg-gray-50';
+      case 'GROUP_BUY_TIMEOUT':
+        return 'bg-orange-50';
+      case 'LOTTERY_PURCHASE':
+        return 'bg-purple-50';
+      case 'LOTTERY_WIN':
+        return 'bg-yellow-50';
+      case 'FRIEND_CASHBACK':
+        return 'bg-green-50';
+      case 'SPIN_REWARD':
+        return 'bg-purple-50';
       default:
         return 'bg-gray-50';
     }
