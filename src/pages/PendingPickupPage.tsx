@@ -80,58 +80,61 @@ const PendingPickupPage: React.FC = () => {
       }
 
       // 2. 获取拼团（GroupBuy）的待提货商品
-      // TODO: 暂时注释掉拼团查询，等待数据库类型更新
-      /*
-      const { data: groupBuyOrders, error: groupBuyError } = await supabase
-        .from('group_buy_orders')
-        .select(`
-          id, 
-          product_id, 
-          session_id, 
-          created_at, 
-          status,
-          group_buy_products(id, title, description, image_url, images, price_per_person, group_size),
-          group_buy_sessions(id, session_code, current_participants, expires_at)
-        `)
-        .eq('user_id', user.id)
-        .eq('status', 'COMPLETED')
-        .order('created_at', { ascending: false });
+      // 使用 any 类型绕过 TypeScript 严格检查
+      try {
+        const { data: groupBuyOrders, error: groupBuyError } = await (supabase as any)
+          .from('group_buy_orders')
+          .select(`
+            id, 
+            product_id, 
+            session_id, 
+            created_at, 
+            status,
+            group_buy_products(id, title, description, image_url, images, price_per_person, group_size),
+            group_buy_sessions(id, session_code, current_participants, expires_at)
+          `)
+          .eq('user_id', user.id)
+          .eq('status', 'COMPLETED')
+          .order('created_at', { ascending: false });
 
-      if (groupBuyError) {
-        console.error('Failed to fetch group buy orders:', groupBuyError);
-      } else if (groupBuyOrders && Array.isArray(groupBuyOrders)) {
-        groupBuyOrders.forEach((order: any) => {
-          const product = order.group_buy_products;
-          const session = order.group_buy_sessions;
-          
-          if (product && session) {
-            let title = '';
-            if (typeof product.title === 'object') {
-              title = product.title[i18n.language] || product.title.zh || product.title.en || '';
-            } else {
-              title = product.title || '';
-            }
-
-            const image = product.images?.[0] || product.image_url || '';
+        if (groupBuyError) {
+          console.error('Failed to fetch group buy orders:', groupBuyError);
+        } else if (groupBuyOrders && Array.isArray(groupBuyOrders)) {
+          groupBuyOrders.forEach((order: any) => {
+            const product = order.group_buy_products;
+            const session = order.group_buy_sessions;
             
-            pendingItems.push({
-              id: order.id,
-              type: 'groupbuy',
-              productId: product.id,
-              productTitle: title,
-              productImage: image,
-              price: product.price_per_person,
-              currency: 'TJS',
-              quantity: 1,
-              sessionCode: session.session_code,
-              createdAt: order.created_at,
-              status: 'PENDING',
-              orderDetailLink: `/groupbuy/${product.id}`
-            });
-          }
-        });
+            if (product && session) {
+              // 处理多语言标题
+              let title = '';
+              if (typeof product.title === 'object') {
+                title = product.title[i18n.language] || product.title.zh || product.title.en || '';
+              } else {
+                title = product.title || '';
+              }
+
+              const image = product.images?.[0] || product.image_url || '';
+              
+              pendingItems.push({
+                id: order.id,
+                type: 'groupbuy',
+                productId: product.id,
+                productTitle: title,
+                productImage: image,
+                price: product.price_per_person,
+                currency: 'TJS',
+                quantity: 1,
+                sessionCode: session.session_code,
+                createdAt: order.created_at,
+                status: 'PENDING',
+                orderDetailLink: `/groupbuy/${product.id}`
+              });
+            }
+          });
+        }
+      } catch (groupBuyErr) {
+        console.error('Error fetching group buy orders:', groupBuyErr);
       }
-      */
 
       // 按创建时间倒序排列（新到旧）
       pendingItems.sort((a, b) => 
