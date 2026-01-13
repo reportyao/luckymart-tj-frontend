@@ -113,39 +113,97 @@ export default function GroupBuyListPage() {
               onClick={() => navigate(`/group-buy/${product.id}`)}
               className="bg-white rounded-2xl shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
             >
-              {/* Product Images - 展示前三张图片 */}
+              {/* Product Images - 智能展示图片，根据图片数量自动调整布局 */}
               <div className="relative">
                 {(() => {
-                  const images = product.images && product.images.length > 0 
-                    ? product.images.slice(0, 3) 
+                  const allImages = product.images && product.images.length > 0 
+                    ? product.images 
                     : [product.image_url];
                   
-                  if (images.length === 1) {
+                  // 单张图片：全宽展示
+                  if (allImages.length === 1) {
                     return (
                       <img
-                        src={images[0]}
+                        src={allImages[0]}
                         alt={getLocalizedText(product.title)}
                         className="w-full h-48 object-cover"
                       />
                     );
                   }
                   
-                  return (
-                    <div className="flex h-48 gap-0.5 overflow-hidden">
-                      {images.map((img, index) => (
-                        <div 
-                          key={index} 
-                          className={`relative overflow-hidden ${
-                            images.length === 2 ? 'w-1/2' : 'w-1/3'
-                          }`}
-                        >
+                  // 2张图片：左右平分
+                  if (allImages.length === 2) {
+                    return (
+                      <div className="flex h-48 gap-0.5 overflow-hidden">
+                        {allImages.map((img, index) => (
+                          <div key={index} className="w-1/2 overflow-hidden">
+                            <img
+                              src={img}
+                              alt={`${getLocalizedText(product.title)} ${index + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  
+                  // 3张图片：左边大图 + 右边两小图
+                  if (allImages.length === 3) {
+                    return (
+                      <div className="flex h-48 gap-0.5 overflow-hidden">
+                        <div className="w-1/2 overflow-hidden">
                           <img
-                            src={img}
-                            alt={`${getLocalizedText(product.title)} ${index + 1}`}
+                            src={allImages[0]}
+                            alt={`${getLocalizedText(product.title)} 1`}
                             className="w-full h-full object-cover"
                           />
                         </div>
-                      ))}
+                        <div className="w-1/2 flex flex-col gap-0.5">
+                          {allImages.slice(1, 3).map((img, index) => (
+                            <div key={index} className="h-1/2 overflow-hidden">
+                              <img
+                                src={img}
+                                alt={`${getLocalizedText(product.title)} ${index + 2}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  // 4张及以上图片：左边大图 + 右边三小图
+                  const displayImages = allImages.slice(0, 4);
+                  const remainingCount = allImages.length - 4;
+                  
+                  return (
+                    <div className="flex h-48 gap-0.5 overflow-hidden">
+                      <div className="w-1/2 overflow-hidden">
+                        <img
+                          src={displayImages[0]}
+                          alt={`${getLocalizedText(product.title)} 1`}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="w-1/2 flex flex-col gap-0.5">
+                        {displayImages.slice(1, 4).map((img, index) => (
+                          <div key={index} className="h-1/3 overflow-hidden relative">
+                            <img
+                              src={img}
+                              alt={`${getLocalizedText(product.title)} ${index + 2}`}
+                              className="w-full h-full object-cover"
+                            />
+                            {/* 最后一张图片显示剩余数量 */}
+                            {index === 2 && remainingCount > 0 && (
+                              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">+{remainingCount}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   );
                 })()}

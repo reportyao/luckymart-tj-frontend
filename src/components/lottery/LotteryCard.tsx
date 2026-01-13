@@ -75,14 +75,15 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	        className
 	      )}
 	    >
-      {/* 抽奖图片 - 展示前三张图片 */}
-      <div className="relative h-32 bg-gradient-to-r from-purple-400 to-pink-400">
+      {/* 抽奖图片 - 智能展示图片，根据图片数量自动调整布局 */}
+      <div className="relative h-36 bg-gradient-to-r from-purple-400 to-pink-400">
         {(() => {
-          const images = lottery.image_urls && lottery.image_urls.length > 0 
-            ? lottery.image_urls.slice(0, 3) 
+          const allImages = lottery.image_urls && lottery.image_urls.length > 0 
+            ? lottery.image_urls 
             : (lottery.image_url ? [lottery.image_url] : []);
           
-          if (images.length === 0) {
+          // 无图片：显示默认图标
+          if (allImages.length === 0) {
             return (
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center text-white">
@@ -93,36 +94,102 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             );
           }
           
-          if (images.length === 1) {
+          // 单张图片：全宽展示
+          if (allImages.length === 1) {
             return (
               <LazyImage 
-                src={images[0]} 
+                src={allImages[0]} 
                 alt={lottery.title}
                 className="w-full h-full object-cover"
                 width={300}
-                height={128}
+                height={144}
               />
             );
           }
           
-          return (
-            <div className="flex h-full gap-0.5 overflow-hidden">
-              {images.map((img, index) => (
-                <div 
-                  key={index} 
-                  className={`relative overflow-hidden ${
-                    images.length === 2 ? 'w-1/2' : 'w-1/3'
-                  }`}
-                >
+          // 2张图片：左右平分
+          if (allImages.length === 2) {
+            return (
+              <div className="flex h-full gap-0.5 overflow-hidden">
+                {allImages.map((img, index) => (
+                  <div key={index} className="w-1/2 overflow-hidden">
+                    <LazyImage
+                      src={img}
+                      alt={`${lottery.title} ${index + 1}`}
+                      className="w-full h-full object-cover"
+                      width={150}
+                      height={144}
+                    />
+                  </div>
+                ))}
+              </div>
+            );
+          }
+          
+          // 3张图片：左边大图 + 右边两小图
+          if (allImages.length === 3) {
+            return (
+              <div className="flex h-full gap-0.5 overflow-hidden">
+                <div className="w-1/2 overflow-hidden">
                   <LazyImage
-                    src={img}
-                    alt={`${lottery.title} ${index + 1}`}
+                    src={allImages[0]}
+                    alt={`${lottery.title} 1`}
                     className="w-full h-full object-cover"
-                    width={images.length === 2 ? 150 : 100}
-                    height={128}
+                    width={150}
+                    height={144}
                   />
                 </div>
-              ))}
+                <div className="w-1/2 flex flex-col gap-0.5">
+                  {allImages.slice(1, 3).map((img, index) => (
+                    <div key={index} className="h-1/2 overflow-hidden">
+                      <LazyImage
+                        src={img}
+                        alt={`${lottery.title} ${index + 2}`}
+                        className="w-full h-full object-cover"
+                        width={150}
+                        height={72}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+          
+          // 4张及以上图片：左边大图 + 右边三小图
+          const displayImages = allImages.slice(0, 4);
+          const remainingCount = allImages.length - 4;
+          
+          return (
+            <div className="flex h-full gap-0.5 overflow-hidden">
+              <div className="w-1/2 overflow-hidden">
+                <LazyImage
+                  src={displayImages[0]}
+                  alt={`${lottery.title} 1`}
+                  className="w-full h-full object-cover"
+                  width={150}
+                  height={144}
+                />
+              </div>
+              <div className="w-1/2 flex flex-col gap-0.5">
+                {displayImages.slice(1, 4).map((img, index) => (
+                  <div key={index} className="h-1/3 overflow-hidden relative">
+                    <LazyImage
+                      src={img}
+                      alt={`${lottery.title} ${index + 2}`}
+                      className="w-full h-full object-cover"
+                      width={150}
+                      height={48}
+                    />
+                    {/* 最后一张图片显示剩余数量 */}
+                    {index === 2 && remainingCount > 0 && (
+                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">+{remainingCount}</span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           );
         })()}
