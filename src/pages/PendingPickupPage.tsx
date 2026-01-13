@@ -82,7 +82,7 @@ const PendingPickupPage: React.FC = () => {
       // 2. 获取拼团（GroupBuy）的待提货商品
       // 从group_buy_orders表获取用户参与的拼团订单
       const { data: groupBuyOrders, error: groupBuyError } = await supabase
-        .from('group_buy_participants')
+        .from('group_buy_orders')
         .select(`
           id, 
           product_id, 
