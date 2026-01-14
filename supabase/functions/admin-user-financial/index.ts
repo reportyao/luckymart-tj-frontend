@@ -105,7 +105,7 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
     .from('commissions')
     .select('level, amount')
     .eq('user_id', userId)
-    .eq('status', 'PAID')
+    .eq('status', 'settled')
 
   if (commissionsError) throw commissionsError
 
@@ -337,6 +337,8 @@ function getTransactionTypeName(type: string): string {
   const typeNames: Record<string, string> = {
     'DEPOSIT': '充值',
     'WITHDRAWAL': '提现',
+    'WITHDRAWAL_FREEZE': '提现冻结',
+    'WITHDRAWAL_UNFREEZE': '提现解冻',
     'LOTTERY_PURCHASE': '积分商城消费',
     'LOTTERY_REFUND': '积分商城退款',
     'LOTTERY_PRIZE': '积分商城中奖',
@@ -347,11 +349,31 @@ function getTransactionTypeName(type: string): string {
     'ADMIN_ADJUSTMENT': '系统调整',
     'GROUP_BUY_PURCHASE': '拼团消费',
     'GROUP_BUY_REFUND': '拼团退款',
-    'GROUP_BUY_WIN': '拼团中奖'
+    'GROUP_BUY_REFUND_TO_POINTS': '拼团退款转积分',
+    'GROUP_BUY_WIN': '拼团中奖',
+    'FULL_PURCHASE': '全款购买',
+    'NEW_USER_GIFT': '新用户礼物',
+    'SHOWOFF_REWARD': '晒单奖励',
+    'SPIN_REWARD': '转盘奖励',
+    'COMMISSION': '佣金收入'
   }
   return typeNames[type] || type
 }
 
 function isIncomeType(type: string): boolean {
-  return ['DEPOSIT', 'LOTTERY_PRIZE', 'GROUP_BUY_WIN', 'REFERRAL_BONUS', 'MARKET_SALE', 'LOTTERY_REFUND', 'GROUP_BUY_REFUND'].includes(type)
+  return [
+    'DEPOSIT',
+    'LOTTERY_PRIZE',
+    'LOTTERY_REFUND',
+    'GROUP_BUY_WIN',
+    'GROUP_BUY_REFUND',
+    'GROUP_BUY_REFUND_TO_POINTS',
+    'REFERRAL_BONUS',
+    'MARKET_SALE',
+    'NEW_USER_GIFT',
+    'SHOWOFF_REWARD',
+    'SPIN_REWARD',
+    'WITHDRAWAL_UNFREEZE',
+    'COMMISSION'
+  ].includes(type)
 }
