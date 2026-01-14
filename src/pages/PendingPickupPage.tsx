@@ -99,8 +99,8 @@ const PendingPickupPage: React.FC = () => {
             lotteries(id, title, title_i18n, image_url, image_urls, currency)
           `)
           .eq('user_id', user.id)
-          .eq('status', 'PAID')
-          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
+          .eq('status', 'COMPLETED')
+          .neq('logistics_status', 'PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (fullPurchaseError) {
@@ -145,11 +145,12 @@ const PendingPickupPage: React.FC = () => {
             status,
             logistics_status,
             pickup_code,
+            pickup_status,
             lotteries(id, title, title_i18n, image_url, image_urls, currency, ticket_price)
           `)
           .eq('user_id', user.id)
-          .eq('status', 'WON')
-          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
+          .eq('status', 'PENDING_CLAIM')
+          .neq('pickup_status', 'PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (prizesError) {
@@ -195,12 +196,13 @@ const PendingPickupPage: React.FC = () => {
             status,
             logistics_status,
             pickup_code,
-            group_buy_products(id, title, description, image_url, image_urls, price_per_person, group_size),
+            pickup_status,
+            group_buy_products(id, name, name_i18n, title, description, image_url, image_urls, price_per_person, group_size),
             group_buy_sessions(id, session_code, current_participants, expires_at)
           `)
-          .eq('user_id', user.id)
-          .eq('status', 'WON')
-          .or('logistics_status.is.null,logistics_status.neq.PICKED_UP')
+          .eq('winner_id', user.id)
+          .not('winner_id', 'is', null)
+          .neq('pickup_status', 'PICKED_UP')
           .order('created_at', { ascending: false });
 
         if (groupBuyResultsError) {
@@ -213,10 +215,12 @@ const PendingPickupPage: React.FC = () => {
             if (product) {
               // 处理多语言标题
               let title = '';
-              if (typeof product.title === 'object') {
+              if (product.name_i18n) {
+                title = getLocalizedText(product.name_i18n, i18n.language) || product.name || product.title || '';
+              } else if (typeof product.title === 'object') {
                 title = product.title[i18n.language] || product.title.zh || product.title.en || '';
               } else {
-                title = product.title || '';
+                title = product.name || product.title || '';
               }
 
               const image = product.image_urls?.[0] || product.image_url || '';

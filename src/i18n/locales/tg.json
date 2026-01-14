@@ -303,6 +303,8 @@
       "groupBuyRefund": "Баргашти пул барои хариди гурӯҳӣ",
       "groupBuyRefundTimeout": "Баргашт - гурӯҳ ҷамъ нашуд (ба тавозун)",
       "groupBuyRefundLost": "Баргашт - бурд накардед (ба холҳо)",
+      "groupBuyRefundToPoints": "Баргашти пул барои хариди гурӯҳӣ (ба холҳо)",
+      "groupBuyRefundToBalance": "Баргашти пул барои хариди гурӯҳӣ (ба тавозун)",
       "groupBuyPrize": "Бурд дар хариди гурӯҳӣ",
       "spinReward": "Мукофоти дават - чархи ҷодуӣ"
     },
@@ -1001,7 +1003,7 @@
     "people": "наф.",
     "activeGroups": "Гурӯҳҳои фаъол",
     "joinGroup": "Хамроҳ шудан",
-    "startGroup": "Сохтан",
+    "startGroup": "Сохтани гурӯҳи нав",
     "productNotFound": "Мол ёфт нашуд",
     "joinExisting": "Ба гурӯҳ ҳамроҳ шудан",
     "noActiveGroups": "Гурӯҳҳои фаъол нест",

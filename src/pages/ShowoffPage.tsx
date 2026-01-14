@@ -169,11 +169,31 @@ const ShowoffPage: React.FC = () => {
         }
       }
 
-      // 5. 合并数据
+      // 5. 查询当前用户的点赞状态
+      let likedShowoffIds = new Set<string>();
+      if (user && showoffsData.length > 0) {
+        const showoffIds = showoffsData.map((s: any) => s.id);
+        const likesResponse = await fetch(
+          `${supabaseUrl}/rest/v1/likes?user_id=eq.${user.id}&post_id=in.(${showoffIds.join(',')})&select=post_id`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (likesResponse.ok) {
+          const likesData = await likesResponse.json();
+          likedShowoffIds = new Set(likesData.map((l: any) => l.post_id));
+        }
+      }
+
+      // 6. 合并数据
       const enrichedData = showoffsData.map((showoff: any) => ({
         ...showoff,
         user: usersMap[showoff.user_id] || null,
         lottery: lotteriesMap[showoff.lottery_id] || null,
+        is_liked: likedShowoffIds.has(showoff.id),
       }));
 
       // 如果是加载更多，追加到现有数据

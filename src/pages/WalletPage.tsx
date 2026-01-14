@@ -182,6 +182,8 @@ const WalletPage: React.FC = () => {
       'GROUP_BUY_TIMEOUT_REFUND': t('wallet.transactionType.groupBuyRefundTimeout'),
       'GROUP_BUY_REFUND_LOST': t('wallet.transactionType.groupBuyRefundLost'),
       'GROUP_BUY_LOST_REFUND': t('wallet.transactionType.groupBuyRefundLost'),
+      'GROUP_BUY_REFUND_TO_POINTS': t('wallet.transactionType.groupBuyRefundToPoints'),
+      'GROUP_BUY_REFUND_TO_BALANCE': t('wallet.transactionType.groupBuyRefundToBalance'),
       'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize'),
       'SPIN_REWARD': t('wallet.transactionType.spinReward')
     }
@@ -217,6 +219,8 @@ const WalletPage: React.FC = () => {
       case 'GROUP_BUY_TIMEOUT_REFUND':
       case 'GROUP_BUY_REFUND_LOST':
       case 'GROUP_BUY_LOST_REFUND':
+      case 'GROUP_BUY_REFUND_TO_POINTS':
+      case 'GROUP_BUY_REFUND_TO_BALANCE':
         return <ArrowDownIcon className="w-5 h-5 text-blue-600" />
       case 'COIN_EXCHANGE':
         // 积分增加时显示四叶草图标（SparklesIcon），减少时显示循环箭头

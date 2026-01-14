@@ -303,6 +303,8 @@
       "groupBuyRefund": "Возврат за групповую покупку",
       "groupBuyRefundTimeout": "Возврат - группа не собрана (на баланс)",
       "groupBuyRefundLost": "Возврат - не выиграли (на баллы)",
+      "groupBuyRefundToPoints": "Возврат за групповую покупку (на баллы)",
+      "groupBuyRefundToBalance": "Возврат за групповую покупку (на баланс)",
       "groupBuyPrize": "Выигрыш в групповой покупке",
       "spinReward": "Приглашение награда-волшебные колеса"
     },
@@ -996,7 +998,7 @@
     "people": "чел.",
     "activeGroups": "Активные группы",
     "joinGroup": "Присоединиться",
-    "startGroup": "Создать",
+    "startGroup": "Создать новую группу",
     "productNotFound": "Товар не найден",
     "joinExisting": "Присоединиться к группе",
     "noActiveGroups": "Нет активных групп",
