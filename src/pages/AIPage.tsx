@@ -27,13 +27,57 @@ interface Message {
   timestamp: Date;
 }
 
+const CHAT_HISTORY_KEY = 'ai_chat_history';
+
 export default function AIPage() {
   const { t } = useTranslation();
   const { quota, loading, refetch } = useAIQuota();
   const [showWelcome, setShowWelcome] = useState(true);
   const [quickInput, setQuickInput] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
+  
+  // 从 localStorage 加载历史聊天记录
+  const loadChatHistory = (): Message[] => {
+    try {
+      const saved = localStorage.getItem(CHAT_HISTORY_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // 将 timestamp 字符串转换回 Date 对象
+        return parsed.map((msg: any) => ({
+          ...msg,
+          timestamp: new Date(msg.timestamp)
+        }));
+      }
+    } catch (error) {
+      console.error('Failed to load chat history:', error);
+    }
+    return [];
+  };
+  
+  const [messages, setMessages] = useState<Message[]>(loadChatHistory());
   const { sendMessage, loading: sending } = useAIChat();
+  
+  // 保存聊天记录到 localStorage
+  const saveChatHistory = (msgs: Message[]) => {
+    try {
+      localStorage.setItem(CHAT_HISTORY_KEY, JSON.stringify(msgs));
+    } catch (error) {
+      console.error('Failed to save chat history:', error);
+    }
+  };
+  
+  // 当 messages 变化时保存到 localStorage
+  React.useEffect(() => {
+    if (messages.length > 0) {
+      saveChatHistory(messages);
+    }
+  }, [messages]);
+  
+  // 如果有历史记录，默认显示聊天界面
+  React.useEffect(() => {
+    if (messages.length > 0) {
+      setShowWelcome(false);
+    }
+  }, []);
 
   // 处理欢迎页面的快速提问
   const handleQuickSend = async () => {
@@ -192,7 +236,10 @@ export default function AIPage() {
             >
               <AIChat 
                 initialMessages={messages}
-                onMessagesChange={setMessages}
+                onMessagesChange={(newMessages) => {
+                  setMessages(newMessages);
+                  saveChatHistory(newMessages);
+                }}
                 onBack={() => setShowWelcome(true)} 
                 onQuotaUpdate={refetch}
               />

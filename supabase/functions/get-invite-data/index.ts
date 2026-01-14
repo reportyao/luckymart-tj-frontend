@@ -125,11 +125,12 @@ serve(async (req) => {
       const userIds = allInvitedUsers.map(u => u.id)
       
       // 查询每个用户的订单总额（消费总额）
+      // 包含所有已支付状态的订单：COMPLETED（已完成）、SHIPPED（已发货）、DELIVERED（已送达）
       const { data: ordersData } = await supabase
         .from('orders')
         .select('user_id, total_amount')
         .in('user_id', userIds)
-        .eq('status', 'COMPLETED')
+        .in('status', ['COMPLETED', 'SHIPPED', 'DELIVERED', 'PENDING'])
       
       // 统计每个用户的消费总额
       const userSpending: Record<string, number> = {}
@@ -143,11 +144,13 @@ serve(async (req) => {
       }
       
       // 查询当前用户从每个下级用户获得的佣金
+      // 只统计已结算的佣金（status='settled'）
       const { data: commissionsData } = await supabase
         .from('commissions')
         .select('from_user_id, amount')
         .eq('user_id', user_id)
         .in('from_user_id', userIds)
+        .eq('status', 'settled')
       
       // 统计每个用户贡献的佣金
       const userCommissions: Record<string, number> = {}
