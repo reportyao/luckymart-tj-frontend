@@ -65,6 +65,7 @@ const LotteryDetailPage: React.FC = () => {
   const [isPurchasing, setIsPurchasing] = useState<boolean>(false);
   const [isFullPurchasing, setIsFullPurchasing] = useState<boolean>(false);
   const [myTickets, setMyTickets] = useState<string[]>([]);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
 
   const fetchMyTickets = useCallback(async () => {
     if (!id || !user) return;
@@ -655,7 +656,39 @@ const LotteryDetailPage: React.FC = () => {
             </span>
           </div>
 
-          <p className="text-gray-600">{description}</p>
+          {/* 商品介绍 - 智能分段 + 折叠展开 */}
+          {description && (
+            <div className="space-y-2">
+              <div className={cn(
+                "text-gray-600 leading-relaxed whitespace-pre-line",
+                !isDescriptionExpanded && "line-clamp-3"
+              )}>
+                {/* 智能分段：将文本按句号分段 */}
+                {description.split(/(?<=[.。!！?？])\s+/).map((paragraph, index) => (
+                  <p key={index} className="mb-2 last:mb-0">{paragraph.trim()}</p>
+                ))}
+              </div>
+              {/* 展开/收起按钮 */}
+              {description.length > 100 && (
+                <button
+                  onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                  className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors flex items-center gap-1"
+                >
+                  {isDescriptionExpanded ? (
+                    <>
+                      <span>{t('common.collapse')}</span>
+                      <ChevronRightIcon className="w-4 h-4 transform rotate-90" />
+                    </>
+                  ) : (
+                    <>
+                      <span>{t('common.expandMore')}</span>
+                      <ChevronRightIcon className="w-4 h-4 transform -rotate-90" />
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Price Display */}
           <div className="text-center py-2">

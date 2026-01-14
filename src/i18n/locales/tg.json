@@ -29,7 +29,9 @@
     "user": "Корбар",
     "aUser": "Як корбар",
     "processing": "Коркард...",
-    "pleaseLogin": "Лутфан ворид шавед"
+    "pleaseLogin": "Лутфан ворид шавед",
+    "expandMore": "Кушодан",
+    "collapse": "Пӯшондан"
   },
   "nav": {
     "home": "Асосӣ",

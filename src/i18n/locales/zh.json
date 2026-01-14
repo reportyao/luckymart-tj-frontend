@@ -30,6 +30,8 @@
     "aUser": "一位用户",
     "processing": "处理中...",
     "pleaseLogin": "请先登录",
+    "expandMore": "展开查看更多",
+    "collapse": "收起",
     "delete": "删除"
   },
   "nav": {

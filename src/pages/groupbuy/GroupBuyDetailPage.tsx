@@ -269,6 +269,7 @@ export default function GroupBuyDetailPage() {
   const [loading, setLoading] = useState(true);
   const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null); // 修改：记录正在处理的session
   const [userParticipatedSessions, setUserParticipatedSessions] = useState<Set<string>>(new Set()); // 新增：记录用户已参与的session
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
 
   useEffect(() => {
     if (id) {
@@ -537,7 +538,39 @@ export default function GroupBuyDetailPage() {
         <h1 className="text-2xl font-bold text-gray-800 mb-2">
           {getLocalizedText(product.title)}
         </h1>
-        <p className="text-gray-600 mb-4">{getLocalizedText(product.description)}</p>
+        {/* 商品介绍 - 智能分段 + 折叠展开 */}
+        {getLocalizedText(product.description) && (
+          <div className="space-y-2 mb-4">
+            <div className={cn(
+              "text-gray-600 leading-relaxed whitespace-pre-line",
+              !isDescriptionExpanded && "line-clamp-3"
+            )}>
+              {/* 智能分段：将文本按句号分段 */}
+              {getLocalizedText(product.description).split(/(?<=[.。!！?？])\s+/).map((paragraph: string, index: number) => (
+                <p key={index} className="mb-2 last:mb-0">{paragraph.trim()}</p>
+              ))}
+            </div>
+            {/* 展开/收起按钮 */}
+            {getLocalizedText(product.description).length > 100 && (
+              <button
+                onClick={() => setIsDescriptionExpanded(!isDescriptionExpanded)}
+                className="text-blue-600 text-sm font-medium hover:text-blue-700 transition-colors flex items-center gap-1"
+              >
+                {isDescriptionExpanded ? (
+                  <>
+                    <span>{t('common.collapse')}</span>
+                    <ChevronRightIcon className="w-4 h-4 transform rotate-90" />
+                  </>
+                ) : (
+                  <>
+                    <span>{t('common.expandMore')}</span>
+                    <ChevronRightIcon className="w-4 h-4 transform -rotate-90" />
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Price */}
         <div className="bg-purple-50 rounded-2xl p-4 mb-4">
