@@ -274,6 +274,8 @@
     "idCardName": "身份证姓名",
     "idCardNumber": "身份证号码",
     "phoneNumber": "手机号码",
+    "withdrawBankInfo": "提现银行信息",
+    "bankAccount": "银行账户",
     "submitWithdrawRequest": "提交提现申请",
     "pleaseEnterValidAmount": "请输入有效金额",
     "pleaseCompleteBankInfo": "请填写完整的银行卡信息",

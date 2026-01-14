@@ -266,6 +266,8 @@
     "idCardName": "Имя на удостоверении",
     "idCardNumber": "Номер удостоверения",
     "phoneNumber": "Номер телефона",
+    "withdrawBankInfo": "Банковская информация для вывода",
+    "bankAccount": "Банковский счёт",
     "submitWithdrawRequest": "Отправить запрос на вывод",
     "pleaseEnterValidAmount": "Введите корректную сумму",
     "pleaseCompleteBankInfo": "Заполните информацию о банковской карте",

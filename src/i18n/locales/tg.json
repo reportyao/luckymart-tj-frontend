@@ -266,6 +266,8 @@
     "idCardName": "Номи дар шиноснома",
     "idCardNumber": "Рақами шиноснома",
     "phoneNumber": "Рақами телефон",
+    "withdrawBankInfo": "Маълумоти бонкӣ барои баровардан",
+    "bankAccount": "Ҳисоби бонкӣ",
     "submitWithdrawRequest": "Дархости гирифтанро ирсол кунед",
     "pleaseEnterValidAmount": "Введите корректную сумму",
     "pleaseCompleteBankInfo": "Заполните информацию о банковской карте",

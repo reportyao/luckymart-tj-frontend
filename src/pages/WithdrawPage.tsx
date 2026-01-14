@@ -173,13 +173,13 @@ export default function WithdrawPage() {
 
         {/* 手机钱包信息 */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.mobileWalletInfo')}</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.withdrawBankInfo')}</h2>
           <div className="space-y-3">
             <input
               type="text"
               value={mobileWalletNumber}
               onChange={(e) => setMobileWalletNumber(e.target.value)}
-              placeholder={t('wallet.walletNumber')}
+              placeholder={t('wallet.bankAccount')}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
             />
             <input

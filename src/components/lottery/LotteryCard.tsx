@@ -76,7 +76,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	      )}
 	    >
       {/* 抽奖图片 - 智能展示图片，根据图片数量自动调整布局 */}
-      <div className="relative h-36 bg-gradient-to-r from-purple-400 to-pink-400">
+      <div className="relative h-36 bg-white">
         {(() => {
           const allImages = lottery.image_urls && lottery.image_urls.length > 0 
             ? lottery.image_urls 
