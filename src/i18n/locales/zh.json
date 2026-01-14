@@ -388,7 +388,10 @@
     "remainingDays": "剩余 {{days}} 天提货",
     "unknownProduct": "未知商品",
     "pickupTips": "温馨提示",
-    "pickupTipsContent": "请在有效期内前往自提点提货，出示提货码即可领取商品。"
+    "pickupTipsContent": "温馨提示：请在有效期内前往自提点提货，出示提货码即可领取商品。",
+    "prize": "一元夺宝中奖",
+    "groupBuy": "拼团中奖",
+    "lottery": "积分商城"
   },
   "notification": {
     "notifications": "通知中心",

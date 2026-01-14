@@ -125,7 +125,7 @@ const PendingPickupPage: React.FC = () => {
                 createdAt: order.created_at,
                 status: order.status,
                 logisticsStatus: order.logistics_status,
-                orderDetailLink: `/full-purchase-orders/${order.id}`
+                orderDetailLink: `/order-detail/${order.id}`
               });
             }
           });
@@ -175,7 +175,7 @@ const PendingPickupPage: React.FC = () => {
                 createdAt: prize.created_at,
                 status: prize.status,
                 logisticsStatus: prize.logistics_status,
-                orderDetailLink: `/prizes/${prize.id}`
+                orderDetailLink: `/order-detail/${prize.id}`
               });
             }
           });
@@ -239,7 +239,7 @@ const PendingPickupPage: React.FC = () => {
                 createdAt: result.created_at,
                 status: result.status,
                 logisticsStatus: result.logistics_status,
-                orderDetailLink: `/groupbuy-results/${result.id}`
+                orderDetailLink: `/order-detail/${result.id}`
               });
             }
           });

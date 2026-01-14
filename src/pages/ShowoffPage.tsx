@@ -284,7 +284,7 @@ const ShowoffPage: React.FC = () => {
             ? {
                 ...showoff,
                 is_liked: !showoff.is_liked,
-                likes_count: Math.max(0, showoff.is_liked ? showoff.likes_count - 1 : showoff.likes_count + 1)
+                likes_count: showoff.is_liked ? showoff.likes_count - 1 : showoff.likes_count + 1
               }
             : showoff
         )
