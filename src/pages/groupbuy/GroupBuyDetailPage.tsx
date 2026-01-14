@@ -14,6 +14,8 @@ import {
   AlertCircle,
   X,
 } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface PriceComparisonItem {
   platform: string;
