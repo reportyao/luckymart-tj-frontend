@@ -11,11 +11,15 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
+  console.log('[deposit-request] 开始处理请求')
+
   try {
     // 先尝试使用用户的token
     const authHeader = req.headers.get('Authorization')
     let userId: string | null = null
     let user: any = null
+
+    console.log('[deposit-request] Authorization header:', authHeader ? '存在' : '不存在')
 
     if (authHeader) {
       // 尝试使用用户token验证
@@ -34,6 +38,9 @@ serve(async (req) => {
       if (!userError && authUser) {
         userId = authUser.id
         user = authUser
+        console.log('[deposit-request] 从token获取到userId:', userId)
+      } else {
+        console.log('[deposit-request] token验证失败:', userError?.message)
       }
     }
 
@@ -44,6 +51,8 @@ serve(async (req) => {
     )
 
     const requestBody = await req.json()
+    console.log('[deposit-request] 请求体:', JSON.stringify(requestBody))
+
     const { 
       amount, 
       currency, 
@@ -56,61 +65,91 @@ serve(async (req) => {
       userId: bodyUserId  // 从body中获取userId
     } = requestBody
 
+    console.log('[deposit-request] 解析的字段:', {
+      amount,
+      currency,
+      paymentMethod,
+      paymentProofImages: paymentProofImages?.length || 0,
+      payerName: payerName || '未提供',
+      payerAccount: payerAccount || '未提供',
+      payerPhone: payerPhone || '未提供',
+      bodyUserId
+    })
+
     // 如果没有从token中获取到userId，使用body中的userId
     if (!userId && bodyUserId) {
       userId = bodyUserId
+      console.log('[deposit-request] 使用body中的userId:', userId)
     }
 
     if (!userId) {
+      console.log('[deposit-request] 错误: 未授权 - 没有userId')
       throw new Error('未授权')
     }
 
     // 验证用户是否存在
+    console.log('[deposit-request] 验证用户是否存在:', userId)
     const { data: existingUser, error: userCheckError } = await supabaseClient
       .from('users')
       .select('id')
       .eq('id', userId)
       .single()
 
-    if (userCheckError || !existingUser) {
+    if (userCheckError) {
+      console.log('[deposit-request] 用户查询错误:', userCheckError.message)
+      throw new Error('用户不存在: ' + userCheckError.message)
+    }
+
+    if (!existingUser) {
+      console.log('[deposit-request] 用户不存在')
       throw new Error('用户不存在')
     }
 
+    console.log('[deposit-request] 用户验证通过')
+
     // 验证参数
     if (!amount || amount <= 0) {
+      console.log('[deposit-request] 错误: 充值金额无效:', amount)
       throw new Error('充值金额必须大于0')
     }
 
     if (!paymentMethod) {
+      console.log('[deposit-request] 错误: 未选择支付方式')
       throw new Error('请选择支付方式')
     }
 
     // 生成订单号
     const orderNumber = `LM${Date.now()}`
+    console.log('[deposit-request] 生成订单号:', orderNumber)
 
     // 创建充值申请
+    const insertData = {
+      user_id: userId,
+      order_number: orderNumber,
+      amount: amount,
+      currency: currency || 'TJS',
+      payment_method: paymentMethod,
+      payment_proof_images: paymentProofImages || null,
+      payment_reference: paymentReference || null,
+      payer_name: payerName || null,
+      payer_account: payerAccount || null,
+      payer_phone: payerPhone || null,
+      status: 'PENDING',
+    }
+    console.log('[deposit-request] 插入数据:', JSON.stringify(insertData))
+
     const { data: depositRequest, error: insertError } = await supabaseClient
       .from('deposit_requests')
-      .insert({
-        user_id: userId,
-        order_number: orderNumber,
-        amount: amount,
-        currency: currency || 'TJS',
-        payment_method: paymentMethod,
-        payment_proof_images: paymentProofImages || null,
-        payment_reference: paymentReference || null,
-        payer_name: payerName || null,
-        payer_account: payerAccount || null,
-        payer_phone: payerPhone || null,
-        status: 'PENDING',
-      })
+      .insert(insertData)
       .select()
       .single()
 
     if (insertError) {
-      console.error('创建充值申请失败:', insertError)
-      throw new Error('创建充值申请失败')
+      console.error('[deposit-request] 创建充值申请失败:', insertError.message, insertError.details, insertError.hint)
+      throw new Error('创建充值申请失败: ' + insertError.message)
     }
+
+    console.log('[deposit-request] 充值申请创建成功:', depositRequest.id)
 
     return new Response(
       JSON.stringify({
@@ -124,7 +163,7 @@ serve(async (req) => {
       }
     )
   } catch (error) {
-    console.error('充值申请错误:', error)
+    console.error('[deposit-request] 充值申请错误:', error.message, error.stack)
     return new Response(
       JSON.stringify({
         success: false,

@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import { DebugFloatingButton } from "./components/debug/DebugFloatingButton"
+import { BotFollowModal, useBotFollowModal } from "./components/BotFollowModal"
 import { Layout } from "./components/layout/Layout"
 import { queryClient } from "./lib/react-query"
 import { RealtimeNotificationsProvider } from "./components/RealtimeNotificationsProvider"
@@ -45,6 +46,8 @@ import AIPage from "./pages/AIPage"
 import PendingPickupPage from "./pages/PendingPickupPage"
 
 function App() {
+  const { showModal, closeModal, handleSuccess } = useBotFollowModal()
+
   return (
     <QueryClientProvider client={queryClient}>
       <RealtimeNotificationsProvider>
@@ -104,6 +107,14 @@ function App() {
         />
         
         <DebugFloatingButton />
+        
+        {/* Bot关注引导弹窗 */}
+        {showModal && (
+          <BotFollowModal
+            onClose={closeModal}
+            onSuccess={handleSuccess}
+          />
+        )}
       </div>
         </Router>
         <ReactQueryDevtools initialIsOpen={false} />

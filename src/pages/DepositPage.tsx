@@ -282,17 +282,23 @@ export default function DepositPage() {
     try {
       setSubmitting(true)
 
+      // 构建请求体
+      const requestBody = {
+        userId: user?.id,
+        amount: amountNum,
+        currency: 'TJS',
+        paymentMethod: selectedMethod.config_data?.method || selectedMethod.config_key,
+        paymentProofImages: uploadedImages,
+        ...(selectedMethod?.require_payer_name && { payerName }),
+        ...(selectedMethod?.require_payer_account && { payerAccount }),
+        ...(selectedMethod?.require_payer_phone && { payerPhone }),
+      }
+      
+      console.log('[DepositPage] 提交充值申请:', JSON.stringify(requestBody))
+      console.log('[DepositPage] selectedMethod:', JSON.stringify(selectedMethod))
+
       const { data, error } = await supabase.functions.invoke('deposit-request', {
-        body: {
-          userId: user?.id,
-          amount: amountNum,
-          currency: 'TJS',
-          paymentMethod: selectedMethod.config_data.method,
-          paymentProofImages: uploadedImages,
-          ...(selectedMethod?.require_payer_name && { payerName }),
-          ...(selectedMethod?.require_payer_account && { payerAccount }),
-          ...(selectedMethod?.require_payer_phone && { payerPhone }),
-        }
+        body: requestBody
       })
 
       if (error) throw error

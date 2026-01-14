@@ -1143,6 +1143,20 @@
     "readyForPickupDesc": "您的包裹已到达自提点，请携带提货码前往提货。",
     "pickedUpDesc": "您已成功提货，感谢您的购买！"
   },
+  "botFollow": {
+    "title": "关注我们的Bot",
+    "description": "关注Bot后，您可以随时在Telegram中找到我们，不错过任何重要通知。",
+    "benefit1Title": "实时通知",
+    "benefit1Desc": "中奖、充值、提现等重要消息即时推送",
+    "benefit2Title": "快速访问",
+    "benefit2Desc": "在聊天列表中快速打开应用",
+    "confirmButton": "关注Bot",
+    "skipButton": "稍后再说",
+    "successTitle": "关注成功！",
+    "successMessage": "您现在可以在Telegram聊天列表中找到我们了",
+    "deniedTitle": "已跳过",
+    "deniedMessage": "您可以稍后在设置中关注我们"
+  },
   "ai": {
     "title": "TezBarakat AI",
     "subtitle": "и пешрафта барои Тоҷикистон",
