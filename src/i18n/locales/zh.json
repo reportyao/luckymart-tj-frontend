@@ -594,7 +594,10 @@
     "tip4": "请勿发布违法违规、广告等不当内容",
     "preview": "预览",
     "imageUploadFailed": "图片上传失败",
-    "imageFormatHint": "支持JPG、PNG格式,单张图片不超过5MB"
+    "imageFormatHint": "支持JPG、PNG格式,单张图片不超过5MB",
+    "groupBuy": "拼团",
+    "lottery": "抽奖",
+    "pickupCode": "提货码"
   },
   "prize": {
     "prizeManagement": "中奖管理",

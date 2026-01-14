@@ -22,6 +22,7 @@ interface WinningLottery {
   prize_image: string;
   winning_number: string;
   draw_time: string;
+  source_type: 'lottery' | 'group_buy'; // 来源类型：抽奖或拼团
 }
 
 const ShowoffCreatePage: React.FC = () => {
@@ -48,7 +49,7 @@ const ShowoffCreatePage: React.FC = () => {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
       const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-      // 1. 直接查询 prizes 表获取用户的中奖记录
+      // 1. 直接查询 prizes 表获取用户的中奖记录（抽奖类型）
       console.log('[ShowoffCreatePage] Fetching prizes...');
       const prizesResponse = await fetch(
         `${supabaseUrl}/rest/v1/prizes?user_id=eq.${user.id}&select=*&order=won_at.desc`,
@@ -68,8 +69,21 @@ const ShowoffCreatePage: React.FC = () => {
 
       const prizes = await prizesResponse.json();
       console.log('[ShowoffCreatePage] Prizes fetched:', prizes.length);
-      console.log('[ShowoffCreatePage] Prizes data:', JSON.stringify(prizes, null, 2));
-      console.log('[ShowoffCreatePage] Current user.id:', user.id);
+
+      // 2. 查询拼团中奖记录 - 用户是中奖者的记录
+      console.log('[ShowoffCreatePage] Fetching group buy results...');
+      const groupBuyResponse = await fetch(
+        `${supabaseUrl}/rest/v1/group_buy_results?user_id=eq.${user.id}&status=eq.PENDING&select=*&order=created_at.desc`,
+        {
+          headers: {
+            'Authorization': `Bearer ${supabaseKey}`,
+            'apikey': supabaseKey,
+          },
+        }
+      );
+
+      const groupBuyResults = groupBuyResponse.ok ? await groupBuyResponse.json() : [];
+      console.log('[ShowoffCreatePage] Group buy results fetched:', groupBuyResults.length);
 
       // 获取关联的彩票信息
       const lotteryIds = [...new Set(prizes.map((p: any) => p.lottery_id).filter(Boolean))];
@@ -93,13 +107,42 @@ const ShowoffCreatePage: React.FC = () => {
         }
       }
 
+      // 获取关联的拼团商品信息
+      const productIds = [...new Set(groupBuyResults.map((g: any) => g.product_id).filter(Boolean))];
+      let productsMap: Record<string, any> = {};
+      
+      if (productIds.length > 0) {
+        const productsResponse = await fetch(
+          `${supabaseUrl}/rest/v1/group_buy_products?id=in.(${productIds.join(',')})&select=id,title,name,image_url`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (productsResponse.ok) {
+          const productsData = await productsResponse.json();
+          productsData.forEach((p: any) => {
+            productsMap[p.id] = p;
+          });
+        }
+      }
+
       // 合并数据
       const enrichedPrizes = prizes.map((prize: any) => ({
         ...prize,
         lottery: lotteriesMap[prize.lottery_id] || null,
+        source_type: 'lottery' as const,
       }));
 
-      // 2. 获取已发布的晒单（通过 prize_id 关联）
+      const enrichedGroupBuyResults = groupBuyResults.map((result: any) => ({
+        ...result,
+        product: productsMap[result.product_id] || null,
+        source_type: 'group_buy' as const,
+      }));
+
+      // 3. 获取已发布的晒单（通过 prize_id 关联）
       // 只排除 APPROVED 和 PENDING 状态的晒单，REJECTED 状态的可以再次发布
       const showoffsResponse = await fetch(
         `${supabaseUrl}/rest/v1/showoffs?user_id=eq.${user?.id}&status=in.(APPROVED,PENDING)&select=prize_id`,
@@ -113,17 +156,18 @@ const ShowoffCreatePage: React.FC = () => {
 
       const publishedShowoffs = showoffsResponse.ok ? await showoffsResponse.json() : [];
       console.log('[ShowoffCreatePage] Published showoffs:', publishedShowoffs.length);
-      console.log('[ShowoffCreatePage] Published showoffs data:', JSON.stringify(publishedShowoffs, null, 2));
       const publishedPrizeIds = new Set(publishedShowoffs.map((s: any) => s.prize_id).filter(Boolean));
-      console.log('[ShowoffCreatePage] Published prize IDs:', Array.from(publishedPrizeIds));
 
-      // 3. 过滤掉已有 APPROVED 或 PENDING 晒单的中奖记录，并按中奖时间从新到旧排序
+      // 4. 过滤掉已有 APPROVED 或 PENDING 晒单的中奖记录
       const availablePrizes = enrichedPrizes
-        .filter((prize: any) => !publishedPrizeIds.has(prize.id))
-        .sort((a: any, b: any) => new Date(b.won_at).getTime() - new Date(a.won_at).getTime());
+        .filter((prize: any) => !publishedPrizeIds.has(prize.id));
 
-      // 4. 转换为 WinningLottery 格式 - 直接使用 prizes 表中的数据
-      const winningLotteries: WinningLottery[] = availablePrizes.map((prize: any) => ({
+      const availableGroupBuyResults = enrichedGroupBuyResults
+        .filter((result: any) => !publishedPrizeIds.has(result.id));
+
+      // 5. 转换为 WinningLottery 格式
+      // 抽奖中奖记录
+      const lotteryWinnings: WinningLottery[] = availablePrizes.map((prize: any) => ({
         id: prize.id,
         lottery_id: prize.lottery_id,
         lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知积分商城',
@@ -131,14 +175,36 @@ const ShowoffCreatePage: React.FC = () => {
         prize_image: prize.prize_image || prize.lottery?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
         winning_number: prize.winning_code || prize.winning_number || '',
         draw_time: prize.won_at,
+        source_type: 'lottery' as const,
       }));
 
-      console.log('[ShowoffCreatePage] Available winning lotteries:', winningLotteries.length);
-      console.log('[ShowoffCreatePage] Winning lotteries data:', JSON.stringify(winningLotteries, null, 2));
-      setWinningLotteries(winningLotteries);
+      // 拼团中奖记录
+      const groupBuyWinnings: WinningLottery[] = availableGroupBuyResults.map((result: any) => {
+        const product = result.product;
+        const productTitle = product?.title?.zh || product?.name || '拼团商品';
+        return {
+          id: result.id,
+          lottery_id: result.session_id || '', // 使用 session_id 作为关联
+          lottery_title: `拼团中奖 - ${productTitle}`,
+          prize_name: productTitle,
+          prize_image: product?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
+          winning_number: result.pickup_code || '',
+          draw_time: result.created_at,
+          source_type: 'group_buy' as const,
+        };
+      });
+
+      // 6. 合并并按时间排序
+      const allWinnings = [...lotteryWinnings, ...groupBuyWinnings]
+        .sort((a, b) => new Date(b.draw_time).getTime() - new Date(a.draw_time).getTime());
+
+      console.log('[ShowoffCreatePage] Available winning records:', allWinnings.length);
+      console.log('[ShowoffCreatePage] - Lottery winnings:', lotteryWinnings.length);
+      console.log('[ShowoffCreatePage] - Group buy winnings:', groupBuyWinnings.length);
+      setWinningLotteries(allWinnings);
       
-      if (winningLotteries.length === 0) {
-        console.log('[ShowoffCreatePage] No winning lotteries available for user');
+      if (allWinnings.length === 0) {
+        console.log('[ShowoffCreatePage] No winning records available for user');
       }
     } catch (error) {
       console.error('[ShowoffCreatePage] Failed to fetch winning lotteries:', error);
@@ -324,9 +390,20 @@ const ShowoffCreatePage: React.FC = () => {
                     height={64}
                   />
                   <div className="flex-1 text-left">
-                    <p className="font-medium text-gray-900">{lottery.prize_name}</p>
+                    <div className="flex items-center space-x-2">
+                      <p className="font-medium text-gray-900">{lottery.prize_name}</p>
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+                        lottery.source_type === 'group_buy' 
+                          ? 'bg-pink-100 text-pink-800' 
+                          : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {lottery.source_type === 'group_buy' ? t('showoff.groupBuy') : t('showoff.lottery')}
+                      </span>
+                    </div>
                     <p className="text-sm text-gray-500">{lottery.lottery_title}</p>
-                    <p className="text-xs text-gray-400 mt-1">{t('showoff.winningNumber')}: {lottery.winning_number}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {lottery.source_type === 'group_buy' ? t('showoff.pickupCode') : t('showoff.winningNumber')}: {lottery.winning_number}
+                    </p>
                   </div>
                   {selectedLottery === lottery.id && (
                     <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
