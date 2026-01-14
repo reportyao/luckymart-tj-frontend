@@ -6,8 +6,7 @@
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.42.0'
-import { sendBatchShippedNotification } from '../_shared/batchNotification.ts'
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.42.0'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +23,95 @@ interface AddOrdersRequest {
   orders: OrderItem[]
   admin_id: string
   send_notification?: boolean
+}
+
+// 内联通知功能
+const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
+
+const notificationTemplates = {
+  zh: {
+    batch_shipped: (batchNo: string, estimatedDate: string) => 
+      `📦 您的订单已发货！\n\n批次号：${batchNo}\n预计到达：${estimatedDate}\n\n请耐心等待，我们会在货物到达后第一时间通知您。`,
+  },
+  ru: {
+    batch_shipped: (batchNo: string, estimatedDate: string) => 
+      `📦 Ваш заказ отправлен!\n\nНомер партии: ${batchNo}\nОжидаемая дата прибытия: ${estimatedDate}\n\nПожалуйста, подождите. Мы уведомим вас сразу после прибытия товара.`,
+  },
+  tg: {
+    batch_shipped: (batchNo: string, estimatedDate: string) => 
+      `📦 Фармоиши шумо фиристода шуд!\n\nРақами партия: ${batchNo}\nСанаи интизорӣ: ${estimatedDate}\n\nЛутфан интизор шавед. Мо шуморо баъд аз расидани мол огоҳ мекунем.`,
+  },
+}
+
+type NotificationLanguage = 'zh' | 'ru' | 'tg'
+
+async function sendBatchShippedNotification(
+  supabase: SupabaseClient,
+  userId: string,
+  batchNo: string,
+  estimatedArrivalDate: string
+): Promise<boolean> {
+  try {
+    // 获取用户信息
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('telegram_id, preferred_language, first_name')
+      .eq('id', userId)
+      .single()
+
+    if (userError || !userData || !userData.telegram_id) {
+      console.error(`Failed to get user info for ${userId}:`, userError)
+      return false
+    }
+
+    if (!BOT_TOKEN) {
+      console.warn('TELEGRAM_BOT_TOKEN is not set. Skipping notification.')
+      return false
+    }
+
+    const lang = (userData.preferred_language in notificationTemplates 
+      ? userData.preferred_language 
+      : 'zh') as NotificationLanguage
+
+    // 格式化日期
+    const date = new Date(estimatedArrivalDate)
+    const localeMap: Record<string, string> = {
+      zh: 'zh-CN',
+      ru: 'ru-RU',
+      tg: 'tg-TJ',
+    }
+    const formattedDate = date.toLocaleDateString(localeMap[lang] || 'zh-CN', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+
+    const message = notificationTemplates[lang].batch_shipped(batchNo, formattedDate)
+
+    // 发送Telegram消息
+    const telegramApiUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`
+    const response = await fetch(telegramApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: userData.telegram_id,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json()
+      console.error(`Failed to send Telegram message:`, response.status, errorData)
+      return false
+    }
+
+    console.log(`Notification sent to user ${userId}`)
+    return true
+  } catch (error) {
+    console.error('Error sending notification:', error)
+    return false
+  }
 }
 
 serve(async (req) => {
