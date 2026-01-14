@@ -7,6 +7,9 @@ interface Banner {
   id: string;
   title: string;
   image_url: string;
+  image_url_zh: string | null;
+  image_url_ru: string | null;
+  image_url_tg: string | null;
   link_url: string | null;
   link_type: string;
 }
@@ -24,6 +27,31 @@ const BannerCarousel: React.FC = () => {
   const [imagesLoaded, setImagesLoaded] = useState(false);
   const preloadedRef = useRef<boolean>(false);
   const loadedCountRef = useRef<number>(0);
+
+  // 根据当前语言获取对应的图片URL
+  const getLocalizedImageUrl = useCallback((banner: Banner): string => {
+    const lang = i18n.language;
+    
+    // 根据语言选择对应的图片URL
+    if (lang === 'zh' && banner.image_url_zh) {
+      return banner.image_url_zh;
+    }
+    if (lang === 'ru' && banner.image_url_ru) {
+      return banner.image_url_ru;
+    }
+    if (lang === 'tg' && banner.image_url_tg) {
+      return banner.image_url_tg;
+    }
+    
+    // 如果当前语言没有对应图片，按优先级回退
+    // 优先级：当前语言 > 中文 > 俄语 > 塔吉克语 > 默认图片
+    if (banner.image_url_zh) return banner.image_url_zh;
+    if (banner.image_url_ru) return banner.image_url_ru;
+    if (banner.image_url_tg) return banner.image_url_tg;
+    
+    // 最后使用默认的image_url
+    return banner.image_url;
+  }, [i18n.language]);
 
   // 预加载所有图片
   const preloadImages = useCallback((bannerList: Banner[]) => {
@@ -47,14 +75,25 @@ const BannerCarousel: React.FC = () => {
           setImagesLoaded(true);
         }
       };
-      img.src = banner.image_url;
+      // 预加载当前语言对应的图片
+      img.src = getLocalizedImageUrl(banner);
     });
     
     // 超时后强制显示
     setTimeout(() => {
       setImagesLoaded(true);
     }, 3000);
-  }, []);
+  }, [getLocalizedImageUrl]);
+
+  // 当语言变化时，重新预加载图片
+  useEffect(() => {
+    if (banners.length > 0) {
+      preloadedRef.current = false;
+      loadedCountRef.current = 0;
+      setImagesLoaded(false);
+      preloadImages(banners);
+    }
+  }, [i18n.language, banners, preloadImages]);
 
   useEffect(() => {
     const fetchBanners = async () => {
@@ -70,7 +109,7 @@ const BannerCarousel: React.FC = () => {
       try {
         const { data, error } = await (supabase as any)
           .from('banners')
-          .select('id, title, image_url, link_url, link_type')
+          .select('id, title, image_url, image_url_zh, image_url_ru, image_url_tg, link_url, link_type')
           .eq('is_active', true)
           .order('sort_order', { ascending: true });
 
@@ -119,9 +158,10 @@ const BannerCarousel: React.FC = () => {
       {/* 渲染所有图片，通过 opacity 和 transform 控制平滑过渡 */}
       {banners.map((banner, index) => {
         const isActive = index === currentIndex;
+        const imageUrl = getLocalizedImageUrl(banner);
         return (
           <div
-            key={banner.id}
+            key={`${banner.id}-${i18n.language}`}
             className="absolute inset-0 w-full h-full"
             style={{
               opacity: isActive ? 1 : 0,
@@ -131,7 +171,7 @@ const BannerCarousel: React.FC = () => {
             }}
           >
             <img
-              src={banner.image_url}
+              src={imageUrl}
               alt={banner.title}
               className="w-full h-full object-cover"
               style={{

@@ -10,6 +10,7 @@ interface LazyImageProps {
   height?: number
   onLoad?: () => void
   onError?: () => void
+  objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
 }
 
 /**
@@ -25,6 +26,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   height,
   onLoad,
   onError,
+  objectFit = 'cover',
 }) => {
   const [imageSrc, setImageSrc] = useState(placeholder)
   const [isLoading, setIsLoading] = useState(true)
@@ -63,23 +65,45 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     }
   }, [onLoad, onError])
 
+  // 根据objectFit参数获取对应的CSS类
+  const getObjectFitClass = () => {
+    switch (objectFit) {
+      case 'contain':
+        return 'object-contain'
+      case 'fill':
+        return 'object-fill'
+      case 'none':
+        return 'object-none'
+      case 'scale-down':
+        return 'object-scale-down'
+      case 'cover':
+      default:
+        return 'object-cover'
+    }
+  }
+
   return (
     <div
       ref={containerRef}
       className={`relative overflow-hidden bg-gray-200 ${className}`}
       style={{
         width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : 'auto',
-        aspectRatio: width && height ? `${width}/${height}` : 'auto',
+        height: height ? `${height}px` : '100%',
+        minWidth: width ? `${width}px` : '100%',
+        minHeight: height ? `${height}px` : '100%',
       }}
     >
       <img
         ref={imgRef}
         src={imageSrc}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${
+        className={`w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
+        style={{
+          minWidth: '100%',
+          minHeight: '100%',
+        }}
       />
       {isLoading && (
         <div className="absolute inset-0 bg-gray-300 animate-pulse" />

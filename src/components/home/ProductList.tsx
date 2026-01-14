@@ -94,18 +94,23 @@ export const ProductList: React.FC<ProductListProps> = ({
               to={`${linkPrefix}/${product.id}`}
               className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex space-x-3 hover:shadow-md transition-shadow"
             >
-              {/* 商品图片 */}
-              <div className="w-24 h-24 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+              {/* 商品图片 - 修复图片铺满问题 */}
+              <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 {product.image_url ? (
-                  <LazyImage
+                  <img
                     src={product.image_url}
                     alt={getProductTitle(product)}
                     className="w-full h-full object-cover"
-                    width={96}
-                    height={96}
+                    style={{
+                      minWidth: '100%',
+                      minHeight: '100%',
+                    }}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="96" height="96"%3E%3Crect fill="%23f0f0f0" width="96" height="96"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-size="12"%3ENo Image%3C/text%3E%3C/svg%3E';
+                    }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <div className="w-full h-full flex items-center justify-center text-gray-400 bg-gray-100">
                     <span className="text-xs">No Image</span>
                   </div>
                 )}
