@@ -1,7 +1,6 @@
-# Supabase CLI
+# Supabase CLI (v1)
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main) [![Bitbucket Pipelines](https://img.shields.io/bitbucket/pipelines/supabase-cli/setup-cli/master?style=flat-square&label=Bitbucket%20Canary)](https://bitbucket.org/supabase-cli/setup-cli/pipelines) [![Gitlab Pipeline Status](https://img.shields.io/gitlab/pipeline-status/sweatybridge%2Fsetup-cli?label=Gitlab%20Canary)
-](https://gitlab.com/sweatybridge/setup-cli/-/pipelines)
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main)
 
 [Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
@@ -9,13 +8,18 @@ This repository contains all the functionality for Supabase CLI.
 
 - [x] Running Supabase locally
 - [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
+- [x] Pushing your local changes to production
+- [x] Create and Deploy Supabase Functions
+- [ ] Manage your Supabase Account
+- [x] Manage your Supabase Projects
 - [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+- [ ] Generating API and validation schemas from your database
 
 ## Getting started
 
 ### Install the CLI
+
+#### NodeJS
 
 Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
@@ -23,139 +27,100 @@ Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 npm i supabase --save-dev
 ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
+To run:
 
+```bash
+npx supabase -h
 ```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
+
+#### macOS
+
+Available via [Homebrew](https://brew.sh). To install:
+
+```sh
+brew install supabase/tap/supabase
 ```
 
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
+To upgrade:
 
-<details>
-  <summary><b>macOS</b></summary>
+```sh
+brew upgrade supabase
+```
 
-  Available via [Homebrew](https://brew.sh). To install:
+#### Windows
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+Available via [Scoop](https://scoop.sh). To install:
 
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
+```powershell
+scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+scoop install supabase
+```
 
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
+To upgrade:
 
-<details>
-  <summary><b>Windows</b></summary>
+```powershell
+scoop update supabase
+```
 
-  Available via [Scoop](https://scoop.sh). To install:
+#### Linux
 
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
+Available via [Homebrew](https://brew.sh) and Linux packages.
 
-  To upgrade:
+##### via Homebrew
 
-  ```powershell
-  scoop update supabase
-  ```
-</details>
+To install:
 
-<details>
-  <summary><b>Linux</b></summary>
+```sh
+brew install supabase/tap/supabase
+```
 
-  Available via [Homebrew](https://brew.sh) and Linux packages.
+To upgrade:
 
-  #### via Homebrew
+```sh
+brew upgrade supabase
+```
 
-  To install:
+##### via Linux packages
 
-  ```sh
-  brew install supabase/tap/supabase
-  ```
+Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
 
-  To upgrade:
+```sh
+sudo apk add --allow-untrusted <...>.apk
+```
 
-  ```sh
-  brew upgrade supabase
-  ```
+```sh
+sudo dpkg -i <...>.deb
+```
 
-  #### via Linux packages
+```sh
+sudo rpm -i <...>.rpm
+```
 
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+```sh
+sudo pacman -U <...>.pkg.tar.zst
+```
 
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
+#### Other Platforms
 
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
+You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
 
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
+```sh
+go install github.com/supabase/cli@latest
+```
 
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
+Add a symlink to the binary in `$PATH` for easier access:
 
-<details>
-  <summary><b>Other Platforms</b></summary>
+```sh
+ln -s "$(go env GOPATH)/cli" /usr/bin/supabase
+```
 
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/bin/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
+This works on other non-standard Linux distros.
 
 ### Run the CLI
 
-```bash
-supabase bootstrap
+```sh
+supabase help
 ```
-
-Or using npx:
-
-```bash
-npx supabase bootstrap
-```
-
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
 ## Docs
 
@@ -163,15 +128,19 @@ Command & config reference can be found [here](https://supabase.com/docs/referen
 
 ## Breaking changes
 
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+The CLI is a WIP and we're still exploring the design, so expect a lot of breaking changes. We try to document migration steps in [Releases](https://github.com/supabase/cli/releases). Please file an issue if these steps don't work!
 
 ## Developing
 
 To run from source:
 
 ```sh
-# Go >= 1.22
+# Go >= 1.18
 go run . help
 ```
+
+---
+
+## Sponsors
+
+[![New Sponsor](https://user-images.githubusercontent.com/10214025/90518111-e74bbb00-e198-11ea-8f88-c9e3c1aa4b5b.png)](https://github.com/sponsors/supabase)

@@ -13,6 +13,9 @@ import { FirstDepositNoticeModal } from '../components/wallet/FirstDepositNotice
 interface PaymentConfig {
   id: string
   config_key: string
+  require_payer_name?: boolean
+  require_payer_account?: boolean
+  require_payer_phone?: boolean
   config_data: {
     method: string
     enabled: boolean
@@ -41,6 +44,7 @@ export default function DepositPage() {
   const [amount, setAmount] = useState('')
   const [payerName, setPayerName] = useState('')
   const [payerAccount, setPayerAccount] = useState('')
+  const [payerPhone, setPayerPhone] = useState('')
   const [paymentReference, setPaymentReference] = useState('')
   const [uploadedImages, setUploadedImages] = useState<string[]>([])
   const [uploading, setUploading] = useState(false)
@@ -255,8 +259,17 @@ export default function DepositPage() {
       return
     }
 
-    if (!payerName || !payerAccount) {
-      alert(t('wallet.pleaseCompletePaymentInfo'))
+    // 根据配置检查必填字段
+    if (selectedMethod?.require_payer_name && !payerName) {
+      alert(t('wallet.pleaseEnterPayerName'))
+      return
+    }
+    if (selectedMethod?.require_payer_account && !payerAccount) {
+      alert(t('wallet.pleaseEnterPayerAccount'))
+      return
+    }
+    if (selectedMethod?.require_payer_phone && !payerPhone) {
+      alert(t('wallet.pleaseEnterPayerPhone'))
       return
     }
 
@@ -276,8 +289,9 @@ export default function DepositPage() {
           currency: 'TJS',
           paymentMethod: selectedMethod.config_data.method,
           paymentProofImages: uploadedImages,
-          payerName: payerName,
-          payerAccount: payerAccount,
+          ...(selectedMethod?.require_payer_name && { payerName }),
+          ...(selectedMethod?.require_payer_account && { payerAccount }),
+          ...(selectedMethod?.require_payer_phone && { payerPhone }),
         }
       })
 
@@ -419,27 +433,44 @@ export default function DepositPage() {
           )}
         </div>
 
-        {/* 付款人信息 */}
-        <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.payerInfo')}</h2>
-          <div className="space-y-3">
-            <input
-              type="text"
-              value={payerName}
-              onChange={(e) => setPayerName(e.target.value)}
-              placeholder={t('wallet.payerName')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-            />
-            <input
-              type="text"
-              value={payerAccount}
-              onChange={(e) => setPayerAccount(e.target.value)}
-              placeholder={t('wallet.payerAccount')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-            />
-
+        {/* 付款人信息 - 根据配置动态显示 */}
+        {(selectedMethod?.require_payer_name || selectedMethod?.require_payer_account || selectedMethod?.require_payer_phone) && (
+          <div className="bg-white rounded-2xl p-4">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.payerInfo')}</h2>
+            <div className="space-y-3">
+              {selectedMethod?.require_payer_name && (
+                <input
+                  type="text"
+                  value={payerName}
+                  onChange={(e) => setPayerName(e.target.value)}
+                  placeholder={t('wallet.payerName')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
+                  required
+                />
+              )}
+              {selectedMethod?.require_payer_account && (
+                <input
+                  type="text"
+                  value={payerAccount}
+                  onChange={(e) => setPayerAccount(e.target.value)}
+                  placeholder={t('wallet.payerAccount')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
+                  required
+                />
+              )}
+              {selectedMethod?.require_payer_phone && (
+                <input
+                  type="tel"
+                  value={payerPhone}
+                  onChange={(e) => setPayerPhone(e.target.value)}
+                  placeholder={t('wallet.payerPhone')}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
+                  required
+                />
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 上传凭证 */}
         <div className="bg-white rounded-2xl p-4">
