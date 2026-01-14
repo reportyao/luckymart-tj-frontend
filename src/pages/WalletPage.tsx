@@ -363,7 +363,7 @@ const WalletPage: React.FC = () => {
                       {getTransactionIcon(transaction.type, transaction.amount)}
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">
+                      <p className="text-sm font-medium text-gray-900 leading-tight break-words max-w-[180px]">
                         {getTransactionTypeLabel(transaction.type)}
                       </p>
                       <div className="flex items-center space-x-2 mt-1">
