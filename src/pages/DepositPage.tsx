@@ -276,7 +276,6 @@ export default function DepositPage() {
           currency: 'TJS',
           paymentMethod: selectedMethod.config_data.method,
           paymentProofImages: uploadedImages,
-          paymentReference: paymentReference,
           payerName: payerName,
           payerAccount: payerAccount,
         }
@@ -438,13 +437,7 @@ export default function DepositPage() {
               placeholder={t('wallet.payerAccount')}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
             />
-            <input
-              type="text"
-              value={paymentReference}
-              onChange={(e) => setPaymentReference(e.target.value)}
-              placeholder={t('wallet.paymentReference') + ' (' + t('common.optional') + ')'}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-            />
+
           </div>
         </div>
 

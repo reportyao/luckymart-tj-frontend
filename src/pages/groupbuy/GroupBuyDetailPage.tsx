@@ -108,8 +108,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={images[0]}
               alt={alt}
-              className="max-w-full max-h-full object-contain p-4"
-              onClick={(e) => e.stopPropagation()}
+              className="max-w-full max-h-full object-contain p-4 cursor-pointer"
+              onClick={() => setIsModalOpen(false)}
             />
           </div>
         )}
@@ -204,8 +204,8 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={images[currentIndex]}
               alt={`${alt} - ${currentIndex + 1}`}
-              className="w-full h-full object-cover"
-              onClick={(e) => e.stopPropagation()}
+              className="w-full h-full object-contain cursor-pointer"
+              onClick={() => setIsModalOpen(false)}
             />
             <button
               onClick={(e) => {

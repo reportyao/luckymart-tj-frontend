@@ -66,7 +66,7 @@ export default function GroupBuyListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto"></div>
           <p className="mt-4 text-gray-600">{t('common.loading')}</p>
@@ -76,7 +76,7 @@ export default function GroupBuyListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
+    <div className="min-h-screen bg-white pb-20">
       {/* Header - 删除红色渐变区域 */}
 
       {/* Rules Card */}

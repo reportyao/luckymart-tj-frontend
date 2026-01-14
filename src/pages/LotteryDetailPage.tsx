@@ -546,8 +546,8 @@ const LotteryDetailPage: React.FC = () => {
               <img
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="max-w-full max-h-full object-contain"
-                onClick={(e) => e.stopPropagation()}
+                className="max-w-full max-h-full object-contain cursor-pointer"
+                onClick={() => setIsImageModalOpen(false)}
               />
               {lottery.image_urls.length > 1 && (
                 <>

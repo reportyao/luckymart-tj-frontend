@@ -11,7 +11,7 @@ export default function WithdrawPage() {
   const navigate = useNavigate()
   const { wallets, sessionToken } = useUser()
   
-  const [withdrawalMethod, setWithdrawalMethod] = useState<'BANK_TRANSFER' | 'ALIF_MOBI' | 'DC_BANK'>('BANK_TRANSFER')
+  const [withdrawalMethod, setWithdrawalMethod] = useState<'ALIF_MOBI' | 'DC_BANK'>('ALIF_MOBI')
   const [amount, setAmount] = useState('')
   
   // 银行卡信息
@@ -53,21 +53,9 @@ export default function WithdrawPage() {
     }
 
     // 验证必填字段
-    if (withdrawalMethod === 'BANK_TRANSFER') {
-      if (!bankName || !bankAccountNumber || !bankAccountName) {
-        alert(t('wallet.pleaseCompleteBankInfo'))
-        return
-      }
-    } else {
-      if (!mobileWalletNumber || !mobileWalletName) {
-        alert(t('wallet.pleaseCompleteWalletInfo'))
-        return
-      }
-    }
-
-    if (!idCardNumber || !idCardName || !phoneNumber) {
-      alert(t('wallet.pleaseCompleteIdentityInfo'))
-        return
+    if (!mobileWalletNumber || !mobileWalletName) {
+      alert(t('wallet.pleaseCompleteWalletInfo'))
+      return
     }
 
     try {
@@ -82,15 +70,8 @@ export default function WithdrawPage() {
           amount: amountNum,
           currency: 'TJS',
           withdrawalMethod: withdrawalMethod,
-          bankName: withdrawalMethod === 'BANK_TRANSFER' ? bankName : null,
-          bankAccountNumber: withdrawalMethod === 'BANK_TRANSFER' ? bankAccountNumber : null,
-          bankAccountName: withdrawalMethod === 'BANK_TRANSFER' ? bankAccountName : null,
-          bankBranch: withdrawalMethod === 'BANK_TRANSFER' ? bankBranch : null,
-          mobileWalletNumber: withdrawalMethod !== 'BANK_TRANSFER' ? mobileWalletNumber : null,
-          mobileWalletName: withdrawalMethod !== 'BANK_TRANSFER' ? mobileWalletName : null,
-          idCardNumber: idCardNumber,
-          idCardName: idCardName,
-          phoneNumber: phoneNumber,
+          mobileWalletNumber: mobileWalletNumber,
+          mobileWalletName: mobileWalletName,
         };
       
       console.log('[Debug] Withdraw - Request body:', requestBody);
@@ -152,16 +133,7 @@ export default function WithdrawPage() {
         <div className="bg-white rounded-2xl p-4">
           <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.selectWithdrawalMethod')}</h2>
           <div className="space-y-2">
-            <button
-              onClick={() => setWithdrawalMethod('BANK_TRANSFER')}
-              className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
-                withdrawalMethod === 'BANK_TRANSFER'
-                  ? 'border-purple-500 bg-purple-50'
-                  : 'border-gray-200 hover:border-purple-300'
-              }`}
-            >
-              <div className="font-bold text-gray-800">{t('wallet.bankTransfer')}</div>
-            </button>
+
             <button
               onClick={() => setWithdrawalMethod('ALIF_MOBI')}
               className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
@@ -197,93 +169,29 @@ export default function WithdrawPage() {
           />
         </div>
 
-        {/* 银行卡信息 */}
-        {withdrawalMethod === 'BANK_TRANSFER' && (
-          <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.bankCardInfo')}</h2>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={bankName}
-                onChange={(e) => setBankName(e.target.value)}
-                placeholder={t('wallet.bankName')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-              <input
-                type="text"
-                value={bankAccountNumber}
-                onChange={(e) => setBankAccountNumber(e.target.value)}
-                placeholder={t('wallet.accountNumber')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-              <input
-                type="text"
-                value={bankAccountName}
-                onChange={(e) => setBankAccountName(e.target.value)}
-                placeholder={t('wallet.accountName')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-              <input
-                type="text"
-                value={bankBranch}
-                onChange={(e) => setBankBranch(e.target.value)}
-                placeholder={t('wallet.bankBranch') + ' (' + t('common.optional') + ')'}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-            </div>
-          </div>
-        )}
+
 
         {/* 手机钱包信息 */}
-        {(withdrawalMethod === 'ALIF_MOBI' || withdrawalMethod === 'DC_BANK') && (
-          <div className="bg-white rounded-2xl p-4">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.mobileWalletInfo')}</h2>
-            <div className="space-y-3">
-              <input
-                type="text"
-                value={mobileWalletNumber}
-                onChange={(e) => setMobileWalletNumber(e.target.value)}
-                placeholder={t('wallet.walletNumber')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-              <input
-                type="text"
-                value={mobileWalletName}
-                onChange={(e) => setMobileWalletName(e.target.value)}
-                placeholder={t('wallet.walletAccountName')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-              />
-            </div>
-          </div>
-        )}
-
-        {/* 身份信息 */}
         <div className="bg-white rounded-2xl p-4">
-          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.identityInfo')}</h2>
+          <h2 className="text-lg font-bold text-gray-800 mb-4">{t('wallet.mobileWalletInfo')}</h2>
           <div className="space-y-3">
             <input
               type="text"
-              value={idCardName}
-              onChange={(e) => setIdCardName(e.target.value)}
-              placeholder={t('wallet.idCardName')}
+              value={mobileWalletNumber}
+              onChange={(e) => setMobileWalletNumber(e.target.value)}
+              placeholder={t('wallet.walletNumber')}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
             />
             <input
               type="text"
-              value={idCardNumber}
-              onChange={(e) => setIdCardNumber(e.target.value)}
-              placeholder={t('wallet.idCardNumber')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
-            />
-            <input
-              type="text"
-              value={phoneNumber}
-              onChange={(e) => setPhoneNumber(e.target.value)}
+              value={mobileWalletName}
+              onChange={(e) => setMobileWalletName(e.target.value)}
               placeholder={t('wallet.phoneNumber')}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-purple-500"
             />
           </div>
         </div>
+
 
         {/* 提交按钮 */}
         <button
