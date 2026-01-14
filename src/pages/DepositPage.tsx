@@ -19,6 +19,7 @@ interface PaymentConfig {
     account_number?: string
     account_name?: string
     bank_name?: string
+    phone_number?: string
     instructions: {
       zh: string
       ru: string
@@ -385,6 +386,12 @@ export default function DepositPage() {
                 <div>
                   <div className="text-gray-600">{t('wallet.bankName')}</div>
                   <div className="font-bold text-gray-800">{selectedMethod.config_data.bank_name}</div>
+                </div>
+              )}
+              {selectedMethod.config_data.phone_number && (
+                <div>
+                  <div className="text-gray-600">{t('wallet.phoneNumber')}</div>
+                  <div className="font-bold text-gray-800">{selectedMethod.config_data.phone_number}</div>
                 </div>
               )}
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mt-4">

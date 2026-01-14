@@ -48,12 +48,8 @@ const SettingsPage: React.FC = () => {
       }
       toast.success(messages[languageCode] || t('settings.languageChanged'))
       
-      // 导航回个人中心页面
-      setTimeout(() => {
-        navigate('/profile', { replace: true })
-        // 触发页面刷新以应用新语言
-        window.location.reload()
-      }, 500)
+      // 不再强制导航回个人中心，保持在当前页面
+      // React组件会自动响应i18n语言变化重新渲染
     } catch (error) {
       console.error(t('settings.languageChangeFailed') + ':', error)
       toast.error(t('settings.languageChangeFailed'))

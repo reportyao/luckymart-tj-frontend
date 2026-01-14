@@ -445,12 +445,10 @@ const LotteryDetailPage: React.FC = () => {
             onClick={() => setIsImageModalOpen(true)}
           >
             {lottery.image_urls && lottery.image_urls.length > 0 ? (
-              <LazyImage
+              <img
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
                 className="w-full h-full object-contain cursor-pointer"
-                width={600}
-                height={600}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-200">

@@ -97,12 +97,11 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           // 单张图片：全宽展示
           if (allImages.length === 1) {
             return (
-              <LazyImage 
+              <img 
                 src={allImages[0]} 
                 alt={lottery.title}
                 className="w-full h-full object-cover"
-                width={300}
-                height={144}
+                style={{ minWidth: '100%', minHeight: '100%' }}
               />
             );
           }
@@ -113,12 +112,11 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               <div className="flex h-full gap-0.5 overflow-hidden">
                 {allImages.map((img, index) => (
                   <div key={index} className="w-1/2 overflow-hidden">
-                    <LazyImage
+                    <img
                       src={img}
                       alt={`${lottery.title} ${index + 1}`}
                       className="w-full h-full object-cover"
-                      width={150}
-                      height={144}
+                      style={{ minWidth: '100%', minHeight: '100%' }}
                     />
                   </div>
                 ))}
@@ -131,23 +129,21 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             return (
               <div className="flex h-full gap-0.5 overflow-hidden">
                 <div className="w-1/2 overflow-hidden">
-                  <LazyImage
+                  <img
                     src={allImages[0]}
                     alt={`${lottery.title} 1`}
                     className="w-full h-full object-cover"
-                    width={150}
-                    height={144}
+                    style={{ minWidth: '100%', minHeight: '100%' }}
                   />
                 </div>
                 <div className="w-1/2 flex flex-col gap-0.5">
                   {allImages.slice(1, 3).map((img, index) => (
                     <div key={index} className="h-1/2 overflow-hidden">
-                      <LazyImage
+                      <img
                         src={img}
                         alt={`${lottery.title} ${index + 2}`}
                         className="w-full h-full object-cover"
-                        width={150}
-                        height={72}
+                        style={{ minWidth: '100%', minHeight: '100%' }}
                       />
                     </div>
                   ))}
@@ -163,23 +159,21 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           return (
             <div className="flex h-full gap-0.5 overflow-hidden">
               <div className="w-1/2 overflow-hidden">
-                <LazyImage
+                <img
                   src={displayImages[0]}
                   alt={`${lottery.title} 1`}
                   className="w-full h-full object-cover"
-                  width={150}
-                  height={144}
+                  style={{ minWidth: '100%', minHeight: '100%' }}
                 />
               </div>
               <div className="w-1/2 flex flex-col gap-0.5">
                 {displayImages.slice(1, 4).map((img, index) => (
                   <div key={index} className="h-1/3 overflow-hidden relative">
-                    <LazyImage
+                    <img
                       src={img}
                       alt={`${lottery.title} ${index + 2}`}
                       className="w-full h-full object-cover"
-                      width={150}
-                      height={48}
+                      style={{ minWidth: '100%', minHeight: '100%' }}
                     />
                     {/* 最后一张图片显示剩余数量 */}
                     {index === 2 && remainingCount > 0 && (
