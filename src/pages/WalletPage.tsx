@@ -124,9 +124,12 @@ const WalletPage: React.FC = () => {
         if (tx.source === 'wallet_transactions' && tx.type === 'WITHDRAWAL') {
           return false
         }
-        // 如果是充值类型，优先使用单独表的数据
-        if (tx.source === 'wallet_transactions' && tx.type === 'DEPOSIT') {
-          // 检查是否已经有来自单独表的同类型记录
+        // 过滤掉 deposit_requests 表中状态为 APPROVED 的记录，因为这些记录已经在 wallet_transactions 表中
+        if (tx.source === 'deposit_requests' && tx.status === 'COMPLETED') {
+          return false
+        }
+        // 如果是充值类型，优先使用 wallet_transactions 表的数据
+        if (tx.type === 'DEPOSIT') {
           const key = `${tx.type}_${tx.amount}_${new Date(tx.created_at).toDateString()}`
           if (seen.has(key)) {
             return false
