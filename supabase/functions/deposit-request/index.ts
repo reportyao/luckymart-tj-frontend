@@ -52,6 +52,7 @@ serve(async (req) => {
       paymentReference, 
       payerName, 
       payerAccount,
+      payerPhone,
       userId: bodyUserId  // 从body中获取userId
     } = requestBody
 
@@ -100,6 +101,7 @@ serve(async (req) => {
         payment_reference: paymentReference || null,
         payer_name: payerName || null,
         payer_account: payerAccount || null,
+        payer_phone: payerPhone || null,
         status: 'PENDING',
       })
       .select()
