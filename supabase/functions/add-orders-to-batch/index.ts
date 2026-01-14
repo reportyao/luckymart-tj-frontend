@@ -153,12 +153,12 @@ serve(async (req) => {
           userTelegramId = user?.telegram_id
 
         } else if (order.order_type === 'GROUP_BUY') {
+          // 先查询拼团结果
           const { data, error } = await supabase
             .from('group_buy_results')
             .select(`
               id, winner_id, product_id, batch_id,
-              group_buy_products:product_id (title, image_urls),
-              users:winner_id (first_name, telegram_username, telegram_id)
+              group_buy_products:product_id (name, name_i18n, image_urls)
             `)
             .eq('id', order.order_id)
             .single()
@@ -173,17 +173,25 @@ serve(async (req) => {
             continue
           }
 
+          // 单独查询用户信息（因为winner_id没有外键约束）
+          let user: any = null
+          if (data.winner_id) {
+            const { data: userData } = await supabase
+              .from('users')
+              .select('first_name, telegram_username, telegram_id')
+              .eq('id', data.winner_id)
+              .single()
+            user = userData
+          }
+
           orderData = data
           const product = data.group_buy_products as any
-          const user = data.users as any
           
-          if (product?.title) {
-            if (typeof product.title === 'object') {
-              productNameI18n = product.title
-              productName = product.title.zh || product.title.ru || '未知商品'
-            } else {
-              productName = product.title
-            }
+          if (product?.name_i18n) {
+            productNameI18n = product.name_i18n
+            productName = product.name_i18n.zh || product.name_i18n.ru || product.name || '未知商品'
+          } else if (product?.name) {
+            productName = product.name
           }
           productImage = product?.image_urls?.[0]
           productSku = data.product_id
