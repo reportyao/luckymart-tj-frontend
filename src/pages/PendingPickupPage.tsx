@@ -149,8 +149,7 @@ const PendingPickupPage: React.FC = () => {
             lotteries(id, title, title_i18n, image_url, image_urls, currency, ticket_price)
           `)
           .eq('user_id', user.id)
-          .eq('status', 'PENDING_CLAIM')
-          .neq('pickup_status', 'PICKED_UP')
+          .in('pickup_status', ['PENDING_CLAIM', 'PENDING_PICKUP'])
           .order('created_at', { ascending: false });
 
         if (prizesError) {

@@ -332,7 +332,7 @@ serve(async (req) => {
         if (lotteryIds.length > 0) {
           const { data: lotteries } = await supabase
             .from('lotteries')
-            .select('id, title, title_i18n, image_url, ticket_price')
+            .select('id, title, title_i18n, image_url, ticket_price, status, winning_user_id')
             .in('id', lotteryIds);
           lotteriesMap = new Map((lotteries || []).map(l => [l.id, l]));
         }
@@ -364,12 +364,27 @@ serve(async (req) => {
             displayTitle = lottery?.title_i18n || { zh: lottery?.title || '市场购买' };
           }
           
+          // 确定订单状态：基于lottery的状态和用户是否中奖
+          let orderStatus = order.status || 'COMPLETED';
+          if (lottery && displayType === 'lottery') {
+            if (lottery.status === 'ACTIVE') {
+              orderStatus = 'PENDING';  // 待开奖
+            } else if (lottery.status === 'COMPLETED') {
+              // 检查用户是否中奖
+              if (lottery.winning_user_id === userId) {
+                orderStatus = 'WON';  // 中奖
+              } else {
+                orderStatus = 'LOST';  // 未中奖
+              }
+            }
+          }
+          
           orders.push({
             id: order.id,
             order_type: displayType,
             order_number: order.order_number,
             amount: order.total_amount,
-            status: order.status || 'COMPLETED',
+            status: orderStatus,
             created_at: order.created_at,
             product_title: displayTitle,
             product_image: lottery?.image_url || '',

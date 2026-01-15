@@ -295,6 +295,7 @@ Deno.serve(async (req) => {
 
     // 11. 【新增】处理首次拼团奖励（给邀请人增加2次抽奖机会）
     try {
+      console.log(`[First Group Buy] Checking reward for user ${user.id}, order ${order.id}`);
       const rewardResponse = await supabase.functions.invoke('handle-first-group-buy-reward', {
         body: { 
           user_id: user.id,  // 使用 UUID 而不是 telegram_id
@@ -302,11 +303,15 @@ Deno.serve(async (req) => {
         }
       });
       
+      console.log(`[First Group Buy] Reward response:`, rewardResponse.data);
+      
       if (rewardResponse.data?.success && rewardResponse.data?.inviter_rewarded) {
-        console.log(`[First Group Buy] Inviter rewarded for user ${user.id}'s first group buy`);
+        console.log(`[First Group Buy] ✅ Inviter rewarded for user ${user.id}'s first group buy`);
+      } else if (rewardResponse.data?.success && !rewardResponse.data?.inviter_rewarded) {
+        console.log(`[First Group Buy] ℹ️ No inviter reward: ${rewardResponse.data?.message}`);
       }
     } catch (rewardError) {
-      console.error('Failed to process first group buy reward:', rewardError);
+      console.error('[First Group Buy] ❌ Failed to process reward:', rewardError);
       // 奖励处理失败不影响主流程
     }
     

@@ -335,6 +335,7 @@ Deno.serve(async (req) => {
             
             if (chatId && isWinner && winnerInfo) {
                 // 只发送中奖通知
+                console.log(`[Lottery Draw] Sending win notification to user ${entry.user_id}`);
                 botNotifications.push({
                     user_id: entry.user_id,
                     type: 'lucky_draw_win',
@@ -344,38 +345,34 @@ Deno.serve(async (req) => {
                         winning_number: winningNumbers[0],
                         ticket_number: entry.numbers
                     },
-                    telegram_chat_id: chatId,
-                    notification_type: 'lucky_draw_win',
-                    title: '恭喜幸运入选！',
-                    message: `您在一元夺宝活动中幸运入选`,
-                    data: {
-                        lottery_id: lotteryId,
-                        product_name: lottery.title,
-                        winning_number: winningNumbers[0],
-                        ticket_number: entry.numbers
-                    },
-                    priority: 1, // 高优先级
                     status: 'pending',
-                    scheduled_at: new Date().toISOString(),
-                    retry_count: 0,
-                    max_retries: 3,
-                    created_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
+                    created_at: new Date().toISOString()
                 });
             }
         }
 
         // 批量创建 Bot 通知
         if (botNotifications.length > 0) {
-            await fetch(`${supabaseUrl}/rest/v1/notification_queue`, {
+            console.log(`[Lottery Draw] Inserting ${botNotifications.length} bot notifications`);
+            const notifResponse = await fetch(`${supabaseUrl}/rest/v1/notification_queue`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${serviceRoleKey}`,
                     'apikey': serviceRoleKey,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=representation'
                 },
                 body: JSON.stringify(botNotifications)
             });
+            
+            if (!notifResponse.ok) {
+                const errorText = await notifResponse.text();
+                console.error(`[Lottery Draw] Failed to insert notifications: ${errorText}`);
+            } else {
+                console.log(`[Lottery Draw] ✅ Bot notifications inserted successfully`);
+            }
+        } else {
+            console.log(`[Lottery Draw] No bot notifications to send`);
         }
 
         // 更新彩票状态为已完成
