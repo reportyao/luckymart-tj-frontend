@@ -259,7 +259,57 @@ Deno.serve(async (req) => {
       }
     );
 
-    // 7. 获取更新后的抽奖次数
+    // 7. 发送Bot通知（只在中奖时发送）
+    if (isWinner) {
+      try {
+        const userResponse = await fetch(
+          `${supabaseUrl}/rest/v1/users?id=eq.${user_id}&select=telegram_id`,
+          {
+            headers: {
+              'Authorization': `Bearer ${serviceRoleKey}`,
+              'apikey': serviceRoleKey,
+            }
+          }
+        );
+        const userData = await userResponse.json();
+        
+        if (userData.length > 0 && userData[0].telegram_id) {
+          await fetch(
+            `${supabaseUrl}/rest/v1/notification_queue`,
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${serviceRoleKey}`,
+                'apikey': serviceRoleKey,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                user_id: user_id,
+                telegram_chat_id: parseInt(userData[0].telegram_id),
+                notification_type: 'spin_win',
+                title: '转盘中奖',
+                message: `恭喜您在转盘抽奖中获得奖励`,
+                data: {
+                  prize_name: selectedReward.reward_name,
+                  prize_amount: selectedReward.reward_amount
+                },
+                priority: 1,
+                status: 'pending',
+                scheduled_at: new Date().toISOString(),
+                retry_count: 0,
+                max_retries: 3,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              })
+            }
+          );
+        }
+      } catch (notifError) {
+        console.error('Failed to send spin win notification:', notifError);
+      }
+    }
+
+    // 8. 获取更新后的抽奖次数
     const updatedSpinBalanceResponse = await fetch(
       `${supabaseUrl}/rest/v1/user_spin_balance?user_id=eq.${user_id}&select=spin_count`,
       {
@@ -272,7 +322,7 @@ Deno.serve(async (req) => {
     const updatedSpinBalance = await updatedSpinBalanceResponse.json();
     const remainingSpins = updatedSpinBalance.length > 0 ? updatedSpinBalance[0].spin_count : 0;
 
-    // 8. 返回结果
+    // 9. 返回结果
     return new Response(
       JSON.stringify({
         success: true,

@@ -361,7 +361,7 @@ Deno.serve(async (req) => {
                         console.error('Failed to process AI invite reward:', aiRewardError);
                     }
                     
-                    // 创建邀请成功通知
+// 创建邀请成功通知
                     try {
                         await fetch(`${supabaseUrl}/rest/v1/notifications`, {
                             method: 'POST',
@@ -380,9 +380,9 @@ Deno.serve(async (req) => {
                                     tg: 'Даъвати муваффақ'
                                 },
                                 message_i18n: {
-                                    zh: `恭喜！用户 ${userData.first_name || userData.username || '新用户'} 通过您的邀请链接注册成功！您获得了1次抽奖机会和5次AI对话次数。`,
-                                    ru: `Поздравляем! Пользователь ${userData.first_name || userData.username || 'новый пользователь'} успешно зарегистрировался по вашей реферальной ссылке! Вы получили 1 попытку в лотерее и 5 AI-чатов.`,
-                                    tg: `Табрик! Корбар ${userData.first_name || userData.username || 'корбари нав'} тавассути истинодаи шумо бомуваффақият сабти ном кард! Шумо 1 имконияти қуръакашӣ ва 5 суҳбати AI гирифтед.`
+                                    zh: `恭喜！用户 ${userData.first_name || userData.username || '新用户'} 通过您的邀请链接注册成功！您获得了1次转盘抽奖机会和5次AI对话次数。`,
+                                    ru: `Поздравляем! Пользователь ${userData.first_name || userData.username || 'новый пользователь'} успешно зарегистрировался по вашей реферальной ссылке! Вы получили 1 вращение колеса и 5 AI-чатов.`,
+                                    tg: `Табрик! Корбар ${userData.first_name || userData.username || 'корбари нав'} тавассути истиноди шумо бомуваффақият сабти ном кард! Шумо 1 чархиши чархак ва 5 суҳбати AI гирифтед.`
                                 },
                                 is_read: false,
                                 metadata: {
@@ -398,6 +398,48 @@ Deno.serve(async (req) => {
                         });
                         
                         console.log(`[Invite Notification] Created notification for inviter ${referredById}`);
+                        
+                        // 【新增】发送Bot通知给邀请人
+                        const inviterResponse = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${referredById}&select=telegram_id`, {
+                            headers: {
+                                'Authorization': `Bearer ${serviceRoleKey}`,
+                                'apikey': serviceRoleKey,
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        
+                        if (inviterResponse.ok) {
+                            const inviterData = await inviterResponse.json();
+                            if (inviterData.length > 0 && inviterData[0].telegram_id) {
+                                await fetch(`${supabaseUrl}/rest/v1/notification_queue`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${serviceRoleKey}`,
+                                        'apikey': serviceRoleKey,
+                                        'Content-Type': 'application/json',
+                                        'Prefer': 'return=minimal'
+                                    },
+                                    body: JSON.stringify({
+                                        user_id: referredById,
+                                        telegram_chat_id: parseInt(inviterData[0].telegram_id),
+                                        notification_type: 'referral_success',
+                                        title: '邀请成功',
+                                        message: '',
+                                        data: {
+                                            invitee_name: userData.first_name || userData.username || '新用户'
+                                        },
+                                        priority: 2,
+                                        status: 'pending',
+                                        scheduled_at: new Date().toISOString(),
+                                        retry_count: 0,
+                                        max_retries: 3,
+                                        created_at: new Date().toISOString(),
+                                        updated_at: new Date().toISOString()
+                                    })
+                                });
+                                console.log(`[Invite Bot Notification] Queued notification for inviter ${referredById}`);
+                            }
+                        }
                     } catch (notificationError) {
                         console.error('Failed to create invite notification:', notificationError);
                     }

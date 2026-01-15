@@ -149,6 +149,35 @@ serve(async (req) => {
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })
+
+      // 发送Bot通知
+      const { data: user } = await supabaseClient
+        .from('users')
+        .select('telegram_id')
+        .eq('id', showoff.user_id)
+        .single()
+
+      if (user?.telegram_id) {
+        await supabaseClient
+          .from('notification_queue')
+          .insert({
+            user_id: showoff.user_id,
+            telegram_chat_id: parseInt(user.telegram_id),
+            notification_type: 'showoff_approved',
+            title: '晒单审核通过',
+            message: `您的晒单已审核通过`,
+            data: {
+              reward_amount: rewardCoins
+            },
+            priority: 2,
+            status: 'pending',
+            scheduled_at: new Date().toISOString(),
+            retry_count: 0,
+            max_retries: 3,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+      }
     } else if (action === 'APPROVED') {
       // 批准但没有奖励
       await supabaseClient.from('notifications').insert({
@@ -159,6 +188,35 @@ serve(async (req) => {
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })
+
+      // 发送Bot通知
+      const { data: user } = await supabaseClient
+        .from('users')
+        .select('telegram_id')
+        .eq('id', showoff.user_id)
+        .single()
+
+      if (user?.telegram_id) {
+        await supabaseClient
+          .from('notification_queue')
+          .insert({
+            user_id: showoff.user_id,
+            telegram_chat_id: parseInt(user.telegram_id),
+            notification_type: 'showoff_approved',
+            title: '晒单审核通过',
+            message: `您的晒单已审核通过`,
+            data: {
+              reward_amount: 0
+            },
+            priority: 2,
+            status: 'pending',
+            scheduled_at: new Date().toISOString(),
+            retry_count: 0,
+            max_retries: 3,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+      }
     } else {
       // 审核拒绝,发送通知
       await supabaseClient.from('notifications').insert({
@@ -169,6 +227,35 @@ serve(async (req) => {
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })
+
+      // 发送Bot通知
+      const { data: user } = await supabaseClient
+        .from('users')
+        .select('telegram_id')
+        .eq('id', showoff.user_id)
+        .single()
+
+      if (user?.telegram_id) {
+        await supabaseClient
+          .from('notification_queue')
+          .insert({
+            user_id: showoff.user_id,
+            telegram_chat_id: parseInt(user.telegram_id),
+            notification_type: 'showoff_rejected',
+            title: '晒单审核未通过',
+            message: `您的晒单审核未通过`,
+            data: {
+              reason: adminNote || '不符合要求'
+            },
+            priority: 2,
+            status: 'pending',
+            scheduled_at: new Date().toISOString(),
+            retry_count: 0,
+            max_retries: 3,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+      }
     }
 
     return new Response(

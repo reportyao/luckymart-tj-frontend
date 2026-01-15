@@ -324,6 +324,7 @@ Deno.serve(async (req) => {
         }
 
         // 创建 Bot 通知（使用预先获取的Bot设置，避免循环中的fetch调用）
+        // 只发送中奖通知，不发送未中奖通知（避免打扰用户）
         const botNotifications = [];
         for (const entry of entries) {
             const isWinner = winnerUpdates.some(w => w.id === entry.id);
@@ -332,43 +333,28 @@ Deno.serve(async (req) => {
             // 使用预先获取的Bot设置映射
             const chatId = botSettingsMap.get(entry.user_id);
             
-            if (chatId) {
-                if (isWinner && winnerInfo) {
-                    // 中奖通知
-                    botNotifications.push({
-                        user_id: entry.user_id,
-                        telegram_chat_id: chatId,
-                        notification_type: 'lottery_win',
-                        title: '恭喜中奖！',
-                        message: `您在彩票开奖中获得奖金`,
-                        data: {
-                            lottery_id: lotteryId,
-                            lottery_title: lottery.title,
-                            winning_number: winningNumbers[0],
-                            prize_amount: winnerInfo.prize_amount,
-                            ticket_number: entry.numbers // 7位数开奖码
-                        },
-                        priority: 1, // 高优先级
-                        created_at: new Date().toISOString()
-                    });
-                } else {
-                    // 未中奖通知
-                    botNotifications.push({
-                        user_id: entry.user_id,
-                        telegram_chat_id: chatId,
-                        notification_type: 'lottery_lost',
-                        title: '开奖结果',
-                        message: `很遗憾，您本次未中奖`,
-                        data: {
-                            lottery_id: lotteryId,
-                            lottery_title: lottery.title,
-                            winning_number: winningNumbers[0],
-                            ticket_number: entry.numbers // 7位数开奖码
-                        },
-                        priority: 2, // 中等优先级
-                        created_at: new Date().toISOString()
-                    });
-                }
+            if (chatId && isWinner && winnerInfo) {
+                // 只发送中奖通知
+                botNotifications.push({
+                    user_id: entry.user_id,
+                    telegram_chat_id: chatId,
+                    notification_type: 'lucky_draw_win',
+                    title: '恭喜幸运入选！',
+                    message: `您在一元夺宝活动中幸运入选`,
+                    data: {
+                        lottery_id: lotteryId,
+                        product_name: lottery.title,
+                        winning_number: winningNumbers[0],
+                        ticket_number: entry.numbers
+                    },
+                    priority: 1, // 高优先级
+                    status: 'pending',
+                    scheduled_at: new Date().toISOString(),
+                    retry_count: 0,
+                    max_retries: 3,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                });
             }
         }
 

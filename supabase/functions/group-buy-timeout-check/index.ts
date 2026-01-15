@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
               refund_type: 'TJS_BALANCE'
             });
 
-            // 发送Telegram通知
+            // 发送Telegram通知（拼团超时，退回余额）
             try {
               const { data: product } = await supabase
                 .from('group_buy_products')
@@ -184,22 +184,27 @@ Deno.serve(async (req) => {
                 .eq('type', 'TJS')
                 .single();
 
-              await supabase.functions.invoke('send-telegram-notification', {
-                body: {
-                  user_id: userUUID,
-                  type: 'group_buy_timeout',
-                  data: {
-                    product_name: product?.name || 'Unknown Product',
-                    product_image: product?.image_url || '',
-                    session_code: session.session_code,
-                    refund_amount: refundAmount,
-                    wallet_balance: Number(updatedWallet?.balance || 0),
-                    refund_type: 'balance', // 标识退回到余额
-                  },
+              // 插入通知队列
+              await supabase.from('notification_queue').insert({
+                user_id: userUUID,
+                telegram_chat_id: null, // 将在发送时查询
+                notification_type: 'group_buy_timeout',
+                title: '拼团超时退款通知',
+                message: '',
+                data: {
+                  product_name: product?.name || 'Unknown Product',
+                  session_code: session.session_code,
+                  refund_amount: refundAmount,
+                  balance: Number(updatedWallet?.balance || 0),
                 },
+                priority: 2,
+                status: 'pending',
+                scheduled_at: new Date().toISOString(),
+                retry_count: 0,
+                max_retries: 3,
               });
             } catch (error) {
-              console.error('Failed to send notification:', error);
+              console.error('Failed to queue notification:', error);
             }
           } else {
             console.error(`TJS wallet not found for user ${userUUID}`);

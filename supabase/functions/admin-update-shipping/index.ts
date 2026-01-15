@@ -127,6 +127,61 @@ serve(async (req) => {
         .eq('id', shipping.prize_id)
     }
 
+    // 发送Bot通知
+    if (shipping.user_id) {
+      // 获取用户telegram_id
+      const { data: user } = await supabaseClient
+        .from('users')
+        .select('telegram_id')
+        .eq('id', shipping.user_id)
+        .single()
+
+      if (user?.telegram_id) {
+        let notificationType = ''
+        const notificationData: any = {
+          order_id: shipping.id,
+          product_name: shipping.product_name || '商品',
+          tracking_number: trackingNumber || shipping.tracking_number
+        }
+
+        // 根据状态选择通知类型（只推送关键节点：到达塔国、到达自提点）
+        if (status === 'in_transit_tajikistan' || status === 'arrived_tajikistan') {
+          // 到达塔吉克斯坦通知
+          notificationType = 'order_arrived_tajikistan'
+        } else if (status === 'ready_for_pickup') {
+          // 到达自提点通知
+          notificationType = 'order_ready_pickup'
+          notificationData.pickup_location = shipping.pickup_location || '自提点'
+          notificationData.pickup_code = shipping.pickup_code
+        } else if (status === 'picked_up' || status === 'DELIVERED') {
+          // 订单完成通知
+          notificationType = 'order_completed'
+        }
+        // 注意：不再推送 SHIPPED 和 in_transit_china 状态的通知
+
+        // 只在关键节点发送通知
+        if (notificationType) {
+          await supabaseClient
+            .from('notification_queue')
+            .insert({
+              user_id: shipping.user_id,
+              telegram_chat_id: parseInt(user.telegram_id),
+              notification_type: notificationType,
+              title: '订单物流更新',
+              message: `您的订单状态已更新`,
+              data: notificationData,
+              priority: 1,
+              status: 'pending',
+              scheduled_at: new Date().toISOString(),
+              retry_count: 0,
+              max_retries: 3,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
