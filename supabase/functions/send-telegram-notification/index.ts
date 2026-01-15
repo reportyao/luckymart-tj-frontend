@@ -18,11 +18,6 @@ function createResponse(data: any, status: number = 200) {
   });
 }
 
-// Generate unique notification ID
-function generateNotificationId(): string {
-  return `NOTIF${Date.now()}${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
-}
-
 Deno.serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -44,7 +39,7 @@ Deno.serve(async (req) => {
     // Get user information (telegram_id and language preference)
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('telegram_id, preferred_language')
+      .select('telegram_id, language_code')
       .eq('id', user_id)
       .single();
 
@@ -64,23 +59,27 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Insert notification into queue
-    const notificationId = generateNotificationId();
+    // Insert notification into queue with correct table structure
     const { error: insertError } = await supabase
       .from('notification_queue')
       .insert({
-        id: notificationId,
+        // Required fields
         user_id: user_id,
+        type: type,  // Required NOT NULL field
+        payload: data || {},  // Required NOT NULL field
+        // Optional fields
         telegram_chat_id: parseInt(user.telegram_id),
         notification_type: type,
-        title: '', // Will be generated from template
-        message: '', // Will be generated from template
+        title: '',
+        message: '',
         data: data || {},
         priority: priority,
         scheduled_at: new Date().toISOString(),
         status: 'pending',
         retry_count: 0,
         max_retries: 3,
+        attempts: 0,
+        channel: 'telegram',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });
@@ -89,15 +88,14 @@ Deno.serve(async (req) => {
       console.error('Failed to insert notification:', insertError);
       return createResponse({ 
         success: false, 
-        error: 'Failed to queue notification' 
+        error: 'Failed to queue notification: ' + insertError.message 
       }, 500);
     }
 
-    console.log(`Notification queued: ${notificationId} for user ${user_id}, type: ${type}`);
+    console.log(`Notification queued for user ${user_id}, type: ${type}`);
 
     return createResponse({
       success: true,
-      notification_id: notificationId,
       message: 'Notification queued successfully'
     });
 
