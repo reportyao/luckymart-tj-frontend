@@ -860,7 +860,7 @@ const LotteryResultPage: React.FC = () => {
 
       {/* 领取弹窗 */}
       <AnimatePresence>
-        {showClaimModal && prizeInfo && (
+        {showClaimModal && (
           <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[60]">
             <motion.div
               initial={{ opacity: 0, y: '100%' }}
