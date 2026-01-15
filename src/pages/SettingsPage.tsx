@@ -119,18 +119,7 @@ const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 其他设置（预留） */}
-      <div className="mx-4 mt-4">
-        <div className="bg-white rounded-2xl overflow-hidden shadow-sm">
-          <div className="p-4 border-b border-gray-100">
-            <h2 className="text-base font-semibold text-gray-900">通知设置</h2>
-            <p className="text-sm text-gray-500 mt-1">管理通知偏好</p>
-          </div>
-          <div className="p-4">
-            <p className="text-sm text-gray-500 text-center py-8">功能开发中...</p>
-          </div>
-        </div>
-      </div>
+
     </div>
   )
 }

@@ -92,12 +92,6 @@ const ProfilePage: React.FC = () => {
   // 精简后的菜单项
   const menuItems = [
     {
-      icon: UserCircleIcon,
-      title: t('profile.accountInfo'),
-      subtitle: t('common.edit'),
-      action: () => navigate('/profile/edit'),
-    },
-    {
       icon: LanguageIcon,
       title: t('profile.language'),
       subtitle: t('profile.settings'),
