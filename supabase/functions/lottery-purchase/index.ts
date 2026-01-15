@@ -32,7 +32,6 @@ Deno.serve(async (req) => {
     }
 
     // ✅ 使用自定义 session token 验证用户
-    // 优先从 body 获取，其次从 header 获取
     let sessionToken = session_token;
     if (!sessionToken) {
       const authHeader = req.headers.get('authorization');
@@ -98,9 +97,7 @@ Deno.serve(async (req) => {
     const user = users[0];
     const userId = user.id;
 
-    // ✅ 获取彩票信息（使用 FOR UPDATE 行锁防止并发超卖）
-    // 注意：Supabase REST API 不直接支持 FOR UPDATE，需要使用 RPC 函数
-    // 这里先查询，后续会在更新时检查版本号
+    // ✅ 获取彩票信息
     const lotteryResponse = await fetch(
       `${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}&select=*`,
       {
@@ -124,7 +121,7 @@ Deno.serve(async (req) => {
       throw new Error(`Lottery is not active. Current status: ${lottery.status}`);
     }
 
-    // ✅ 检查是否售完（关键：防止超卖）
+    // ✅ 检查是否有足够的票（预检查，实际检查在RPC函数中）
     if (lottery.sold_tickets + quantity > lottery.total_tickets) {
       throw new Error('Not enough tickets available');
     }
@@ -155,18 +152,6 @@ Deno.serve(async (req) => {
 
     /**
      * 获取用户钱包
-     * 
-     * 钱包类型说明（重要）：
-     * - 现金钱包: type='TJS', currency='TJS'
-     * - 积分钱包: type='LUCKY_COIN', currency='POINTS'
-     * 
-     * 支付方式映射：
-     * - BALANCE_WALLET (余额支付) -> 现金钱包 (TJS/TJS)
-     * - LUCKY_COIN_WALLET (积分支付) -> 积分钱包 (LUCKY_COIN/POINTS)
-     * 
-     * 历史遗留问题：
-     * - LUCKY_COIN 是历史名称（幸运币），现在前端统一显示为"积分"
-     * - 积分钱包的 currency 必须是 'POINTS'，不能是 'TJS' 或 'LUCKY_COIN'
      */
     const walletType = paymentMethod === 'BALANCE_WALLET' ? 'TJS' : 'LUCKY_COIN';
     const walletCurrency = paymentMethod === 'BALANCE_WALLET' ? lottery.currency : 'POINTS';
@@ -188,13 +173,13 @@ Deno.serve(async (req) => {
 
     const wallet = wallets[0];
 
-    // 检查可用余额（余额 - 冻结金额）
+    // 检查可用余额
     const currentBalance = parseFloat(wallet.balance) || 0;
     const frozenBalance = parseFloat(wallet.frozen_balance) || 0;
     const availableBalance = currentBalance - frozenBalance;
     
     if (availableBalance < totalAmount) {
-      throw new Error(`Insufficient available balance. Available: ${availableBalance.toFixed(2)}, Required: ${totalAmount.toFixed(2)} (Total: ${currentBalance.toFixed(2)}, Frozen: ${frozenBalance.toFixed(2)})`);
+      throw new Error(`Insufficient available balance. Available: ${availableBalance.toFixed(2)}, Required: ${totalAmount.toFixed(2)}`);
     }
 
     // 生成订单号
@@ -234,61 +219,23 @@ Deno.serve(async (req) => {
     const orders = await createOrderResponse.json();
     const order = orders[0];
 
-    // ✅ 查询当前最大票号以避免并发冲突
-    const maxTicketResponse = await fetch(
-      `${supabaseUrl}/rest/v1/lottery_entries?lottery_id=eq.${lotteryId}&select=ticket_number&order=ticket_number.desc&limit=1`,
-      {
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-      }
-    );
-
-    const maxTicketEntries = await maxTicketResponse.json();
-    const startTicketNumber = maxTicketEntries.length > 0 ? maxTicketEntries[0].ticket_number + 1 : 1;
-
-    // ✅ 生成连续7位数参与码
-    // 逻辑：从 1000000 + startTicketNumber 开始分配连续号码
-    const generateConsecutiveNumbers = (startIndex: number, count: number) => {
-      const numbers = [];
-      const baseNumber = 1000000; // 7位数起始值
-      
-      for (let i = 0; i < count; i++) {
-        const number = baseNumber + startIndex + i - 1; // startIndex已经是从1开始，所以-1
-        numbers.push(number.toString());
-      }
-      
-      return numbers;
-    };
-
-    // 生成连续号码
-    const newNumbers = generateConsecutiveNumbers(startTicketNumber, quantity);
-
-    // 创建彩票记录
-    const lotteryEntries = newNumbers.map((number, index) => ({
-      user_id: userId,
-      lottery_id: lotteryId,
-      ticket_number: startTicketNumber + index, // 使用查询到的最大票号+1开始
-      participation_code: number, // 7位数参与码（字符串）
-      is_winning: false,
-      created_at: new Date().toISOString(),
-    }));
-
-    const createEntriesResponse = await fetch(`${supabaseUrl}/rest/v1/lottery_entries`, {
+    // ✅ 使用原子性RPC函数分配ticket_number，防止并发冲突
+    const allocateResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/allocate_lottery_tickets`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
         'apikey': serviceRoleKey,
         'Content-Type': 'application/json',
-        'Prefer': 'return=representation',
       },
-      body: JSON.stringify(lotteryEntries),
+      body: JSON.stringify({
+        p_lottery_id: lotteryId,
+        p_user_id: userId,
+        p_quantity: quantity
+      }),
     });
 
-    if (!createEntriesResponse.ok) {
-      const errorText = await createEntriesResponse.text();
+    if (!allocateResponse.ok) {
+      const errorText = await allocateResponse.text();
       // 回滚订单
       await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
         method: 'PATCH',
@@ -299,10 +246,11 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({ status: 'CANCELLED' }),
       });
-      throw new Error(`Failed to create lottery entries: ${errorText}`);
+      throw new Error(`Failed to allocate tickets: ${errorText}`);
     }
 
-    const entries = await createEntriesResponse.json();
+    const allocatedTickets = await allocateResponse.json();
+    const participationCodes = allocatedTickets.map((t: any) => t.participation_code);
 
     // 更新钱包余额
     const newBalance = wallet.balance - totalAmount;
@@ -364,38 +312,53 @@ Deno.serve(async (req) => {
       }),
     });
 
-    // ✅ 更新彩票已售数量，并在售罄时同时更新状态和开奖时间（原子操作）
-    const newSoldTickets = lottery.sold_tickets + quantity;
-    const isSoldOut = newSoldTickets >= lottery.total_tickets;
+    // ✅ 重新查询lottery获取最新的sold_tickets
+    const updatedLotteryResponse = await fetch(
+      `${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}&select=sold_tickets,total_tickets`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
     
-    // 准备更新数据
-    const updateData: any = {
-      sold_tickets: newSoldTickets,
-      updated_at: new Date().toISOString(),
-    };
-    
-    // 如果售罄，同时更新状态和开奖时间
+    const updatedLotteries = await updatedLotteryResponse.json();
+    const updatedLottery = updatedLotteries[0];
+    const isSoldOut = updatedLottery.sold_tickets >= updatedLottery.total_tickets;
+
+    // 如果售罄，更新状态和开奖时间
     if (isSoldOut) {
       const drawTime = new Date(Date.now() + 180 * 1000); // 180秒后开奖
-      updateData.status = 'SOLD_OUT';
-      updateData.draw_time = drawTime.toISOString();
-    }
-    
-    const updateLotteryResponse = await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${serviceRoleKey}`,
-        'apikey': serviceRoleKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updateData),
-    });
+      await fetch(`${supabaseUrl}/rest/v1/lotteries?id=eq.${lotteryId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          status: 'SOLD_OUT',
+          draw_time: drawTime.toISOString(),
+          updated_at: new Date().toISOString(),
+        }),
+      });
 
-    if (!updateLotteryResponse.ok) {
-      console.error('Failed to update lottery:', await updateLotteryResponse.text());
+      // 异步调用售罄检测函数
+      fetch(`${supabaseUrl}/functions/v1/check-lottery-sold-out`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${serviceRoleKey}`,
+        },
+        body: JSON.stringify({ lotteryId: lotteryId }),
+      }).catch((err) => {
+        console.error('Failed to trigger sold-out check:', err);
+      });
     }
 
-    // 处理推荐佣金（使用handle-purchase-commission进行三级分销）
+    // 处理推荐佣金
     if (user.referred_by_id) {
       try {
         const commissionResponse = await fetch(`${supabaseUrl}/functions/v1/handle-purchase-commission`, {
@@ -416,22 +379,7 @@ Deno.serve(async (req) => {
         }
       } catch (commissionError) {
         console.error('Commission processing error:', commissionError);
-        // 不阻断购买流程
       }
-    }
-
-    // ✅ 如果售罄，异步调用售罄检测函数（用于触发定时开奖）
-    if (isSoldOut) {
-      fetch(`${supabaseUrl}/functions/v1/check-lottery-sold-out`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${serviceRoleKey}`,
-        },
-        body: JSON.stringify({ lotteryId: lotteryId }),
-      }).catch((err) => {
-        console.error('Failed to trigger sold-out check:', err);
-      });
     }
 
     // 返回购买结果
@@ -443,8 +391,8 @@ Deno.serve(async (req) => {
         total_amount: totalAmount,
         status: 'PAID',
       },
-      lottery_entries: entries,
-      participation_codes: newNumbers, // 返回分配的7位数参与码
+      lottery_entries: allocatedTickets,
+      participation_codes: participationCodes,
       remaining_balance: newBalance,
       is_sold_out: isSoldOut,
     };
