@@ -861,14 +861,16 @@ const LotteryResultPage: React.FC = () => {
       {/* 领取弹窗 */}
       <AnimatePresence>
         {showClaimModal && prizeInfo && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[60]">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white rounded-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto"
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+              className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] flex flex-col shadow-2xl"
             >
-              <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-2xl z-10">
+              {/* 头部固定 */}
+              <div className="flex-none bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl z-10">
                 <h3 className="text-lg font-bold">{t('orders.confirmClaim')}</h3>
                 <button
                   onClick={() => setShowClaimModal(false)}
@@ -878,7 +880,8 @@ const LotteryResultPage: React.FC = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmitClaim} className="p-6 space-y-4">
+              {/* 内容区域可滚动 */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 <div className="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-4">
                   <div className="flex items-center space-x-3 mb-2">
                     <GiftIcon className="w-6 h-6 text-purple-600" />
@@ -894,7 +897,7 @@ const LotteryResultPage: React.FC = () => {
                   <select
                     value={selectedPointId}
                     onChange={(e) => setSelectedPointId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white"
                     required
                   >
                     {pickupPoints.map((point) => (
@@ -913,24 +916,28 @@ const LotteryResultPage: React.FC = () => {
                     <li>{t('orders.claimNotice3')}</li>
                   </ul>
                 </div>
+                
+                {/* 增加底部占位，确保滚动到底部时内容不被遮挡 */}
+                <div className="h-24 sm:hidden"></div>
+              </div>
 
-                <div className="pt-4 flex space-x-3">
-                  <button
-                    type="button"
-                    onClick={() => setShowClaimModal(false)}
-                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-                  >
-                    {t('common.cancel')}
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? t('common.submitting') : t('common.confirm')}
-                  </button>
-                </div>
-              </form>
+              {/* 底部按钮固定，并增加巨大的底部内边距避开 TabBar */}
+              <div className="flex-none border-t bg-white p-6 pb-24 sm:pb-6 flex space-x-3 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+                <button
+                  type="button"
+                  onClick={() => setShowClaimModal(false)}
+                  className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={handleSubmitClaim}
+                  disabled={isSubmitting}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-pink-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-200"
+                >
+                  {isSubmitting ? t('common.submitting') : t('common.confirm')}
+                </button>
+              </div>
             </motion.div>
           </div>
         )}
