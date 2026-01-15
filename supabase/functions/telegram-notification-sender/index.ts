@@ -43,6 +43,7 @@ interface NotificationData {
   referral_amount?: number;
   level?: string;
   source?: string;
+  invitee_name?: string;  // 被邀请人名称
 }
 
 // 多语言通知模板 - 根据用户确认的文案
@@ -214,12 +215,12 @@ const notificationTemplates = {
   
   // 邀请好友注册成功通知（邀请者获得轮盘抽奖机会）
   referral_success: {
-    zh: () => 
-      `🎉 好友注册成功\n\n👥 您邀请的好友已成功注册\n🎰 奖励: 获得1次轮盘抽奖机会\n\n立即前往轮盘抽奖，赢取更多奖励！`,
-    ru: () => 
-      `🎉 Друг успешно зарегистрировался\n\n👥 Ваш приглашенный друг успешно зарегистрировался\n🎰 Награда: 1 бесплатный спин колеса фортуны\n\nКрутите колесо и выигрывайте больше призов!`,
-    tg: () => 
-      `🎉 Дӯст бомуваффақият сабти ном шуд\n\n👥 Дӯсти даъватшудаи шумо бомуваффақият сабти ном шуд\n🎰 Ҷоиза: 1 чархиши ройгони чархи бахт\n\nЧархро бигардонед ва ҷоизаҳои бештар бурдед!`
+    zh: (data: NotificationData) => 
+      `🎉 好友注册成功\n\n👥 您邀请的好友 ${data.invitee_name || '新用户'} 已成功注册\n🎰 奖励: 获得1次轮盘抽奖机会\n\n立即前往轮盘抽奖，赢取更多奖励！`,
+    ru: (data: NotificationData) => 
+      `🎉 Друг успешно зарегистрировался\n\n👥 Ваш приглашенный друг ${data.invitee_name || 'новый пользователь'} успешно зарегистрировался\n🎰 Награда: 1 бесплатный спин колеса фортуны\n\nКрутите колесо и выигрывайте больше призов!`,
+    tg: (data: NotificationData) => 
+      `🎉 Дӯст бомуваффақият сабти ном шуд\n\n👥 Дӯсти даъватшудаи шумо ${data.invitee_name || 'корбари нав'} бомуваффақият сабти ном шуд\n🎰 Ҷоиза: 1 чархиши ройгони чархи бахт\n\nЧархро бигардонед ва ҷоизаҳои бештар бурдед!`
   },
   
   // 推荐奖励到账通知
@@ -297,11 +298,44 @@ async function processNotification(supabase: any, notification: any, botToken: s
     // 获取用户信息和语言偏好
     const { data: user } = await supabase
       .from('users')
-      .select('preferred_language')
+      .select('preferred_language, telegram_id')
       .eq('id', notification.user_id)
       .single();
 
     const language = user?.preferred_language || 'zh';
+    
+    // 获取 telegram_chat_id，优先使用通知中的，否则从用户表查询
+    let chatId = notification.telegram_chat_id;
+    if (!chatId && user?.telegram_id) {
+      chatId = parseInt(user.telegram_id);
+    }
+    
+    // 如果仍然没有 chat_id，尝试从 bot_user_settings 查询
+    if (!chatId) {
+      const { data: botSettings } = await supabase
+        .from('bot_user_settings')
+        .select('telegram_chat_id')
+        .eq('user_id', notification.user_id)
+        .single();
+      
+      if (botSettings?.telegram_chat_id) {
+        chatId = botSettings.telegram_chat_id;
+      }
+    }
+    
+    // 如果没有有效的 chat_id，标记为失败
+    if (!chatId) {
+      console.warn(`No telegram_chat_id found for user ${notification.user_id}`);
+      await supabase
+        .from('notification_queue')
+        .update({ 
+          status: 'failed',
+          error_message: 'No telegram_chat_id found for user',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', notification.id);
+      return { success: false, error: 'No telegram_chat_id' };
+    }
 
     // 格式化通知文本
     const notificationText = formatNotificationText(
@@ -312,7 +346,7 @@ async function processNotification(supabase: any, notification: any, botToken: s
 
     // 发送通知
     const sent = await sendTelegramMessage(
-      notification.telegram_chat_id,
+      chatId,
       notificationText,
       botToken
     );
