@@ -291,7 +291,14 @@ Deno.serve(async (req) => {
             // 插入通知队列
             await supabase.from('notification_queue').insert({
               user_id: userUUID,
-              telegram_chat_id: null, // 将在发送时查询
+              type: 'group_buy_refund',
+              payload: {
+                product_name: product?.name || 'Unknown Product',
+                session_code: session.session_code,
+                refund_amount: refundAmount,
+                balance: Number(updatedWallet?.balance || 0),
+              },
+              telegram_chat_id: null,
               notification_type: 'group_buy_refund',
               title: '拼团退款通知',
               message: '',
@@ -306,6 +313,8 @@ Deno.serve(async (req) => {
               scheduled_at: new Date().toISOString(),
               retry_count: 0,
               max_retries: 3,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
             });
           } catch (error) {
             console.error('Failed to queue notification:', error);
@@ -325,7 +334,13 @@ Deno.serve(async (req) => {
       // 插入通知队列
       await supabase.from('notification_queue').insert({
         user_id: winnerUUID,
-        telegram_chat_id: null, // 将在发送时查询
+        type: 'group_buy_win',
+        payload: {
+          product_name: product?.name || 'Unknown Product',
+          session_code: session.session_code,
+          won_at: new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' }),
+        },
+        telegram_chat_id: null,
         notification_type: 'group_buy_win',
         title: '拼团成功通知',
         message: '',
@@ -339,6 +354,8 @@ Deno.serve(async (req) => {
         scheduled_at: new Date().toISOString(),
         retry_count: 0,
         max_retries: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       });
     } catch (error) {
       console.error('Failed to queue win notification:', error);

@@ -162,6 +162,10 @@ serve(async (req) => {
           .from('notification_queue')
           .insert({
             user_id: showoff.user_id,
+            type: 'showoff_approved',
+            payload: {
+              reward_amount: rewardCoins
+            },
             telegram_chat_id: parseInt(user.telegram_id),
             notification_type: 'showoff_approved',
             title: '晒单审核通过',
@@ -201,6 +205,10 @@ serve(async (req) => {
           .from('notification_queue')
           .insert({
             user_id: showoff.user_id,
+            type: 'showoff_approved',
+            payload: {
+              reward_amount: 0
+            },
             telegram_chat_id: parseInt(user.telegram_id),
             notification_type: 'showoff_approved',
             title: '晒单审核通过',

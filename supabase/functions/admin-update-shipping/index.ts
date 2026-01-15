@@ -165,6 +165,8 @@ serve(async (req) => {
             .from('notification_queue')
             .insert({
               user_id: shipping.user_id,
+              type: notificationType,
+              payload: notificationData,
               telegram_chat_id: parseInt(user.telegram_id),
               notification_type: notificationType,
               title: '订单物流更新',

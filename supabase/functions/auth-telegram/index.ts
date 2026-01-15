@@ -421,6 +421,10 @@ Deno.serve(async (req) => {
                                     },
                                     body: JSON.stringify({
                                         user_id: referredById,
+                                        type: 'referral_success',
+                                        payload: {
+                                            invitee_name: userData.first_name || userData.username || '新用户'
+                                        },
                                         telegram_chat_id: parseInt(inviterData[0].telegram_id),
                                         notification_type: 'referral_success',
                                         title: '邀请成功',

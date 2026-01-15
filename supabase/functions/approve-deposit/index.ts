@@ -248,7 +248,11 @@ serve(async (req) => {
         // 插入通知队列 - 充值到账
         await supabaseClient.from('notification_queue').insert({
           user_id: depositRequest.user_id,
-          telegram_chat_id: null, // 将在发送时查询
+          type: 'wallet_deposit',
+          payload: {
+            transaction_amount: depositAmount,
+          },
+          telegram_chat_id: null,
           notification_type: 'wallet_deposit',
           title: '充值到账',
           message: '',
@@ -260,6 +264,8 @@ serve(async (req) => {
           scheduled_at: new Date().toISOString(),
           retry_count: 0,
           max_retries: 3,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
         console.log('充值通知已加入队列');
 
@@ -267,6 +273,13 @@ serve(async (req) => {
         if (bonusAmount > 0) {
           await supabaseClient.from('notification_queue').insert({
             user_id: depositRequest.user_id,
+            type: 'first_deposit_bonus',
+            payload: {
+              deposit_amount: depositAmount,
+              bonus_amount: bonusAmount,
+              bonus_percent: bonusPercent,
+              total_amount: totalCredited,
+            },
             telegram_chat_id: null,
             notification_type: 'first_deposit_bonus',
             title: '首充奖励到账',
@@ -282,6 +295,8 @@ serve(async (req) => {
             scheduled_at: new Date().toISOString(),
             retry_count: 0,
             max_retries: 3,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           });
           console.log('首充奖励通知已加入队列');
         }
@@ -303,6 +318,12 @@ serve(async (req) => {
       try {
         await supabaseClient.from('notification_queue').insert({
           user_id: depositRequest.user_id,
+          type: 'wallet_withdraw_failed',
+          payload: {
+            transaction_amount: depositRequest.amount,
+            failure_reason: adminNote || '审核未通过',
+            current_balance: 0,
+          },
           telegram_chat_id: null,
           notification_type: 'wallet_withdraw_failed',
           title: '充值失败',
@@ -317,6 +338,8 @@ serve(async (req) => {
           scheduled_at: new Date().toISOString(),
           retry_count: 0,
           max_retries: 3,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
       } catch (error) {
         console.error('Failed to queue Telegram notification:', error);

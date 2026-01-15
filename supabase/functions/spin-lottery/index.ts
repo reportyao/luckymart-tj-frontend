@@ -285,6 +285,11 @@ Deno.serve(async (req) => {
               },
               body: JSON.stringify({
                 user_id: user_id,
+                type: 'spin_win',
+                payload: {
+                  prize_name: selectedReward.reward_name,
+                  prize_amount: selectedReward.reward_amount
+                },
                 telegram_chat_id: parseInt(userData[0].telegram_id),
                 notification_type: 'spin_win',
                 title: '转盘中奖',

@@ -337,6 +337,13 @@ Deno.serve(async (req) => {
                 // 只发送中奖通知
                 botNotifications.push({
                     user_id: entry.user_id,
+                    type: 'lucky_draw_win',
+                    payload: {
+                        lottery_id: lotteryId,
+                        product_name: lottery.title,
+                        winning_number: winningNumbers[0],
+                        ticket_number: entry.numbers
+                    },
                     telegram_chat_id: chatId,
                     notification_type: 'lucky_draw_win',
                     title: '恭喜幸运入选！',
