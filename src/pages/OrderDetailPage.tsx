@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   ArrowLeftIcon,
+  ArrowPathIcon,
   ShoppingBagIcon,
   MapPinIcon,
   ClockIcon,
@@ -138,6 +139,12 @@ const OrderDetailPage: React.FC = () => {
         bgColor: 'bg-blue-100',
         icon: <TruckIcon className="w-5 h-5" />
       },
+      'PENDING_CLAIM': { 
+        text: t('orders.statusPendingClaim') || '待领取', 
+        color: 'text-orange-700', 
+        bgColor: 'bg-orange-100',
+        icon: <GiftIcon className="w-5 h-5" />
+      },
       'PICKED_UP': { 
         text: t('orders.statusPickedUp') || '已提货', 
         color: 'text-green-700', 
@@ -224,7 +231,7 @@ const OrderDetailPage: React.FC = () => {
         <GiftIcon className="w-16 h-16 text-gray-400 mb-4" />
         <p className="text-gray-600 mb-4">{t('orders.noOrders') || '未找到订单'}</p>
         <button
-          onClick={() => navigate('/orders-management')}
+          onClick={() => navigate(-1)}
           className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
         >
           {t('common.back') || '返回'}
@@ -245,14 +252,24 @@ const OrderDetailPage: React.FC = () => {
       {/* 头部 */}
       <div className="bg-gradient-to-r from-purple-600 via-pink-500 to-orange-500 text-white shadow-lg">
         <div className="max-w-2xl mx-auto px-4 py-4">
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => navigate(-1)}
+                className="p-2 hover:bg-white/20 rounded-lg transition"
+              >
+                <ArrowLeftIcon className="w-6 h-6" />
+              </button>
+              <h1 className="text-xl font-bold">{t('order.orderDetails') || '订单详情'}</h1>
+            </div>
             <button
-              onClick={() => navigate('/orders-management')}
-              className="p-2 hover:bg-white/20 rounded-lg transition"
+              onClick={fetchOrderDetail}
+              disabled={loading}
+              className="p-2 hover:bg-white/20 rounded-lg transition disabled:opacity-50"
+              title={t('common.refresh') || '刷新'}
             >
-              <ArrowLeftIcon className="w-6 h-6" />
+              <ArrowPathIcon className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} />
             </button>
-            <h1 className="text-xl font-bold">{t('order.orderDetails') || '订单详情'}</h1>
           </div>
         </div>
       </div>
