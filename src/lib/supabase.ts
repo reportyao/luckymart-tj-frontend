@@ -699,7 +699,7 @@ export const referralService = {
 
     // 如果不是重复点赞，更新 likes_count
     if (!error) {
-      const { error: updateError } = await supabase.rpc('increment_likes_count', { showoff_id: showoffId });
+      const { error: updateError } = await (supabase.rpc as any)('increment_likes_count', { p_post_id: showoffId });
       if (updateError) {
         console.error('Failed to update likes_count:', updateError);
       }
@@ -726,7 +726,7 @@ export const referralService = {
 	    }
 
       // 更新 likes_count
-      const { error: updateError } = await supabase.rpc('decrement_likes_count', { showoff_id: showoffId });
+      const { error: updateError } = await (supabase.rpc as any)('decrement_likes_count', { p_post_id: showoffId });
       if (updateError) {
         console.error('Failed to update likes_count:', updateError);
       }

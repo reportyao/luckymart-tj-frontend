@@ -208,16 +208,12 @@ serve(async (req) => {
         ticket_id: winningEntry.id, // 使用 lottery_entry id
         winning_code: winningEntry.participation_code || winningEntry.numbers, // 7位数参与码
         prize_name: lottery.title,
-        prize_image: lottery.images?.[0] || lottery.image_url,
+        prize_image: lottery.image_urls?.[0] || lottery.image_url,
         prize_value: lottery.ticket_price * lottery.total_tickets,
         status: 'PENDING',
+        pickup_status: 'PENDING_CLAIM', // 添加pickup_status字段
+        logistics_status: 'PENDING_SHIPMENT', // 添加logistics_status字段
         won_at: drawTime,
-        algorithm_data: {
-          algorithm: 'timestamp_sum',
-          timestamp_sum: result.timestampSum,
-          formula: result.formula,
-          winning_index: result.winningIndex,
-        },
         created_at: drawTime,
         updated_at: drawTime,
       })
@@ -225,15 +221,24 @@ serve(async (req) => {
       .single();
 
     if (prizeError) {
-      console.error('Failed to create prize:', prizeError);
+      console.error('[AutoLotteryDraw] Failed to create prize:', {
+        error: prizeError,
+        message: prizeError.message,
+        details: prizeError.details,
+        hint: prizeError.hint,
+        code: prizeError.code
+      });
       // Prize创建失败必须回滚开奖结果
       // 删除lottery_results记录
-      await supabaseClient
+      const { error: deleteResultError } = await supabaseClient
         .from('lottery_results')
         .delete()
         .eq('lottery_id', lotteryId);
+      if (deleteResultError) {
+        console.error('[AutoLotteryDraw] Failed to delete lottery_results:', deleteResultError);
+      }
       // 回滚 lottery 状态
-      await supabaseClient
+      const { error: rollbackError } = await supabaseClient
         .from('lotteries')
         .update({ 
           status: 'ACTIVE',
@@ -243,7 +248,10 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', lotteryId);
-      throw new Error(`Failed to create prize for lottery ${lotteryId}: ${prizeError.message}`);
+      if (rollbackError) {
+        console.error('[AutoLotteryDraw] Failed to rollback lottery status:', rollbackError);
+      }
+      throw new Error(`Failed to create prize for lottery ${lotteryId}: ${prizeError.message} (code: ${prizeError.code})`);
     }
 
     // 发送中奖通知给中奖用户 - 修复: 使用正确的枚举值和添加必填字段
