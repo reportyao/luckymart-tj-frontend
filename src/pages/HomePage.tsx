@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { useInviteStats } from '../hooks/useInviteStats';
@@ -83,10 +83,45 @@ const HomePage: React.FC = () => {
     }
   }, []);
 
+  const nav = useNavigate();
+
   useEffect(() => {
     loadLotteries();
     loadGroupBuyProducts();
-  }, [loadLotteries, loadGroupBuyProducts]);
+
+    // 处理 Telegram start_param 重定向
+    const WebApp = (window as any).Telegram?.WebApp;
+    const startParam = WebApp?.initDataUnsafe?.start_param;
+    
+    if (startParam) {
+      console.log('[HomePage] Found start_param:', startParam);
+      
+      // 1. 拼团详情: gb_{productId}
+      if (startParam.startsWith('gb_')) {
+        const productId = startParam.replace('gb_', '');
+        console.log('[HomePage] Redirecting to group buy product:', productId);
+        nav(`/group-buy/${productId}`, { replace: true });
+      }
+      // 2. 拼团结果/加入: gbs_{sessionId}
+      else if (startParam.startsWith('gbs_')) {
+        const sessionId = startParam.replace('gbs_', '');
+        console.log('[HomePage] Redirecting to group buy session:', sessionId);
+        nav(`/group-buy/result/${sessionId}`, { replace: true });
+      }
+      // 3. 积分商城详情: lt_{lotteryId}
+      else if (startParam.startsWith('lt_')) {
+        const lotteryId = startParam.replace('lt_', '');
+        console.log('[HomePage] Redirecting to lottery detail:', lotteryId);
+        nav(`/lottery/${lotteryId}`, { replace: true });
+      }
+      // 4. 晒单详情: so_{showoffId}
+      else if (startParam.startsWith('so_')) {
+        const showoffId = startParam.replace('so_', '');
+        console.log('[HomePage] Redirecting to showoff detail:', showoffId);
+        nav(`/showoff`, { replace: true }); // 目前晒单详情在列表中，先跳到列表
+      }
+    }
+  }, [loadLotteries, loadGroupBuyProducts, nav]);
 
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
