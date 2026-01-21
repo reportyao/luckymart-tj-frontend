@@ -125,17 +125,53 @@ serve(async (req) => {
       const userIds = allInvitedUsers.map(u => u.id)
       
       // 查询每个用户的订单总额（消费总额）
-      // 包含所有已支付状态的订单：COMPLETED（已完成）、SHIPPED（已发货）、DELIVERED（已送达）
+      // 1. 抽奖订单（orders表）
       const { data: ordersData } = await supabase
         .from('orders')
         .select('user_id, total_amount')
         .in('user_id', userIds)
         .in('status', ['COMPLETED', 'SHIPPED', 'DELIVERED', 'PENDING'])
       
+      // 2. 拼团订单（group_buy_orders表）
+      const { data: groupBuyOrdersData } = await supabase
+        .from('group_buy_orders')
+        .select('user_id, amount')
+        .in('user_id', userIds)
+        .in('status', ['PENDING', 'COMPLETED', 'TIMEOUT_REFUNDED'])
+      
+      // 3. 全款购买订单（full_purchase_orders表）
+      const { data: fullPurchaseOrdersData } = await supabase
+        .from('full_purchase_orders')
+        .select('user_id, total_amount')
+        .in('user_id', userIds)
+        .in('status', ['PENDING', 'COMPLETED'])
+      
       // 统计每个用户的消费总额
       const userSpending: Record<string, number> = {}
+      
+      // 统计抽奖订单
       if (ordersData) {
         ordersData.forEach(order => {
+          if (!userSpending[order.user_id]) {
+            userSpending[order.user_id] = 0
+          }
+          userSpending[order.user_id] += Number(order.total_amount)
+        })
+      }
+      
+      // 统计拼团订单
+      if (groupBuyOrdersData) {
+        groupBuyOrdersData.forEach(order => {
+          if (!userSpending[order.user_id]) {
+            userSpending[order.user_id] = 0
+          }
+          userSpending[order.user_id] += Number(order.amount)
+        })
+      }
+      
+      // 统计全款购买订单
+      if (fullPurchaseOrdersData) {
+        fullPurchaseOrdersData.forEach(order => {
           if (!userSpending[order.user_id]) {
             userSpending[order.user_id] = 0
           }

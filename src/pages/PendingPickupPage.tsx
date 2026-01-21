@@ -191,13 +191,15 @@ const PendingPickupPage: React.FC = () => {
             id, 
             product_id, 
             session_id, 
+            winner_order_id,
             created_at, 
             status,
             logistics_status,
             pickup_code,
             pickup_status,
             group_buy_products(id, name, name_i18n, title, description, image_url, image_urls, price_per_person, group_size),
-            group_buy_sessions(id, session_code, current_participants, expires_at)
+            group_buy_sessions(id, session_code, current_participants, expires_at),
+            group_buy_orders!winner_order_id(amount)
           `)
           .eq('winner_id', user.id)
           .not('winner_id', 'is', null)
@@ -224,13 +226,17 @@ const PendingPickupPage: React.FC = () => {
 
               const image = product.image_urls?.[0] || product.image_url || '';
               
+              // 获取用户实际支付的金额
+              const order = result.group_buy_orders;
+              const actualPrice = order?.amount || product.price_per_person || 0;
+              
               pendingItems.push({
                 id: result.id,
                 type: 'groupbuy',
                 productId: product.id,
                 productTitle: title,
                 productImage: image,
-                price: product.price_per_person,
+                price: actualPrice,
                 currency: 'TJS',
                 quantity: 1,
                 sessionCode: session?.session_code,
