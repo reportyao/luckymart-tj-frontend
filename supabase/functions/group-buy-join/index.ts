@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           group_size: groupSize,
           max_participants: groupSize,
           required_participants: groupSize,
-          initiator_id: user.telegram_id,
+          initiator_id: user.id,
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
         })
