@@ -232,12 +232,9 @@ serve(async (req) => {
     }
 
     // 创建钱包交易记录 (使用正确的枚举值 COIN_EXCHANGE)
-    const txId1 = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    const txId2 = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
-    
-    await supabaseClient.from('wallet_transactions').insert([
+    // 不指定 id，让数据库自动生成 UUID
+    const { error: txError } = await supabaseClient.from('wallet_transactions').insert([
       {
-        id: txId1,
         wallet_id: sourceWallet.id,
         type: 'COIN_EXCHANGE',
         amount: -amount,
@@ -248,7 +245,6 @@ serve(async (req) => {
         processed_at: new Date().toISOString(),
       },
       {
-        id: txId2,
         wallet_id: targetWallet.id,
         type: 'COIN_EXCHANGE',
         amount: amount,
@@ -259,6 +255,13 @@ serve(async (req) => {
         processed_at: new Date().toISOString(),
       },
     ])
+
+    if (txError) {
+      console.error('[Exchange] Create wallet transaction error:', txError);
+      // 不阻断流程，只记录错误
+    } else {
+      console.log('[Exchange] Wallet transactions created successfully');
+    }
 
     console.log('[Exchange] Success, new balances:', {
       source: sourceBalanceBefore - amount,
