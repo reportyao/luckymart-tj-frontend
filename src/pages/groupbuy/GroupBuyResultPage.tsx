@@ -219,6 +219,7 @@ export default function GroupBuyResultPage() {
     setShowClaimModal(true);
   };
 
+  // 修复多语言对象渲染问题 - 2026-01-21
   const getLocalizedText = (text: any) => {
     if (!text) return '';
     if (typeof text === 'string') return text;
