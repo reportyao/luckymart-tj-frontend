@@ -120,6 +120,12 @@ const HomePage: React.FC = () => {
         console.log('[HomePage] Redirecting to showoff detail:', showoffId);
         nav(`/showoff`, { replace: true }); // 目前晒单详情在列表中，先跳到列表
       }
+      // 5. 邀请码: 直接是邀请码字符串（如 LMBDYIHI）
+      else {
+        console.log('[HomePage] Found referral code:', startParam);
+        // 邀请码已在 UserContext 中处理，这里不需要额外操作
+        // 用户会看到首页，邀请关系会在后台建立
+      }
     }
   }, [loadLotteries, loadGroupBuyProducts, nav]);
 
