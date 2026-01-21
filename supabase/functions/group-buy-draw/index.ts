@@ -244,9 +244,8 @@ Deno.serve(async (req) => {
             }
 
             // 创建钱包交易记录
-            const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+            // 移除手动指定的 ID，让数据库自动生成 UUID
             await supabase.from('wallet_transactions').insert({
-              id: transactionId,
               wallet_id: tjsWallet.id,
               type: 'GROUP_BUY_REFUND',
               amount: refundAmount,
