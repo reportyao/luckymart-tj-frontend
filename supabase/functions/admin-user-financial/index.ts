@@ -336,6 +336,7 @@ async function exportTransactions(supabaseClient: any, userId: string, options: 
 function getTransactionTypeName(type: string): string {
   const typeNames: Record<string, string> = {
     'DEPOSIT': '充值',
+    'deposit': '充值',
     'WITHDRAWAL': '提现',
     'WITHDRAWAL_FREEZE': '提现冻结',
     'WITHDRAWAL_UNFREEZE': '提现解冻',
@@ -355,7 +356,15 @@ function getTransactionTypeName(type: string): string {
     'NEW_USER_GIFT': '新用户礼物',
     'SHOWOFF_REWARD': '晒单奖励',
     'SPIN_REWARD': '转盘奖励',
-    'COMMISSION': '佣金收入'
+    'SPIN_COST': '转盘消耗',
+    'COMMISSION': '佣金收入',
+    'FIRST_DEPOSIT_BONUS': '首充奖励',
+    'FIRST_DEPOSIT_BONUS_ACTIVATION': '首充奖励激活',
+    'FIRST_GROUP_BUY_REWARD': '首次拼团奖励',
+    'REFERRAL_FIRST_DEPOSIT_COMMISSION': '邀请首充佣金',
+    'REFERRAL_GROUP_BUY_COMMISSION': '邀请拼团佣金',
+    'BONUS': '奖励',
+    'POINTS_EXCHANGE': '积分兑换'
   }
   return typeNames[type] || type
 }
@@ -363,6 +372,7 @@ function getTransactionTypeName(type: string): string {
 function isIncomeType(type: string): boolean {
   return [
     'DEPOSIT',
+    'deposit',
     'LOTTERY_PRIZE',
     'LOTTERY_REFUND',
     'GROUP_BUY_WIN',
@@ -374,6 +384,12 @@ function isIncomeType(type: string): boolean {
     'SHOWOFF_REWARD',
     'SPIN_REWARD',
     'WITHDRAWAL_UNFREEZE',
-    'COMMISSION'
+    'COMMISSION',
+    'FIRST_DEPOSIT_BONUS',
+    'FIRST_DEPOSIT_BONUS_ACTIVATION',
+    'FIRST_GROUP_BUY_REWARD',
+    'REFERRAL_FIRST_DEPOSIT_COMMISSION',
+    'REFERRAL_GROUP_BUY_COMMISSION',
+    'BONUS'
   ].includes(type)
 }
