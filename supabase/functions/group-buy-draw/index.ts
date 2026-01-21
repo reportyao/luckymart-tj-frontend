@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
 
             // 创建钱包交易记录
             // 移除手动指定的 ID，让数据库自动生成 UUID
-            await supabase.from('wallet_transactions').insert({
+            const { error: insertError } = await supabase.from('wallet_transactions').insert({
               wallet_id: tjsWallet.id,
               type: 'GROUP_BUY_REFUND',
               amount: refundAmount,
@@ -258,19 +258,36 @@ Deno.serve(async (req) => {
               created_at: new Date().toISOString(),
             });
 
-            console.log(`Refunded ${refundAmount} TJS to balance for user ${userUUID}`);
-          }
+            if (insertError) {
+              console.error(`Failed to create transaction record for user ${userUUID}:`, insertError);
+              // 回滚钱包余额
+              await supabase
+                .from('wallets')
+                .update({ 
+                  balance: Number(tjsWallet.balance),
+                  updated_at: new Date().toISOString(),
+                  version: tjsWallet.version + 1
+                })
+                .eq('id', tjsWallet.id);
+              continue;
+            }
 
-          // 更新订单退款信息
-          await supabase
-            .from('group_buy_orders')
-            .update({
-              status: 'REFUNDED',
-              refund_lucky_coins: refundAmount,
-              refunded_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq('id', order.id);
+            console.log(`Refunded ${refundAmount} TJS to balance for user ${userUUID}`);
+            
+            // 更新订单退款信息（只有在交易记录创建成功后才更新）
+            await supabase
+              .from('group_buy_orders')
+              .update({
+                status: 'REFUNDED',
+                refund_lucky_coins: refundAmount,
+                refunded_at: new Date().toISOString(),
+                updated_at: new Date().toISOString(),
+              })
+              .eq('id', order.id);
+          } else {
+            console.error(`TJS wallet not found for user ${userUUID}`);
+            continue;
+          }
 
           // 发送Telegram通知（未中奖，退回余额）
           try {
