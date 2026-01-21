@@ -310,7 +310,8 @@ const SpinLotteryPage: React.FC = () => {
   const copyInviteLink = () => {
     if (!spinData?.referral_code) return;
     
-    const inviteLink = `t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
+    const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
+    const inviteLink = `${sharePrefix}?startapp=${spinData.referral_code}`;
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     toast.success(t('spin.linkCopied'));
@@ -321,7 +322,8 @@ const SpinLotteryPage: React.FC = () => {
   const shareInvite = () => {
     if (!spinData?.referral_code) return;
     
-    const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${spinData.referral_code}`;
+    const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
+    const inviteLink = `https://${sharePrefix}?startapp=${spinData.referral_code}`;
     const shareText = `🎁 Барои Шумо 10 сомонӣ тӯҳфа!\nБо истиноди ман ворид шавед ва бонус гиред. Дар TezBarakat арзон харед ва бурд кунед!`;
     
     // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面

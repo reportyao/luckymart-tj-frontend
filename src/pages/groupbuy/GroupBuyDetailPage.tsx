@@ -413,7 +413,8 @@ export default function GroupBuyDetailPage() {
         return;
       }
       
-      const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${referralCode}`;
+      const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
+      const inviteLink = `https://${sharePrefix}?startapp=${referralCode}`;
       const shareText = `Барои Шумо тӯҳфа: Хариди мол бо нархи 3 маротиба арзонтар!\nМан худам санҷидам — кор мекунад! Ин шонсро аз даст надиҳед, ҳоло зер кунед`;
       
       // 优先使用 Telegram WebApp 的分享功能

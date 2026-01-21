@@ -301,7 +301,8 @@ const ShowoffPage: React.FC = () => {
       return;
     }
     
-    const inviteLink = `https://t.me/mybot2636_bot/shoppp?startapp=${code}`;
+    const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
+    const inviteLink = `https://${sharePrefix}?startapp=${code}`;
     const shareText = `🎁 Барои Шумо 10 сомонӣ тӯҳфа!\nБо истиноди ман ворид шавед ва бонус гиред. Дар TezBarakat арзон харед ва бурд кунед!`;
     
     // 使用 Telegram WebApp 的 openTelegramLink 打开分享页面

@@ -29,7 +29,7 @@ const InvitePage: React.FC = () => {
   const [isActivating, setIsActivating] = useState(false);
   const inviteCode = user?.referral_code || user?.invite_code || 'LOADING...'; // 优先使用 referral_code，兼容旧的 invite_code
   // 从环境变量读取 Telegram 分享链接前缀（BotFather Direct Links）
-  const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/mybot2636_bot/shoppp';
+  const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
   const inviteLink = `https://${sharePrefix}?startapp=${inviteCode}`;
 
   // 加载佣金配置 - 独立于用户登录状态
