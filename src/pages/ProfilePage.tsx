@@ -32,7 +32,7 @@ const ProfilePage: React.FC = () => {
     if (code) {
       // 复制完整的邀请链接
       const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
-      const inviteLink = `${sharePrefix}?startapp=${code}`
+      const inviteLink = `https://${sharePrefix}?startapp=${code}`
       const success = await copyToClipboard(inviteLink)
       if (success) {
         toast.success(t('profile.copyReferralCode'))
