@@ -72,7 +72,22 @@ export default function MyGroupBuysPage() {
 
   const getLocalizedText = (text: any) => {
     if (!text) return '';
-    return text[i18n.language] || text.zh || '';
+    if (typeof text === 'string') return text;
+    if (typeof text !== 'object') return String(text);
+    
+    const currentLang = text[i18n.language];
+    if (currentLang && typeof currentLang === 'string' && currentLang.trim()) {
+      return currentLang;
+    }
+    
+    const fallbackLangs = ['zh', 'ru', 'tg', 'en'];
+    for (const lang of fallbackLangs) {
+      if (text[lang] && typeof text[lang] === 'string' && text[lang].trim()) {
+        return text[lang];
+      }
+    }
+    
+    return '';
   };
 
   const getStatusBadge = (order: GroupBuyOrder) => {
