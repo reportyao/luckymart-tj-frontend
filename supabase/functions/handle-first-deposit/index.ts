@@ -31,9 +31,9 @@ serve(async (req) => {
       )
     }
 
-    // 2. 获取首充配置（使用 system_configs 表）
+    // 2. 获取首充配置（使用 system_config 表）
     const { data: config, error: configError } = await supabaseClient
-      .from('system_configs')
+      .from('system_config')
       .select('value')
       .eq('key', 'first_deposit_bonus')
       .single()

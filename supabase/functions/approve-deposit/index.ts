@@ -145,7 +145,7 @@ serve(async (req) => {
         // 获取首充奖励配置
         console.log('检查首充奖励配置...')
         const { data: configData } = await supabaseClient
-          .from('system_configs')
+          .from('system_config')
           .select('value')
           .eq('key', 'first_deposit_bonus')
           .single()

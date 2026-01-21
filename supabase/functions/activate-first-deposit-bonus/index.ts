@@ -48,7 +48,7 @@ serve(async (req) => {
 
     // 3. 获取激活配置
     const { data: config, error: configError } = await supabaseClient
-      .from('system_configs')
+      .from('system_config')
       .select('value')
       .eq('key', 'first_deposit_bonus')
       .single()
