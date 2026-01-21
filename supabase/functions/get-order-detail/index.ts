@@ -70,13 +70,14 @@ serve(async (req) => {
       lottery = lotteryData
     }
 
-    // 查询自提点信息
+    // 查询自提点信息（只查询启用的自提点）
     let pickupPoint = null
     if (order.pickup_point_id) {
       const { data: pointData } = await supabase
         .from('pickup_points')
-        .select('name, name_i18n, address, address_i18n, contact_phone')
+        .select('name, name_i18n, address, address_i18n, contact_phone, status')
         .eq('id', order.pickup_point_id)
+        .eq('status', 'ACTIVE')  // 只查询启用的自提点
         .single()
       pickupPoint = pointData
     }
