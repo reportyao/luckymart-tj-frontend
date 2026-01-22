@@ -137,11 +137,14 @@ export const Layout: React.FC<LayoutProps> = ({
           <div className="max-w-md mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <img 
-                  src="/tezbarakat-logo.png" 
-                  alt="TezBarakat Logo"
-                  className="w-10 h-10 object-contain"
-                />
+                <picture>
+                  <source srcSet="/tezbarakat-logo.webp" type="image/webp" />
+                  <img 
+                    src="/tezbarakat-logo.png" 
+                    alt="TezBarakat Logo"
+                    className="w-10 h-10 object-contain"
+                  />
+                </picture>
                 <div>
                   <h1 className="text-lg font-bold text-gray-900">TezBarakat</h1>
                   <p className="text-xs text-gray-500">{t('home.tagline')}</p>
