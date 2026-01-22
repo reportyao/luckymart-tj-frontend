@@ -95,6 +95,7 @@ serve(async (req) => {
     // 尝试从不同的表中查询订单
     let orderType: string | null = null
     let orderData: Record<string, unknown> | null = null
+    let productId: string | null = null // 用于存储商品ID
 
     // 1. 首先尝试从 full_purchase_orders 查询
     const { data: fullPurchaseOrder, error: fullPurchaseError } = await supabase
@@ -125,6 +126,7 @@ serve(async (req) => {
     if (fullPurchaseOrder) {
       orderType = 'full_purchase'
       orderData = fullPurchaseOrder as Record<string, unknown>
+      productId = orderData.lottery_id as string | null
     }
 
     // 2. 如果没找到,尝试从 prizes 查询
@@ -154,6 +156,7 @@ serve(async (req) => {
       if (prize) {
         orderType = 'prize'
         const prizeData = prize as Record<string, unknown>
+        productId = prizeData.lottery_id as string | null
         orderData = {
           ...prizeData,
           order_number: `PRIZE-${(prizeData.id as string).substring(0, 8).toUpperCase()}`,
@@ -193,6 +196,7 @@ serve(async (req) => {
       if (groupBuyResult) {
         orderType = 'group_buy'
         const gbResult = groupBuyResult as Record<string, unknown>
+        productId = gbResult.product_id as string | null
         
         // 获取拼团订单金额
         let orderAmount = 0
@@ -227,7 +231,7 @@ serve(async (req) => {
             session_id: gbResult.session_id,
             winner_order_id: gbResult.winner_order_id
           },
-          lottery_id: gbResult.product_id,
+          lottery_id: gbResult.product_id, // 保持兼容性
           pickup_point_id: gbResult.pickup_point_id,
           logistics_status: gbResult.logistics_status,
           batch_id: gbResult.batch_id
@@ -249,31 +253,55 @@ serve(async (req) => {
     }
 
     // 并行查询关联数据(使用 Promise.all 提升性能)
-    const [lotteryData, pickupPointData, shipmentBatchData] = await Promise.all([
-      // 查询商品信息
-      orderData.lottery_id ? (async () => {
-        const tableName = orderType === 'group_buy' ? 'group_buy_products' : 'lotteries'
-        const selectFields = orderType === 'group_buy' 
-          ? 'id, name as title, name_i18n as title_i18n, image_url, image_urls, price_per_person as original_price'
-          : 'title, title_i18n, image_url, image_urls, original_price'
-
-        const { data, error } = await supabase
-          .from(tableName)
-          .select(selectFields)
-          .eq('id', orderData!.lottery_id)
-          .maybeSingle()
-        
-        if (error) {
-          console.error(`Error querying ${tableName}:`, error)
+    const [productData, pickupPointData, shipmentBatchData, activePickupPoints] = await Promise.all([
+      // 查询商品信息 - 根据订单类型从不同的表查询
+      productId ? (async () => {
+        if (orderType === 'group_buy') {
+          // 从 group_buy_products 表查询
+          const { data, error } = await supabase
+            .from('group_buy_products')
+            .select('id, name, name_i18n, image_url, image_urls, group_price, original_price')
+            .eq('id', productId)
+            .maybeSingle()
+          
+          if (error) {
+            console.error('Error querying group_buy_products:', error)
+            return null
+          }
+          
+          if (data) {
+            // 转换字段名以保持与前端兼容
+            const productInfo = data as Record<string, unknown>
+            return {
+              title: productInfo.name,
+              title_i18n: productInfo.name_i18n,
+              image_url: productInfo.image_url,
+              image_urls: productInfo.image_urls,
+              original_price: productInfo.group_price || productInfo.original_price
+            }
+          }
+          return null
+        } else {
+          // 从 lotteries 表查询(full_purchase 和 prize)
+          const { data, error } = await supabase
+            .from('lotteries')
+            .select('title, title_i18n, image_url, image_urls, original_price')
+            .eq('id', productId)
+            .maybeSingle()
+          
+          if (error) {
+            console.error('Error querying lotteries:', error)
+            return null
+          }
+          return data
         }
-        return data
       })() : Promise.resolve(null),
 
-      // 查询自提点信息
+      // 查询已选择的自提点信息
       orderData.pickup_point_id ? (async () => {
         const { data, error } = await supabase
           .from('pickup_points')
-          .select('name, name_i18n, address, address_i18n, contact_phone')
+          .select('id, name, name_i18n, address, address_i18n, contact_phone, is_active')
           .eq('id', orderData!.pickup_point_id)
           .maybeSingle()
         
@@ -296,6 +324,21 @@ serve(async (req) => {
         }
         return data
       })() : Promise.resolve(null),
+
+      // 查询所有活跃的自提点列表(供用户选择)
+      (async () => {
+        const { data, error } = await supabase
+          .from('pickup_points')
+          .select('id, name, name_i18n, address, address_i18n, contact_phone')
+          .eq('is_active', true)
+          .order('name', { ascending: true })
+        
+        if (error) {
+          console.error('Error querying active pickup_points:', error)
+          return []
+        }
+        return data || []
+      })(),
     ])
 
     // 计算 pickup_status
@@ -308,9 +351,10 @@ serve(async (req) => {
       ...orderData,
       pickup_status,
       order_type: orderType, // 添加订单类型标识
-      lotteries: lotteryData,
-      pickup_point: pickupPointData,
-      shipment_batch: shipmentBatchData
+      lotteries: productData, // 商品信息(保持字段名兼容)
+      pickup_point: pickupPointData, // 已选择的自提点
+      shipment_batch: shipmentBatchData,
+      available_pickup_points: activePickupPoints // 可选的活跃自提点列表
     }
 
     // 缓存结果
