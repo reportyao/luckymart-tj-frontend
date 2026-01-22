@@ -230,7 +230,7 @@ const PendingPickupPage: React.FC = () => {
                 productId: product.id,
                 productTitle: title,
                 productImage: image,
-                price: product.price_per_person,
+                price: product.group_price || product.price_per_person || 0,
                 currency: 'TJS',
                 quantity: 1,
                 sessionCode: session?.session_code,
