@@ -317,7 +317,7 @@
       "friendCashback": "好友消费返现",
       "groupBuyPurchase": "参与拼团",
       "groupBuyRefund": "拼团退款",
-      "groupBuyRefundTimeout": "拼团未成团退款（退回余额）",
+      "groupBuyRefundTimeout": "拼团超时退款",
       "groupBuyRefundLost": "拼团未入选退款（退回积分）",
       "groupBuyRefundToPoints": "拼团成功未获得商品退款（转为积分）",
       "groupBuyRefundToBalance": "拼团未成功退款（退回余额）",

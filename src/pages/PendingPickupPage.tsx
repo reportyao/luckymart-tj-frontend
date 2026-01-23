@@ -196,7 +196,7 @@ const PendingPickupPage: React.FC = () => {
             logistics_status,
             pickup_code,
             pickup_status,
-            group_buy_products(id, name, name_i18n, title, description, image_url, image_urls, price_per_person, group_size),
+            group_buy_products(id, name, name_i18n, title, description, image_url, image_urls, price_per_person, group_price, group_size),
             group_buy_sessions(id, session_code, current_participants, expires_at)
           `)
           .eq('winner_id', user.id)
