@@ -57,6 +57,7 @@ interface OrderDetail {
     address: string;
     address_i18n: any;
     contact_phone: string;
+    is_active: boolean;
   } | null;
 }
 
@@ -410,8 +411,8 @@ const OrderDetailPage: React.FC = () => {
           </motion.div>
         )}
 
-        {/* 自提点信息卡片 */}
-        {order.pickup_point && (
+        {/* 自提点信息卡片 - 只显示启用的自提点 */}
+        {order.pickup_point && order.pickup_point.is_active && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
