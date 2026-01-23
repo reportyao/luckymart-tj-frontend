@@ -42,6 +42,7 @@ interface GroupBuyResult {
     address: string;
     address_i18n: { zh?: string; ru?: string; tg?: string };
     contact_phone?: string;
+    is_active: boolean;
   };
   session?: {
     id: string;
@@ -527,8 +528,8 @@ export default function GroupBuyResultPage() {
         )}
       </div>
 
-      {/* Pickup Point Info (if claimed) */}
-      {isWinner && result.pickup_point && result.pickup_status === 'PENDING_PICKUP' && (
+      {/* Pickup Point Info (if claimed) - 只显示启用的自提点 */}
+      {isWinner && result.pickup_point && result.pickup_point.is_active && result.pickup_status === 'PENDING_PICKUP' && (
         <div className="p-4">
           <div className="bg-white rounded-2xl shadow-md p-4">
             <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">

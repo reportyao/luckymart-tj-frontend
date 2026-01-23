@@ -36,7 +36,14 @@ interface PrizeInfo {
   pickup_code?: string;
   pickup_status?: string;
   expires_at?: string;
-  pickup_point?: any;
+  pickup_point?: {
+    name: string;
+    name_i18n: any;
+    address: string;
+    address_i18n: any;
+    contact_phone?: string;
+    is_active: boolean;
+  };
   picked_up_at?: string;
 }
 
@@ -614,8 +621,8 @@ const LotteryResultPage: React.FC = () => {
                       <p className="text-3xl font-bold font-mono text-white">{prizeInfo?.pickup_code}</p>
                     </div>
                     
-                    {/* 自提点地址 */}
-                    {prizeInfo?.pickup_point && (
+                    {/* 自提点地址 - 只显示启用的自提点 */}
+                    {prizeInfo?.pickup_point && prizeInfo.pickup_point.is_active && (
                       <div className="bg-white/10 rounded-xl p-4">
                         <div className="flex items-start gap-2">
                           <MapPinIcon className="w-5 h-5 text-white/80 mt-0.5 flex-shrink-0" />
