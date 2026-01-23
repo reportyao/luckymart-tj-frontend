@@ -184,7 +184,7 @@ const ShowoffCreatePage: React.FC = () => {
         const productTitle = product?.title?.zh || product?.name || '拼团商品';
         return {
           id: result.id,
-          lottery_id: result.session_id || '', // 使用 session_id 作为关联
+          lottery_id: '', // 拼团商品不属于lotteries表,设置为空字符串
           lottery_title: `拼团中奖 - ${productTitle}`,
           prize_name: productTitle,
           prize_image: product?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',

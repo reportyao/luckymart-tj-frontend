@@ -795,7 +795,7 @@ export const referralService = {
       .insert({
         user_id: userId,
         prize_id: params.prize_id,
-        lottery_id: params.lottery_id,
+        lottery_id: params.lottery_id || null, // 拼团商品时lottery_id为空,设置为null
         content: params.content,
         image_urls: params.images, // 数据库字段名是 image_urls
         status: 'PENDING',
