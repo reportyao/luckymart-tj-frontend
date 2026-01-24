@@ -804,6 +804,7 @@ export const referralService = {
   async createShowoff(params: {
     prize_id?: string;
     lottery_id: string | null; // 拼团时为null
+    title?: string; // 商品名称（可能是 JSON 字符串或普通字符串）
     content: string;
     images: string[];
     user_id?: string;
@@ -821,6 +822,7 @@ export const referralService = {
         user_id: userId,
         prize_id: params.prize_id,
         lottery_id: params.lottery_id || null, // 拼团商品时lottery_id为空,设置为null
+        title: params.title || null, // 保存商品名称
         content: params.content,
         image_urls: params.images, // 数据库字段名是 image_urls
         status: 'PENDING',
