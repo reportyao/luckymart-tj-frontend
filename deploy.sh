@@ -100,10 +100,10 @@ deploy_frontend() {
         git pull origin main
         
         echo "[INFO] 安装依赖..."
-        npm install
+        pnpm install
         
         echo "[INFO] 构建前端..."
-        npm run build
+        pnpm build
         
         echo "[INFO] 备份旧版本..."
         if [ -d /var/www/tezbarakat.com/html.backup ]; then

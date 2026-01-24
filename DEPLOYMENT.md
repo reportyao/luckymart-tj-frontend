@@ -46,13 +46,13 @@ chmod +x deploy.sh
 
 ### ⚠️ 已弃用的部署方式
 以下部署方式已**不再使用**，请勿尝试：
-- ❌ 使用 PM2 运行 `npm run preview`
+- ❌ 使用 PM2 运行 `pnpm run preview`
 - ❌ 部署到 `/root/projects/luckymart-tj-frontend`
 - ❌ 使用 Nginx 反向代理到 4173 端口
 
 ### ✅ 标准部署方式
 **唯一推荐的部署方式**：
-1. 构建静态文件：`npm run build`
+1. 构建静态文件：`ppnpm build`
 2. 部署到 Nginx 目录：`/var/www/tezbarakat.com/html`
 3. 重启 Nginx：`systemctl restart nginx`
 
@@ -116,10 +116,10 @@ cd /root/luckymart-tj-frontend
 git pull origin main
 
 # 安装依赖
-npm install
+ppnpm install
 
 # 构建前端
-npm run build
+ppnpm build
 ```
 
 ### 步骤 4: 部署到 Nginx 目录
@@ -186,7 +186,7 @@ git log --oneline
 git reset --hard <commit-id>
 
 # 重新构建并部署
-npm run build
+ppnpm build
 rm -rf /var/www/tezbarakat.com/html/*
 cp -rf dist/* /var/www/tezbarakat.com/html/
 systemctl restart nginx
