@@ -311,7 +311,7 @@ const SpinLotteryPage: React.FC = () => {
     if (!spinData?.referral_code) return;
     
     const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
-    const inviteLink = `${sharePrefix}?startapp=${spinData.referral_code}`;
+    const inviteLink = `https://${sharePrefix}?startapp=${spinData.referral_code}`;
     navigator.clipboard.writeText(inviteLink);
     setCopied(true);
     toast.success(t('spin.linkCopied'));

@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { useInviteStats } from '../hooks/useInviteStats';
@@ -83,10 +83,75 @@ const HomePage: React.FC = () => {
     }
   }, []);
 
+  const nav = useNavigate();
+
   useEffect(() => {
     loadLotteries();
     loadGroupBuyProducts();
-  }, [loadLotteries, loadGroupBuyProducts]);
+
+    // 处理 Telegram start_param 重定向
+    // 等待 Telegram SDK 加载完成
+    const checkStartParam = () => {
+      const WebApp = (window as any).Telegram?.WebApp || (window as any).__TELEGRAM_WEB_APP__;
+      
+      if (!WebApp) {
+        console.log('[HomePage] Telegram SDK not loaded yet, waiting...');
+        return false;
+      }
+      
+      const startParam = WebApp.initDataUnsafe?.start_param;
+      console.log('[HomePage] Checking start_param:', startParam);
+      
+      if (startParam) {
+        console.log('[HomePage] Found start_param:', startParam);
+        
+        // 1. 拼团详情: gb_{productId}
+        if (startParam.startsWith('gb_')) {
+          const productId = startParam.replace('gb_', '');
+          console.log('[HomePage] Redirecting to group buy product:', productId);
+          nav(`/group-buy/${productId}`, { replace: true });
+        }
+        // 2. 拼团结果/加入: gbs_{sessionId}
+        else if (startParam.startsWith('gbs_')) {
+          const sessionId = startParam.replace('gbs_', '');
+          console.log('[HomePage] Redirecting to group buy session:', sessionId);
+          nav(`/group-buy/result/${sessionId}`, { replace: true });
+        }
+        // 3. 积分商城详情: lt_{lotteryId}
+        else if (startParam.startsWith('lt_')) {
+          const lotteryId = startParam.replace('lt_', '');
+          console.log('[HomePage] Redirecting to lottery detail:', lotteryId);
+          nav(`/lottery/${lotteryId}`, { replace: true });
+        }
+        // 4. 晒单详情: so_{showoffId}
+        else if (startParam.startsWith('so_')) {
+          const showoffId = startParam.replace('so_', '');
+          console.log('[HomePage] Redirecting to showoff detail:', showoffId);
+          nav(`/showoff`, { replace: true }); // 目前晒单详情在列表中，先跳到列表
+        }
+        // 5. 邀请码: 直接是邀请码字符串（如 LMBDYIHI）
+        else {
+          console.log('[HomePage] Found referral code:', startParam);
+          // 邀请码已在 UserContext 中处理，这里不需要额外操作
+          // 用户会看到首页，邀请关系会在后台建立
+        }
+      } else {
+        console.log('[HomePage] No start_param found');
+      }
+      
+      return true;
+    };
+    
+    // 立即尝试检查
+    if (!checkStartParam()) {
+      // 如果 SDK 还没加载，等待一段时间后重试
+      const timer = setTimeout(() => {
+        checkStartParam();
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [loadLotteries, loadGroupBuyProducts, nav]);
 
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);

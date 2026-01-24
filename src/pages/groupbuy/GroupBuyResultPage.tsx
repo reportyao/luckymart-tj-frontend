@@ -220,10 +220,28 @@ export default function GroupBuyResultPage() {
     setShowClaimModal(true);
   };
 
+  // 修复多语言对象渲染问题 - 2026-01-21
   const getLocalizedText = (text: any) => {
     if (!text) return '';
     if (typeof text === 'string') return text;
-    return text[i18n.language] || text.zh || text.ru || text.tg || '';
+    if (typeof text !== 'object') return String(text);
+    
+    // 尝试获取当前语言的文本
+    const currentLang = text[i18n.language];
+    if (currentLang && typeof currentLang === 'string' && currentLang.trim()) {
+      return currentLang;
+    }
+    
+    // 按优先级fallback到其他语言
+    const fallbackLangs = ['zh', 'ru', 'tg', 'en'];
+    for (const lang of fallbackLangs) {
+      if (text[lang] && typeof text[lang] === 'string' && text[lang].trim()) {
+        return text[lang];
+      }
+    }
+    
+    // 如果所有语言都是空的，返回空字符串
+    return '';
   };
 
   const formatDateTime = (dateString: string) => {
@@ -693,7 +711,7 @@ export default function GroupBuyResultPage() {
 
       {/* Claim Modal */}
       {showClaimModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center z-[9999] p-4">
           <div className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg animate-slide-up">
             <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between rounded-t-3xl sm:rounded-t-2xl">
               <h3 className="text-lg font-bold">{t('orders.confirmClaim')}</h3>

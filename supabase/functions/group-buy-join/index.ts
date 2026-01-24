@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
           group_size: groupSize,
           max_participants: groupSize,
           required_participants: groupSize,
-          initiator_id: user.telegram_id,
+          initiator_id: user.id,
           started_at: new Date().toISOString(),
           expires_at: expiresAt.toISOString(),
         })
@@ -214,11 +214,10 @@ Deno.serve(async (req) => {
     }
 
     // 7. Create wallet transaction record
-    const transactionId = `TXN${Date.now()}${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+    // 移除手动指定的 ID，让数据库自动生成 UUID
     await supabase
       .from('wallet_transactions')
       .insert({
-        id: transactionId,
         wallet_id: wallet.id,
         type: 'GROUP_BUY_PURCHASE',
         amount: -pricePerPerson,
@@ -315,7 +314,44 @@ Deno.serve(async (req) => {
       // 奖励处理失败不影响主流程
     }
     
-    // 12. 【新增】给参与拼团的用户增加10次AI对话次数
+    // 12. 【新增】处理推荐佣金
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      
+      // 获取用户的推荐关系
+      const { data: userWithReferrer } = await supabase
+        .from('users')
+        .select('referred_by_id')
+        .eq('id', user.id)
+        .single();
+      
+      if (userWithReferrer?.referred_by_id) {
+        const commissionResponse = await fetch(`${supabaseUrl}/functions/v1/handle-purchase-commission`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            order_id: order.id,
+            user_id: user.id,
+            order_amount: pricePerPerson
+          }),
+        });
+        
+        if (!commissionResponse.ok) {
+          console.error('Failed to process commission:', await commissionResponse.text());
+        } else {
+          console.log(`[Commission] Successfully processed commission for order ${order.id}`);
+        }
+      }
+    } catch (commissionError) {
+      console.error('Commission processing error:', commissionError);
+      // 佣金处理失败不影响主流程
+    }
+    
+    // 13. 【新增】给参与拼团的用户增加10次AI对话次数
     try {
       const supabaseUrl = Deno.env.get('SUPABASE_URL');
       const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
