@@ -15,7 +15,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 })
 
 // 缓存配置
-const CACHE_TTL = 30 * 1000 
+const CACHE_TTL = 5 * 1000 
 const MAX_CACHE_SIZE = 500 
 const cache = new Map<string, { data: unknown; timestamp: number }>()
 
@@ -182,11 +182,10 @@ serve(async (req) => {
       })(),
     ])
 
-    // 如果当前绑定的自提点已禁用，则在返回数据中标记，让前端提示用户重新选择
+    // 如果当前绑定的自提点已禁用，保留数据但标记为禁用状态
     let finalPickupPoint = pickupPointData
-    if (pickupPointData && !(pickupPointData as any).is_active) {
-      finalPickupPoint = null // 强制设为 null，让前端显示"请选择自提点"
-    }
+    // 不再强制设为 null，而是保留完整的自提点信息（包括 is_active 字段）
+    // 让前端根据 is_active 字段决定如何显示
 
     const pickup_status = orderData.pickup_code ? (orderData.claimed_at ? 'PICKED_UP' : 'PENDING_PICKUP') : orderData.status
 

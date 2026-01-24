@@ -411,7 +411,7 @@ const OrderDetailPage: React.FC = () => {
           </motion.div>
         )}
 
-        {/* 自提点信息卡片 - 只显示启用的自提点 */}
+        {/* 自提点信息卡片 */}
         {order.pickup_point && order.pickup_point.is_active && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -465,6 +465,35 @@ const OrderDetailPage: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* 自提点已禁用警告 */}
+        {order.pickup_point && !order.pickup_point.is_active && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5"
+          >
+            <div className="flex items-start space-x-3">
+              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                <MapPinIcon className="w-5 h-5 text-yellow-600" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-base font-bold text-yellow-900 mb-2">
+                  {t('orders.pickupPointDisabled') || '自提点已停用'}
+                </h3>
+                <p className="text-sm text-yellow-800 mb-3">
+                  {t('orders.pickupPointDisabledDesc') || '您之前选择的自提点已经停用，请联系客服重新选择自提点。'}
+                </p>
+                <div className="text-sm text-yellow-700">
+                  <p className="font-medium">{t('orders.originalPickupPoint') || '原自提点'}:</p>
+                  <p>{getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}</p>
+                  <p className="text-xs mt-1">{getLocalizedText(order.pickup_point.address_i18n) || order.pickup_point.address}</p>
+                </div>
+              </div>
             </div>
           </motion.div>
         )}
