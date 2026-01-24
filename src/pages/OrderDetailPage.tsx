@@ -141,18 +141,27 @@ const OrderDetailPage: React.FC = () => {
     try {
       // 根据订单类型更新不同的表
       const orderType = order.metadata?.type || 'prize';
-      let tableName = 'prizes';
       
+      let error = null;
       if (orderType === 'full_purchase') {
-        tableName = 'full_purchase_orders';
+        const result = await supabase
+          .from('full_purchase_orders')
+          .update({ pickup_point_id: selectedPickupPointId })
+          .eq('id', order.id);
+        error = result.error;
       } else if (orderType === 'group_buy') {
-        tableName = 'group_buy_results';
+        const result = await supabase
+          .from('group_buy_results')
+          .update({ pickup_point_id: selectedPickupPointId })
+          .eq('id', order.id);
+        error = result.error;
+      } else {
+        const result = await supabase
+          .from('prizes')
+          .update({ pickup_point_id: selectedPickupPointId })
+          .eq('id', order.id);
+        error = result.error;
       }
-
-      const { error } = await supabase
-        .from(tableName)
-        .update({ pickup_point_id: selectedPickupPointId })
-        .eq('id', order.id);
 
       if (error) throw error;
 
