@@ -17,7 +17,8 @@ import { showoffService } from '@/lib/supabase';
 interface WinningLottery {
   id: string;
   lottery_id: string | null; // 拼团时为null
-  lottery_title: string;
+  lottery_title: string; // 显示用的标题（单一语言）
+  lottery_title_full?: any; // 完整的标题（可能是字符串或多语言对象）
   prize_name: string;
   prize_image: string;
   winning_number: string;
@@ -167,26 +168,39 @@ const ShowoffCreatePage: React.FC = () => {
 
       // 5. 转换为 WinningLottery 格式
       // 抽奖中奖记录
-      const lotteryWinnings: WinningLottery[] = availablePrizes.map((prize: any) => ({
-        id: prize.id,
-        lottery_id: prize.lottery_id,
-        lottery_title: prize.prize_name || prize.lottery?.title?.zh || '未知积分商城',
-        prize_name: prize.prize_name || prize.lottery?.title?.zh || '未知奖品',
-        prize_image: prize.prize_image || prize.lottery?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
-        winning_number: prize.winning_code || prize.winning_number || '',
-        draw_time: prize.won_at,
-        source_type: 'lottery' as const,
-      }));
+      const lotteryWinnings: WinningLottery[] = availablePrizes.map((prize: any) => {
+        // 获取商品名称，优先使用 prize_name，其次使用 lottery.title
+        const lotteryTitle = prize.prize_name || prize.lottery?.title || '未知积分商城';
+        // 如果 title 是字符串，直接使用；如果是对象，使用中文版本作为显示
+        const displayTitle = typeof lotteryTitle === 'string' ? lotteryTitle : (lotteryTitle.zh || lotteryTitle.ru || lotteryTitle.tg || '未知积分商城');
+        
+        return {
+          id: prize.id,
+          lottery_id: prize.lottery_id,
+          lottery_title: displayTitle,
+          lottery_title_full: lotteryTitle, // 保存完整的 title（可能是字符串或对象）
+          prize_name: displayTitle,
+          prize_image: prize.prize_image || prize.lottery?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
+          winning_number: prize.winning_code || prize.winning_number || '',
+          draw_time: prize.won_at,
+          source_type: 'lottery' as const,
+        };
+      });
 
       // 拼团中奖记录
       const groupBuyWinnings: WinningLottery[] = availableGroupBuyResults.map((result: any) => {
         const product = result.product;
-        const productTitle = product?.title?.zh || product?.name || '拼团商品';
+        // 获取商品名称，优先使用 title（多语言），其次使用 name
+        const productTitle = product?.title || product?.name || '拼团商品';
+        // 如果 title 是对象，使用中文版本作为显示；如果是字符串，直接使用
+        const displayTitle = typeof productTitle === 'object' ? (productTitle.zh || productTitle.ru || productTitle.tg || '拼团商品') : productTitle;
+        
         return {
           id: result.id,
           lottery_id: null, // 拼团商品不属于lotteries表,设置为null
-          lottery_title: `拼团中奖 - ${productTitle}`,
-          prize_name: productTitle,
+          lottery_title: `拼团中奖 - ${displayTitle}`,
+          lottery_title_full: productTitle, // 保存完整的 title（可能是字符串或对象）
+          prize_name: displayTitle,
           prize_image: product?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
           winning_number: result.pickup_code || '',
           draw_time: result.created_at,
@@ -312,9 +326,17 @@ const ShowoffCreatePage: React.FC = () => {
       });
 
       // 调用晒单创建 API
+      // 如果 lottery_title_full 是对象，转换为 JSON 字符串；否则直接使用
+      const titleToSave = selectedLotteryData.lottery_title_full 
+        ? (typeof selectedLotteryData.lottery_title_full === 'object' 
+            ? JSON.stringify(selectedLotteryData.lottery_title_full) 
+            : selectedLotteryData.lottery_title_full)
+        : selectedLotteryData.lottery_title;
+      
       await showoffService.createShowoff({
         prize_id: selectedLotteryData.id, // prize_id 是 prizes 表的 id
         lottery_id: selectedLotteryData.lottery_id || null, // 拼团时为null
+        title: titleToSave, // 保存完整的商品名称（可能是 JSON 字符串或普通字符串）
         content: content.trim(),
         images: images,
         user_id: user?.id, // 传入 user_id 避免 session 问题
