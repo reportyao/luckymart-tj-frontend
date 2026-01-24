@@ -4,16 +4,21 @@
 async function rollbackAllocatedTickets(
   supabaseUrl: string,
   serviceRoleKey: string,
-  tickets: any[]
+  tickets: any[],
+  context?: {
+    userId?: string;
+    lotteryId?: string;
+    orderId?: string;
+  }
 ) {
   if (!tickets || tickets.length === 0) {
     return;
   }
 
-  try {
-    const ticketIds = tickets.map((t) => t.id);
-    console.log(`Rolling back ${ticketIds.length} tickets:`, ticketIds);
+  const ticketIds = tickets.map((t) => t.id);
+  console.log(`Rolling back ${ticketIds.length} tickets:`, ticketIds);
 
+  try {
     // 删除已分配的彩票
     const deleteResponse = await fetch(
       `${supabaseUrl}/rest/v1/lottery_entries?id=in.(${ticketIds.join(',')})`,
@@ -31,53 +36,59 @@ async function rollbackAllocatedTickets(
       const errorText = await deleteResponse.text();
       console.error('Failed to delete tickets during rollback:', errorText);
       // 记录到错误日志，需要人工处理
-      await logOrphanedTickets(supabaseUrl, serviceRoleKey, ticketIds, errorText);
+      logOrphanedTickets(ticketIds, `Rollback failed: ${errorText}`, context);
     } else {
       console.log(`Successfully rolled back ${ticketIds.length} tickets`);
     }
   } catch (error) {
     console.error('Error during ticket rollback:', error);
     // 记录到错误日志
-    await logOrphanedTickets(
-      supabaseUrl,
-      serviceRoleKey,
-      tickets.map((t) => t.id),
-      error instanceof Error ? error.message : String(error)
+    logOrphanedTickets(
+      ticketIds,
+      `Rollback exception: ${error instanceof Error ? error.message : String(error)}`,
+      context
     );
   }
 }
 
 /**
  * 记录孤儿彩票（需要人工处理）
+ * 使用 console.error 记录，Supabase 日志系统会捕获这些错误
+ * 可以在 Supabase Dashboard -> Logs -> Edge Functions 中查看
  */
-async function logOrphanedTickets(
-  supabaseUrl: string,
-  serviceRoleKey: string,
+function logOrphanedTickets(
   ticketIds: string[],
-  error: string
-) {
-  try {
-    const logData = {
-      type: 'ORPHANED_TICKETS',
-      ticket_ids: ticketIds,
-      error_message: error,
-      created_at: new Date().toISOString(),
-    };
-
-    await fetch(`${supabaseUrl}/rest/v1/error_logs`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${serviceRoleKey}`,
-        'apikey': serviceRoleKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(logData),
-    });
-
-    console.log('Logged orphaned tickets for manual cleanup:', ticketIds);
-  } catch (logError) {
-    console.error('Failed to log orphaned tickets:', logError);
+  error: string,
+  context?: {
+    userId?: string;
+    lotteryId?: string;
+    orderId?: string;
   }
+) {
+  // 使用结构化日志格式，便于在 Supabase 日志中搜索和过滤
+  const logEntry = {
+    level: 'ERROR',
+    type: 'ORPHANED_TICKETS',
+    ticket_ids: ticketIds,
+    ticket_count: ticketIds.length,
+    error_message: error,
+    context: context || {},
+    timestamp: new Date().toISOString(),
+    action_required: 'Manual cleanup required - delete these tickets from lottery_entries table',
+  };
+
+  // 使用特殊前缀，便于在日志中搜索
+  console.error('[ORPHANED_TICKETS_ALERT]', JSON.stringify(logEntry));
+  
+  // 同时输出可读格式
+  console.error(`⚠️ ORPHANED TICKETS DETECTED:
+  - Ticket IDs: ${ticketIds.join(', ')}
+  - Error: ${error}
+  - User ID: ${context?.userId || 'unknown'}
+  - Lottery ID: ${context?.lotteryId || 'unknown'}
+  - Order ID: ${context?.orderId || 'unknown'}
+  - Timestamp: ${logEntry.timestamp}
+  - Action: Please manually delete these tickets from lottery_entries table`);
 }
 
 Deno.serve(async (req) => {
@@ -358,7 +369,11 @@ Deno.serve(async (req) => {
       const errorText = await updateWalletResponse.text();
       // 回滚已分配的彩票
       console.error('Failed to update wallet, rolling back tickets...');
-      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets);
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
+        userId,
+        lotteryId,
+        orderId: order.id,
+      });
       // 取消订单
       await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
         method: 'PATCH',
@@ -376,7 +391,11 @@ Deno.serve(async (req) => {
     const updatedWallets = await updateWalletResponse.json();
     if (!updatedWallets || updatedWallets.length === 0) {
       console.error('Wallet update returned empty result, rolling back...');
-      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets);
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
+        userId,
+        lotteryId,
+        orderId: order.id,
+      });
       await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
         method: 'PATCH',
         headers: {
