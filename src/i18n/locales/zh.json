@@ -31,8 +31,7 @@
     "processing": "处理中...",
     "pleaseLogin": "请先登录",
     "expandMore": "展开查看更多",
-    "collapse": "收起",
-    "delete": "删除"
+    "collapse": "收起"
   },
   "nav": {
     "home": "首页",
@@ -335,31 +334,20 @@
     "checkBalance": "查看钱包余额"
   },
   "notification": {
-    "notifications": "消息通知",
-    "all": "全部",
+    "notifications": "通知中心",
+    "markAllRead": "全部标记已读",
+    "noNotifications": "暂无通知",
+    "lotteryResult": "开奖结果",
+    "lotteryReminder": "抽奖提醒",
+    "paymentSuccess": "支付成功",
+    "paymentFailed": "支付失败",
+    "marketSold": "市场售出",
+    "marketPurchased": "市场购买",
+    "referralReward": "推荐奖励",
+    "systemAnnouncement": "系统公告",
+    "accountSecurity": "账户安全",
     "unread": "未读",
-    "read": "已读",
-    "noNotifications": "暂无消息通知",
-    "markAllRead": "全部标记为已读",
-    "markRead": "标记已读",
-    "depositSuccess": "充值成功",
-    "depositFailed": "充值失败",
-    "depositProcessing": "充值处理中",
-    "withdrawSuccess": "提现成功",
-    "withdrawFailed": "提现失败",
-    "withdrawProcessing": "提现处理中",
-    "groupBuyWin": "🎉 拼团入选!",
-    "groupBuyLose": "拼团未中奖",
-    "groupBuyWinContent": "恭喜您在拼团中入选，获得{{product}}!",
-    "groupBuyLoseContent": "很遗憾，本次拼团未入选，已退还积分",
-    "groupBuyTimeout": "拼团未成团",
-    "groupBuyTimeoutContent": "拼团超时未成团，资金已原路退回余额",
-    "lotteryPurchase": "积分商城参与",
-    "lotteryPurchaseContent": "您已参与{{product}}，购买{{count}}张彩票",
-    "lotteryWin": "🎉 积分商城入选!",
-    "lotteryWinContent": "恭喜您在积分商城入选，获得{{product}}!",
-    "referralBonus": "推荐奖励",
-    "spinReward": "转盘奖励"
+    "read": "已读"
   },
   "order": {
     "myOrders": "我的订单",
@@ -399,23 +387,8 @@
     "pickupTipsContent": "温馨提示：请在有效期内前往自提点提货，出示提货码即可领取商品。",
     "prize": "积分商城一元购物",
     "groupBuy": "拼团购买成功",
-    "lottery": "积分商城全款购买"
-  },
-  "notification": {
-    "notifications": "通知中心",
-    "markAllRead": "全部标记已读",
-    "noNotifications": "暂无通知",
-    "lotteryResult": "开奖结果",
-    "lotteryReminder": "抽奖提醒",
-    "paymentSuccess": "支付成功",
-    "paymentFailed": "支付失败",
-    "marketSold": "市场售出",
-    "marketPurchased": "市场购买",
-    "referralReward": "推荐奖励",
-    "systemAnnouncement": "系统公告",
-    "accountSecurity": "账户安全",
-    "unread": "未读",
-    "read": "已读"
+    "lottery": "积分商城全款购买",
+    "oneYuanShopping": "一元购物"
   },
   "invite": {
     "inviteFriends": "邀请好友",
