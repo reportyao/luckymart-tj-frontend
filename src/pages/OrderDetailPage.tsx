@@ -59,6 +59,14 @@ interface OrderDetail {
     contact_phone: string;
     is_active: boolean;
   } | null;
+  available_pickup_points?: Array<{
+    id: string;
+    name: string;
+    name_i18n: any;
+    address: string;
+    address_i18n: any;
+    contact_phone: string;
+  }>;
 }
 
 const OrderDetailPage: React.FC = () => {
@@ -70,6 +78,8 @@ const OrderDetailPage: React.FC = () => {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedPickupPointId, setSelectedPickupPointId] = useState<string>('');
+  const [isUpdatingPickupPoint, setIsUpdatingPickupPoint] = useState(false);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -117,6 +127,44 @@ const OrderDetailPage: React.FC = () => {
     if (order?.order_number) {
       navigator.clipboard.writeText(order.order_number);
       toast.success(t('order.orderNumberCopied') || '订单号已复制');
+    }
+  };
+
+  // 更新自提点
+  const handleUpdatePickupPoint = async () => {
+    if (!selectedPickupPointId || !order) {
+      toast.error(t('orders.pleaseSelectPickupPoint') || '请选择自提点');
+      return;
+    }
+
+    setIsUpdatingPickupPoint(true);
+    try {
+      // 根据订单类型更新不同的表
+      const orderType = order.metadata?.type || 'prize';
+      let tableName = 'prizes';
+      
+      if (orderType === 'full_purchase') {
+        tableName = 'full_purchase_orders';
+      } else if (orderType === 'group_buy') {
+        tableName = 'group_buy_results';
+      }
+
+      const { error } = await supabase
+        .from(tableName)
+        .update({ pickup_point_id: selectedPickupPointId })
+        .eq('id', order.id);
+
+      if (error) throw error;
+
+      toast.success(t('orders.pickupPointUpdated') || '自提点更新成功');
+      
+      // 重新加载订单详情
+      await fetchOrderDetail();
+    } catch (error: any) {
+      console.error('Error updating pickup point:', error);
+      toast.error(t('orders.updatePickupPointError') || '更新自提点失败');
+    } finally {
+      setIsUpdatingPickupPoint(false);
     }
   };
 
@@ -469,31 +517,61 @@ const OrderDetailPage: React.FC = () => {
           </motion.div>
         )}
 
-        {/* 自提点已禁用警告 */}
-        {order.pickup_point && !order.pickup_point.is_active && (
+        {/* 自提点选择器 - 当原自提点被禁用或未设置时显示 */}
+        {(!order.pickup_point || !order.pickup_point.is_active) && order.available_pickup_points && order.available_pickup_points.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-yellow-50 border-2 border-yellow-200 rounded-2xl p-5"
+            className="bg-white rounded-2xl p-5 shadow-sm border-2 border-purple-200"
           >
-            <div className="flex items-start space-x-3">
-              <div className="w-8 h-8 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                <MapPinIcon className="w-5 h-5 text-yellow-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-yellow-900 mb-2">
-                  {t('orders.pickupPointDisabled') || '自提点已停用'}
-                </h3>
-                <p className="text-sm text-yellow-800 mb-3">
-                  {t('orders.pickupPointDisabledDesc') || '您之前选择的自提点已经停用，请联系客服重新选择自提点。'}
+            <div className="flex items-center space-x-2 mb-4">
+              <MapPinIcon className="w-5 h-5 text-purple-600" />
+              <h2 className="text-base font-bold text-gray-900">{t('orders.selectPickupPoint') || '选择自提点'}</h2>
+            </div>
+
+            {order.pickup_point && !order.pickup_point.is_active && (
+              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800">
+                  {t('orders.originalPickupPointDisabled') || '原自提点已停用，请重新选择'}
                 </p>
-                <div className="text-sm text-yellow-700">
-                  <p className="font-medium">{t('orders.originalPickupPoint') || '原自提点'}:</p>
-                  <p>{getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}</p>
-                  <p className="text-xs mt-1">{getLocalizedText(order.pickup_point.address_i18n) || order.pickup_point.address}</p>
-                </div>
+                <p className="text-xs text-yellow-700 mt-1">
+                  {t('orders.original') || '原'}: {getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}
+                </p>
               </div>
+            )}
+
+            <div className="space-y-3">
+              <select
+                value={selectedPickupPointId}
+                onChange={(e) => setSelectedPickupPointId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">{t('orders.pleaseSelect') || '请选择自提点'}</option>
+                {order.available_pickup_points.map((point) => (
+                  <option key={point.id} value={point.id}>
+                    {getLocalizedText(point.name_i18n) || point.name} - {getLocalizedText(point.address_i18n) || point.address}
+                  </option>
+                ))}
+              </select>
+
+              <button
+                onClick={handleUpdatePickupPoint}
+                disabled={!selectedPickupPointId || isUpdatingPickupPoint}
+                className="w-full py-3 bg-purple-600 text-white rounded-xl font-medium hover:bg-purple-700 focus:ring-4 focus:ring-purple-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                {isUpdatingPickupPoint ? (
+                  <>
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                    {t('orders.updating') || '更新中...'}
+                  </>
+                ) : (
+                  <>
+                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    {t('orders.confirmSelection') || '确认选择'}
+                  </>
+                )}
+              </button>
             </div>
           </motion.div>
         )}
