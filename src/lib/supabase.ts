@@ -778,7 +778,7 @@ export const referralService = {
    */
   async createShowoff(params: {
     prize_id?: string;
-    lottery_id: string;
+    lottery_id: string | null; // 拼团时为null
     content: string;
     images: string[];
     user_id?: string;

@@ -16,7 +16,7 @@ import { showoffService } from '@/lib/supabase';
 
 interface WinningLottery {
   id: string;
-  lottery_id: string;
+  lottery_id: string | null; // 拼团时为null
   lottery_title: string;
   prize_name: string;
   prize_image: string;
@@ -184,7 +184,7 @@ const ShowoffCreatePage: React.FC = () => {
         const productTitle = product?.title?.zh || product?.name || '拼团商品';
         return {
           id: result.id,
-          lottery_id: '', // 拼团商品不属于lotteries表,设置为空字符串
+          lottery_id: null, // 拼团商品不属于lotteries表,设置为null
           lottery_title: `拼团中奖 - ${productTitle}`,
           prize_name: productTitle,
           prize_image: product?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
@@ -314,7 +314,7 @@ const ShowoffCreatePage: React.FC = () => {
       // 调用晒单创建 API
       await showoffService.createShowoff({
         prize_id: selectedLotteryData.id, // prize_id 是 prizes 表的 id
-        lottery_id: selectedLotteryData.lottery_id,
+        lottery_id: selectedLotteryData.lottery_id || null, // 拼团时为null
         content: content.trim(),
         images: images,
         user_id: user?.id, // 传入 user_id 避免 session 问题
