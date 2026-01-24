@@ -686,8 +686,8 @@ export const referralService = {
       const lotteryId = showoff.lottery_id || (showoff.prize_id ? prizeToLotteryMap.get(showoff.prize_id) : null);
       const lottery = lotteryId ? lotteryMap.get(lotteryId) : null;
       
-      // 获取商品名：优先使用已保存的 lottery_title，其次使用查询到的 lottery.title
-      const lotteryTitle = showoff.lottery_title || lottery?.title || '未知商品';
+      // 获取商品名：优先使用已保存的 title，其次使用查询到的 lottery.title
+      const lotteryTitle = (showoff as any).title || lottery?.title || '未知商品';
       
       return {
         ...showoff,
