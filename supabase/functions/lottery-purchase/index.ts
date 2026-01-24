@@ -1,3 +1,85 @@
+/**
+ * 回滚已分配的彩票
+ */
+async function rollbackAllocatedTickets(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  tickets: any[]
+) {
+  if (!tickets || tickets.length === 0) {
+    return;
+  }
+
+  try {
+    const ticketIds = tickets.map((t) => t.id);
+    console.log(`Rolling back ${ticketIds.length} tickets:`, ticketIds);
+
+    // 删除已分配的彩票
+    const deleteResponse = await fetch(
+      `${supabaseUrl}/rest/v1/lottery_entries?id=in.(${ticketIds.join(',')})`,
+      {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (!deleteResponse.ok) {
+      const errorText = await deleteResponse.text();
+      console.error('Failed to delete tickets during rollback:', errorText);
+      // 记录到错误日志，需要人工处理
+      await logOrphanedTickets(supabaseUrl, serviceRoleKey, ticketIds, errorText);
+    } else {
+      console.log(`Successfully rolled back ${ticketIds.length} tickets`);
+    }
+  } catch (error) {
+    console.error('Error during ticket rollback:', error);
+    // 记录到错误日志
+    await logOrphanedTickets(
+      supabaseUrl,
+      serviceRoleKey,
+      tickets.map((t) => t.id),
+      error instanceof Error ? error.message : String(error)
+    );
+  }
+}
+
+/**
+ * 记录孤儿彩票（需要人工处理）
+ */
+async function logOrphanedTickets(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  ticketIds: string[],
+  error: string
+) {
+  try {
+    const logData = {
+      type: 'ORPHANED_TICKETS',
+      ticket_ids: ticketIds,
+      error_message: error,
+      created_at: new Date().toISOString(),
+    };
+
+    await fetch(`${supabaseUrl}/rest/v1/error_logs`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(logData),
+    });
+
+    console.log('Logged orphaned tickets for manual cleanup:', ticketIds);
+  } catch (logError) {
+    console.error('Failed to log orphaned tickets:', logError);
+  }
+}
+
 Deno.serve(async (req) => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -252,25 +334,59 @@ Deno.serve(async (req) => {
     const allocatedTickets = await allocateResponse.json();
     const participationCodes = allocatedTickets.map((t: any) => t.participation_code);
 
-    // 更新钱包余额
+    // 更新钱包余额（使用乐观锁）
     const newBalance = wallet.balance - totalAmount;
-    const updateWalletResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${serviceRoleKey}`,
-        'apikey': serviceRoleKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        balance: newBalance,
-        version: wallet.version + 1,
-        updated_at: new Date().toISOString(),
-      }),
-    });
+    const updateWalletResponse = await fetch(
+      `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}&version=eq.${wallet.version}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({
+          balance: newBalance,
+          version: wallet.version + 1,
+          updated_at: new Date().toISOString(),
+        }),
+      }
+    );
 
     if (!updateWalletResponse.ok) {
       const errorText = await updateWalletResponse.text();
-      throw new Error(`Failed to update wallet: ${errorText}`);
+      // 回滚已分配的彩票
+      console.error('Failed to update wallet, rolling back tickets...');
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets);
+      // 取消订单
+      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+      throw new Error(`Failed to update wallet (concurrent modification detected): ${errorText}`);
+    }
+
+    // 检查是否更新成功（乐观锁冲突检查）
+    const updatedWallets = await updateWalletResponse.json();
+    if (!updatedWallets || updatedWallets.length === 0) {
+      console.error('Wallet update returned empty result, rolling back...');
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets);
+      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+      throw new Error('Failed to update wallet (concurrent modification detected). Please try again.');
     }
 
     // 创建钱包交易记录
