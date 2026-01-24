@@ -375,13 +375,11 @@ serve(async (req) => {
       pickup_point_id: pickup_point_id || null,
       expires_at: expiresAt.toISOString(),
       claimed_at: new Date().toISOString(),
+      // ✨ 修复：同时更新 status 为 CLAIMED，这样管理后台的订单发货页面才能查询到
+      status: 'CLAIMED',
     };
 
-    // ✨ 新增：如果status是PENDING，更新为更明确的状态
-    if (prize.status === 'PENDING') {
-      // 不修改status，保持业务流程独立
-      console.log('[ClaimPrize] Keeping status as PENDING, pickup_status updated to PENDING_PICKUP');
-    }
+    console.log('[ClaimPrize] Updating prize status to CLAIMED and pickup_status to PENDING_PICKUP');
 
     const { data: updatedPrize, error: updateError } = await supabase
       .from(tableName)
