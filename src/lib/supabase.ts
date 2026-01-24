@@ -640,15 +640,33 @@ export const referralService = {
       .in('id', userIds);
     const userMap = new Map(users?.map(u => [u.id, u]) || []);
 
-    // 3. 批量查询积分商城信息
-    const lotteryIds = [...new Set(showoffs.map(s => s.lottery_id).filter(Boolean))];
+    // 3. 处理 prize_id，查询对应的 lottery_id
+    const prizeIds = [...new Set(showoffs.map(s => s.prize_id).filter(Boolean))];
+    const prizeToLotteryMap = new Map<string, string>();
+    if (prizeIds.length > 0) {
+      const { data: prizes } = await supabase
+        .from('prizes')
+        .select('id, lottery_id')
+        .in('id', prizeIds);
+      prizes?.forEach(p => {
+        if (p.lottery_id) {
+          prizeToLotteryMap.set(p.id, p.lottery_id);
+        }
+      });
+    }
+
+    // 4. 批量查询积分商城信息（包括直接的 lottery_id 和通过 prize 查询到的）
+    const directLotteryIds = showoffs.map(s => s.lottery_id).filter(Boolean);
+    const prizeLotteryIds = Array.from(prizeToLotteryMap.values());
+    const allLotteryIds = [...new Set([...directLotteryIds, ...prizeLotteryIds])];
+    
     const { data: lotteries } = await supabase
       .from('lotteries')
-      .select('id, title')
-      .in('id', lotteryIds);
+      .select('id, title, title_i18n')
+      .in('id', allLotteryIds);
     const lotteryMap = new Map(lotteries?.map(l => [l.id, l]) || []);
 
-    // 4. 如果有 userId，查询用户的点赞状态
+    // 5. 如果有 userId，查询用户的点赞状态
     let likedIds = new Set<string>();
     if (userId) {
       const showoffIds = showoffs.map(s => s.id);
@@ -660,16 +678,23 @@ export const referralService = {
       likedIds = new Set(likes?.map(l => l.post_id) || []);
     }
 
-    // 5. 组装数据
+    // 6. 组装数据
     return showoffs.map(showoff => {
       const user = userMap.get(showoff.user_id);
-      const lottery = lotteryMap.get(showoff.lottery_id);
+      
+      // 获取 lottery_id：优先使用直接的 lottery_id，其次通过 prize_id 查询
+      const lotteryId = showoff.lottery_id || (showoff.prize_id ? prizeToLotteryMap.get(showoff.prize_id) : null);
+      const lottery = lotteryId ? lotteryMap.get(lotteryId) : null;
+      
+      // 获取商品名：优先使用已保存的 lottery_title，其次使用查询到的 lottery.title
+      const lotteryTitle = showoff.lottery_title || lottery?.title || '未知商品';
+      
       return {
         ...showoff,
         user: user || null,
         lottery: lottery || null,
         is_liked: likedIds.has(showoff.id),
-        lottery_title: lottery?.title || ''
+        lottery_title: lotteryTitle
       };
     }) as any as Showoff[];
   },
