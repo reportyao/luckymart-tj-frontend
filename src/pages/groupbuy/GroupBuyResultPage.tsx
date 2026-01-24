@@ -277,8 +277,8 @@ export default function GroupBuyResultPage() {
     );
   }
 
-  // 【新增】超时未开奖的情况
-  if (result.status === 'TIMEOUT') {
+  // 【新增】超时、取消或过期未开奖的情况
+  if (result.status === 'TIMEOUT' || result.status === 'CANCELLED' || result.status === 'EXPIRED') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
         {/* Header */}

@@ -278,7 +278,7 @@ Deno.serve(async (req) => {
       }
 
       // 【关键修复】检查会话状态，处理不同情况
-      if (session.status === 'TIMEOUT') {
+      if (session.status === 'TIMEOUT' || session.status === 'CANCELLED' || session.status === 'EXPIRED') {
         // 超时未开奖的会话
         // 获取该会话的所有订单
         const { data: orders } = await supabase
@@ -291,11 +291,11 @@ Deno.serve(async (req) => {
           success: true, 
           data: {
             session_id: session.id,
-            status: 'TIMEOUT',
+            status: session.status, // 使用实际的会话状态
             session: session,
             product: session.product ? mapProductToFrontend(session.product) : null,
             orders: orders || [],
-            message: 'Session timed out without enough participants',
+            message: `Session ${session.status.toLowerCase()}: refund processed`,
           }
         });
       }
