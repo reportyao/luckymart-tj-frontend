@@ -88,22 +88,31 @@ serve(async (req) => {
       // 如果找不到订单，尝试查询原始数据以帮助调试
       const { data: debugData } = await supabase
         .from(tableName)
-        .select('id, ' + ownerField)
+        .select('*')
         .eq('id', order_id)
         .maybeSingle()
       
       console.error('[update-pickup-point] Order not found. Debug info:', { 
         tableName, 
-        order_id, 
+        order_id,
+        ownerField,
         expected_owner: user_id,
-        actual_data: debugData 
+        actual_data: debugData,
+        query_condition: `${ownerField} = ${user_id}`
       })
 
       return new Response(
         JSON.stringify({ 
           success: false, 
           error: 'Order not found or access denied',
-          debug: { tableName, order_id, user_id, found: !!debugData }
+          debug: { 
+            tableName, 
+            order_id, 
+            user_id, 
+            ownerField,
+            found: !!debugData,
+            actual_owner: debugData ? debugData[ownerField] : null
+          }
         }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
