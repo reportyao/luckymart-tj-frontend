@@ -799,6 +799,7 @@
     "typeUnknown": "Неизвестно",
     "statusPending": "Ожидание",
     "statusActive": "Активный",
+    "statusPaid": "Оплачено",
     "statusWon": "Выиграно",
     "statusLost": "Не выиграно",
     "statusRefunded": "Возвращено",

@@ -851,6 +851,7 @@
     "typeUnknown": "未知",
     "statusPending": "待处理",
     "statusActive": "进行中",
+    "statusPaid": "已支付",
     "statusWon": "已中奖",
     "statusLost": "未入选",
     "statusRefunded": "已退款",

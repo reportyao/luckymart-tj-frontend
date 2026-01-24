@@ -182,9 +182,31 @@ const OrderManagementPage: React.FC = () => {
       }
     }
 
+    // 对于拼团订单，优先根据 session_status 判断状态
+    if (order.order_type === 'group_buy' && order.session_status) {
+      // 如果拼团未成团（超时、取消、过期），显示"已退款"
+      if (['TIMEOUT', 'CANCELLED', 'EXPIRED'].includes(order.session_status)) {
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
+            {t('orders.statusRefunded')}
+          </span>
+        );
+      }
+      // 如果拼团进行中
+      if (order.session_status === 'ACTIVE') {
+        return (
+          <span className="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+            {t('orders.statusGrouping')}
+          </span>
+        );
+      }
+      // 如果拼团成功，继续使用 order.status 判断
+    }
+
     const statusMap: Record<string, { text: string; color: string }> = {
       'PENDING': { text: order.order_type === 'group_buy' ? t('orders.statusGrouping') : t('orders.statusWaiting'), color: 'bg-blue-100 text-blue-700' },
       'ACTIVE': { text: t('orders.statusGrouping'), color: 'bg-blue-100 text-blue-700' },
+      'PAID': { text: t('orders.statusPaid'), color: 'bg-blue-100 text-blue-700' },
       'WON': { text: t('orders.statusCongratulations'), color: 'bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700' },
       'LOST': { text: t('orders.statusFinished'), color: 'bg-gray-100 text-gray-700' },
       'REFUNDED': { text: t('orders.statusRefunded'), color: 'bg-orange-100 text-orange-700' },

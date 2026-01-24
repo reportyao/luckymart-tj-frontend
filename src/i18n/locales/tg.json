@@ -804,6 +804,7 @@
     "typeUnknown": "Номаълум",
     "statusPending": "Дар интизорӣ",
     "statusActive": "Фаъол",
+    "statusPaid": "Пардохт шуд",
     "statusWon": "Ғолиб омад",
     "statusLost": "Ғолиб наомад",
     "statusRefunded": "Баргардонида шуд",
