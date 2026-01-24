@@ -18,6 +18,8 @@ serve(async (req) => {
 
     const { order_id, order_type, pickup_point_id, user_id } = await req.json()
 
+    console.log('[update-pickup-point] Request:', { order_id, order_type, pickup_point_id, user_id })
+
     if (!order_id || !pickup_point_id || !user_id) {
       return new Response(
         JSON.stringify({ success: false, error: 'Missing required parameters' }),
@@ -33,6 +35,7 @@ serve(async (req) => {
       .single()
 
     if (pickupPointError || !pickupPoint) {
+      console.error('[update-pickup-point] Pickup point error:', pickupPointError)
       return new Response(
         JSON.stringify({ success: false, error: 'Invalid pickup point' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -46,26 +49,62 @@ serve(async (req) => {
       )
     }
 
-    // 根据订单类型更新不同的表
+    // 根据订单类型确定表名和所有权字段
     let tableName = 'prizes'
+    let ownerField = 'user_id'
+    
     if (order_type === 'full_purchase') {
       tableName = 'full_purchase_orders'
+      ownerField = 'user_id'
     } else if (order_type === 'group_buy') {
       tableName = 'group_buy_results'
+      ownerField = 'winner_id'
+    } else if (order_type === 'prize') {
+      tableName = 'prizes'
+      ownerField = 'user_id'
     }
 
+    console.log('[update-pickup-point] Querying:', { tableName, ownerField, order_id, user_id })
+
     // 验证订单所有权
-    const ownerField = order_type === 'group_buy' ? 'winner_id' : 'user_id'
-    const { data: orderCheck } = await supabase
+    const { data: orderCheck, error: orderCheckError } = await supabase
       .from(tableName)
       .select('id')
       .eq('id', order_id)
       .eq(ownerField, user_id)
-      .single()
+      .maybeSingle()
+
+    console.log('[update-pickup-point] Order check result:', { orderCheck, orderCheckError })
+
+    if (orderCheckError) {
+      console.error('[update-pickup-point] Order check error:', orderCheckError)
+      return new Response(
+        JSON.stringify({ success: false, error: `Database error: ${orderCheckError.message}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
     if (!orderCheck) {
+      // 如果找不到订单，尝试查询原始数据以帮助调试
+      const { data: debugData } = await supabase
+        .from(tableName)
+        .select('id, ' + ownerField)
+        .eq('id', order_id)
+        .maybeSingle()
+      
+      console.error('[update-pickup-point] Order not found. Debug info:', { 
+        tableName, 
+        order_id, 
+        expected_owner: user_id,
+        actual_data: debugData 
+      })
+
       return new Response(
-        JSON.stringify({ success: false, error: 'Order not found or access denied' }),
+        JSON.stringify({ 
+          success: false, 
+          error: 'Order not found or access denied',
+          debug: { tableName, order_id, user_id, found: !!debugData }
+        }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
@@ -77,12 +116,14 @@ serve(async (req) => {
       .eq('id', order_id)
 
     if (updateError) {
-      console.error('Update error:', updateError)
+      console.error('[update-pickup-point] Update error:', updateError)
       return new Response(
         JSON.stringify({ success: false, error: updateError.message }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
+
+    console.log('[update-pickup-point] Update successful')
 
     return new Response(
       JSON.stringify({ success: true }),
@@ -90,7 +131,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error:', error)
+    console.error('[update-pickup-point] Error:', error)
     return new Response(
       JSON.stringify({ success: false, error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
