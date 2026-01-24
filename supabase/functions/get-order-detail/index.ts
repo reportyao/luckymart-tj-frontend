@@ -74,6 +74,11 @@ serve(async (req) => {
       orderType = 'full_purchase'
       orderData = fullPurchaseOrder as Record<string, unknown>
       productId = orderData.lottery_id as string | null
+      // 确保 metadata.type 正确设置
+      if (!orderData.metadata || typeof orderData.metadata !== 'object') {
+        orderData.metadata = {}
+      }
+      (orderData.metadata as Record<string, unknown>).type = 'full_purchase'
     }
 
     // 2. 查询 prizes
