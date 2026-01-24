@@ -139,31 +139,18 @@ const OrderDetailPage: React.FC = () => {
 
     setIsUpdatingPickupPoint(true);
     try {
-      // 根据订单类型更新不同的表
-      const orderType = order.metadata?.type || 'prize';
-      
-      let error = null;
-      if (orderType === 'full_purchase') {
-        const result = await supabase
-          .from('full_purchase_orders')
-          .update({ pickup_point_id: selectedPickupPointId })
-          .eq('id', order.id);
-        error = result.error;
-      } else if (orderType === 'group_buy') {
-        const result = await supabase
-          .from('group_buy_results')
-          .update({ pickup_point_id: selectedPickupPointId })
-          .eq('id', order.id);
-        error = result.error;
-      } else {
-        const result = await supabase
-          .from('prizes')
-          .update({ pickup_point_id: selectedPickupPointId })
-          .eq('id', order.id);
-        error = result.error;
-      }
+      // 使用 Edge Function 更新自提点，避免类型问题
+      const { data, error } = await supabase.functions.invoke('update-pickup-point', {
+        body: {
+          order_id: order.id,
+          order_type: order.metadata?.type || 'prize',
+          pickup_point_id: selectedPickupPointId,
+          user_id: user?.id
+        }
+      });
 
       if (error) throw error;
+      if (!data?.success) throw new Error(data?.error || 'Update failed');
 
       toast.success(t('orders.pickupPointUpdated') || '自提点更新成功');
       
