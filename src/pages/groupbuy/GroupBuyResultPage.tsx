@@ -277,8 +277,13 @@ export default function GroupBuyResultPage() {
     );
   }
 
+  // 检查是否实际上已经超时（即使后端返回的状态还是 ACTIVE）
+  const isActuallyExpired = result.status === 'ACTIVE' && 
+                           result.session?.expires_at && 
+                           new Date(result.session.expires_at).getTime() < Date.now();
+
   // 【新增】超时、取消或过期未开奖的情况
-  if (result.status === 'TIMEOUT' || result.status === 'CANCELLED' || result.status === 'EXPIRED') {
+  if (result.status === 'TIMEOUT' || result.status === 'CANCELLED' || result.status === 'EXPIRED' || isActuallyExpired) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
         {/* Header */}

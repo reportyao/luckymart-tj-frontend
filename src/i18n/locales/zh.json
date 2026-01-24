@@ -923,7 +923,15 @@
     "hours": "小时",
     "expired": "已过期",
     "noPickupPoints": "暂无可用自提点",
-    "prizeInfoNotLoaded": "奖品信息加载中，请稍后再试"
+    "prizeInfoNotLoaded": "奖品信息加载中，请稍后再试",
+    "pleaseSelect": "请选择自提点",
+    "confirmSelection": "确认选择",
+    "updating": "更新中...",
+    "pickupPointUpdated": "自提点更新成功",
+    "updatePickupPointError": "更新自提点失败",
+    "pleaseSelectPickupPoint": "请选择自提点",
+    "originalPickupPointDisabled": "原自提点已停用，请重新选择",
+    "original": "原"
   },
   "notifications": {
     "congratulations": "恭喜入选!",

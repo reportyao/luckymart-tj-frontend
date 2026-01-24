@@ -869,7 +869,15 @@
     "hours": "ч.",
     "expired": "Истекло",
     "noPickupPoints": "Нет доступных пунктов самовывоза",
-    "prizeInfoNotLoaded": "Информация о призе загружается, попробуйте позже"
+    "prizeInfoNotLoaded": "Информация о призе загружается, попробуйте позже",
+    "pleaseSelect": "Пожалуйста, выберите пункт выдачи",
+    "confirmSelection": "Подтвердить выбор",
+    "updating": "Обновление...",
+    "pickupPointUpdated": "Пункт выдачи успешно обновлен",
+    "updatePickupPointError": "Ошибка обновления пункта выдачи",
+    "pleaseSelectPickupPoint": "Пожалуйста, выберите пункт выдачи",
+    "originalPickupPointDisabled": "Оригинальный пункт выдачи отключен, пожалуйста, выберите другой",
+    "original": "Оригинал"
   },
   "notifications": {
     "congratulations": "Поздравляем с выигрышем!",

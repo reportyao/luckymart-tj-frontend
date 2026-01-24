@@ -184,8 +184,13 @@ const OrderManagementPage: React.FC = () => {
 
     // 对于拼团订单，优先根据 session_status 判断状态
     if (order.order_type === 'group_buy' && order.session_status) {
+      // 检查是否实际上已经超时（即使 session_status 还是 ACTIVE）
+      const isActuallyExpired = order.session_status === 'ACTIVE' && 
+                               order.expires_at && 
+                               new Date(order.expires_at).getTime() < Date.now();
+
       // 如果拼团未成团（超时、取消、过期），显示"已退款"
-      if (['TIMEOUT', 'CANCELLED', 'EXPIRED'].includes(order.session_status)) {
+      if (['TIMEOUT', 'CANCELLED', 'EXPIRED'].includes(order.session_status) || isActuallyExpired) {
         return (
           <span className="px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-700">
             {t('orders.statusRefunded')}

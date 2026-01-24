@@ -874,7 +874,15 @@
     "hours": "соат",
     "expired": "Ба охир расид",
     "noPickupPoints": "Нуқтаҳои худгирӣ дастрас нестанд",
-    "prizeInfoNotLoaded": "Маълумот дар ҳоли боргирӣ, лутфан баъдан кӯшиш кунед"
+    "prizeInfoNotLoaded": "Маълумот дар ҳоли боргирӣ, лутфан баъдан кӯшиш кунед",
+    "pleaseSelect": "Лутфан нуқтаи гирифтанро интихоб кунед",
+    "confirmSelection": "Тасдиқи интихоб",
+    "updating": "Навсозӣ...",
+    "pickupPointUpdated": "Нуқтаи гирифтан бомуваффақият нав карда шуд",
+    "updatePickupPointError": "Хатогии навсозии нуқтаи гирифтан",
+    "pleaseSelectPickupPoint": "Лутфан нуқтаи гирифтанро интихоб кунед",
+    "originalPickupPointDisabled": "Нуқтаи аслии гирифтан ғайрифаъол аст, лутфан дигареро интихоб кунед",
+    "original": "Аслӣ"
   },
   "notifications": {
     "congratulations": "Табрик бо бурд!",
