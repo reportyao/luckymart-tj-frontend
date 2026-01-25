@@ -348,7 +348,7 @@ const ShowoffPage: React.FC = () => {
           </svg>
         </button>
         <h1 className="text-xl font-bold text-gray-900">
-          {isMyShowoffs ? t('showoff.myShowoffs') : t('showoff.title')}
+          {isMyShowoffs ? t('showoff.myShowoffs') : t('showoff.showoffGallery')}
         </h1>
       </div>
 
@@ -396,9 +396,17 @@ const ShowoffPage: React.FC = () => {
                   {/* User Info */}
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-	                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+	                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold overflow-hidden">
                             {showoff.user?.avatar_url ? (
-                              <img src={showoff.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                              <img 
+                                src={showoff.user.avatar_url} 
+                                alt="" 
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).style.display = 'none';
+                                  (e.target as HTMLImageElement).parentElement!.innerText = showoff.user?.telegram_username?.charAt(0) || 'U';
+                                }}
+                              />
                             ) : (
 		                      showoff.user?.telegram_username ? showoff.user.telegram_username.charAt(0) : 'U'
                             )}
