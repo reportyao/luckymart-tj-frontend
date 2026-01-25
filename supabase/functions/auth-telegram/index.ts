@@ -55,21 +55,32 @@ Deno.serve(async (req) => {
         const userData = JSON.parse(userDataRaw);
         const telegramId = userData.id.toString();
 
-        // 获取用户头像
-        let avatarUrl = null;
+        // 获取用户头像 (带超时控制)
+        let avatarUrl = userData.photo_url || null;
         try {
             console.log(`[Avatar] Fetching avatar for user ${telegramId} via Bot API...`);
-            const profilePhotosResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5秒超时
+
+            const profilePhotosResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`, {
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
             if (profilePhotosResponse.ok) {
                 const profileData = await profilePhotosResponse.json();
                 if (profileData.ok && profileData.result.total_count > 0) {
-                    // 获取最大尺寸的头像 (数组的最后一个元素通常是最大尺寸)
                     const photos = profileData.result.photos[0];
                     const photo = photos[photos.length - 1]; 
                     const fileId = photo.file_id;
                     
-                    // 获取文件路径
-                    const fileResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${fileId}`);
+                    const fileController = new AbortController();
+                    const fileTimeoutId = setTimeout(() => fileController.abort(), 5000);
+                    const fileResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${fileId}`, {
+                        signal: fileController.signal
+                    });
+                    clearTimeout(fileTimeoutId);
+
                     if (fileResponse.ok) {
                         const fileData = await fileResponse.json();
                         if (fileData.ok) {
@@ -77,16 +88,11 @@ Deno.serve(async (req) => {
                             console.log(`[Avatar] Successfully fetched high-res avatar: ${avatarUrl}`);
                         }
                     }
-                } else {
-                    console.log(`[Avatar] User ${telegramId} has no profile photo via Bot API, falling back to initData`);
-                    avatarUrl = userData.photo_url || null;
                 }
-            } else {
-                avatarUrl = userData.photo_url || null;
             }
         } catch (avatarError) {
-            console.error('[Avatar] Failed to fetch avatar via Bot API:', avatarError);
-            avatarUrl = userData.photo_url || null;
+            console.error('[Avatar] Failed to fetch avatar via Bot API (using fallback):', avatarError.message);
+            // 保持使用 userData.photo_url
         }
 
         // 验证 initData 时效性（24小时内有效）
