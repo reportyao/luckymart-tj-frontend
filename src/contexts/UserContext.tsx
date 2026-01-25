@@ -243,6 +243,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       
       const { user, session } = result;
       
+      console.log('[Auth] User data from server:', user);
+      console.log('[Auth] Avatar URL from server:', user?.avatar_url);
+      
       setUser(user as User);
       
       if (session && session.token) {
