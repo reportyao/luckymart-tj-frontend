@@ -17,7 +17,8 @@ import {
   BellIcon,
   UsersIcon,
   TrophyIcon,
-  LanguageIcon
+  LanguageIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline'
 import { copyToClipboard } from '../lib/utils'
 import toast from 'react-hot-toast'
@@ -93,6 +94,13 @@ const ProfilePage: React.FC = () => {
 
   // 精简后的菜单项
   const menuItems = [
+    {
+      icon: SparklesIcon,
+      title: t('subsidy.menuTitle'),
+      subtitle: t('subsidy.banner'),
+      action: () => navigate('/subsidy-plan'),
+      highlight: true,
+    },
     {
       icon: LanguageIcon,
       title: t('profile.language'),
@@ -252,11 +260,19 @@ const ProfilePage: React.FC = () => {
               className="w-full p-4 flex items-center justify-between hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                  <item.icon className="w-5 h-5 text-gray-600" />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  item.highlight 
+                    ? 'bg-gradient-to-br from-orange-500 to-yellow-500' 
+                    : 'bg-gray-100'
+                }`}>
+                  <item.icon className={`w-5 h-5 ${
+                    item.highlight ? 'text-white' : 'text-gray-600'
+                  }`} />
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-gray-900">{item.title}</p>
+                  <p className={`text-sm font-medium ${
+                    item.highlight ? 'text-orange-600' : 'text-gray-900'
+                  }`}>{item.title}</p>
                   <p className="text-xs text-gray-500">{item.subtitle}</p>
                 </div>
               </div>

@@ -44,6 +44,7 @@ import FullPurchaseConfirmPage from "./pages/FullPurchaseConfirmPage"
 import SpinLotteryPage from "./pages/SpinLotteryPage"
 import AIPage from "./pages/AIPage"
 import PendingPickupPage from "./pages/PendingPickupPage"
+import SubsidyPlanPage from "./pages/SubsidyPlanPage"
 
 function App() {
   const { showModal, closeModal, handleSuccess } = useBotFollowModal()
@@ -71,6 +72,7 @@ function App() {
               <Route path="/wallet/withdraw" element={<WithdrawPage />} />
               <Route path="/exchange" element={<ExchangePage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/subsidy-plan" element={<SubsidyPlanPage />} />
               <Route path="/bot" element={<BotPage />} />
               <Route path="/monitoring" element={<MonitoringPage />} />
               <Route path="/orders" element={<OrderManagementPage />} />
