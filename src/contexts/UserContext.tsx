@@ -31,6 +31,23 @@ const getWebApp = () => {
   };
 };
 
+/**
+ * 【安全修复】获取当前 Telegram 用户的 ID
+ * 用于验证 localStorage 缓存的用户身份是否与当前 Telegram 账号一致
+ * 修复身份串号 Bug：防止切换 Telegram 账号后显示上一个账号的数据
+ */
+const getCurrentTelegramUserId = (): string | null => {
+  try {
+    const WebApp = getWebApp();
+    if (WebApp.initDataUnsafe?.user?.id) {
+      return WebApp.initDataUnsafe.user.id.toString();
+    }
+  } catch (e) {
+    console.warn('[Telegram] Failed to get current user ID:', e);
+  }
+  return null;
+};
+
 // 合并 Supabase auth user 和 profile
 export type User = UserProfile & { 
   email?: string;
@@ -116,14 +133,31 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.log('[Session] Found stored session, validating...');
         const parsedUser = JSON.parse(storedUser);
         
+        // 【安全修复】验证缓存的用户身份是否与当前 Telegram 账号一致
+        // 这是修复身份串号 Bug 的核心逻辑
+        const currentTelegramId = getCurrentTelegramUserId();
+        const cachedTelegramId = parsedUser.telegram_id?.toString();
+        
+        if (currentTelegramId && cachedTelegramId && currentTelegramId !== cachedTelegramId) {
+          console.log('[Security] Identity mismatch detected!');
+          console.log(`[Security] Cached telegram_id: ${cachedTelegramId}, Current telegram_id: ${currentTelegramId}`);
+          console.log('[Security] Clearing cached data and forcing re-authentication...');
+          localStorage.removeItem('custom_session_token');
+          localStorage.removeItem('custom_user');
+          setSessionToken(null);
+          setUser(null);
+          setProfile(null);
+          setWallets([]);
+          setIsLoading(false);
+          return; // 退出，让自动认证流程处理新账号
+        }
+        
         try {
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
           const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
           
-          // 优化：先检查本地存储的过期时间（如果有），减少不必要的网络请求
-          // 如果没有存储过期时间，或者已经快过期了，再进行网络验证
-          
-          console.log('[Session] Restoring user from localStorage...');
+          // 身份验证通过，继续恢复会话
+          console.log('[Session] Identity verified, restoring user from localStorage...');
           setUser(parsedUser as User);
           setSessionToken(storedToken);
 
