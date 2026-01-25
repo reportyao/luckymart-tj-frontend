@@ -229,8 +229,9 @@ const InvitePage: React.FC = () => {
             <button
               onClick={shareInvite}
               className="px-4 py-3 bg-white/20 hover:bg-white/30 rounded-xl transition-colors flex items-center justify-center"
+              aria-label={t('invite.share')}
             >
-              <ShareIcon className="w-5 h-5 text-white" />
+              <ShareIcon className="w-5 h-5" style={{ color: 'white' }} />
             </button>
           </div>
         </div>
