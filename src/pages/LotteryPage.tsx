@@ -72,6 +72,15 @@ const LotteryPage: React.FC = () => {
 
   return (
     <div className="pb-20 min-h-screen bg-gray-50">
+      {/* Subsidy Banner */}
+      <div className="bg-white px-4 pt-4 pb-2">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg p-3 text-center shadow-sm">
+          <p className="text-white text-sm font-medium">
+            {t('subsidy.banner')} | {t('subsidy.lotteryHint')}
+          </p>
+        </div>
+      </div>
+
       {/* 简洁的头部 - 四个按钮 */}
       <div className="bg-white border-b border-gray-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
         <div className="flex justify-between items-center max-w-2xl mx-auto">

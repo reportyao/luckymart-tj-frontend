@@ -92,7 +92,14 @@ export default function GroupBuyListPage() {
 
   return (
     <div className="min-h-screen bg-white pb-20">
-      {/* Header - 删除红色渐变区域 */}
+      {/* Subsidy Banner */}
+      <div className="px-4 pt-4">
+        <div className="bg-gradient-to-r from-amber-500 to-orange-500 rounded-lg p-3 text-center shadow-sm">
+          <p className="text-white text-sm font-medium">
+            {t('subsidy.banner')} | {t('subsidy.groupBuyHint')}
+          </p>
+        </div>
+      </div>
 
       {/* Rules Card */}
       <div className="px-4 mt-4">
