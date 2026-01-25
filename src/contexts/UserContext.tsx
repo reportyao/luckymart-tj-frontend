@@ -128,7 +128,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       const timeoutId = setTimeout(() => {
         console.warn('[Session] Check session timeout, forcing isLoading to false');
         setIsLoading(false);
-      }, 8000); // 8秒超时
+      }, 4000); // 4秒超时
 
       const storedToken = localStorage.getItem('custom_session_token');
       const storedUser = localStorage.getItem('custom_user');
@@ -250,7 +250,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         console.warn('[Auth] Authentication timeout');
         setIsLoading(false);
         toast.error(t('error.networkError'));
-      }, 10000); // 10秒超时
+      }, 4000); // 4秒超时
       
       const startParam = WebApp.initDataUnsafe?.start_param;
       console.log('[Auth] Calling authenticateWithTelegram...');

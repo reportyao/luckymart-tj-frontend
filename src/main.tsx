@@ -73,7 +73,7 @@ const loadingTimeout = setTimeout(() => {
       `;
     }
   }
-}, 12000); // 12秒超时
+}, 4000); // 4秒超时
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
