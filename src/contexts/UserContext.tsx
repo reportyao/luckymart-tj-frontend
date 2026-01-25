@@ -124,8 +124,12 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
 
   const checkSession = useCallback(async () => {
     try {
-      setIsLoading(true);
-      
+      // 设置超时保护，确保即使请求失败也能结束加载状态
+      const timeoutId = setTimeout(() => {
+        console.warn('[Session] Check session timeout, forcing isLoading to false');
+        setIsLoading(false);
+      }, 8000); // 8秒超时
+
       const storedToken = localStorage.getItem('custom_session_token');
       const storedUser = localStorage.getItem('custom_user');
       
@@ -216,9 +220,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
       } else {
         console.log('[Session] No stored session found');
       }
+      
+      // 清除超时定时器
+      clearTimeout(timeoutId);
     } catch (error) {
       console.error('Failed to check session:', error);
     } finally {
+      // 确保无论如何都结束加载状态
       setIsLoading(false);
     }
   }, [fetchWallets, supabase]);
@@ -236,9 +244,19 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     
     try {
       setIsLoading(true);
+      
+      // 设置认证超时保护
+      const authTimeout = setTimeout(() => {
+        console.warn('[Auth] Authentication timeout');
+        setIsLoading(false);
+        toast.error(t('error.networkError'));
+      }, 10000); // 10秒超时
+      
       const startParam = WebApp.initDataUnsafe?.start_param;
       console.log('[Auth] Calling authenticateWithTelegram...');
       const result = await authService.authenticateWithTelegram(WebApp.initData, startParam);
+      
+      clearTimeout(authTimeout);
       console.log('[Auth] Authentication result:', result);
       
       const { user, session } = result;

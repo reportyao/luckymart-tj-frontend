@@ -51,8 +51,53 @@ function AppWrapper() {
   );
 }
 
+// 全局加载超时检测
+let appMounted = false;
+const loadingTimeout = setTimeout(() => {
+  if (!appMounted) {
+    console.error('[App] Loading timeout detected, showing fallback UI');
+    const rootElement = document.getElementById('root');
+    if (rootElement) {
+      rootElement.innerHTML = `
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; text-align: center; background-color: #f9fafb;">
+          <div style="font-size: 48px; margin-bottom: 20px;">⚠️</div>
+          <h2 style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 10px;">Loading Failed</h2>
+          <p style="color: #6b7280; margin-bottom: 20px;">The application failed to load. This might be due to network issues.</p>
+          <button 
+            onclick="window.location.reload()" 
+            style="background-color: #2B5D3A; color: white; padding: 12px 24px; border-radius: 8px; border: none; font-size: 16px; cursor: pointer;"
+          >
+            Retry
+          </button>
+        </div>
+      `;
+    }
+  }
+}, 12000); // 12秒超时
+
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error('Root element not found');
 }
-createRoot(rootElement).render(<AppWrapper />);
+
+try {
+  createRoot(rootElement).render(<AppWrapper />);
+  appMounted = true;
+  clearTimeout(loadingTimeout);
+} catch (error) {
+  console.error('[App] Failed to mount React app:', error);
+  clearTimeout(loadingTimeout);
+  rootElement.innerHTML = `
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; text-align: center; background-color: #f9fafb;">
+      <div style="font-size: 48px; margin-bottom: 20px;">❌</div>
+      <h2 style="font-size: 20px; font-weight: bold; color: #1f2937; margin-bottom: 10px;">Application Error</h2>
+      <p style="color: #6b7280; margin-bottom: 20px;">Failed to initialize the application.</p>
+      <button 
+        onclick="window.location.reload()" 
+        style="background-color: #2B5D3A; color: white; padding: 12px 24px; border-radius: 8px; border: none; font-size: 16px; cursor: pointer;"
+      >
+        Reload
+      </button>
+    </div>
+  `;
+}
