@@ -146,21 +146,26 @@ const ProfilePage: React.FC = () => {
         className="bg-gradient-to-r from-blue-600 to-purple-600 text-white mx-4 mt-4 rounded-2xl p-6"
       >
         <div className="flex items-center space-x-4">
-          {/* 头像 */}
-          <div className="relative">
-            {user?.avatar_url ? (
-              <img 
-                src={user.avatar_url} 
-                alt="Avatar"
-                className="w-16 h-16 rounded-full border-4 border-white/20"
-              />
-            ) : (
-              <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
+	          {/* 头像 */}
+	          <div className="relative">
+	            {user?.avatar_url ? (
+	              <img 
+	                src={user.avatar_url} 
+	                alt="Avatar"
+	                className="w-16 h-16 rounded-full border-4 border-white/20 object-cover"
+                  onError={(e) => {
+                    console.error('Avatar load failed:', user.avatar_url);
+                    // 如果加载失败，隐藏图片显示占位符
+                    (e.target as HTMLImageElement).style.display = 'none';
+                    (e.target as HTMLImageElement).parentElement!.querySelector('.avatar-placeholder')!.classList.remove('hidden');
+                  }}
+	              />
+	            ) : null}
+              <div className={`w-16 h-16 bg-white/20 rounded-full flex items-center justify-center avatar-placeholder ${user?.avatar_url ? 'hidden' : ''}`}>
                 <span className="text-2xl font-bold">
                   {user?.telegram_username?.[0] || user?.first_name?.[0] || 'U'}
                 </span>
               </div>
-            )}
             
             {user?.is_verified && (
               <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
