@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { ShowoffWithDetails } from '../lib/supabase';
@@ -35,19 +35,21 @@ const CACHE_DURATION = 2 * 60 * 1000; // 2分钟缓存
 const ShowoffPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMyShowoffs = location.pathname === '/showoff/my';
   const { user } = useUser();
   const { showoffService } = useSupabase();
 
   // 从缓存初始化状态
   const [showoffs, setShowoffs] = useState<ShowoffWithDetails[]>(() => {
-    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+    if (!isMyShowoffs && showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
       return showoffCache.data;
     }
     return [];
   });
   const [isLoading, setIsLoading] = useState(() => {
     // 如果有有效缓存，不显示加载状态
-    if (showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
+    if (!isMyShowoffs && showoffCache && (Date.now() - showoffCache.timestamp) < CACHE_DURATION) {
       return false;
     }
     return true;
@@ -78,7 +80,7 @@ const ShowoffPage: React.FC = () => {
   
   // 缓存数据更新
   useEffect(() => {
-    if (showoffs.length > 0) {
+    if (!isMyShowoffs && showoffs.length > 0) {
       showoffCache = {
         data: showoffs,
         timestamp: Date.now(),
@@ -87,7 +89,7 @@ const ShowoffPage: React.FC = () => {
         page,
       };
     }
-  }, [showoffs, filter, hasMore, page]);
+  }, [showoffs, filter, hasMore, page, isMyShowoffs]);
   
   const observerRef = useRef<IntersectionObserver | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -108,8 +110,16 @@ const ShowoffPage: React.FC = () => {
       const limit = ITEMS_PER_PAGE;
 
       // 1. 先获取晒单数据（不使用关联查询）
+      let url = `${supabaseUrl}/rest/v1/showoffs?select=*&order=created_at.desc&limit=${limit}&offset=${offset}`;
+      
+      if (isMyShowoffs && user) {
+        url += `&user_id=eq.${user.id}`;
+      } else {
+        url += `&status=eq.APPROVED`;
+      }
+
       const showoffsResponse = await fetch(
-        `${supabaseUrl}/rest/v1/showoffs?status=eq.APPROVED&select=*&order=created_at.desc&limit=${limit}&offset=${offset}`,
+        url,
         {
           headers: {
             'Authorization': `Bearer ${supabaseKey}`,
@@ -224,7 +234,7 @@ const ShowoffPage: React.FC = () => {
   useEffect(() => {
     // 检查缓存是否有效且 filter 匹配
     const now = Date.now();
-    if (showoffCache && 
+    if (!isMyShowoffs && showoffCache && 
         (now - showoffCache.timestamp) < CACHE_DURATION && 
         showoffCache.filter === filter &&
         showoffCache.data.length > 0) {
@@ -237,7 +247,7 @@ const ShowoffPage: React.FC = () => {
     setShowoffs([]);
     setHasMore(true);
     fetchShowoffs(0, false);
-  }, [filter, fetchShowoffs]);
+  }, [filter, fetchShowoffs, isMyShowoffs]);
 
   // 无限滚动加载
   useEffect(() => {
@@ -330,6 +340,17 @@ const ShowoffPage: React.FC = () => {
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
+      {/* 顶部导航 */}
+      <div className="bg-white px-4 py-4 sticky top-0 z-10 shadow-sm flex items-center">
+        <button onClick={() => navigate(-1)} className="mr-4">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+          </svg>
+        </button>
+        <h1 className="text-xl font-bold text-gray-900">
+          {isMyShowoffs ? t('showoff.myShowoffs') : t('showoff.title')}
+        </h1>
+      </div>
 
       {/* Showoffs List */}
       <div className="px-4 py-4">
@@ -375,9 +396,13 @@ const ShowoffPage: React.FC = () => {
                   {/* User Info */}
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
-	                      {showoff.user?.telegram_username ? showoff.user.telegram_username.charAt(0) : 'U'}
-                      </div>
+	                      <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold overflow-hidden">
+                            {showoff.user?.avatar_url ? (
+                              <img src={showoff.user.avatar_url} alt="" className="w-full h-full object-cover" />
+                            ) : (
+		                      showoff.user?.telegram_username ? showoff.user.telegram_username.charAt(0) : 'U'
+                            )}
+	                      </div>
                       <div>
 	                      <p className="font-medium text-gray-900">{showoff.user?.telegram_username || 'Anonymous'}</p>
                         <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
