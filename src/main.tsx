@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHandlers';
+import { errorMonitor } from './services/ErrorMonitorService';
 
 import i18n from './i18n/config';
 import './index.css';
@@ -25,6 +26,11 @@ const queryClient = new QueryClient({
 // 设置全局错误处理和警告抑制
 setupGlobalErrorHandlers();
 suppressKnownWarnings();
+
+// 初始化错误监控服务（仅在生产环境启用）
+if (import.meta.env.PROD) {
+  errorMonitor.init('1.0.1');
+}
 
 
 function AppWrapper() {
