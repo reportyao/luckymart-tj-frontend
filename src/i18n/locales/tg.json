@@ -41,7 +41,8 @@
     "bot": "Идораи бот",
     "monitoring": "Мониторинг",
     "orders": "Фармоишҳо",
-    "notifications": "Огоҳиномаҳо"
+    "notifications": "Огоҳиномаҳо",
+    "messages": "Паёмҳо"
   },
   "home": {
     "welcome": "Салом",
@@ -186,7 +187,14 @@
     "totalEntries": "Ҳамаи иштирокчиён",
     "unitPrice": "Нархи воҳид",
     "totalQuantity": "Миқдори умумӣ",
-    "purchaseLimit": "Маҳдудияти харид"
+    "purchaseLimit": "Маҳдудияти харид",
+    "confirmPurchase": "Тасдиқи харид",
+    "minutes": "дақиқа",
+    "noShowoffsYet": "Ҳоло шарҳ нест",
+    "purchaseModalPlaceholder": "Миқдорро ворид кунед",
+    "purchaseModalTitle": "Хариди билетҳои мағозаи холҳо",
+    "recentShowoffs": "Шарҳҳои охирин",
+    "won": "Интихоб шуд"
   },
   "fairness": {
     "title": "Чаро ин алгоритм одилона аст?",
@@ -356,7 +364,15 @@
     "prize": "Харид бо 1 юан дар мағозаи холҳо",
     "groupBuy": "Хариди гурӯҳӣ муваффақ шуд",
     "lottery": "Харид бо пардохти пурра дар мағозаи холҳо",
-    "oneYuanShopping": "Хариди як юан"
+    "oneYuanShopping": "Хариди як юан",
+    "amount": "Маблағ",
+    "deposit": "Пуркунӣ",
+    "numbers": "Рақамҳо",
+    "pickupCode": "Рамзи гирифтан",
+    "product": "Мол",
+    "searchPlaceholder": "Ҷустуҷӯи рақами фармоиш ё номи мол...",
+    "type": "Намуд",
+    "withdrawal": "Баровардани пул"
   },
   "notification": {
     "notifications": "Маркази огоҳиномаҳо",
@@ -473,7 +489,8 @@
     "pendingPrizes": "Дар интизорӣ",
     "totalValue": "Арзиши умумӣ",
     "viewShowoffs": "Дидани намоишҳо",
-    "viewOrders": "Дидани ҳамаи фармоишҳо"
+    "viewOrders": "Дидани ҳамаи фармоишҳо",
+    "notifications": "Паёмҳои ман"
   },
   "auth": {
     "welcome": "Хуш омадед ба TezBarakat",
@@ -561,7 +578,13 @@
     "preview": "Пешнамоиш",
     "groupBuy": "Хариди гурӯҳӣ",
     "lottery": "Лоторея",
-    "pickupCode": "Рамзи гирифтан"
+    "pickupCode": "Рамзи гирифтан",
+    "beTheFirst": "Ҳоло шарҳ нест",
+    "lotteryRequiredError": "Лутфан, ҷоизаи бурдашударо интихоб кунед",
+    "maxImagesError": "Танҳо то 9 тасвир бор кардан мумкин аст",
+    "publishNow": "Ҳозир нашр кунед",
+    "unknownLottery": "Мағозаи холҳои номаълум",
+    "won": "Интихоб шуд"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",
@@ -630,8 +653,9 @@
     "buyToResellHint": "Билетҳоро харед, то дар ин ҷо фурӯшед",
     "unknownItem": "Мол номаълум",
     "createFailed": "Нашр кардани дубора фурӯшӣ қобил нашуд",
-    "resaleRecords": "Сабтҳои фурӯши дубора",
-    "viewResaleHistory": "Дидани таърихи фурӯши дубора"
+    "resaleRecords": "Таърихи дубора фурӯш",
+    "viewResaleHistory": "Дидани таърихи дубора фурӯш",
+    "buyResaleItems": "Хариди молҳои дубораф��рӯш"
   },
   "bot": {
     "botManagement": "Идораи бот",
@@ -880,7 +904,9 @@
     "updatePickupPointError": "Хатогии навсозии нуқтаи гирифтан",
     "pleaseSelectPickupPoint": "Лутфан нуқтаи гирифтанро интихоб кунед",
     "originalPickupPointDisabled": "Нуқтаи аслии гирифтан ғайрифаъол аст, лутфан дигареро интихоб кунед",
-    "original": "Аслӣ"
+    "original": "Аслӣ",
+    "fullPurchaseCount": "Пардохти пурра",
+    "tabFullPurchase": "Пардохти пурра"
   },
   "notifications": {
     "congratulations": "Табрик бо бурд!",
@@ -1147,5 +1173,11 @@
     "disclaimer": "AI танҳо барои маълумот аст, на мавқеи расмӣ",
     "footer": "TezBarakat AI",
     "footerDesc": "Зеҳни сунъии сатҳи олӣ дар ҳизмати мардуми тоҷик"
+  },
+  "prize": {
+    "myPrizes": "Ҷоизаҳои ман",
+    "prizeDetails": "Тафсилоти ҷоиза",
+    "prizeManagement": "Идоракунии ҷоизаҳо",
+    "viewPrizes": "Дидани сабтҳои ҷоизаҳо"
   }
 }

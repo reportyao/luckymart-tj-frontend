@@ -41,7 +41,8 @@
     "bot": "Управление ботом",
     "monitoring": "Мониторинг",
     "orders": "Заказы",
-    "notifications": "Уведомления"
+    "notifications": "Уведомления",
+    "messages": "Сообщения"
   },
   "home": {
     "welcome": "Привет",
@@ -186,7 +187,14 @@
     "totalEntries": "Всего участников",
     "unitPrice": "Цена за единицу",
     "totalQuantity": "Общее количество",
-    "purchaseLimit": "Лимит покупки"
+    "purchaseLimit": "Лимит покупки",
+    "confirmPurchase": "Подтвердить покупку",
+    "minutes": "мин",
+    "noShowoffsYet": "Пока нет отзывов",
+    "purchaseModalPlaceholder": "Введите количество",
+    "purchaseModalTitle": "Покупка билетов магазина баллов",
+    "recentShowoffs": "Недавние отзывы",
+    "won": "Выбран"
   },
   "fairness": {
     "title": "Почему этот алгоритм честный?",
@@ -356,7 +364,15 @@
     "prize": "Покупка за 1 юань в магазине баллов",
     "groupBuy": "Покупка по групповому заказу успешна",
     "lottery": "Покупка за полную стоимость в магазине баллов",
-    "oneYuanShopping": "Покупка за один юань"
+    "oneYuanShopping": "Покупка за один юань",
+    "amount": "Сумма",
+    "deposit": "Пополнение",
+    "numbers": "Номера",
+    "pickupCode": "Код получения",
+    "product": "Товар",
+    "searchPlaceholder": "Поиск по номеру заказа или названию товара...",
+    "type": "Тип",
+    "withdrawal": "Вывод средств"
   },
   "notification": {
     "notifications": "Центр уведомлений",
@@ -473,7 +489,8 @@
     "pendingPrizes": "Ожидают обработки",
     "totalValue": "Общая стоимость",
     "viewShowoffs": "Просмотреть выборы",
-    "viewOrders": "Просмотреть все заказы"
+    "viewOrders": "Просмотреть все заказы",
+    "notifications": "Мои сообщения"
   },
   "auth": {
     "welcome": "Добро пожаловать в TezBarakat",
@@ -561,7 +578,13 @@
     "preview": "Предпросмотр",
     "groupBuy": "Групповая покупка",
     "lottery": "Лотерея",
-    "pickupCode": "Код получения"
+    "pickupCode": "Код получения",
+    "beTheFirst": "Пока нет отзывов",
+    "lotteryRequiredError": "Пожалуйста, выберите выигранный приз",
+    "maxImagesError": "Можно загрузить не более 9 изображений",
+    "publishNow": "Опубликовать сейчас",
+    "unknownLottery": "Неизвестный магазин баллов",
+    "won": "Выбран"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",
@@ -629,7 +652,10 @@
     "noResellableTickets": "Нет билетов для перепродажи",
     "buyToResellHint": "Купите билеты, чтобы перепродать их здесь",
     "unknownItem": "Неизвестный товар",
-    "createFailed": "Не удалось опубликовать перепродажу"
+    "createFailed": "Не удалось опубликовать перепродажу",
+    "buyResaleItems": "Купить перепродаваемые товары",
+    "resaleRecords": "История перепродаж",
+    "viewResaleHistory": "Посмотреть историю перепродаж"
   },
   "bot": {
     "botManagement": "Управление ботом",
@@ -878,7 +904,9 @@
     "updatePickupPointError": "Ошибка обновления пункта выдачи",
     "pleaseSelectPickupPoint": "Пожалуйста, выберите пункт выдачи",
     "originalPickupPointDisabled": "Оригинальный пункт выдачи отключен, пожалуйста, выберите другой",
-    "original": "Оригинал"
+    "original": "Оригинал",
+    "fullPurchaseCount": "Полная оплата",
+    "tabFullPurchase": "Полная оплата"
   },
   "notifications": {
     "congratulations": "Поздравляем с выигрышем!",
@@ -1145,5 +1173,11 @@
     "disclaimer": "AI только для справки, не официальная позиция",
     "footer": "TezBarakat AI",
     "footerDesc": "Искусственный интеллект высокого уровня на службе таджикского народа"
+  },
+  "prize": {
+    "myPrizes": "Мои призы",
+    "prizeDetails": "Детали приза",
+    "prizeManagement": "Управление призами",
+    "viewPrizes": "Посмотреть записи о призах"
   }
 }
