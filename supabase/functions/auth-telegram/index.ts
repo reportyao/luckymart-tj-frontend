@@ -56,34 +56,37 @@ Deno.serve(async (req) => {
         const telegramId = userData.id.toString();
 
         // 获取用户头像
-        let avatarUrl = userData.photo_url || null;
-        if (!avatarUrl) {
-            try {
-                console.log(`[Avatar] Fetching avatar for user ${telegramId}...`);
-                const profilePhotosResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`);
-                if (profilePhotosResponse.ok) {
-                    const profileData = await profilePhotosResponse.json();
-                    if (profileData.ok && profileData.result.total_count > 0) {
-                        const photo = profileData.result.photos[0][0]; // 获取最小尺寸的头像
-                        const fileId = photo.file_id;
-                        
-                        // 获取文件路径
-                        const fileResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${fileId}`);
-                        if (fileResponse.ok) {
-                            const fileData = await fileResponse.json();
-                            if (fileData.ok) {
-                                avatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
-                                console.log(`[Avatar] Successfully fetched avatar: ${avatarUrl}`);
-                            }
+        let avatarUrl = null;
+        try {
+            console.log(`[Avatar] Fetching avatar for user ${telegramId} via Bot API...`);
+            const profilePhotosResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`);
+            if (profilePhotosResponse.ok) {
+                const profileData = await profilePhotosResponse.json();
+                if (profileData.ok && profileData.result.total_count > 0) {
+                    // 获取最大尺寸的头像 (数组的最后一个元素通常是最大尺寸)
+                    const photos = profileData.result.photos[0];
+                    const photo = photos[photos.length - 1]; 
+                    const fileId = photo.file_id;
+                    
+                    // 获取文件路径
+                    const fileResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${fileId}`);
+                    if (fileResponse.ok) {
+                        const fileData = await fileResponse.json();
+                        if (fileData.ok) {
+                            avatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
+                            console.log(`[Avatar] Successfully fetched high-res avatar: ${avatarUrl}`);
                         }
-                    } else {
-                        console.log(`[Avatar] User ${telegramId} has no profile photo`);
                     }
+                } else {
+                    console.log(`[Avatar] User ${telegramId} has no profile photo via Bot API, falling back to initData`);
+                    avatarUrl = userData.photo_url || null;
                 }
-            } catch (avatarError) {
-                console.error('[Avatar] Failed to fetch avatar:', avatarError);
-                // 头像获取失败不影响登录流程
+            } else {
+                avatarUrl = userData.photo_url || null;
             }
+        } catch (avatarError) {
+            console.error('[Avatar] Failed to fetch avatar via Bot API:', avatarError);
+            avatarUrl = userData.photo_url || null;
         }
 
         // 验证 initData 时效性（24小时内有效）
