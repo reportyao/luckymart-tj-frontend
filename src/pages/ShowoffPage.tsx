@@ -391,7 +391,7 @@ const ShowoffPage: React.FC = () => {
                       <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {getLocalizedText(showoff.lottery?.title_i18n, i18n.language) || showoff.lottery?.title || showoff.lottery_title || t('showoff.unknownLottery')}
+                          {showoff.title || getLocalizedText(showoff.lottery?.title_i18n, i18n.language) || showoff.lottery?.title || showoff.lottery_title || t('showoff.unknownLottery')}
                         </p>
                       </div>
                     </div>
