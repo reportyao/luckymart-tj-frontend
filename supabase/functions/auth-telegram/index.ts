@@ -28,6 +28,7 @@ Deno.serve(async (req) => {
         // 获取 Supabase 配置
         const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
         const supabaseUrl = Deno.env.get('SUPABASE_URL');
+        const telegramBotToken = Deno.env.get('TELEGRAM_BOT_TOKEN') || '8554465278:AAH7Pp0m9BoPECcmDC2ba10SQOz9sj6TVvg';
 
         if (!serviceRoleKey || !supabaseUrl) {
             throw new Error('Supabase configuration missing');
@@ -53,6 +54,37 @@ Deno.serve(async (req) => {
         // 解析用户数据
         const userData = JSON.parse(userDataRaw);
         const telegramId = userData.id.toString();
+
+        // 获取用户头像
+        let avatarUrl = userData.photo_url || null;
+        if (!avatarUrl) {
+            try {
+                console.log(`[Avatar] Fetching avatar for user ${telegramId}...`);
+                const profilePhotosResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getUserProfilePhotos?user_id=${telegramId}&limit=1`);
+                if (profilePhotosResponse.ok) {
+                    const profileData = await profilePhotosResponse.json();
+                    if (profileData.ok && profileData.result.total_count > 0) {
+                        const photo = profileData.result.photos[0][0]; // 获取最小尺寸的头像
+                        const fileId = photo.file_id;
+                        
+                        // 获取文件路径
+                        const fileResponse = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getFile?file_id=${fileId}`);
+                        if (fileResponse.ok) {
+                            const fileData = await fileResponse.json();
+                            if (fileData.ok) {
+                                avatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
+                                console.log(`[Avatar] Successfully fetched avatar: ${avatarUrl}`);
+                            }
+                        }
+                    } else {
+                        console.log(`[Avatar] User ${telegramId} has no profile photo`);
+                    }
+                }
+            } catch (avatarError) {
+                console.error('[Avatar] Failed to fetch avatar:', avatarError);
+                // 头像获取失败不影响登录流程
+            }
+        }
 
         // 验证 initData 时效性（24小时内有效）
         const authTimestamp = parseInt(authDate) * 1000;
@@ -133,7 +165,7 @@ Deno.serve(async (req) => {
                 first_name: userData.first_name || null,
                 last_name: userData.last_name || null,
                 language_code: userData.language_code || 'zh',
-                avatar_url: userData.photo_url || user.avatar_url || null,
+                avatar_url: avatarUrl || user.avatar_url || null,
                 last_login_at: new Date().toISOString(),
                 last_active_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
@@ -171,7 +203,7 @@ Deno.serve(async (req) => {
                 first_name: userData.first_name || null,
                 last_name: userData.last_name || null,
                 language_code: userData.language_code || 'zh',
-                avatar_url: userData.photo_url || null,
+                avatar_url: avatarUrl || null,
                 referral_code: referralCode,
                 referred_by_id: referredById,
                 referrer_id: referredById,
