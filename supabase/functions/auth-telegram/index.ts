@@ -84,8 +84,41 @@ Deno.serve(async (req) => {
                     if (fileResponse.ok) {
                         const fileData = await fileResponse.json();
                         if (fileData.ok) {
-                            avatarUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${fileData.result.file_path}`;
-                            console.log(`[Avatar] Successfully fetched high-res avatar: ${avatarUrl}`);
+                            const tgFilePath = fileData.result.file_path;
+                            const tgFileUrl = `https://api.telegram.org/file/bot${telegramBotToken}/${tgFilePath}`;
+                            
+                            // 终极方案：转存到 Supabase Storage
+                            try {
+                                console.log(`[Avatar] Downloading from Telegram: ${tgFileUrl}`);
+                                const imageResponse = await fetch(tgFileUrl);
+                                if (imageResponse.ok) {
+                                    const imageBlob = await imageResponse.blob();
+                                    const fileName = `${telegramId}_${Date.now()}.jpg`;
+                                    
+                                    console.log(`[Avatar] Uploading to Supabase Storage: avatars/${fileName}`);
+                                    const uploadResponse = await fetch(`${supabaseUrl}/storage/v1/object/avatars/${fileName}`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Authorization': `Bearer ${serviceRoleKey}`,
+                                            'apikey': serviceRoleKey,
+                                            'Content-Type': imageResponse.headers.get('Content-Type') || 'image/jpeg'
+                                        },
+                                        body: imageBlob
+                                    });
+                                    
+                                    if (uploadResponse.ok) {
+                                        avatarUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${fileName}`;
+                                        console.log(`[Avatar] Successfully stored in Supabase: ${avatarUrl}`);
+                                    } else {
+                                        const uploadError = await uploadResponse.text();
+                                        console.error(`[Avatar] Storage upload failed: ${uploadError}`);
+                                        avatarUrl = tgFileUrl; // Fallback to direct TG URL
+                                    }
+                                }
+                            } catch (storageError) {
+                                console.error(`[Avatar] Storage process failed: ${storageError.message}`);
+                                avatarUrl = tgFileUrl;
+                            }
                         }
                     }
                 }
