@@ -350,7 +350,8 @@ class ErrorMonitorService {
       };
 
       // 异步上报，不阻塞用户操作
-      await supabase.from('error_logs').insert([logData]);
+      // 使用 any 类型绕过类型检查，因为 error_logs 表是新增的
+      await (supabase as any).from('error_logs').insert([logData]);
       
       console.log('[ErrorMonitor] 错误已上报:', logData.error_message);
     } catch (e) {
