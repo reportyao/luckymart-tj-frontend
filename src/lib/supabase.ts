@@ -47,6 +47,7 @@ export type ShowoffWithDetails = Showoff & {
   lottery_title?: string;
   reward_coins?: number;
   image_urls?: string[]; // 晒单图片数组
+  title?: string; // 晒单标题
 };
 
 
