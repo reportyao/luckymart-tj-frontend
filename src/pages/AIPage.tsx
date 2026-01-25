@@ -67,9 +67,7 @@ export default function AIPage() {
   
   // 当 messages 变化时保存到 localStorage
   React.useEffect(() => {
-    if (messages.length > 0) {
-      saveChatHistory(messages);
-    }
+    saveChatHistory(messages);
   }, [messages]);
   
   // 如果有历史记录，默认显示聊天界面
@@ -236,10 +234,7 @@ export default function AIPage() {
             >
               <AIChat 
                 initialMessages={messages}
-                onMessagesChange={(newMessages) => {
-                  setMessages(newMessages);
-                  saveChatHistory(newMessages);
-                }}
+                onMessagesChange={setMessages}
                 onBack={() => setShowWelcome(true)} 
                 onQuotaUpdate={refetch}
               />

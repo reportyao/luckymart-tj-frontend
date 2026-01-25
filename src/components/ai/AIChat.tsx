@@ -53,11 +53,19 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
   const inputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // 使用 requestAnimationFrame 确保在 DOM 更新后再滚动
+    requestAnimationFrame(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    });
   };
 
+  // 只在新消息添加时自动滚动到底部，避免频繁滚动导致抖动
+  const prevMessagesLengthRef = useRef(messages.length);
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > prevMessagesLengthRef.current) {
+      scrollToBottom();
+    }
+    prevMessagesLengthRef.current = messages.length;
   }, [messages]);
 
   const handleSend = async () => {
