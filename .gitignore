@@ -32,3 +32,9 @@ dist-ssr
 .env.*.local
 .env.production
 .env.production.local
+
+# Ignore all .env files except .env.example
+.env.test
+.env.development
+.env.staging
+
