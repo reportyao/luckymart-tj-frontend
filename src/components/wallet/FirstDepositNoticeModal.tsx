@@ -138,7 +138,7 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-gray-50 p-6 rounded-b-2xl border-t border-gray-200">
+        <div className="sticky bottom-0 bg-gray-50 p-6 pb-8 rounded-b-2xl border-t border-gray-200">
           <button
             onClick={onConfirm}
             className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"

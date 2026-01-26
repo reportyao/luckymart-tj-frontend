@@ -173,7 +173,7 @@ const BannerCarousel: React.FC = () => {
             <img
               src={imageUrl}
               alt={banner.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-contain"
               style={{
                 opacity: imagesLoaded ? 1 : 0,
                 transition: 'opacity 300ms ease-in-out',
