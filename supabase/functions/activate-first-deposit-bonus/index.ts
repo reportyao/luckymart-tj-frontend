@@ -5,7 +5,7 @@ import { sendTelegramMessage } from '../_shared/sendTelegramMessage.ts'
 serve(async (req) => {
   // 允许 OPTIONS 请求
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' } })
+    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, prefer' } })
   }
 
   try {
