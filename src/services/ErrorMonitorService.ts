@@ -280,10 +280,22 @@ class ErrorMonitorService {
     // 监听用户点击操作
     document.addEventListener('click', (event) => {
       const target = event.target as HTMLElement;
+      
+      // 安全获取className字符串（处理SVG元素的SVGAnimatedString类型）
+      let classNameStr = '';
+      if (target.className) {
+        if (typeof target.className === 'string') {
+          classNameStr = target.className;
+        } else if (typeof target.className === 'object' && 'baseVal' in target.className) {
+          // SVG元素的className是SVGAnimatedString对象
+          classNameStr = (target.className as any).baseVal || '';
+        }
+      }
+      
       this.recordUserAction({
         type: 'click',
         target: target.tagName + (target.id ? `#${target.id}` : '') + 
-                (target.className ? `.${target.className.split(' ').join('.')}` : ''),
+                (classNameStr ? `.${classNameStr.split(' ').join('.')}` : ''),
         timestamp: Date.now(),
       });
     }, true);
