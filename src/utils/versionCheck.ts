@@ -3,7 +3,7 @@
  * 用于解决 Telegram 缓存旧版本的问题
  */
 
-const CURRENT_VERSION = '2.0.0'; // 每次部署时更新此版本号
+const CURRENT_VERSION = '2.1.0'; // 每次部署时更新此版本号
 const VERSION_KEY = 'app_version';
 const LAST_CHECK_KEY = 'last_version_check';
 const CHECK_INTERVAL = 5 * 60 * 1000; // 5分钟检查一次

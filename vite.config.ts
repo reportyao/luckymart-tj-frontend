@@ -6,12 +6,14 @@ import timestampPlugin from './vite-plugin-timestamp.js'
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_')
   const buildTime = new Date().toISOString()
+  const appVersion = '2.1.0' // 升级版本号以破坏Telegram缓存
 
   return {
     plugins: [react(), timestampPlugin()],
     
     define: {
       __BUILD_TIME__: JSON.stringify(buildTime),
+      __APP_VERSION__: JSON.stringify(appVersion),
     },
     
     base: '/',
