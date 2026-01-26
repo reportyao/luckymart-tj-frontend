@@ -200,12 +200,14 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
             .from('users')
             .select('*')
             .eq('id', parsedUser.id)
-            .single();
+            .maybeSingle();
 
           if (profileError) {
             console.error('Failed to fetch profile:', profileError);
-          } else {
+          } else if (profileData) {
             setProfile(profileData as UserProfile);
+          } else {
+            console.log('[Session] No profile found for user, will be created on first interaction');
           }
 
           await fetchWallets(parsedUser.id);
