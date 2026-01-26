@@ -11,6 +11,65 @@
  * 5. 创建会话
  */
 
+// 循环检查函数：检查设置邀请关系是否会形成循环
+async function wouldCreateCycle(
+  supabaseUrl: string,
+  serviceRoleKey: string,
+  userId: string,
+  referrerId: string
+): Promise<boolean> {  console.log(`[Cycle Check] Checking if setting ${userId} -> ${referrerId} would create a cycle`);
+  
+  let currentId = referrerId;
+  const visited = new Set<string>();
+  visited.add(userId);
+  
+  let depth = 0;
+  const maxDepth = 100;
+  
+  while (currentId && depth < maxDepth) {
+    depth++;
+    
+    if (currentId === userId) {
+      console.log(`[Cycle Check] ❌ Cycle detected at depth ${depth}`);
+      return true;
+    }
+    
+    if (visited.has(currentId)) {
+      console.log(`[Cycle Check] ⚠️  Existing cycle in chain, stopping`);
+      break;
+    }
+    
+    visited.add(currentId);
+    
+    const response = await fetch(
+      `${supabaseUrl}/rest/v1/users?id=eq.${currentId}&select=referred_by_id,referrer_id`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    if (!response.ok) break;
+    
+    const users = await response.json();
+    if (users.length === 0) break;
+    
+    const user = users[0];
+    currentId = user.referred_by_id || user.referrer_id || null;
+  }
+  
+  if (depth >= maxDepth) {
+    console.error(`[Cycle Check] ⚠️  Max depth reached`);
+    return true;
+  }
+  
+  console.log(`[Cycle Check] ✅ No cycle, depth: ${depth}`);
+  return false;
+}
+
 Deno.serve(async (req) => {
     const corsHeaders = {
         'Access-Control-Allow-Origin': '*',
@@ -232,9 +291,17 @@ Deno.serve(async (req) => {
             // 修复: 强化邀请关系不可变性 - 同时检查两个字段
             // 只有当用户从未被邀请过时，才设置邀请关系
             if (!user.referred_by_id && !user.referrer_id && referredById) {
-                updateData.referrer_id = referredById;
-                updateData.referred_by_id = referredById;
-                console.log(`[Auth] Setting referral relationship for existing user ${user.id}: referred by ${referredById}`);
+                // 检查是否会形成循环
+                const wouldCycle = await wouldCreateCycle(supabaseUrl, serviceRoleKey, user.id, referredById);
+                
+                if (wouldCycle) {
+                    console.error(`[Auth] ❌ Cannot set referral: would create circular reference`);
+                    // 不设置邀请关系，但允许用户登录
+                } else {
+                    updateData.referrer_id = referredById;
+                    updateData.referred_by_id = referredById;
+                    console.log(`[Auth] ✅ Setting referral relationship for existing user ${user.id}: referred by ${referredById}`);
+                }
             } else if ((user.referred_by_id || user.referrer_id) && referredById) {
                 console.log(`[Auth] User ${user.id} already has referrer, ignoring new referral code`);
             }
@@ -259,6 +326,36 @@ Deno.serve(async (req) => {
             user = updatedUsers[0];
         } else {
             // 创建新用户 (id 由数据库自动生成)
+            
+            // 验证邀请人是否存在
+            let finalReferredById = referredById;
+            
+            if (referredById) {
+                const referrerResponse = await fetch(
+                    `${supabaseUrl}/rest/v1/users?id=eq.${referredById}&select=id,created_at`,
+                    {
+                        headers: {
+                            'Authorization': `Bearer ${serviceRoleKey}`,
+                            'apikey': serviceRoleKey,
+                            'Content-Type': 'application/json'
+                        }
+                    }
+                );
+                
+                if (referrerResponse.ok) {
+                    const referrers = await referrerResponse.json();
+                    if (referrers.length === 0) {
+                        console.error(`[Auth] ❌ Referrer ${referredById} not found, ignoring referral`);
+                        finalReferredById = null;
+                    } else {
+                        console.log(`[Auth] ✅ Referrer ${referredById} exists, valid referral`);
+                    }
+                } else {
+                    console.error(`[Auth] Failed to verify referrer, ignoring referral`);
+                    finalReferredById = null;
+                }
+            }
+            
             const newUserData = {
                 telegram_id: telegramId,
                 telegram_username: userData.username || null,
@@ -267,8 +364,8 @@ Deno.serve(async (req) => {
                 language_code: userData.language_code || 'zh',
                 avatar_url: avatarUrl || null,
                 referral_code: referralCode,
-                referred_by_id: referredById,
-                referrer_id: referredById,
+                referred_by_id: finalReferredById,
+                referrer_id: finalReferredById,
                 status: 'ACTIVE',
                 is_verified: false,
                 kyc_level: 'NONE',
