@@ -12,8 +12,8 @@ interface ReferralNode {
   first_name: string
   last_name: string
   telegram_id: string
-  invite_code: string
-  referred_by_id: string | null
+  referral_code: string  // 统一使用 referral_code
+  referred_by_id: string | null  // 统一使用 referred_by_id
   created_at: string
   children: ReferralNode[]
   stats: {
@@ -70,11 +70,11 @@ serve(async (req) => {
         throw new Error('User not found')
       }
 
-      // 获取直接邀请的用户
+      // 获取直接邀请的用户（兼容 referred_by_id 和 referrer_id 两个字段）
       const { data: children } = await supabaseClient
         .from('users')
         .select('*')
-        .eq('referred_by_id', userId)
+        .or(`referred_by_id.eq.${userId},referrer_id.eq.${userId}`)
 
       // 如果还没到3层，继续递归
       const childNodes: ReferralNode[] = []
@@ -85,28 +85,37 @@ serve(async (req) => {
         }
       }
 
-      // 修复: 基于递归结果统计人脉数量
+      // 修复: 正确统计三级人脉
+      // Level 1: 直接子节点数量
+      const level1Count = childNodes.length
+      
+      // Level 2: 所有子节点的子节点数量总和
+      let level2Count = 0
+      childNodes.forEach(child => {
+        level2Count += child.children.length
+      })
+      
+      // Level 3: 所有孙节点的子节点数量总和
+      let level3Count = 0
+      childNodes.forEach(child => {
+        child.children.forEach(grandchild => {
+          level3Count += grandchild.children.length
+        })
+      })
+
       const stats = {
-        level1_count: childNodes.length, // 一级人脉数量
-        level2_count: 0,
-        level3_count: 0,
+        level1_count: level1Count,
+        level2_count: level2Count,
+        level3_count: level3Count,
         total_commission: 0
       }
-
-      // 统计二级和三级人脉
-      childNodes.forEach(child => {
-        stats.level2_count += child.children.length; // 二级人脉
-        
-        child.children.forEach(grandchild => {
-          stats.level3_count += grandchild.children.length; // 三级人脉
-        });
-      });
 
       // 获取返利统计（佣金总额）
       const { data: commissions } = await supabaseClient
         .from('commissions')
         .select('amount')
-        .eq('referred_by_id', userId)
+        .eq('user_id', userId)  // 修复: 使用 user_id 而不是 referred_by_id
+        .eq('status', 'settled')  // 只统计已结算的佣金
 
       if (commissions) {
         stats.total_commission = commissions.reduce((sum: number, c: any) => sum + parseFloat(c.amount), 0)
@@ -118,8 +127,8 @@ serve(async (req) => {
         first_name: currentUser.first_name,
         last_name: currentUser.last_name,
         telegram_id: currentUser.telegram_id,
-        invite_code: currentUser.invite_code,
-        referred_by_id: currentUser.referred_by_id,
+        referral_code: currentUser.referral_code || currentUser.invite_code || '',  // 统一使用 referral_code，兼容 invite_code
+        referred_by_id: currentUser.referred_by_id || currentUser.referrer_id,  // 统一使用 referred_by_id，兼容 referrer_id
         created_at: currentUser.created_at,
         children: childNodes,
         stats
@@ -134,6 +143,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
+    console.error('[GetReferralTree] Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

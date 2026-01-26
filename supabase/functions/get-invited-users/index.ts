@@ -104,8 +104,9 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
 
-    // 2. 获取一级好友 (referred_by_id = userId)
-    const level1Response = await fetch(
+    // 修复: 兼容 referred_by_id 和 referrer_id 两个字段
+    // 2. 获取一级好友 (referred_by_id = userId OR referrer_id = userId)
+    const level1ByReferred = await fetch(
       `${supabaseUrl}/rest/v1/users?referred_by_id=eq.${userId}&select=id,telegram_username,first_name,last_name,avatar_url,created_at`,
       {
         headers: {
@@ -116,17 +117,36 @@ serve(async (req) => {
       }
     );
 
-    if (!level1Response.ok) {
+    const level1ByReferrer = await fetch(
+      `${supabaseUrl}/rest/v1/users?referrer_id=eq.${userId}&select=id,telegram_username,first_name,last_name,avatar_url,created_at`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+
+    if (!level1ByReferred.ok) {
       throw new Error('获取一级好友失败');
     }
 
-    const level1Users = await level1Response.json();
+    const level1ByReferredData = await level1ByReferred.json();
+    const level1ByReferrerData = level1ByReferrer.ok ? await level1ByReferrer.json() : [];
+    
+    // 合并并去重
+    const level1Map = new Map();
+    [...level1ByReferredData, ...level1ByReferrerData].forEach(u => {
+      level1Map.set(u.id, u);
+    });
+    const level1Users = Array.from(level1Map.values());
 
-    // 3. 获取二级好友 (referred_by_id = level1Users.id)
+    // 3. 获取二级好友
     const level1Ids = level1Users?.map((u: any) => u.id) || []
     let level2Users: any[] = []
     if (level1Ids.length > 0) {
-      const level2Response = await fetch(
+      const level2ByReferred = await fetch(
         `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level1Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
         {
           headers: {
@@ -137,16 +157,33 @@ serve(async (req) => {
         }
       );
 
-      if (level2Response.ok) {
-        level2Users = await level2Response.json();
-      }
+      const level2ByReferrer = await fetch(
+        `${supabaseUrl}/rest/v1/users?referrer_id=in.(${level1Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const level2ByReferredData = level2ByReferred.ok ? await level2ByReferred.json() : [];
+      const level2ByReferrerData = level2ByReferrer.ok ? await level2ByReferrer.json() : [];
+      
+      // 合并并去重
+      const level2Map = new Map();
+      [...level2ByReferredData, ...level2ByReferrerData].forEach(u => {
+        level2Map.set(u.id, u);
+      });
+      level2Users = Array.from(level2Map.values());
     }
 
-    // 4. 获取三级好友 (referred_by_id = level2Users.id)
+    // 4. 获取三级好友
     const level2Ids = level2Users.map((u: any) => u.id)
     let level3Users: any[] = []
     if (level2Ids.length > 0) {
-      const level3Response = await fetch(
+      const level3ByReferred = await fetch(
         `${supabaseUrl}/rest/v1/users?referred_by_id=in.(${level2Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
         {
           headers: {
@@ -157,9 +194,26 @@ serve(async (req) => {
         }
       );
 
-      if (level3Response.ok) {
-        level3Users = await level3Response.json();
-      }
+      const level3ByReferrer = await fetch(
+        `${supabaseUrl}/rest/v1/users?referrer_id=in.(${level2Ids.join(',')})&select=id,telegram_username,first_name,last_name,avatar_url,created_at,referred_by_id`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const level3ByReferredData = level3ByReferred.ok ? await level3ByReferred.json() : [];
+      const level3ByReferrerData = level3ByReferrer.ok ? await level3ByReferrer.json() : [];
+      
+      // 合并并去重
+      const level3Map = new Map();
+      [...level3ByReferredData, ...level3ByReferrerData].forEach(u => {
+        level3Map.set(u.id, u);
+      });
+      level3Users = Array.from(level3Map.values());
     }
 
     // 5. 整合数据并计算统计

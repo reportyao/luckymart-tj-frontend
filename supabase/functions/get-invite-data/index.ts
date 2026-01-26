@@ -29,10 +29,11 @@ serve(async (req) => {
     console.log('[GetInviteData] Fetching invite data for user:', user_id)
 
     // 1. 获取一级邀请用户（直接邀请）
+    // 修复: 兼容 referred_by_id 和 referrer_id 两个字段
     const { data: level1Users, error: level1Error } = await supabase
       .from('users')
       .select('id, first_name, telegram_username, avatar_url, created_at')
-      .eq('referred_by_id', user_id)
+      .or(`referred_by_id.eq.${user_id},referrer_id.eq.${user_id}`)
 
     if (level1Error) {
       console.error('[GetInviteData] Level 1 query error:', level1Error)
@@ -62,10 +63,27 @@ serve(async (req) => {
       // 2. 获取二级邀请用户（一级用户邀请的用户）
       const level1Ids = level1Users.map(u => u.id)
       
-      const { data: level2Users, error: level2Error } = await supabase
+      // 修复: 需要分别查询两个字段然后合并去重
+      const { data: level2ByReferred } = await supabase
         .from('users')
         .select('id, first_name, telegram_username, avatar_url, created_at')
         .in('referred_by_id', level1Ids)
+      
+      const { data: level2ByReferrer } = await supabase
+        .from('users')
+        .select('id, first_name, telegram_username, avatar_url, created_at')
+        .in('referrer_id', level1Ids)
+      
+      // 合并并去重
+      const level2Map = new Map()
+      if (level2ByReferred) {
+        level2ByReferred.forEach(u => level2Map.set(u.id, u))
+      }
+      if (level2ByReferrer) {
+        level2ByReferrer.forEach(u => level2Map.set(u.id, u))
+      }
+      const level2Users = Array.from(level2Map.values())
+      const level2Error = null
 
       if (level2Error) {
         console.error('[GetInviteData] Level 2 query error:', level2Error)
@@ -90,10 +108,27 @@ serve(async (req) => {
           // 3. 获取三级邀请用户（二级用户邀请的用户）
           const level2Ids = level2Users.map(u => u.id)
           
-          const { data: level3Users, error: level3Error } = await supabase
+          // 修复: 需要分别查询两个字段然后合并去重
+          const { data: level3ByReferred } = await supabase
             .from('users')
             .select('id, first_name, telegram_username, avatar_url, created_at')
             .in('referred_by_id', level2Ids)
+          
+          const { data: level3ByReferrer } = await supabase
+            .from('users')
+            .select('id, first_name, telegram_username, avatar_url, created_at')
+            .in('referrer_id', level2Ids)
+          
+          // 合并并去重
+          const level3Map = new Map()
+          if (level3ByReferred) {
+            level3ByReferred.forEach(u => level3Map.set(u.id, u))
+          }
+          if (level3ByReferrer) {
+            level3ByReferrer.forEach(u => level3Map.set(u.id, u))
+          }
+          const level3Users = Array.from(level3Map.values())
+          const level3Error = null
 
           if (level3Error) {
             console.error('[GetInviteData] Level 3 query error:', level3Error)

@@ -94,21 +94,25 @@ serve(async (req) => {
     }
 
     // 2. 获取购买用户的推荐关系
+    // 修复: 同时查询 referred_by_id 和 referrer_id 以兼容旧数据
     const { data: userData, error: userError } = await supabaseClient
       .from('users')
-      .select('referred_by_id')
+      .select('referred_by_id, referrer_id')
       .eq('id', user_id)
       .single()
 
     if (userError) throw userError
 
-    if (!userData?.referred_by_id) {
+    // 优先使用 referred_by_id，如果为空则使用 referrer_id
+    const referrerId = userData?.referred_by_id || userData?.referrer_id
+    
+    if (!referrerId) {
       return new Response(JSON.stringify({ message: 'No referrer' }), { status: 200 })
     }
 
     // 3. 计算三级返佣
     const commissions = []
-    let currentUserId = userData.referred_by_id
+    let currentUserId = referrerId
     let level = 1
 
     // 遍历每一级
@@ -126,13 +130,14 @@ serve(async (req) => {
       if (commissionAmount < minPayoutAmount) {
         console.log(`Commission ${commissionAmount} below minimum ${minPayoutAmount} for level ${level}`)
         // 继续查找下一级
+        // 修复: 同时查询两个字段
         const { data: nextUser } = await supabaseClient
           .from('users')
-          .select('referred_by_id')
+          .select('referred_by_id, referrer_id')
           .eq('id', currentUserId)
           .single()
         
-        currentUserId = nextUser?.referred_by_id
+        currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id
         level++
         continue
       }
@@ -247,9 +252,10 @@ serve(async (req) => {
       }
 
       // 查找下一级
+      // 修复: 同时查询两个字段
       const { data: nextUser, error: nextUserError } = await supabaseClient
         .from('users')
-        .select('referred_by_id')
+        .select('referred_by_id, referrer_id')
         .eq('id', currentUserId)
         .single()
 
@@ -258,7 +264,7 @@ serve(async (req) => {
         break
       }
 
-      currentUserId = nextUser?.referred_by_id
+      currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id
       level++
     }
 

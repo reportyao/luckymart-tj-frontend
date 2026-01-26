@@ -229,10 +229,14 @@ Deno.serve(async (req) => {
                 updated_at: new Date().toISOString()
             };
 
-            // 如果用户还没有推荐人，且有有效的推荐码，则设置推荐关系
-            if (!user.referred_by_id && referredById) {
+            // 修复: 强化邀请关系不可变性 - 同时检查两个字段
+            // 只有当用户从未被邀请过时，才设置邀请关系
+            if (!user.referred_by_id && !user.referrer_id && referredById) {
                 updateData.referrer_id = referredById;
                 updateData.referred_by_id = referredById;
+                console.log(`[Auth] Setting referral relationship for existing user ${user.id}: referred by ${referredById}`);
+            } else if ((user.referred_by_id || user.referrer_id) && referredById) {
+                console.log(`[Auth] User ${user.id} already has referrer, ignoring new referral code`);
             }
 
             const updateResponse = await fetch(`${supabaseUrl}/rest/v1/users?id=eq.${user.id}`, {
