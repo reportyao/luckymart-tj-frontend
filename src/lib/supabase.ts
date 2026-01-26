@@ -6,8 +6,15 @@ export type Lottery = Tables<'lotteries'>;
 
 
 // 检查环境变量，优先使用 NEXT_PUBLIC_ (Next.js 风格) 或 VITE_ (Vite 风格)
-const supabaseUrl = import.meta.env.NEXT_PUBLIC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+let supabaseUrl = import.meta.env.NEXT_PUBLIC_SUPABASE_URL || import.meta.env.VITE_SUPABASE_URL;
+let supabaseAnonKey = import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+// 兜底方案：如果环境变量加载失败，使用硬编码的生产环境配置
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.warn('[Supabase] Environment variables not found, using fallback production config');
+  supabaseUrl = 'https://zvouvjkrexowtujnqtna.supabase.co';
+  supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp2b3V2amtyZXhvd3R1am5xdG5hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4NzE3MjgsImV4cCI6MTc2NDQwNzcyOH0.fb0nWhyAMdmzKBIzNqV0gXoANT7rPMmwYCwiszd7jM';
+}
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase URL or Anon Key. Please check your .env.local file.');
