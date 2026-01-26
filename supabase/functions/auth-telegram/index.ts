@@ -92,31 +92,47 @@ Deno.serve(async (req) => {
                                 console.log(`[Avatar] Downloading from Telegram: ${tgFileUrl}`);
                                 const imageResponse = await fetch(tgFileUrl);
                                 if (imageResponse.ok) {
-                                    const imageBlob = await imageResponse.blob();
+                                    const imageArrayBuffer = await imageResponse.arrayBuffer();
                                     const fileName = `${telegramId}_${Date.now()}.jpg`;
                                     
                                     console.log(`[Avatar] Uploading to Supabase Storage: avatars/${fileName}`);
+                                    console.log(`[Avatar] File size: ${imageArrayBuffer.byteLength} bytes`);
+                                    
+                                    // 使用正确的 Supabase Storage API
                                     const uploadResponse = await fetch(`${supabaseUrl}/storage/v1/object/avatars/${fileName}`, {
                                         method: 'POST',
                                         headers: {
                                             'Authorization': `Bearer ${serviceRoleKey}`,
                                             'apikey': serviceRoleKey,
-                                            'Content-Type': imageResponse.headers.get('Content-Type') || 'image/jpeg'
+                                            'Content-Type': 'image/jpeg',
+                                            'x-upsert': 'true'
                                         },
-                                        body: imageBlob
+                                        body: imageArrayBuffer
                                     });
                                     
-                                    if (uploadResponse.ok) {
+                                    const uploadResult = await uploadResponse.text();
+                                    console.log(`[Avatar] Upload response status: ${uploadResponse.status}`);
+                                    console.log(`[Avatar] Upload response body: ${uploadResult}`);
+                                    
+                                    if (uploadResponse.ok || uploadResponse.status === 200) {
                                         avatarUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${fileName}`;
                                         console.log(`[Avatar] Successfully stored in Supabase: ${avatarUrl}`);
+                                        
+                                        // 验证文件是否真的可访问
+                                        const verifyResponse = await fetch(avatarUrl, { method: 'HEAD' });
+                                        if (!verifyResponse.ok) {
+                                            console.error(`[Avatar] File uploaded but not accessible, status: ${verifyResponse.status}`);
+                                            avatarUrl = tgFileUrl; // Fallback
+                                        } else {
+                                            console.log(`[Avatar] File verified accessible`);
+                                        }
                                     } else {
-                                        const uploadError = await uploadResponse.text();
-                                        console.error(`[Avatar] Storage upload failed: ${uploadError}`);
+                                        console.error(`[Avatar] Storage upload failed: ${uploadResult}`);
                                         avatarUrl = tgFileUrl; // Fallback to direct TG URL
                                     }
                                 }
                             } catch (storageError) {
-                                console.error(`[Avatar] Storage process failed: ${storageError.message}`);
+                                console.error(`[Avatar] Storage process failed:`, storageError);
                                 avatarUrl = tgFileUrl;
                             }
                         }
