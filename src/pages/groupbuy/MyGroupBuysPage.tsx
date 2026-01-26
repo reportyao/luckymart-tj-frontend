@@ -243,7 +243,7 @@ export default function MyGroupBuysPage() {
                         {order.session.current_participants}/{order.session.group_size}
                       </span>
                     </div>
-                    <div className="text-purple-600 font-bold">₽{order.amount}</div>
+                    <div className="text-purple-600 font-bold">TJS {order.amount}</div>
                   </div>
 
                   {/* Refund Info */}

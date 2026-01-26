@@ -344,7 +344,7 @@ export default function GroupBuyResultPage() {
                 <div className="flex items-center justify-between text-sm text-gray-600">
                   <span>{t('groupBuy.pricePerPerson')}</span>
                   <span className="text-gray-500 font-bold">
-                    ₽{result.product.price_per_person}
+                    TJS {result.product.price_per_person}
                   </span>
                 </div>
               </div>
@@ -598,7 +598,7 @@ export default function GroupBuyResultPage() {
               <div className="flex items-center justify-between text-sm text-gray-600">
                 <span>{t('groupBuy.pricePerPerson')}</span>
                 <span className="text-purple-600 font-bold">
-                  ₽{result.product.price_per_person}
+                  TJS {result.product.price_per_person}
                 </span>
               </div>
             </div>

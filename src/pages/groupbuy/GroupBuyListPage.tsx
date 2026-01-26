@@ -250,10 +250,10 @@ export default function GroupBuyListPage() {
                 {/* Price Info */}
                 <div className="flex items-end gap-2 mb-3">
                   <div className="text-purple-600 font-bold text-2xl">
-                    ₽{product.price_per_person}
+                    TJS {product.price_per_person}
                   </div>
                   <div className="text-gray-400 line-through text-sm mb-1">
-                    ₽{product.original_price}
+                    TJS {product.original_price}
                   </div>
                 </div>
 
