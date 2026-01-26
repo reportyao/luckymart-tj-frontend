@@ -143,6 +143,31 @@ serve(async (req) => {
       }
 
       /**
+       * 防重复检查：检查该订单是否已经给该用户发放过该级别的佣金
+       */
+      const { data: existingCommission } = await supabaseClient
+        .from('commissions')
+        .select('id')
+        .eq('order_id', order_id)
+        .eq('user_id', currentUserId)
+        .eq('level', level)
+        .maybeSingle()
+
+      if (existingCommission) {
+        console.log(`Commission already exists for order ${order_id}, user ${currentUserId}, level ${level}. Skipping.`)
+        // 继续查找下一级
+        const { data: nextUser } = await supabaseClient
+          .from('users')
+          .select('referred_by_id, referrer_id')
+          .eq('id', currentUserId)
+          .single()
+        
+        currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id
+        level++
+        continue
+      }
+
+      /**
        * 插入佣金记录
        * 
        * commissions 表字段说明：

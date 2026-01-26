@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
     }
 
     // 1. 检查用户是否有邀请人
+    // 修复: 同时查询 referred_by_id 和 referrer_id 以兼容旧数据
     const userResponse = await fetch(
-      `${supabaseUrl}/rest/v1/users?id=eq.${user_id}&select=id,referred_by_id`,
+      `${supabaseUrl}/rest/v1/users?id=eq.${user_id}&select=id,referred_by_id,referrer_id`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -68,7 +69,8 @@ Deno.serve(async (req) => {
     }
 
     const user = userData[0];
-    const inviterId = user.referred_by_id;
+    // 优先使用 referred_by_id，如果为空则使用 referrer_id
+    const inviterId = user.referred_by_id || user.referrer_id;
 
     // 如果没有邀请人，直接返回
     if (!inviterId) {

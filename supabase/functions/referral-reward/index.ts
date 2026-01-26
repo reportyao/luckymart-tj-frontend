@@ -27,13 +27,17 @@ serve(async (req) => {
     const { user_id, transaction_type, amount, currency }: ReferralRewardRequest = await req.json()
 
     // 获取用户信息
+    // 修复: 同时查询 referred_by_id 和 referrer_id 以兼容旧数据
     const { data: user, error: userError } = await supabaseClient
       .from('users')
-      .select('referred_by_id')
+      .select('referred_by_id, referrer_id')
       .eq('id', user_id)
       .single()
 
-    if (userError || !user || !user.referred_by_id) {
+    // 优先使用 referred_by_id，如果为空则使用 referrer_id
+    const referrerId = user?.referred_by_id || user?.referrer_id
+    
+    if (userError || !user || !referrerId) {
       return new Response(
         JSON.stringify({ success: true, message: 'No referrer found' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -70,7 +74,7 @@ serve(async (req) => {
     }> = []
 
     // 递归查找上级推荐人(最多3级)
-    let currentReferrerId = user.referred_by_id
+    let currentReferrerId = referrerId
     let level = 1
 
     while (currentReferrerId && level <= 3) {
@@ -83,30 +87,58 @@ serve(async (req) => {
       })
 
       // 查找下一级推荐人
+      // 修复: 同时查询两个字段
       const { data: referrer } = await supabaseClient
         .from('users')
-        .select('referred_by_id')
+        .select('referred_by_id, referrer_id')
         .eq('id', currentReferrerId)
         .single()
 
-      currentReferrerId = referrer?.referred_by_id
+      currentReferrerId = referrer?.referred_by_id || referrer?.referrer_id
       level++
     }
 
     // 发放奖励
     const results = []
     for (const reward of rewards) {
+      /**
+       * 防重复检查：检查是否已经给该用户发放过该类型的奖励
+       * 使用 from_user_id + user_id + transaction_type + level 作为唯一标识
+       * 同时检查旧字段名以兼容历史数据
+       */
+      const { data: existingReward } = await supabaseClient
+        .from('commissions')
+        .select('id')
+        .or(`and(from_user_id.eq.${user_id},user_id.eq.${reward.referrer_id}),and(referee_id.eq.${user_id},referrer_id.eq.${reward.referrer_id})`)
+        .eq('transaction_type', transaction_type)
+        .eq('level', reward.level)
+        .maybeSingle()
+
+      if (existingReward) {
+        console.log(`Reward already exists for user ${user_id}, referrer ${reward.referrer_id}, type ${transaction_type}, level ${reward.level}. Skipping.`)
+        continue
+      }
+
       // 1. 创建Commission记录
+      // 统一字段名，与 handle-purchase-commission 保持一致
       const { data: commission, error: commissionError } = await supabaseClient
         .from('commissions')
         .insert({
+          // 主字段
+          user_id: reward.referrer_id,      // 获得佣金的用户
+          from_user_id: user_id,            // 产生佣金的用户
+          // 兼容字段
           referrer_id: reward.referrer_id,
           referee_id: user_id,
+          source_user_id: user_id,
+          beneficiary_id: reward.referrer_id,
+          // 业务字段
           level: reward.level,
           amount: reward.amount,
           currency: currency,
           transaction_type: transaction_type,
-          status: 'COMPLETED'
+          type: 'REFERRAL_REWARD',          // 区分与 REFERRAL_COMMISSION
+          status: 'settled'                 // 统一使用 settled
         })
         .select()
         .single()

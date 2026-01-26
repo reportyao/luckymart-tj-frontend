@@ -47,10 +47,19 @@ serve(async (req) => {
         }
 
         // 开始事务：更新钱包余额
+        // 修复: 优先使用 user_id，如果为空则使用 referrer_id（兼容旧数据）
+        const beneficiaryId = commission.user_id || commission.referrer_id || commission.beneficiary_id
+        
+        if (!beneficiaryId) {
+          fail_count++
+          errors.push({ commission_id, error: 'No beneficiary ID found in commission record' })
+          continue
+        }
+        
         const { data: wallet, error: walletError } = await supabaseClient
           .from('wallets')
           .select('balance')
-          .eq('user_id', commission.referrer_id)
+          .eq('user_id', beneficiaryId)
           .single()
 
         if (walletError || !wallet) {
@@ -68,7 +77,7 @@ serve(async (req) => {
             balance: newBalance,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', commission.referrer_id)
+          .eq('user_id', beneficiaryId)
 
         if (updateWalletError) {
           fail_count++
@@ -80,7 +89,7 @@ serve(async (req) => {
         const { error: transactionError } = await supabaseClient
           .from('wallet_transactions')
           .insert({
-            user_id: commission.referrer_id,
+            user_id: beneficiaryId,
             type: 'commission',
             amount: commission.amount,
             balance_after: newBalance,
@@ -93,7 +102,7 @@ serve(async (req) => {
           await supabaseClient
             .from('wallets')
             .update({ balance: wallet.balance })
-            .eq('user_id', commission.referrer_id)
+            .eq('user_id', beneficiaryId)
 
           fail_count++
           errors.push({ commission_id, error: transactionError.message })

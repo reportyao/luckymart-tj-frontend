@@ -75,8 +75,9 @@ Deno.serve(async (req) => {
     const rewards = await rewardsResponse.json();
 
     // 3. 获取用户邀请记录（被邀请人信息）
+    // 修复: 同时查询 referred_by_id 和 referrer_id 以兼容旧数据
     const inviteRecordsResponse = await fetch(
-      `${supabaseUrl}/rest/v1/users?referred_by_id=eq.${user_id}&select=id,telegram_username,first_name,created_at&order=created_at.desc&limit=20`,
+      `${supabaseUrl}/rest/v1/users?or=(referred_by_id.eq.${user_id},referrer_id.eq.${user_id})&select=id,telegram_username,first_name,created_at&order=created_at.desc&limit=20`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -84,7 +85,15 @@ Deno.serve(async (req) => {
         }
       }
     );
-    const invitedUsers = await inviteRecordsResponse.json();
+    const invitedUsersRaw = await inviteRecordsResponse.json();
+    
+    // 去重（以防两个字段都有值时重复返回）
+    const seenIds = new Set<string>();
+    const invitedUsers = invitedUsersRaw.filter((u: any) => {
+      if (seenIds.has(u.id)) return false;
+      seenIds.add(u.id);
+      return true;
+    });
 
     // 4. 获取邀请奖励记录
     const inviteRewardsResponse = await fetch(

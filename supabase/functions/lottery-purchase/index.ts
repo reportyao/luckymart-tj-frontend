@@ -494,7 +494,9 @@ Deno.serve(async (req) => {
     }
 
     // 处理推荐佣金
-    if (user.referred_by_id) {
+    // 修复: 同时检查 referred_by_id 和 referrer_id 以兼容旧数据
+    const hasReferrer = user.referred_by_id || user.referrer_id;
+    if (hasReferrer) {
       try {
         const commissionResponse = await fetch(`${supabaseUrl}/functions/v1/handle-purchase-commission`, {
           method: 'POST',
