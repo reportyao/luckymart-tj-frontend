@@ -179,13 +179,13 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
               const sessions = await response.json();
               if (!sessions || sessions.length === 0) {
                 console.log('[Session] Session token invalid on server, clearing...');
-                logout();
+                logout(false); // 不显示提示，静默清理
               } else {
                 const sessionData = sessions[0];
                 const expiresAt = new Date(sessionData.expires_at);
                 if (expiresAt < new Date()) {
                   console.log('[Session] Session expired on server, clearing...');
-                  logout();
+                  logout(false); // 不显示提示，静默清理
                 }
               }
             }
@@ -325,7 +325,7 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     }
   }, [user, fetchWallets]);
 
-  const logout = useCallback(async () => {
+  const logout = useCallback(async (showToast = true) => {
     await authService.signOut();
     setUser(null);
     setProfile(null);
@@ -333,7 +333,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
     setSessionToken(null);
     localStorage.removeItem('custom_session_token');
     localStorage.removeItem('custom_user');
-    toast.success(t('auth.loggedOut'));
+    if (showToast) {
+      toast.success(t('auth.loggedOut'));
+    }
   }, [authService, t]);
 
   const value: UserContextType = {

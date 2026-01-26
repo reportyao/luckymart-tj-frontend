@@ -1,0 +1,5 @@
+{
+  "version": "2.0.0",
+  "buildTime": "2026-01-26T03:00:00.000Z",
+  "description": "Fixed className.split error and Telegram cache issues"
+}
