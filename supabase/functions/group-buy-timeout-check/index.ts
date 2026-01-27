@@ -73,6 +73,7 @@ Deno.serve(async (req) => {
 
     let processedCount = 0;
     const refundResults: any[] = [];
+    const skippedResults: any[] = [];
 
     // 2. 处理每个超时的会话
     for (const session of timeoutSessions) {
@@ -99,11 +100,41 @@ Deno.serve(async (req) => {
 
         // 【关键修复】超时退款：退回到TJS余额钱包（原路退回）
         for (const order of orders) {
+          // ✅ 【修复1】检查订单状态，防止重复退款
+          if (order.status === 'TIMEOUT_REFUNDED') {
+            console.log(`Order ${order.id} already refunded, skip`);
+            skippedResults.push({
+              order_id: order.id,
+              user_id: order.user_id,
+              reason: 'Already refunded (status check)'
+            });
+            continue;
+          }
+
           // 解析用户UUID
           const userUUID = await resolveUserIdToUUID(supabase, order.user_id);
           
           if (!userUUID) {
             console.error(`Failed to resolve user UUID for user_id: ${order.user_id}`);
+            continue;
+          }
+
+          // ✅ 【修复2】检查是否已存在退款记录
+          const { data: existingRefund } = await supabase
+            .from('wallet_transactions')
+            .select('id')
+            .eq('reference_id', order.id)
+            .in('type', ['GROUP_BUY_REFUND_TO_BALANCE', 'GROUP_BUY_REFUND'])
+            .maybeSingle();
+
+          if (existingRefund) {
+            console.log(`Refund transaction already exists for order ${order.id}, skip`);
+            skippedResults.push({
+              order_id: order.id,
+              user_id: userUUID,
+              reason: 'Refund transaction already exists',
+              existing_transaction_id: existingRefund.id
+            });
             continue;
           }
 
@@ -115,107 +146,150 @@ Deno.serve(async (req) => {
             .eq('type', 'TJS')
             .single();
 
-          if (wallet) {
-            const refundAmount = Number(order.amount);
-            const newBalance = Number(wallet.balance) + refundAmount;
+          if (!wallet) {
+            console.error(`TJS wallet not found for user ${userUUID}`);
+            continue;
+          }
 
-            // 更新钱包余额
+          const refundAmount = Number(order.amount);
+          const newBalance = Number(wallet.balance) + refundAmount;
+
+          // ✅ 【修复3】使用乐观锁更新钱包余额，带重试机制
+          let updateSuccess = false;
+          let retries = 3;
+          let currentWallet = wallet;
+
+          while (retries > 0 && !updateSuccess) {
             const { error: updateError } = await supabase
               .from('wallets')
               .update({ 
-                balance: newBalance,
+                balance: Number(currentWallet.balance) + refundAmount,
                 updated_at: new Date().toISOString(),
-                version: wallet.version + 1
+                version: currentWallet.version + 1
               })
-              .eq('id', wallet.id)
-              .eq('version', wallet.version);
+              .eq('id', currentWallet.id)
+              .eq('version', currentWallet.version);
 
-            if (updateError) {
-              console.error(`Failed to update wallet for user ${userUUID}:`, updateError);
-              continue;
+            if (!updateError) {
+              updateSuccess = true;
+              break;
             }
 
-            // 创建钱包交易记录
-            // 移除手动指定的 ID，让数据库自动生成 UUID
-            await supabase.from('wallet_transactions').insert({
-              wallet_id: wallet.id,
-              type: 'GROUP_BUY_REFUND_TO_BALANCE',
-              amount: refundAmount,
-              balance_before: Number(wallet.balance),
-              balance_after: newBalance,
-              status: 'COMPLETED',
-              description: `拼团未成功退款（退回余额）- ${session.session_code}`,
-              reference_id: order.id,
-              processed_at: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            });
+            console.warn(`Failed to update wallet (attempt ${4 - retries}/3):`, updateError);
+            retries--;
 
-            // 更新订单状态
-            await supabase
-              .from('group_buy_orders')
-              .update({
-                status: 'TIMEOUT_REFUNDED',
-                refund_amount: refundAmount,
-                refunded_at: new Date().toISOString(),
-              })
-              .eq('id', order.id);
-
-            refundResults.push({
-              user_id: userUUID,
-              order_id: order.id,
-              refund_amount: refundAmount,
-              refund_type: 'TJS_BALANCE'
-            });
-
-            // 发送Telegram通知（拼团超时，退回余额）
-            try {
-              const { data: product } = await supabase
-                .from('group_buy_products')
-                .select('name, image_url')
-                .eq('id', session.product_id)
-                .single();
-
-              // 获取更新后的钱包余额
-              const { data: updatedWallet } = await supabase
+            if (retries > 0) {
+              // 重新获取钱包最新状态
+              const { data: freshWallet } = await supabase
                 .from('wallets')
-                .select('balance')
-                .eq('user_id', userUUID)
-                .eq('type', 'TJS')
+                .select('*')
+                .eq('id', currentWallet.id)
                 .single();
-
-              // 插入通知队列
-              await supabase.from('notification_queue').insert({
-                user_id: userUUID,
-                type: 'group_buy_timeout',
-                payload: {
-                  product_name: product?.name || 'Unknown Product',
-                  session_code: session.session_code,
-                  refund_amount: refundAmount,
-                  balance: Number(updatedWallet?.balance || 0),
-                },
-                telegram_chat_id: null,
-                notification_type: 'group_buy_timeout',
-                title: '拼团超时退款通知',
-                message: '',
-                data: {
-                  product_name: product?.name || 'Unknown Product',
-                  session_code: session.session_code,
-                  refund_amount: refundAmount,
-                  balance: Number(updatedWallet?.balance || 0),
-                },
-                priority: 2,
-                status: 'pending',
-                scheduled_at: new Date().toISOString(),
-                retry_count: 0,
-                max_retries: 3,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              });
-            } catch (error) {
-              console.error('Failed to queue notification:', error);
+              
+              if (freshWallet) {
+                currentWallet = freshWallet;
+              } else {
+                break;
+              }
             }
-          } else {
-            console.error(`TJS wallet not found for user ${userUUID}`);
+          }
+
+          if (!updateSuccess) {
+            console.error(`Failed to update wallet for user ${userUUID} after 3 retries`);
+            continue;
+          }
+
+          // ✅ 【修复4】创建钱包交易记录，使用 reference_id 作为幂等键
+          const { error: txError } = await supabase.from('wallet_transactions').insert({
+            wallet_id: wallet.id,
+            type: 'GROUP_BUY_REFUND_TO_BALANCE',
+            amount: refundAmount,
+            balance_before: Number(wallet.balance),
+            balance_after: Number(wallet.balance) + refundAmount,
+            status: 'COMPLETED',
+            description: `拼团未成功退款（退回余额）- ${session.session_code}`,
+            reference_id: order.id,  // ✅ 幂等键
+            processed_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
+          });
+
+          if (txError) {
+            console.error(`Failed to create transaction for order ${order.id}:`, txError);
+            // 如果是唯一约束冲突，说明已经退款过了
+            if (txError.code === '23505') {
+              console.log(`Transaction already exists (unique constraint), skip`);
+              skippedResults.push({
+                order_id: order.id,
+                user_id: userUUID,
+                reason: 'Transaction already exists (unique constraint)'
+              });
+            }
+            continue;
+          }
+
+          // 更新订单状态
+          await supabase
+            .from('group_buy_orders')
+            .update({
+              status: 'TIMEOUT_REFUNDED',
+              refund_amount: refundAmount,
+              refunded_at: new Date().toISOString(),
+            })
+            .eq('id', order.id);
+
+          refundResults.push({
+            user_id: userUUID,
+            order_id: order.id,
+            refund_amount: refundAmount,
+            refund_type: 'TJS_BALANCE'
+          });
+
+          // 发送Telegram通知（拼团超时，退回余额）
+          try {
+            const { data: product } = await supabase
+              .from('group_buy_products')
+              .select('name, image_url')
+              .eq('id', session.product_id)
+              .single();
+
+            // 获取更新后的钱包余额
+            const { data: updatedWallet } = await supabase
+              .from('wallets')
+              .select('balance')
+              .eq('user_id', userUUID)
+              .eq('type', 'TJS')
+              .single();
+
+            // 插入通知队列
+            await supabase.from('notification_queue').insert({
+              user_id: userUUID,
+              type: 'group_buy_timeout',
+              payload: {
+                product_name: product?.name || 'Unknown Product',
+                session_code: session.session_code,
+                refund_amount: refundAmount,
+                balance: Number(updatedWallet?.balance || 0),
+              },
+              telegram_chat_id: null,
+              notification_type: 'group_buy_timeout',
+              title: '拼团超时退款通知',
+              message: '',
+              data: {
+                product_name: product?.name || 'Unknown Product',
+                session_code: session.session_code,
+                refund_amount: refundAmount,
+                balance: Number(updatedWallet?.balance || 0),
+              },
+              priority: 2,
+              status: 'pending',
+              scheduled_at: new Date().toISOString(),
+              retry_count: 0,
+              max_retries: 3,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
+          } catch (error) {
+            console.error('Failed to queue notification:', error);
           }
         }
 
@@ -231,6 +305,7 @@ Deno.serve(async (req) => {
       processed: processedCount,
       total: timeoutSessions.length,
       refund_results: refundResults,
+      skipped_results: skippedResults,
     });
   } catch (error) {
     console.error('Group buy timeout check error:', error);
