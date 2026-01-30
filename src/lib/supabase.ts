@@ -169,21 +169,43 @@ export const authService = {
    * @param startParam 启动参数 (可选)
    */
   async authenticateWithTelegram(initData: string, startParam?: string) {
-    try {
-      // 调用 Supabase Edge Function 进行认证
-      const { data, error } = await supabase.functions.invoke('auth-telegram', {
-        body: { initData, startParam }
-      });
-      
-      if (error) {
-        console.error('Telegram authentication failed:', error);
-        throw new Error(`Telegram 认证失败: ${error.message}`);
-      }
-      
-      // Edge Function 返回的数据结构是 { data: { user, wallets, session, ... } }
-      if (!data || !data.data) {
-        throw new Error('Invalid response from auth-telegram function');
-      }
+    const maxRetries = 3;
+    let lastError: Error | null = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[Auth] Attempt ${attempt}/${maxRetries}...`);
+        
+        // 调用 Supabase Edge Function 进行认证
+        const { data, error } = await supabase.functions.invoke('auth-telegram', {
+          body: { initData, startParam }
+        });
+        
+        if (error) {
+          console.error(`[Auth] Attempt ${attempt} failed:`, error);
+          lastError = new Error(`Telegram 认证失败: ${error.message}`);
+          
+          // 如果不是最后一次尝试，等待后重试
+          if (attempt < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000); // 指数退避，最多5秒
+            console.log(`[Auth] Waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          throw lastError;
+        }
+        
+        // Edge Function 返回的数据结构是 { data: { user, wallets, session, ... } }
+        if (!data || !data.data) {
+          lastError = new Error('Invalid response from auth-telegram function');
+          if (attempt < maxRetries) {
+            const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+            console.log(`[Auth] Invalid response, waiting ${delay}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            continue;
+          }
+          throw lastError;
+        }
       
       // 添加字段映射：referral_code -> invite_code
       const user = {
@@ -203,10 +225,21 @@ export const authService = {
         is_new_user: data.data.is_new_user,
         new_user_gift: data.data.new_user_gift
       };
-    } catch (error) {
-      console.error('authenticateWithTelegram error:', error);
-      throw error;
+      } catch (error) {
+        console.error(`[Auth] Attempt ${attempt} error:`, error);
+        lastError = error instanceof Error ? error : new Error(String(error));
+        
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+          console.log(`[Auth] Waiting ${delay}ms before retry...`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+      }
     }
+    
+    // 所有重试都失败
+    throw lastError || new Error('Authentication failed after all retries');
   },
 
   /**

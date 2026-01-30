@@ -11,8 +11,8 @@
   // 标记初始化已开始
   window.__TELEGRAM_INIT_STARTED__ = true;
   
-  // 等待 Telegram WebApp SDK 加载 - 减少等待时间
-  function waitForTelegram(callback, maxAttempts = 15) {
+  // 等待 Telegram WebApp SDK 加载 - 增加等待时间以适应网络较慢的情况
+  function waitForTelegram(callback, maxAttempts = 50) {
     let attempts = 0;
     
     const checkTelegram = setInterval(() => {
