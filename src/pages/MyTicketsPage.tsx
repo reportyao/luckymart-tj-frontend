@@ -11,7 +11,7 @@ import {
   CheckCircleIcon
 } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
-import { formatDateTime } from '../lib/utils';
+import { formatDateTime, copyToClipboard } from '../lib/utils';
 import { supabase } from '../lib/supabase';
 import { useUser } from '../contexts/UserContext';
 import toast from 'react-hot-toast';
@@ -107,9 +107,13 @@ const MyTicketsPage: React.FC = () => {
     loadTickets();
   }, [loadTickets]);
 
-  const copyCode = (code: string) => {
-    navigator.clipboard.writeText(code);
-    toast.success(t('lottery.winningCodeCopied'));
+  const copyCode = async (code: string) => {
+    const success = await copyToClipboard(code);
+    if (success) {
+      toast.success(t('lottery.winningCodeCopied'));
+    } else {
+      toast.error(t('common.copyFailed') || '复制失败');
+    }
   };
 
   // 格式化7位数开奖码显示

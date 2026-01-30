@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../contexts/UserContext';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { ShowoffWithDetails } from '../lib/supabase';
+import { ShowoffWithDetails, SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 import {
   PhotoIcon,
   HeartIcon,
@@ -16,7 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { LazyImage } from '../components/LazyImage';
 import { HeartIcon as HeartIconSolid } from '@heroicons/react/24/solid';
-import { formatDateTime, getLocalizedText } from '../lib/utils';
+import { formatDateTime, getLocalizedText, copyToClipboard } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 const ITEMS_PER_PAGE = 10;
@@ -103,8 +103,8 @@ const ShowoffPage: React.FC = () => {
     setError(null);
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = SUPABASE_URL;
+      const supabaseKey = SUPABASE_ANON_KEY;
       
       const offset = pageNum * ITEMS_PER_PAGE;
       const limit = ITEMS_PER_PAGE;
@@ -304,7 +304,7 @@ const ShowoffPage: React.FC = () => {
     }
   };
 
-  const handleShare = (showoff: ShowoffWithDetails) => {
+  const handleShare = async (showoff: ShowoffWithDetails) => {
     const code = user?.referral_code || user?.invite_code;
     if (!code) {
       toast.error(t('error.unknownError'));
@@ -322,8 +322,12 @@ const ShowoffPage: React.FC = () => {
       window.Telegram.WebApp.openTelegramLink(shareUrl);
     } else {
       // 降级方案：复制链接
-      navigator.clipboard.writeText(inviteLink);
-      toast.success(t('common.linkCopied'));
+      const success = await copyToClipboard(inviteLink);
+      if (success) {
+        toast.success(t('common.linkCopied'));
+      } else {
+        toast.error(t('common.copyFailed') || '复制失败');
+      }
     }
   };
 

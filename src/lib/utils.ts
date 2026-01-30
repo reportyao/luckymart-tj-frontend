@@ -132,33 +132,49 @@ export function getWalletTypeText(type: string): string {
   return typeMap[type] || type;
 }
 
-// 复制到剪贴板
+// 复制到剪贴板 - 优先使用 Telegram WebApp API
 export async function copyToClipboard(text: string): Promise<boolean> {
   try {
+    // 优先使用 Telegram WebApp 的剪贴板 API
+    if (window.Telegram?.WebApp?.writeTextToClipboard) {
+      return new Promise((resolve) => {
+        window.Telegram!.WebApp.writeTextToClipboard(text, (success: boolean) => {
+          resolve(success);
+        });
+      });
+    }
+    
+    // 其次尝试使用原生 Clipboard API
     if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText(text);
-      return true;
-    } else {
-      // 降级方案
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';
-      textArea.style.left = '-999999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
       try {
-        document.execCommand('copy');
-        textArea.remove();
+        await navigator.clipboard.writeText(text);
         return true;
-      } catch (error) {
-        console.error('Failed to copy:', error);
-        textArea.remove();
-        return false;
+      } catch (clipboardError) {
+        console.warn('[Clipboard] Native API failed, trying fallback:', clipboardError);
       }
     }
+    
+    // 降级方案：使用 textarea + execCommand
+    const textArea = document.createElement('textarea');
+    textArea.value = text;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    textArea.style.top = '-999999px';
+    textArea.style.opacity = '0';
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      const success = document.execCommand('copy');
+      textArea.remove();
+      return success;
+    } catch (error) {
+      console.error('[Clipboard] execCommand fallback failed:', error);
+      textArea.remove();
+      return false;
+    }
   } catch (error) {
-    console.error('Failed to copy:', error);
+    console.error('[Clipboard] Failed to copy:', error);
     return false;
   }
 }

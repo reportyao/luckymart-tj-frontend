@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase, SUPABASE_URL } from '@/lib/supabase';
 
 export interface RealtimeNotification {
   type: 'connected' | 'notification' | 'group_buy_update' | 'balance_update' | 'heartbeat';
@@ -46,10 +46,10 @@ export function useRealtimeNotifications(options: UseRealtimeNotificationsOption
         eventSourceRef.current.close();
       }
 
-      // Get Supabase URL from environment
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      // Get Supabase URL from config
+      const supabaseUrl = SUPABASE_URL;
       if (!supabaseUrl) {
-        throw new Error('VITE_SUPABASE_URL not configured');
+        throw new Error('Supabase URL not configured');
       }
 
       // Create SSE connection

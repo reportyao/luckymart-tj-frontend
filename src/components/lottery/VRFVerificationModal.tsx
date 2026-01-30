@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { XMarkIcon, ShieldCheckIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { copyToClipboard as copyToClipboardUtil } from '../../lib/utils';
 
 interface VRFVerificationModalProps {
   isOpen: boolean;
@@ -25,9 +26,13 @@ export const VRFVerificationModal: React.FC<VRFVerificationModalProps> = ({
 }) => {
   const { t: _t } = useTranslation();
 
-  const copyToClipboard = (text: string, label: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(`${label}已复制到剪贴板`);
+  const copyToClipboard = async (text: string, label: string) => {
+    const success = await copyToClipboardUtil(text);
+    if (success) {
+      toast.success(`${label}已复制到剪贴板`);
+    } else {
+      toast.error('复制失败');
+    }
   };
 
   if (!isOpen) return null;

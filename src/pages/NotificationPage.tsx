@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 
 interface Notification {
   id: string;
@@ -155,8 +156,8 @@ const NotificationPage: React.FC = () => {
 
       // 5. 获取拼团记录（包括成功、失败、超时）
       try {
-        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-        const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+        const supabaseUrl = SUPABASE_URL;
+        const supabaseKey = SUPABASE_ANON_KEY;
         
         // 同时查询user.id和telegram_id
         const userTelegramId = (user as any).telegram_id;

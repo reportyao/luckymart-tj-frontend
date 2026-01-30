@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext, ReactNode, useCa
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { useSupabase } from './SupabaseContext';
-import { UserProfile, Wallet } from '../lib/supabase';
+import { UserProfile, Wallet, SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 
 // 扩展 Window 接口以支持 Telegram WebApp
 declare global {
@@ -157,8 +157,9 @@ export const UserProvider: React.FC<UserProviderProps> = ({ children }) => {
         }
         
         try {
-          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-          const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+          // 使用导出的配置，而不是直接读取环境变量
+          const supabaseUrl = SUPABASE_URL;
+          const supabaseKey = SUPABASE_ANON_KEY;
           
           // 身份验证通过，继续恢复会话
           console.log('[Session] Identity verified, restoring user from localStorage...');

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { referralService, InviteStats, InvitedUser, supabase } from '../lib/supabase';
+import { referralService, InviteStats, InvitedUser, supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
@@ -13,7 +13,7 @@ import {
   ChartBarIcon,
   ShareIcon
 } from '@heroicons/react/24/outline';
-import { formatCurrency, formatDateTime } from '../lib/utils';
+import { formatCurrency, formatDateTime, copyToClipboard } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 // 接口已在 src/lib/supabase.ts 中定义
@@ -35,8 +35,8 @@ const InvitePage: React.FC = () => {
   // 加载佣金配置 - 独立于用户登录状态
   const loadCommissionConfig = useCallback(async () => {
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = SUPABASE_URL;
+      const supabaseKey = SUPABASE_ANON_KEY;
       const configResponse = await fetch(
         `${supabaseUrl}/rest/v1/commission_settings?is_active=eq.true&order=level.asc`,
         {
@@ -143,16 +143,24 @@ const InvitePage: React.FC = () => {
     }
   }, [user, fetchInviteData]);
 
-  const copyInviteLink = () => {
-    navigator.clipboard.writeText(inviteLink);
-    setCopied(true);
-    toast.success(t('invite.linkCopied'));
-    setTimeout(() => setCopied(false), 2000);
+  const copyInviteLink = async () => {
+    const success = await copyToClipboard(inviteLink);
+    if (success) {
+      setCopied(true);
+      toast.success(t('invite.linkCopied'));
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error(t('common.copyFailed') || '复制失败');
+    }
   };
 
-  const copyInviteCode = () => {
-    navigator.clipboard.writeText(inviteCode);
-    toast.success(t('invite.codeCopied'));
+  const copyInviteCode = async () => {
+    const success = await copyToClipboard(inviteCode);
+    if (success) {
+      toast.success(t('invite.codeCopied'));
+    } else {
+      toast.error(t('common.copyFailed') || '复制失败');
+    }
   };
 
   const shareInvite = () => {

@@ -22,7 +22,7 @@ import {
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 import { LazyImage } from '../components/LazyImage';
 import { LogisticsStatus } from '../components/LogisticsStatus';
-import { formatDateTime, formatCurrency } from '../lib/utils';
+import { formatDateTime, formatCurrency, copyToClipboard } from '../lib/utils';
 import toast from 'react-hot-toast';
 
 interface OrderDetail {
@@ -116,17 +116,25 @@ const OrderDetailPage: React.FC = () => {
     return text[i18n.language] || text.zh || text.ru || text.tg || '';
   };
 
-  const copyPickupCode = () => {
+  const copyPickupCode = async () => {
     if (order?.pickup_code) {
-      navigator.clipboard.writeText(order.pickup_code);
-      toast.success(t('lottery.winningCodeCopied') || '提货码已复制');
+      const success = await copyToClipboard(order.pickup_code);
+      if (success) {
+        toast.success(t('lottery.winningCodeCopied') || '提货码已复制');
+      } else {
+        toast.error(t('common.copyFailed') || '复制失败');
+      }
     }
   };
 
-  const copyOrderNumber = () => {
+  const copyOrderNumber = async () => {
     if (order?.order_number) {
-      navigator.clipboard.writeText(order.order_number);
-      toast.success(t('order.orderNumberCopied') || '订单号已复制');
+      const success = await copyToClipboard(order.order_number);
+      if (success) {
+        toast.success(t('order.orderNumberCopied') || '订单号已复制');
+      } else {
+        toast.error(t('common.copyFailed') || '复制失败');
+      }
     }
   };
 

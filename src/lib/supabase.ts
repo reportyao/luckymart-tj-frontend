@@ -20,6 +20,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase URL or Anon Key. Please check your .env.local file.');
 }
 
+// 导出配置供其他模块使用
+export const SUPABASE_URL = supabaseUrl;
+export const SUPABASE_ANON_KEY = supabaseAnonKey;
+
 // 创建 Supabase 客户端实例
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
 

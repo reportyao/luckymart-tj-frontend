@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { XMarkIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline'
 import { LazyImage } from '../LazyImage'
 import { Lottery } from '../../lib/supabase'
-import { getLocalizedText } from '../../lib/utils'
+import { getLocalizedText, copyToClipboard } from '../../lib/utils'
 import { useSupabase } from '../../contexts/SupabaseContext'
 import { useUser } from '../../contexts/UserContext'
 import { useTranslation } from 'react-i18next'
@@ -129,9 +129,13 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                       <div key={index} className="flex items-center justify-between bg-white rounded-lg p-3">
                         <span className="font-mono font-medium text-gray-900">{code}</span>
                         <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(code)
-                            toast.success(t('common.copied'))
+                          onClick={async () => {
+                            const success = await copyToClipboard(code);
+                            if (success) {
+                              toast.success(t('common.copied'));
+                            } else {
+                              toast.error(t('common.copyFailed') || '复制失败');
+                            }
                           }}
                           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                         >

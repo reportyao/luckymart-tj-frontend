@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { supabase } from '../lib/supabase';
+import { copyToClipboard } from '../lib/utils';
 import { SafeMotion } from '../components/SafeMotion';
 import { 
   GiftIcon, 
@@ -307,15 +308,19 @@ const SpinLotteryPage: React.FC = () => {
   };
 
   // 复制邀请链接
-  const copyInviteLink = () => {
+  const copyInviteLink = async () => {
     if (!spinData?.referral_code) return;
     
     const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
     const inviteLink = `https://${sharePrefix}?startapp=${spinData.referral_code}`;
-    navigator.clipboard.writeText(inviteLink);
-    setCopied(true);
-    toast.success(t('spin.linkCopied'));
-    setTimeout(() => setCopied(false), 2000);
+    const success = await copyToClipboard(inviteLink);
+    if (success) {
+      setCopied(true);
+      toast.success(t('spin.linkCopied'));
+      setTimeout(() => setCopied(false), 2000);
+    } else {
+      toast.error(t('common.copyFailed') || '复制失败');
+    }
   };
 
   // 分享邀请

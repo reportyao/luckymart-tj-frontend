@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase';
 
 import {
   ArrowLeftIcon,
@@ -44,12 +45,12 @@ const MarketCreatePage: React.FC = () => {
         throw new Error('请先登录');
       }
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/get-my-prizes`,
+        `${SUPABASE_URL}/functions/v1/get-my-prizes`,
         {
           method: 'POST',
           headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({ session_token: sessionToken }),
@@ -166,12 +167,12 @@ const MarketCreatePage: React.FC = () => {
     try {
       // 调用API创建转售
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-resale`,
+        `${SUPABASE_URL}/functions/v1/create-resale`,
         {
           method: 'POST',
           headers: {
-            'apikey': import.meta.env.VITE_SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${localStorage.getItem('custom_session_token') || import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${localStorage.getItem('custom_session_token') || SUPABASE_ANON_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({

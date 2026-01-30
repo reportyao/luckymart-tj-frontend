@@ -14,7 +14,7 @@ import {
   AlertCircle,
   X,
 } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { cn, copyToClipboard } from '../../lib/utils';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 
 interface PriceComparisonItem {
@@ -433,8 +433,12 @@ export default function GroupBuyDetailPage() {
         });
       } else {
         // 最后 fallback 到复制链接
-        await navigator.clipboard.writeText(inviteLink);
-        toast.success(t('common.linkCopied') || '链接已复制');
+        const success = await copyToClipboard(inviteLink);
+        if (success) {
+          toast.success(t('common.linkCopied') || '链接已复制');
+        } else {
+          toast.error(t('common.copyFailed') || '复制失败');
+        }
       }
     } catch (error) {
       console.error('Share error:', error);

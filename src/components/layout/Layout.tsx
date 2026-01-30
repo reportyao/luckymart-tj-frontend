@@ -6,7 +6,7 @@ import { BottomNavigation } from "../navigation/BottomNavigation"
 import { useTranslation } from 'react-i18next'
 import SpinFloatingButton from "../SpinFloatingButton"
 import NewUserGiftModal from "../NewUserGiftModal"
-import { supabase } from "../../lib/supabase"
+import { supabase, SUPABASE_URL, SUPABASE_ANON_KEY } from "../../lib/supabase"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -69,8 +69,8 @@ export const Layout: React.FC<LayoutProps> = ({
     
     try {
       // 使用直接API调用以避免类型错误（新表未在类型定义中）
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+      const supabaseUrl = SUPABASE_URL
+      const supabaseKey = SUPABASE_ANON_KEY
       
       const response = await fetch(
         `${supabaseUrl}/rest/v1/user_spin_balance?user_id=eq.${user.id}&select=spin_count`,

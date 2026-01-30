@@ -12,7 +12,7 @@ import {
 import { uploadImage } from '@/lib/uploadImage';
 import { LazyImage } from '../components/LazyImage';
 import toast from 'react-hot-toast';
-import { showoffService } from '@/lib/supabase';
+import { showoffService, SUPABASE_URL, SUPABASE_ANON_KEY } from '@/lib/supabase';
 
 interface WinningLottery {
   id: string;
@@ -47,8 +47,8 @@ const ShowoffCreatePage: React.FC = () => {
         throw new Error('未登录');
       }
 
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      const supabaseUrl = SUPABASE_URL;
+      const supabaseKey = SUPABASE_ANON_KEY;
 
       // 1. 直接查询 prizes 表获取用户的中奖记录（抽奖类型）
       console.log('[ShowoffCreatePage] Fetching prizes...');
