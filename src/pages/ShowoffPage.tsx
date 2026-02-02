@@ -401,22 +401,25 @@ const ShowoffPage: React.FC = () => {
                   <div className="p-4 flex items-center justify-between">
                     <div className="flex items-center space-x-3">
 	                      <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 font-bold overflow-hidden">
-                            {showoff.user?.avatar_url ? (
+                            {/* 优先使用运营晒单的虚拟用户信息，否则使用真实用户信息 */}
+                            {(showoff.display_avatar_url || showoff.user?.avatar_url) ? (
                               <img 
-                                src={showoff.user.avatar_url} 
+                                src={showoff.display_avatar_url || showoff.user?.avatar_url} 
                                 alt="" 
                                 className="w-full h-full object-cover"
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';
-                                  (e.target as HTMLImageElement).parentElement!.innerText = showoff.user?.telegram_username?.charAt(0) || 'U';
+                                  const displayName = showoff.display_username || showoff.user?.telegram_username;
+                                  (e.target as HTMLImageElement).parentElement!.innerText = displayName?.charAt(0) || 'U';
                                 }}
                               />
                             ) : (
-		                      showoff.user?.telegram_username ? showoff.user.telegram_username.charAt(0) : 'U'
+		                      (showoff.display_username || showoff.user?.telegram_username) ? (showoff.display_username || showoff.user?.telegram_username)?.charAt(0) : 'U'
                             )}
 	                      </div>
                       <div>
-	                      <p className="font-medium text-gray-900">{showoff.user?.telegram_username || 'Anonymous'}</p>
+                        {/* 优先使用运营晒单的虚拟用户昵称 */}
+	                      <p className="font-medium text-gray-900">{showoff.display_username || showoff.user?.telegram_username || 'Anonymous'}</p>
                         <p className="text-xs text-gray-500">{formatDateTime(showoff.created_at)}</p>
                       </div>
                     </div>
