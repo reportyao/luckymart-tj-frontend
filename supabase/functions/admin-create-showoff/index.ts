@@ -61,7 +61,6 @@ serve(async (req) => {
       title,               // 晒单标题 (可选，用于覆盖商品标题)
       reward_coins,        // 奖励积分 (可选)
       likes_count,         // 初始点赞数 (可选)
-      comments_count,      // 初始评论数 (可选)
       created_at,          // 自定义发布时间 (可选)
     } = await req.json()
 
@@ -108,10 +107,6 @@ serve(async (req) => {
       ? Math.max(0, parseInt(likes_count) || 0)
       : Math.floor(Math.random() * 80) + 20  // 随机 20-100
 
-    const finalCommentsCount = comments_count !== undefined && comments_count !== null
-      ? Math.max(0, parseInt(comments_count) || 0)
-      : Math.floor(Math.random() * 15) + 3   // 随机 3-18
-
     const finalRewardCoins = reward_coins !== undefined && reward_coins !== null
       ? Math.max(0, parseInt(reward_coins) || 0)
       : 0
@@ -146,7 +141,6 @@ serve(async (req) => {
       // 奖励和互动数据
       reward_coins: finalRewardCoins,
       likes_count: finalLikesCount,
-      comments_count: finalCommentsCount,
 
       // 时间戳
       created_at: finalCreatedAt,
@@ -179,7 +173,6 @@ serve(async (req) => {
         lottery_title: lotteryTitle,
         images_count: images.length,
         likes_count: finalLikesCount,
-        comments_count: finalCommentsCount,
         reward_coins: finalRewardCoins,
       },
     })
@@ -194,7 +187,6 @@ serve(async (req) => {
           display_username: newShowoff.display_username,
           lottery_id: newShowoff.lottery_id,
           likes_count: newShowoff.likes_count,
-          comments_count: newShowoff.comments_count,
           reward_coins: newShowoff.reward_coins,
           created_at: newShowoff.created_at,
         },
