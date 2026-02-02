@@ -282,19 +282,20 @@ const ShowoffPage: React.FC = () => {
     }
     try {
       const isLiked = showoffs.find(s => s.id === showoffId)?.is_liked;
+      let newLikesCount: number;
       if (isLiked) {
-        await showoffService.unlikeShowoff(showoffId, user.id);
+        newLikesCount = await showoffService.unlikeShowoff(showoffId, user.id);
       } else {
-        await showoffService.likeShowoff(showoffId, user.id);
+        newLikesCount = await showoffService.likeShowoff(showoffId, user.id);
       }
-      // 乐观更新
+      // 使用服务端返回的最新 likes_count
       setShowoffs(prev =>
         prev.map(showoff =>
           showoff.id === showoffId
             ? {
                 ...showoff,
                 is_liked: !showoff.is_liked,
-                likes_count: isLiked ? showoff.likes_count - 1 : showoff.likes_count + 1
+                likes_count: newLikesCount
               }
             : showoff
         )

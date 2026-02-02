@@ -753,7 +753,7 @@ export const referralService = {
 	   * @param showoffId 晒单 ID
    * @param userId 用户 ID
    */
-  async likeShowoff(showoffId: string, userId?: string): Promise<void> {
+  async likeShowoff(showoffId: string, userId?: string): Promise<number> {
     let uid = userId;
     if (!uid) {
       const user = await authService.getCurrentUser();
@@ -778,9 +778,23 @@ export const referralService = {
         console.error('Failed to update likes_count:', updateError);
       }
     }
+
+    // 获取并返回最新的 likes_count
+    const { data, error: fetchError } = await supabase
+      .from('showoffs')
+      .select('likes_count')
+      .eq('id', showoffId)
+      .single();
+    
+    if (fetchError || !data) {
+      console.error('Failed to fetch updated likes_count:', fetchError);
+      return 0;
+    }
+    
+    return data.likes_count;
   },
 	
-  async unlikeShowoff(showoffId: string, userId?: string): Promise<void> {
+  async unlikeShowoff(showoffId: string, userId?: string): Promise<number> {
     let uid = userId;
     if (!uid) {
       const user = await authService.getCurrentUser();
@@ -804,6 +818,20 @@ export const referralService = {
       if (updateError) {
         console.error('Failed to update likes_count:', updateError);
       }
+
+    // 获取并返回最新的 likes_count
+    const { data, error: fetchError } = await supabase
+      .from('showoffs')
+      .select('likes_count')
+      .eq('id', showoffId)
+      .single();
+    
+    if (fetchError || !data) {
+      console.error('Failed to fetch updated likes_count:', fetchError);
+      return 0;
+    }
+    
+    return data.likes_count;
 	  },
 	
 	  // 原始的 toggleLike 逻辑被拆分为 likeShowoff 和 unlikeShowoff
