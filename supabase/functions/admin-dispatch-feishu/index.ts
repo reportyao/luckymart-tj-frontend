@@ -2,11 +2,12 @@
  * TezBarakat 管理员通知系统 - 飞书发送器
  * 
  * 功能: 将通知消息发送到飞书群机器人
- * 支持: 纯文本消息 和 交互式卡片消息
+ * 支持: 交互式卡片消息(默认) 和 纯文本消息
  * 
  * @author Manus AI
- * @version 1.0.0
+ * @version 1.1.0
  * @date 2026-02-03
+ * @changelog 修复消息格式问题,默认使用交互式卡片
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -37,7 +38,7 @@ interface FeishuRequest {
   message: string
   event_type?: string
   event_data?: Record<string, any>
-  use_card?: boolean  // 是否使用卡片消息
+  use_card?: boolean  // 是否使用卡片消息(默认true)
 }
 
 serve(async (req) => {
@@ -48,7 +49,7 @@ serve(async (req) => {
   console.log('[admin-dispatch-feishu] 收到发送请求')
 
   try {
-    const { webhook_url, message, event_type, event_data, use_card }: FeishuRequest = await req.json()
+    const { webhook_url, message, event_type, event_data, use_card = true }: FeishuRequest = await req.json()
 
     if (!webhook_url) {
       throw new Error('Missing webhook_url')
@@ -64,12 +65,12 @@ serve(async (req) => {
     // 构建飞书消息体
     let payload: any
 
-    // 对于充值和提现审核，使用交互式卡片（如果需要）
-    if (use_card && event_type && ['new_deposit_request', 'new_withdrawal_request'].includes(event_type)) {
+    // 默认使用交互式卡片
+    if (use_card !== false) {
       payload = buildInteractiveCard(message, event_type, event_data)
     } else {
-      // 默认使用富文本消息
-      payload = buildRichTextMessage(message, event_type)
+      // 备用方案: 纯文本消息
+      payload = buildTextMessage(message)
     }
 
     console.log('[admin-dispatch-feishu] 发送消息类型:', payload.msg_type)
@@ -120,72 +121,51 @@ serve(async (req) => {
 })
 
 /**
- * 构建富文本消息
+ * 构建纯文本消息(备用方案)
  */
-function buildRichTextMessage(message: string, eventType?: string): any {
-  // 将消息按行分割，转换为飞书富文本格式
-  const lines = message.split('\n')
-  const content: any[][] = []
-
-  for (const line of lines) {
-    if (line.trim()) {
-      // 检查是否是链接行
-      const linkMatch = line.match(/https?:\/\/[^\s]+/)
-      if (linkMatch) {
-        const beforeLink = line.substring(0, line.indexOf(linkMatch[0]))
-        content.push([
-          { tag: 'text', text: beforeLink },
-          { tag: 'a', text: linkMatch[0], href: linkMatch[0] },
-        ])
-      } else {
-        content.push([{ tag: 'text', text: line }])
-      }
-    } else {
-      // 空行
-      content.push([{ tag: 'text', text: '' }])
-    }
-  }
-
+function buildTextMessage(message: string): any {
   return {
-    msg_type: 'post',
+    msg_type: 'text',
     content: {
-      post: {
-        zh_cn: {
-          title: EVENT_TYPE_TITLES[eventType || ''] || '📢 TezBarakat 通知',
-          content: content,
-        },
-      },
+      text: message,
     },
   }
 }
 
 /**
- * 构建交互式卡片消息 (用于需要审核的事件)
+ * 构建交互式卡片消息(主要方案)
  */
 function buildInteractiveCard(
   message: string,
-  eventType: string,
+  eventType?: string,
   eventData?: Record<string, any>
 ): any {
-  const title = EVENT_TYPE_TITLES[eventType] || '📢 TezBarakat 通知'
-  const color = EVENT_TYPE_COLORS[eventType] || 'blue'
+  const title = EVENT_TYPE_TITLES[eventType || ''] || '📢 TezBarakat 通知'
+  const color = EVENT_TYPE_COLORS[eventType || ''] || 'blue'
 
-  // 解析消息内容，提取关键信息
+  // 构建卡片元素
   const elements: any[] = []
 
-  // 添加消息内容
+  // 添加消息内容 - 使用 lark_md 格式
+  // 将 \n 转换为真正的换行,并确保 Markdown 格式正确
+  const formattedMessage = message
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+
   elements.push({
     tag: 'div',
     text: {
       tag: 'lark_md',
-      content: message.replace(/\n/g, '\n'),
+      content: formattedMessage,
     },
   })
 
   // 添加分割线
   elements.push({ tag: 'hr' })
 
-  // 添加操作按钮 (仅用于充值和提现)
+  // 添加操作按钮 (针对需要审核的事件)
   if (eventType === 'new_deposit_request' || eventType === 'new_withdrawal_request') {
     elements.push({
       tag: 'action',
@@ -203,13 +183,14 @@ function buildInteractiveCard(
     })
   }
 
-  // 添加备注
+  // 添加时间戳备注
+  const timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' })
   elements.push({
     tag: 'note',
     elements: [
       {
         tag: 'plain_text',
-        content: `TezBarakat 管理系统 · ${new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' })}`,
+        content: `TezBarakat 管理系统 · ${timestamp}`,
       },
     ],
   })
