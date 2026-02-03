@@ -5,9 +5,9 @@
  * 支持: 飞书流程触发器(简单 key-value) 和 飞书群机器人(卡片)
  * 
  * @author Manus AI
- * @version 1.4.0
+ * @version 1.5.0
  * @date 2026-02-03
- * @changelog 流程触发器发送简单 key-value 数据,支持卡片按钮
+ * @changelog 修复消息格式,避免重复添加标题和时间戳
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -154,16 +154,31 @@ function buildFlowTriggerPayload(
   
   // 清理消息内容,确保格式正确
   // 将 \n 转换为实际换行符
-  const cleanMessage = message
+  let cleanMessage = message
     .replace(/\\n/g, '\n')  // 将字符串 \n 转换为实际换行
     .trim()
   
-  // 构建消息内容 - 简洁格式
-  const content = `${cleanMessage}
+  // 检查消息是否已经包含标题(由 notification-hub 格式化)
+  // 如果是,直接使用消息内容,不再添加额外的标题和时间戳
+  const hasTitle = cleanMessage.startsWith('🔔') || 
+                   cleanMessage.startsWith('💰') || 
+                   cleanMessage.startsWith('🛒') || 
+                   cleanMessage.startsWith('🎰') ||
+                   cleanMessage.startsWith('📢')
+  
+  let content: string
+  
+  if (hasTitle) {
+    // 消息已经由 notification-hub 格式化,直接使用
+    content = cleanMessage
+  } else {
+    // 消息未格式化,添加时间戳和系统标识
+    content = `${cleanMessage}
 
 ━━━━━━━━━━━━━━━━
 ⏰ ${timestamp}
 📱 TezBarakat 管理系统`
+  }
 
   // 返回简单的 key-value 数据
   // 飞书流程可以直接引用这些字段
