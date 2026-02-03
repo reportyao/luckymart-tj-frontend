@@ -1,13 +1,13 @@
 /**
  * TezBarakat 管理员通知系统 - 飞书发送器
  * 
- * 功能: 将通知消息发送到飞书群机器人
- * 支持: 交互式卡片消息(默认) 和 纯文本消息
+ * 功能: 将通知消息发送到飞书
+ * 支持: 飞书流程触发器 和 飞书群机器人
  * 
  * @author Manus AI
- * @version 1.1.0
+ * @version 1.2.0
  * @date 2026-02-03
- * @changelog 修复消息格式问题,默认使用交互式卡片
+ * @changelog 适配飞书流程自动化触发器
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -62,18 +62,31 @@ serve(async (req) => {
     console.log('[admin-dispatch-feishu] Webhook URL:', webhook_url.substring(0, 50) + '...')
     console.log('[admin-dispatch-feishu] 事件类型:', event_type)
 
-    // 构建飞书消息体
+    // 判断 webhook 类型
+    const isFlowTrigger = webhook_url.includes('/flow/api/trigger-webhook/')
+    const isBotWebhook = webhook_url.includes('/open-apis/bot/')
+
+    console.log('[admin-dispatch-feishu] Webhook 类型:', isFlowTrigger ? '流程触发器' : '群机器人')
+
     let payload: any
 
-    // 默认使用交互式卡片
-    if (use_card !== false) {
-      payload = buildInteractiveCard(message, event_type, event_data)
+    if (isFlowTrigger) {
+      // 飞书流程触发器 - 发送简单的 JSON 数据
+      payload = buildFlowTriggerPayload(message, event_type, event_data)
+    } else if (isBotWebhook) {
+      // 飞书群机器人 - 发送卡片或文本消息
+      if (use_card !== false) {
+        payload = buildInteractiveCard(message, event_type, event_data)
+      } else {
+        payload = buildTextMessage(message)
+      }
     } else {
-      // 备用方案: 纯文本消息
-      payload = buildTextMessage(message)
+      // 默认使用流程触发器格式
+      console.log('[admin-dispatch-feishu] 未识别的 webhook 类型,使用流程触发器格式')
+      payload = buildFlowTriggerPayload(message, event_type, event_data)
     }
 
-    console.log('[admin-dispatch-feishu] 发送消息类型:', payload.msg_type)
+    console.log('[admin-dispatch-feishu] 发送数据:', JSON.stringify(payload).substring(0, 200) + '...')
 
     // 发送到飞书
     const response = await fetch(webhook_url, {
@@ -121,6 +134,30 @@ serve(async (req) => {
 })
 
 /**
+ * 构建飞书流程触发器的数据格式
+ * 发送简单的 key-value 数据,由流程中的"发送飞书消息"节点处理
+ */
+function buildFlowTriggerPayload(
+  message: string,
+  eventType?: string,
+  eventData?: Record<string, any>
+): any {
+  const title = EVENT_TYPE_TITLES[eventType || ''] || '📢 TezBarakat 通知'
+  
+  // 构建交互式卡片的 JSON 字符串
+  const card = buildInteractiveCard(message, eventType, eventData)
+  
+  // 返回简单的数据结构,包含卡片 JSON 字符串
+  return {
+    title: title,
+    content: message,
+    card: JSON.stringify(card),  // 将卡片对象转为 JSON 字符串
+    event_type: eventType || 'notification',
+    timestamp: new Date().toISOString(),
+  }
+}
+
+/**
  * 构建纯文本消息(备用方案)
  */
 function buildTextMessage(message: string): any {
@@ -133,7 +170,7 @@ function buildTextMessage(message: string): any {
 }
 
 /**
- * 构建交互式卡片消息(主要方案)
+ * 构建交互式卡片消息
  */
 function buildInteractiveCard(
   message: string,
@@ -147,7 +184,6 @@ function buildInteractiveCard(
   const elements: any[] = []
 
   // 添加消息内容 - 使用 lark_md 格式
-  // 将 \n 转换为真正的换行,并确保 Markdown 格式正确
   const formattedMessage = message
     .split('\n')
     .map(line => line.trim())
