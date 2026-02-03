@@ -2,12 +2,12 @@
  * TezBarakat 管理员通知系统 - 飞书发送器
  * 
  * 功能: 将通知消息发送到飞书
- * 支持: 飞书流程触发器 和 飞书群机器人
+ * 支持: 飞书流程触发器(纯文本) 和 飞书群机器人(卡片)
  * 
  * @author Manus AI
- * @version 1.2.0
+ * @version 1.3.0
  * @date 2026-02-03
- * @changelog 适配飞书流程自动化触发器
+ * @changelog 流程触发器使用纯文本格式
  */
 
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
@@ -15,14 +15,6 @@ import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-// 事件类型到卡片颜色的映射
-const EVENT_TYPE_COLORS: Record<string, string> = {
-  'new_deposit_request': 'blue',      // 充值 - 蓝色
-  'new_withdrawal_request': 'orange', // 提现 - 橙色
-  'new_group_buy_join': 'green',      // 拼团 - 绿色
-  'new_lottery_purchase': 'purple',   // 积分商城 - 紫色
 }
 
 // 事件类型到标题的映射
@@ -33,12 +25,20 @@ const EVENT_TYPE_TITLES: Record<string, string> = {
   'new_lottery_purchase': '🎰 积分商城动态',
 }
 
+// 事件类型到卡片颜色的映射
+const EVENT_TYPE_COLORS: Record<string, string> = {
+  'new_deposit_request': 'blue',
+  'new_withdrawal_request': 'orange',
+  'new_group_buy_join': 'green',
+  'new_lottery_purchase': 'purple',
+}
+
 interface FeishuRequest {
   webhook_url: string
   message: string
   event_type?: string
   event_data?: Record<string, any>
-  use_card?: boolean  // 是否使用卡片消息(默认true)
+  use_card?: boolean
 }
 
 serve(async (req) => {
@@ -71,8 +71,8 @@ serve(async (req) => {
     let payload: any
 
     if (isFlowTrigger) {
-      // 飞书流程触发器 - 发送简单的 JSON 数据
-      payload = buildFlowTriggerPayload(message, event_type, event_data)
+      // 飞书流程触发器 - 发送纯文本数据
+      payload = buildFlowTriggerPayload(message, event_type)
     } else if (isBotWebhook) {
       // 飞书群机器人 - 发送卡片或文本消息
       if (use_card !== false) {
@@ -83,7 +83,7 @@ serve(async (req) => {
     } else {
       // 默认使用流程触发器格式
       console.log('[admin-dispatch-feishu] 未识别的 webhook 类型,使用流程触发器格式')
-      payload = buildFlowTriggerPayload(message, event_type, event_data)
+      payload = buildFlowTriggerPayload(message, event_type)
     }
 
     console.log('[admin-dispatch-feishu] 发送数据:', JSON.stringify(payload).substring(0, 200) + '...')
@@ -135,30 +135,35 @@ serve(async (req) => {
 
 /**
  * 构建飞书流程触发器的数据格式
- * 发送简单的 key-value 数据,由流程中的"发送飞书消息"节点处理
+ * 发送纯文本数据,由流程中的"发送飞书消息"节点直接显示
  */
 function buildFlowTriggerPayload(
   message: string,
-  eventType?: string,
-  eventData?: Record<string, any>
+  eventType?: string
 ): any {
   const title = EVENT_TYPE_TITLES[eventType || ''] || '📢 TezBarakat 通知'
+  const timestamp = new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Dushanbe' })
   
-  // 构建交互式卡片的 JSON 字符串
-  const card = buildInteractiveCard(message, eventType, eventData)
-  
-  // 返回简单的数据结构,包含卡片 JSON 字符串
+  // 构建格式化的纯文本消息
+  const formattedMessage = `${title}
+
+${message}
+
+━━━━━━━━━━━━━━━━
+⏰ ${timestamp}
+📱 TezBarakat 管理系统`
+
+  // 返回简单的数据结构
   return {
     title: title,
-    content: message,
-    card: JSON.stringify(card),  // 将卡片对象转为 JSON 字符串
+    content: formattedMessage,
     event_type: eventType || 'notification',
-    timestamp: new Date().toISOString(),
+    timestamp: timestamp,
   }
 }
 
 /**
- * 构建纯文本消息(备用方案)
+ * 构建纯文本消息(群机器人)
  */
 function buildTextMessage(message: string): any {
   return {
@@ -170,7 +175,7 @@ function buildTextMessage(message: string): any {
 }
 
 /**
- * 构建交互式卡片消息
+ * 构建交互式卡片消息(群机器人)
  */
 function buildInteractiveCard(
   message: string,
