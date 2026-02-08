@@ -1092,7 +1092,10 @@
       "failed": "包团失败，请稍后重试",
       "insufficientBalance": "余额不足，请先充值",
       "outOfStock": "商品库存不足",
-      "limitExceeded": "今日包团次数已达上限"
+      "limitExceeded": "今日包团次数已达上限",
+      "discountInfo": "相当于原价的{{discount}}%，超值包团！",
+      "aiChats": "次AI对话机会",
+      "alreadyInSession": "您已在进行中的拼团中，请等待完成后再包团"
     }
   },
   "spin": {

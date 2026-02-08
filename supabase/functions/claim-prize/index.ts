@@ -221,7 +221,7 @@ serve(async (req) => {
     if (order_type === 'group_buy') {
       tableName = 'group_buy_results';
       userIdField = 'winner_id';
-      userIdValue = telegramId; // 拼团使用telegram_id
+      userIdValue = userId; // 【修复】拼团使用UUID（与group-buy-draw和group-buy-squad写入的winner_id一致）
     } else {
       tableName = 'prizes';
       userIdField = 'user_id';

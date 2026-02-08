@@ -281,8 +281,9 @@ function SquadBuyConfirmModal({
 }) {
   if (!isOpen) return null;
 
-  const totalPrice = product.price_per_person * 3;
-  const refundPoints = product.price_per_person * 2;
+  const groupSize = product.group_size || 3;
+  const totalPrice = product.price_per_person * groupSize;
+  const refundPoints = product.price_per_person * (groupSize - 1);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -321,12 +322,21 @@ function SquadBuyConfirmModal({
           </div>
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">{t('groupBuy.squadBuy.quantity')}</span>
-            <span className="text-gray-800 font-medium">× 3</span>
+            <span className="text-gray-800 font-medium">× {groupSize}</span>
           </div>
           <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
             <span className="text-gray-800 font-semibold">{t('groupBuy.squadBuy.totalPayment')}</span>
             <span className="text-2xl font-bold text-orange-500">TJS {totalPrice.toFixed(2)}</span>
           </div>
+        </div>
+
+        {/* Discount Info */}
+        <div className="bg-orange-50 rounded-xl px-4 py-2 mb-4 text-center">
+          <span className="text-orange-600 text-sm font-semibold">
+            {t('groupBuy.squadBuy.discountInfo', { 
+              discount: ((totalPrice / product.original_price) * 100).toFixed(0) 
+            })}
+          </span>
         </div>
 
         {/* Benefits */}
@@ -349,6 +359,14 @@ function SquadBuyConfirmModal({
               </div>
               <span className="text-gray-700">
                 <span className="font-bold text-green-600">{refundPoints.toFixed(2)}</span> {t('groupBuy.squadBuy.points')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">✓</span>
+              </div>
+              <span className="text-gray-700">
+                <span className="font-bold text-blue-600">{groupSize * 10}</span> {t('groupBuy.squadBuy.aiChats')}
               </span>
             </div>
           </div>
@@ -521,6 +539,12 @@ export default function GroupBuyDetailPage() {
 
     if (!product) return;
 
+    // 检查用户是否已在某个进行中的session中
+    if (userParticipatedSessions.size > 0) {
+      toast.error(t('groupBuy.squadBuy.alreadyInSession'));
+      return;
+    }
+
     setShowSquadConfirm(true);
   };
 
@@ -541,7 +565,8 @@ export default function GroupBuyDetailPage() {
 
       // Check available balance (balance - frozen_balance)
       const availableBalance = Number(tjsWallet.balance) - Number(tjsWallet.frozen_balance || 0);
-      const totalPrice = product.price_per_person * 3;
+      const groupSize = product.group_size || 3;
+      const totalPrice = product.price_per_person * groupSize;
 
       if (availableBalance < totalPrice) {
         toast.error(t('groupBuy.squadBuy.insufficientBalance'));
@@ -884,8 +909,8 @@ export default function GroupBuyDetailPage() {
           {/* Squad Buy Button (Top) */}
           <button
             onClick={handleSquadBuyClick}
-            disabled={isSquadBuying}
-            className="relative w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+            disabled={isSquadBuying || userParticipatedSessions.size > 0}
+            className="relative w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
           >
             <Crown className="w-5 h-5" />
             <span>{t('groupBuy.squadBuy.title')}</span>
