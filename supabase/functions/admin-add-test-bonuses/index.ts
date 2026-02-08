@@ -13,7 +13,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     // 1. 获取所有用户
-    const usersResponse = await fetch(`${supabaseUrl}/rest/v1/users?select=id,username`, {
+    const usersResponse = await fetch(`${supabaseUrl}/rest/v1/users?select=id,telegram_username,first_name`, {
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
         'apikey': serviceRoleKey
@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     for (const user of users) {
       const userResult = {
         user_id: user.id,
-        username: user.username,
+        username: user.telegram_username || user.first_name || user.id,
         spin_success: false,
         ai_success: false
       };

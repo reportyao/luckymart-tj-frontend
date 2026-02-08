@@ -286,8 +286,8 @@ function SquadBuyConfirmModal({
   const refundPoints = product.price_per_person * (groupSize - 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200 my-auto max-h-[90vh] overflow-y-auto">
         {/* Close Button */}
         <button
           onClick={onClose}
@@ -706,7 +706,7 @@ export default function GroupBuyDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-32">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-4">
         <button
@@ -903,24 +903,10 @@ export default function GroupBuyDetailPage() {
         </div>
       </div>
 
-      {/* Fixed Bottom Buttons */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-20">
+      {/* Action Buttons */}
+      <div className="bg-white border-t border-gray-200 p-6 mt-6">
         <div className="max-w-2xl mx-auto space-y-2">
-          {/* Squad Buy Button (Top) */}
-          <button
-            onClick={handleSquadBuyClick}
-            disabled={isSquadBuying || userParticipatedSessions.size > 0}
-            className="relative w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
-          >
-            <Crown className="w-5 h-5" />
-            <span>{t('groupBuy.squadBuy.title')}</span>
-            {/* Limited Time Badge */}
-            <span className="absolute -top-2 -right-2 px-2.5 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse shadow-md">
-              {t('common.limitedTime')}
-            </span>
-          </button>
-
-          {/* Regular Join Button (Bottom) */}
+          {/* Regular Join Button (Top) - 正常开团拼团按钮 */}
           <button
             onClick={() => handleJoinGroup()}
             disabled={joiningSessionId === 'new'}
@@ -932,6 +918,20 @@ export default function GroupBuyDetailPage() {
                 ? t('common.processing') 
                 : `${t('groupBuy.startNewGroup')} (TJS ${product.price_per_person})`
               }
+            </span>
+          </button>
+
+          {/* Squad Buy Button (Bottom) - 一键包团按钮 */}
+          <button
+            onClick={handleSquadBuyClick}
+            disabled={isSquadBuying || userParticipatedSessions.size > 0}
+            className="relative w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-lg"
+          >
+            <Crown className="w-5 h-5" />
+            <span>{t('groupBuy.squadBuy.title')}</span>
+            {/* Limited Time Badge */}
+            <span className="absolute -top-2 -right-2 px-2.5 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse shadow-md">
+              {t('common.limitedTime')}
             </span>
           </button>
         </div>
