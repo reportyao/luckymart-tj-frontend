@@ -1,5 +1,5 @@
 {
-  "version": "2.1.0",
-  "buildTime": "2026-01-26T03:40:00.000Z",
-  "description": "Force cache break - upgraded to v2.1.0 to fix Telegram caching old version"
+  "version": "2.2.0",
+  "buildTime": "2026-02-08T13:22:46.273Z",
+  "description": "修复拼团页面按钮布局和字段兼容性问题"
 }
