@@ -484,7 +484,7 @@ export default function GroupBuyDetailPage() {
 
     try {
       // Get TJS wallet
-      const tjsWallet = wallets.find((w) => w.wallet_type === 'TJS');
+      const tjsWallet = wallets.find((w) => w.type === 'TJS');
       if (!tjsWallet) {
         toast.error(t('wallet.walletNotFound'));
         return;
@@ -556,7 +556,7 @@ export default function GroupBuyDetailPage() {
 
     try {
       // Get TJS wallet
-      const tjsWallet = wallets.find((w) => w.wallet_type === 'TJS');
+      const tjsWallet = wallets.find((w) => w.type === 'TJS');
       if (!tjsWallet) {
         toast.error(t('wallet.walletNotFound'));
         setShowSquadConfirm(false);
