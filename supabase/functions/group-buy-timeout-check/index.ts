@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
           let currentWallet = wallet;
 
           while (retries > 0 && !updateSuccess) {
-            const { error: updateError } = await supabase
+            const { data: updatedRows, error: updateError } = await supabase
               .from('wallets')
               .update({ 
                 balance: Number(currentWallet.balance) + refundAmount,
@@ -168,14 +168,15 @@ Deno.serve(async (req) => {
                 version: currentWallet.version + 1
               })
               .eq('id', currentWallet.id)
-              .eq('version', currentWallet.version);
+              .eq('version', currentWallet.version)
+              .select();
 
-            if (!updateError) {
+            if (!updateError && updatedRows && updatedRows.length > 0) {
               updateSuccess = true;
               break;
             }
 
-            console.warn(`Failed to update wallet (attempt ${4 - retries}/3):`, updateError);
+            console.warn(`Failed to update wallet (attempt ${4 - retries}/3):`, updateError || 'Optimistic lock conflict (0 rows updated)');
             retries--;
 
             if (retries > 0) {

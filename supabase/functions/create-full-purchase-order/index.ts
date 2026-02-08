@@ -363,19 +363,28 @@ serve(async (req) => {
 
     // 15. 更新库存（关键修改：从库存商品扣减，不影响一元购物份数）
     if (inventoryProduct) {
-      // 有关联库存商品：从库存商品扣减库存
+      // 有关联库存商品：从库存商品扣减库存（使用乐观锁防止并发超卖）
       const newStock = inventoryProduct.stock - 1;
-      const { error: updateInventoryError } = await supabase
+      const { data: updatedInventory, error: updateInventoryError } = await supabase
         .from('inventory_products')
         .update({
           stock: newStock,
           updated_at: new Date().toISOString(),
         })
-        .eq('id', inventoryProduct.id);
+        .eq('id', inventoryProduct.id)
+        .eq('stock', inventoryProduct.stock) // 乐观锁：确保库存未被其他并发请求修改
+        .select()
+        .maybeSingle();
 
       if (updateInventoryError) {
         console.error('[CreateFullPurchaseOrder] Update inventory error:', updateInventoryError);
-        // 不影响主流程，但记录日志
+        throw new Error('库存更新失败，请重试');
+      }
+
+      if (!updatedInventory) {
+        // 乐观锁冲突：库存已被其他请求修改
+        console.error('[CreateFullPurchaseOrder] Optimistic lock conflict: inventory stock changed by another request');
+        throw new Error('库存已变动，请重新购买');
       }
 
       // 记录库存变动

@@ -505,19 +505,34 @@ Deno.serve(async (req) => {
     // ============================================
     // 步骤 12: 更新库存（调用 increment_sold_quantity RPC）
     // ============================================
-    try {
-      const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
-        product_id: product.id,
-        amount: 1,
-      });
+    let stockUpdateSuccess = false;
+    for (let stockRetry = 0; stockRetry < 3; stockRetry++) {
+      try {
+        const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
+          product_id: product.id,
+          amount: 1,
+        });
 
-      if (incrementError) {
-        console.error('Failed to increment sold_quantity:', incrementError);
-      } else {
-        console.log(`[SquadBuy] Incremented sold_quantity for product ${product.id}`);
+        if (incrementError) {
+          console.error(`[SquadBuy] Failed to increment sold_quantity (attempt ${stockRetry + 1}/3):`, incrementError);
+        } else {
+          stockUpdateSuccess = true;
+          console.log(`[SquadBuy] Incremented sold_quantity for product ${product.id}`);
+          break;
+        }
+      } catch (stockError) {
+        console.error(`[SquadBuy] increment_sold_quantity exception (attempt ${stockRetry + 1}/3):`, stockError);
       }
-    } catch (stockError) {
-      console.error('Failed to call increment_sold_quantity:', stockError);
+
+      // 短暂等待后重试
+      if (stockRetry < 2) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    if (!stockUpdateSuccess) {
+      console.error(`[SquadBuy] ⚠️ CRITICAL: Failed to update stock for product ${product.id} after 3 retries. Session: ${newSession.id}. Manual intervention required.`);
+      // 不中断流程（订单和session已创建），但记录严重错误
     }
 
     // ============================================

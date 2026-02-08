@@ -377,18 +377,33 @@ Deno.serve(async (req) => {
       console.error('Failed to queue win notification:', error);
     }
 
-    // 11. Update product sold quantity
-    try {
-      const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
-        product_id: session.product_id,
-        amount: 1
-      });
-      
-      if (incrementError) {
-        console.error('Failed to increment sold_quantity:', incrementError);
+    // 11. Update product sold quantity (with retry)
+    let drawStockUpdateSuccess = false;
+    for (let stockRetry = 0; stockRetry < 3; stockRetry++) {
+      try {
+        const { error: incrementError } = await supabase.rpc('increment_sold_quantity', {
+          product_id: session.product_id,
+          amount: 1
+        });
+        
+        if (incrementError) {
+          console.error(`Failed to increment sold_quantity (attempt ${stockRetry + 1}/3):`, incrementError);
+        } else {
+          drawStockUpdateSuccess = true;
+          console.log(`Incremented sold_quantity for product ${session.product_id}`);
+          break;
+        }
+      } catch (error) {
+        console.error(`increment_sold_quantity exception (attempt ${stockRetry + 1}/3):`, error);
       }
-    } catch (error) {
-      console.error('Failed to call increment_sold_quantity:', error);
+
+      if (stockRetry < 2) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+
+    if (!drawStockUpdateSuccess) {
+      console.error(`⚠️ CRITICAL: Failed to update stock for product ${session.product_id} after 3 retries. Session: ${session.id}. Manual intervention required.`);
     }
 
     return createResponse({
