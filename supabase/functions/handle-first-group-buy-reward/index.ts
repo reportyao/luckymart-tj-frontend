@@ -110,15 +110,41 @@ Deno.serve(async (req) => {
     }
 
     // 3. 检查用户的拼团订单数量（确认是否为首次）
-    const ordersResponse = await fetch(
-      `${supabaseUrl}/rest/v1/group_buy_orders?user_id=eq.${user_id}&status=eq.PAID&select=id&limit=2`,
-      {
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
+    // 【修复】同时查询UUID和telegram_id，兼容历史数据中user_id可能是两种格式
+    // 先获取用户的telegram_id用于双重查询
+    let userTelegramId = '';
+    try {
+      const telegramIdResponse = await fetch(
+        `${supabaseUrl}/rest/v1/users?id=eq.${user_id}&select=telegram_id`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+          }
         }
+      );
+      const telegramIdData = await telegramIdResponse.json();
+      if (telegramIdData && telegramIdData.length > 0) {
+        userTelegramId = telegramIdData[0].telegram_id;
       }
-    );
+    } catch (e) {
+      console.error('Failed to get telegram_id:', e);
+    }
+
+    // 构建查询URL，同时匹配UUID和telegram_id
+    let ordersUrl = `${supabaseUrl}/rest/v1/group_buy_orders?status=eq.PAID&select=id&limit=3`;
+    if (userTelegramId && userTelegramId !== user_id) {
+      ordersUrl += `&or=(user_id.eq.${user_id},user_id.eq.${userTelegramId})`;
+    } else {
+      ordersUrl += `&user_id=eq.${user_id}`;
+    }
+    
+    const ordersResponse = await fetch(ordersUrl, {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+      }
+    });
     const orders = await ordersResponse.json();
 
     // 如果已有多个已支付订单，说明不是首次

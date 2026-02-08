@@ -148,14 +148,14 @@ Deno.serve(async (req) => {
       }
 
       // Check if user already joined this session
-      const { data: existingOrder } = await supabase
+      // 【修复】同时检查UUID和telegram_id，兼容历史数据和新数据
+      const { data: existingOrders } = await supabase
         .from('group_buy_orders')
         .select('id')
         .eq('session_id', existingSession.id)
-        .eq('user_id', user.telegram_id) // 使用 telegram_id 因为外键约束指向 users.telegram_id
-        .single();
+        .or(`user_id.eq.${user.id},user_id.eq.${user.telegram_id}`);
 
-      if (existingOrder) {
+      if (existingOrders && existingOrders.length > 0) {
         return createResponse({ success: false, error: 'You have already joined this session' }, 400);
       }
 

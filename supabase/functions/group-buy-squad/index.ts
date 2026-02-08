@@ -167,11 +167,12 @@ Deno.serve(async (req) => {
 
     // ============================================
     // 步骤 3: 检查用户是否已在进行中的session中（防重复）
+    // 【修复】同时检查UUID和telegram_id，兼容历史数据
     // ============================================
     const { data: activeOrders } = await supabase
       .from('group_buy_orders')
       .select('id, session_id, group_buy_sessions!inner(status)')
-      .eq('user_id', user.id)
+      .or(`user_id.eq.${user.id},user_id.eq.${user.telegram_id}`)
       .eq('group_buy_sessions.product_id', product_id)
       .in('group_buy_sessions.status', ['ACTIVE', 'active']);
 

@@ -221,7 +221,7 @@ serve(async (req) => {
     if (order_type === 'group_buy') {
       tableName = 'group_buy_results';
       userIdField = 'winner_id';
-      userIdValue = userId; // 【修复】拼团使用UUID（与group-buy-draw和group-buy-squad写入的winner_id一致）
+      userIdValue = userId; // 拼团优先使用UUID
     } else {
       tableName = 'prizes';
       userIdField = 'user_id';
@@ -234,24 +234,47 @@ serve(async (req) => {
     
     if (prize_id) {
       // 如果有 prize_id，直接查询
-      const result = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('id', prize_id)
-        .eq(userIdField, userIdValue)
-        .single();
-      prizeData = result.data;
-      prizeError = result.error;
+      // 【修复】拼团类型同时兼容UUID和telegram_id，防止历史数据不一致
+      if (order_type === 'group_buy') {
+        const result = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('id', prize_id)
+          .or(`${userIdField}.eq.${userId},${userIdField}.eq.${telegramId}`)
+          .single();
+        prizeData = result.data;
+        prizeError = result.error;
+      } else {
+        const result = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('id', prize_id)
+          .eq(userIdField, userIdValue)
+          .single();
+        prizeData = result.data;
+        prizeError = result.error;
+      }
     } else if (lottery_id) {
       // 如果只有 lottery_id，通过 lottery_id 查找
-      const result = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('lottery_id', lottery_id)
-        .eq(userIdField, userIdValue)
-        .maybeSingle();
-      prizeData = result.data;
-      prizeError = result.error;
+      if (order_type === 'group_buy') {
+        const result = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('lottery_id', lottery_id)
+          .or(`${userIdField}.eq.${userId},${userIdField}.eq.${telegramId}`)
+          .maybeSingle();
+        prizeData = result.data;
+        prizeError = result.error;
+      } else {
+        const result = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('lottery_id', lottery_id)
+          .eq(userIdField, userIdValue)
+          .maybeSingle();
+        prizeData = result.data;
+        prizeError = result.error;
+      }
       
       // 如果没有找到，需要创建一个新的 prize 记录
       if (!prizeData && !prizeError) {
