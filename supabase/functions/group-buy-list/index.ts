@@ -415,13 +415,15 @@ Deno.serve(async (req) => {
       // 解析用户UUID
       const userUUID = await resolveUserIdToUUID(supabase, user_id);
       
-      // 查询订单（同时使用原始user_id和解析后的UUID）
+      // 查询订单（通过session间接获取product，因为group_buy_orders与group_buy_products之间没有外键关系）
       let ordersQuery = supabase
         .from('group_buy_orders')
         .select(`
           *,
-          session:group_buy_sessions(*),
-          product:group_buy_products(*)
+          session:group_buy_sessions(
+            *,
+            product:group_buy_products(*)
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -438,11 +440,14 @@ Deno.serve(async (req) => {
         return createResponse({ success: false, error: error.message }, 500);
       }
 
-      // Map products to frontend format
-      const mappedOrders = orders?.map(order => ({
-        ...order,
-        product: order.product ? mapProductToFrontend(order.product) : null,
-      })) || [];
+      // 将product从session中提取出来，保持返回格式与前端兼容
+      const mappedOrders = orders?.map(order => {
+        const product = order.session?.product || null;
+        return {
+          ...order,
+          product: product ? mapProductToFrontend(product) : null,
+        };
+      }) || [];
 
       return createResponse({ success: true, data: mappedOrders });
     } else {
