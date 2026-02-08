@@ -31,7 +31,11 @@
     "processing": "处理中...",
     "pleaseLogin": "请先登录",
     "expandMore": "展开查看更多",
-    "collapse": "收起"
+    "collapse": "收起",
+    "limitedTime": "限时",
+    "hour": "小时",
+    "minute": "分钟",
+    "copiedToClipboard": "已复制到剪贴板"
   },
   "nav": {
     "home": "首页",
@@ -1071,6 +1075,24 @@
       "description": "3人组团支付，满员即开奖：",
       "winner": "1位幸运儿： 直接发货，拿走商品！",
       "participants": "2位参与者： 支付金额 100% 全额退还为积分，积分可直接在商城购物抵扣，分文不亏！"
+    },
+    "squadBuy": {
+      "title": "一键包团",
+      "confirmTitle": "确认尊享包团",
+      "confirmSubtitle": "您将支付3份价格，100%获得商品",
+      "originalPrice": "商品原价",
+      "pricePerPerson": "拼团单价",
+      "quantity": "数量",
+      "totalPayment": "支付总额",
+      "youWillGet": "您将立即获得",
+      "product": "份商品",
+      "points": "积分（立即到账）",
+      "confirmButton": "确认支付",
+      "success": "包团成功！正在跳转...",
+      "failed": "包团失败，请稍后重试",
+      "insufficientBalance": "余额不足，请先充值",
+      "outOfStock": "商品库存不足",
+      "limitExceeded": "今日包团次数已达上限"
     }
   },
   "spin": {

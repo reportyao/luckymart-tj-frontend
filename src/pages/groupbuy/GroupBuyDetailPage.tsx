@@ -13,6 +13,8 @@ import {
   ChevronRight,
   AlertCircle,
   X,
+  Crown,
+  Zap,
 } from 'lucide-react';
 import { cn, copyToClipboard } from '../../lib/utils';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
@@ -261,6 +263,120 @@ function PriceComparisonList({ comparisons, t }: { comparisons: PriceComparisonI
   );
 }
 
+// 一键包团确认弹窗组件
+function SquadBuyConfirmModal({
+  isOpen,
+  onClose,
+  onConfirm,
+  product,
+  isProcessing,
+  t,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  product: GroupBuyProduct;
+  isProcessing: boolean;
+  t: any;
+}) {
+  if (!isOpen) return null;
+
+  const totalPrice = product.price_per_person * 3;
+  const refundPoints = product.price_per_person * 2;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-2xl max-w-md w-full p-6 relative animate-in fade-in zoom-in duration-200">
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          disabled={isProcessing}
+        >
+          <X className="w-6 h-6" />
+        </button>
+
+        {/* Title */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-3">
+            <Crown className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            {t('groupBuy.squadBuy.confirmTitle')}
+          </h2>
+          <p className="text-gray-600 text-sm">
+            {t('groupBuy.squadBuy.confirmSubtitle')}
+          </p>
+        </div>
+
+        {/* Price Details */}
+        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">{t('groupBuy.squadBuy.originalPrice')}</span>
+            <span className="line-through text-gray-400">TJS {product.original_price.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">{t('groupBuy.squadBuy.pricePerPerson')}</span>
+            <span className="text-gray-800 font-medium">TJS {product.price_per_person.toFixed(2)}</span>
+          </div>
+          <div className="flex justify-between items-center text-sm">
+            <span className="text-gray-600">{t('groupBuy.squadBuy.quantity')}</span>
+            <span className="text-gray-800 font-medium">× 3</span>
+          </div>
+          <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+            <span className="text-gray-800 font-semibold">{t('groupBuy.squadBuy.totalPayment')}</span>
+            <span className="text-2xl font-bold text-orange-500">TJS {totalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Benefits */}
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 mb-6">
+          <p className="text-sm font-semibold text-gray-700 mb-3 text-center">
+            {t('groupBuy.squadBuy.youWillGet')}
+          </p>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">✓</span>
+              </div>
+              <span className="text-gray-700">
+                <span className="font-bold">1×</span> {t('groupBuy.squadBuy.product')}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 text-sm">
+              <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs">✓</span>
+              </div>
+              <span className="text-gray-700">
+                <span className="font-bold text-green-600">{refundPoints.toFixed(2)}</span> {t('groupBuy.squadBuy.points')}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirm Button */}
+        <button
+          onClick={onConfirm}
+          disabled={isProcessing}
+          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-4 rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+        >
+          {isProcessing ? (
+            <>
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+              {t('common.processing')}
+            </>
+          ) : (
+            <>
+              <Zap className="w-5 h-5" />
+              {t('groupBuy.squadBuy.confirmButton')}
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function GroupBuyDetailPage() {
   const { productId: id } = useParams();
   const { t, i18n } = useTranslation();
@@ -269,9 +385,13 @@ export default function GroupBuyDetailPage() {
   const [product, setProduct] = useState<GroupBuyProduct | null>(null);
   const [sessions, setSessions] = useState<GroupBuySession[]>([]);
   const [loading, setLoading] = useState(true);
-  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null); // 修改：记录正在处理的session
-  const [userParticipatedSessions, setUserParticipatedSessions] = useState<Set<string>>(new Set()); // 新增：记录用户已参与的session
+  const [joiningSessionId, setJoiningSessionId] = useState<string | null>(null);
+  const [userParticipatedSessions, setUserParticipatedSessions] = useState<Set<string>>(new Set());
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
+  
+  // 一键包团相关状态
+  const [showSquadConfirm, setShowSquadConfirm] = useState(false);
+  const [isSquadBuying, setIsSquadBuying] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -306,28 +426,27 @@ export default function GroupBuyDetailPage() {
 
       if (sessionsError) throw sessionsError;
       
-      const sessionsData = sessionsResponse?.success ? sessionsResponse.data : [];
-      
-      // 检查用户已参与的session
-      // 注意：订单中的user_id可能是telegram_id或UUID，需要同时匹配
-      if (user && sessionsData && Array.isArray(sessionsData)) {
-        const participatedSet = new Set<string>();
-        sessionsData.forEach((session: any) => {
-          if (session.orders?.some((order: any) => 
-            order.user_id === user.telegram_id || 
-            order.user_id === user.id ||
-            order.users?.telegram_id === user.telegram_id ||
-            order.users?.id === user.id
-          )) {
-            participatedSet.add(session.id);
-          }
-        });
-        setUserParticipatedSessions(participatedSet);
+      if (sessionsResponse?.success) {
+        const sessionsData = sessionsResponse.data || [];
+        setSessions(sessionsData);
+
+        // 检查用户已参与的session
+        if (user?.id) {
+          const participatedSet = new Set<string>();
+          sessionsData.forEach((session: GroupBuySession) => {
+            const hasUserOrder = session.orders?.some(
+              (order) => order.user_id === user.id
+            );
+            if (hasUserOrder) {
+              participatedSet.add(session.id);
+            }
+          });
+          setUserParticipatedSessions(participatedSet);
+        }
       }
-      
-      setSessions(sessionsData || []);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      console.error('Error fetching product and sessions:', error);
+      toast.error(t('common.error'));
     } finally {
       setLoading(false);
     }
@@ -335,140 +454,163 @@ export default function GroupBuyDetailPage() {
 
   const handleJoinGroup = async (sessionId?: string) => {
     if (!user) {
-      alert(t('common.pleaseLogin'));
+      toast.error(t('common.pleaseLogin'));
+      navigate('/auth');
       return;
     }
 
     if (!product) return;
 
-    // Check balance from wallets - use TJS type wallet
-    console.log('[GroupBuy] Checking balance, wallets:', wallets);
-    const mainWallet = wallets.find((w) => w.type === 'TJS' && w.currency === 'TJS');
-    console.log('[GroupBuy] Main wallet:', mainWallet);
-    const balance = Number(mainWallet?.balance || 0);
-    const pricePerPerson = Number(product.price_per_person);
-    console.log('[GroupBuy] Balance:', balance, 'Price:', pricePerPerson);
-    
-    if (!mainWallet) {
-      // 如果没有找到钱包，尝试刷新钱包数据
-      console.log('[GroupBuy] Wallet not found, trying to refresh...');
-      alert(t('groupBuy.walletNotFound') || '钱包数据加载中，请稍后重试');
-      return;
-    }
-    
-    if (balance < pricePerPerson) {
-      console.log('[GroupBuy] Insufficient balance:', balance, '<', pricePerPerson);
-      alert(t('groupBuy.insufficientBalance'));
-      return;
-    }
+    const targetSessionId = sessionId || 'new';
+    setJoiningSessionId(targetSessionId);
 
     try {
-      setJoiningSessionId(sessionId || 'new'); // 修改：设置正在处理的session
+      // Get TJS wallet
+      const tjsWallet = wallets.find((w) => w.wallet_type === 'TJS');
+      if (!tjsWallet) {
+        toast.error(t('wallet.walletNotFound'));
+        return;
+      }
 
-      // 修复：传递session_code而不是session_id
-      let requestBody: any = {
-        product_id: product.id,
-        user_id: user.id, // Use UUID
-      };
-
-      if (sessionId) {
-        // 查找session_code
-        const session = sessions.find(s => s.id === sessionId);
-        if (session) {
-          requestBody.session_code = session.session_code;
-        }
+      // Check balance (considering frozen_balance)
+      const availableBalance = Number(tjsWallet.balance) - Number(tjsWallet.frozen_balance || 0);
+      if (availableBalance < product.price_per_person) {
+        toast.error(t('wallet.insufficientBalance'));
+        navigate('/wallet');
+        return;
       }
 
       const { data, error } = await supabase.functions.invoke('group-buy-join', {
-        body: requestBody,
+        body: {
+          product_id: product.id,
+          session_id: sessionId || null,
+          user_id: user.id,
+        },
       });
 
       if (error) throw error;
 
       if (data?.success) {
-        alert(t('groupBuy.joinSuccess'));
-        // 刷新当前页面数据，不跳转
-        await fetchProductAndSessions();
-        // 刷新钱包余额
-        if (refreshWallets) {
-          await refreshWallets();
+        toast.success(t('groupBuy.joinSuccess'));
+        await refreshWallets();
+        
+        // Navigate to result page
+        if (data.data?.session_id) {
+          navigate(`/group-buy/result/${data.data.session_id}`);
+        } else {
+          await fetchProductAndSessions();
         }
       } else {
-        alert(data?.error || t('groupBuy.joinFailed'));
+        throw new Error(data?.error || 'Join failed');
       }
     } catch (error: any) {
-      console.error('Failed to join group:', error);
-      alert(error.message || t('groupBuy.joinFailed'));
+      console.error('Error joining group:', error);
+      toast.error(error.message || t('groupBuy.joinFailed'));
     } finally {
-      setJoiningSessionId(null); // 修改：清除处理状态
+      setJoiningSessionId(null);
+    }
+  };
+
+  // 一键包团：打开确认弹窗
+  const handleSquadBuyClick = () => {
+    if (!user) {
+      toast.error(t('common.pleaseLogin'));
+      navigate('/auth');
+      return;
+    }
+
+    if (!product) return;
+
+    setShowSquadConfirm(true);
+  };
+
+  // 一键包团：确认支付
+  const handleConfirmSquadBuy = async () => {
+    if (!user || !product) return;
+
+    setIsSquadBuying(true);
+
+    try {
+      // Get TJS wallet
+      const tjsWallet = wallets.find((w) => w.wallet_type === 'TJS');
+      if (!tjsWallet) {
+        toast.error(t('wallet.walletNotFound'));
+        setShowSquadConfirm(false);
+        return;
+      }
+
+      // Check available balance (balance - frozen_balance)
+      const availableBalance = Number(tjsWallet.balance) - Number(tjsWallet.frozen_balance || 0);
+      const totalPrice = product.price_per_person * 3;
+
+      if (availableBalance < totalPrice) {
+        toast.error(t('groupBuy.squadBuy.insufficientBalance'));
+        setShowSquadConfirm(false);
+        navigate('/wallet');
+        return;
+      }
+
+      // Call squad-buy edge function
+      const { data, error } = await supabase.functions.invoke('group-buy-squad', {
+        body: {
+          product_id: product.id,
+          user_id: user.id,
+        },
+      });
+
+      if (error) throw error;
+
+      if (!data?.success) {
+        throw new Error(data?.error || 'Squad buy failed');
+      }
+
+      // Success
+      toast.success(t('groupBuy.squadBuy.success'));
+      
+      // Refresh wallets
+      await refreshWallets();
+      
+      // Close modal
+      setShowSquadConfirm(false);
+      
+      // Navigate to result page
+      if (data.data?.session_id) {
+        navigate(`/group-buy/result/${data.data.session_id}`);
+      }
+    } catch (error: any) {
+      console.error('Error in squad buy:', error);
+      
+      // Handle specific error types
+      const errorMessage = error.message || error.error || '';
+      
+      if (errorMessage.includes('insufficient_balance') || errorMessage.includes('balance')) {
+        toast.error(t('groupBuy.squadBuy.insufficientBalance'));
+        navigate('/wallet');
+      } else if (errorMessage.includes('out_of_stock') || errorMessage.includes('stock')) {
+        toast.error(t('groupBuy.squadBuy.outOfStock'));
+      } else if (errorMessage.includes('limit') || errorMessage.includes('quota')) {
+        toast.error(t('groupBuy.squadBuy.limitExceeded'));
+      } else {
+        toast.error(t('groupBuy.squadBuy.failed'));
+      }
+      
+      setShowSquadConfirm(false);
+    } finally {
+      setIsSquadBuying(false);
     }
   };
 
   const handleShare = async (sessionCode: string) => {
+    const shareUrl = `${window.location.origin}/group-buy/join/${sessionCode}`;
+    const shareText = t('groupBuy.shareText', { code: sessionCode });
+    
     try {
-      // 使用标准的带邀请码分享链接
-      const referralCode = user?.referral_code || user?.invite_code;
-      if (!referralCode) {
-        toast.error(t('invite.noReferralCode') || '没有邀请码');
-        return;
-      }
-      
-      const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
-      const inviteLink = `https://${sharePrefix}?startapp=${referralCode}`;
-      const shareText = `Барои Шумо тӯҳфа: Хариди мол бо нархи 3 маротиба арзонтар!\nМан худам санҷидам — кор мекунад! Ин шонсро аз даст надиҳед, ҳоло зер кунед`;
-      
-      // 优先使用 Telegram WebApp 的分享功能
-      if (window.Telegram?.WebApp?.openTelegramLink) {
-        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(inviteLink)}&text=${encodeURIComponent(shareText)}`;
-        window.Telegram.WebApp.openTelegramLink(shareUrl);
-        return;
-      }
-      
-      // fallback 到浏览器原生分享
-      if (navigator.share) {
-        await navigator.share({
-          title: getLocalizedText(product?.title),
-          text: shareText,
-          url: inviteLink,
-        });
-      } else {
-        // 最后 fallback 到复制链接
-        const success = await copyToClipboard(inviteLink);
-        if (success) {
-          toast.success(t('common.linkCopied') || '链接已复制');
-        } else {
-          toast.error(t('common.copyFailed') || '复制失败');
-        }
-      }
+      await copyToClipboard(shareUrl);
+      toast.success(t('common.copiedToClipboard'));
     } catch (error) {
-      console.error('Share error:', error);
-      // 如果用户取消分享，不显示错误
-      if (error instanceof Error && error.name !== 'AbortError') {
-        toast.error(t('common.shareFailed') || '分享失败');
-      }
+      console.error('Error sharing:', error);
+      toast.error(t('common.error'));
     }
-  };
-
-  const getLocalizedText = (text: any) => {
-    if (!text) return '';
-    if (typeof text === 'string') return text;
-    if (typeof text !== 'object') return String(text);
-    
-    // 尝试获取当前语言的文本
-    const currentLang = text[i18n.language];
-    if (currentLang && typeof currentLang === 'string' && currentLang.trim()) {
-      return currentLang;
-    }
-    
-    // 按优先级fallback到其他语言
-    const fallbackLangs = ['zh', 'ru', 'tg', 'en'];
-    for (const lang of fallbackLangs) {
-      if (text[lang] && typeof text[lang] === 'string' && text[lang].trim()) {
-        return text[lang];
-      }
-    }
-    
-    return '';
   };
 
   const calculateTimeLeft = (expiresAt: string) => {
@@ -481,27 +623,29 @@ export default function GroupBuyDetailPage() {
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-    return `${hours}${t('groupBuy.hours')} ${minutes}${t('groupBuy.minutes')}`;
+    if (hours > 0) {
+      return `${hours}${t('common.hour')} ${minutes}${t('common.minute')}`;
+    }
+    return `${minutes}${t('common.minute')}`;
   };
 
-  // 获取商品图片数组
+  const getLocalizedText = (text: { zh: string; ru: string; tg: string } | string): string => {
+    if (typeof text === 'string') return text;
+    const lang = i18n.language as 'zh' | 'ru' | 'tg';
+    return text[lang] || text.zh || '';
+  };
+
   const getProductImages = (): string[] => {
     if (!product) return [];
-    
-    // 优先使用images数组
-    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+    if (product.images && product.images.length > 0) {
       return product.images;
     }
-    
-    // 回退到单张图片
     if (product.image_url) {
       return [product.image_url];
     }
-    
     return [];
   };
 
-  // 截断昵称显示
   const truncateUsername = (username: string | null, maxLength: number = 10): string => {
     if (!username) return 'User';
     if (username.length <= maxLength) return username;
@@ -537,7 +681,7 @@ export default function GroupBuyDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-32">
       {/* Header */}
       <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-4">
         <button
@@ -732,17 +876,51 @@ export default function GroupBuyDetailPage() {
             </div>
           )}
         </div>
-
-        {/* Start New Group Button */}
-        <button
-          onClick={() => handleJoinGroup()}
-          disabled={joiningSessionId === 'new'}
-          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-4 rounded-xl font-bold text-lg hover:from-purple-600 hover:to-pink-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-        >
-          <ShoppingBag className="w-6 h-6" />
-          {joiningSessionId === 'new' ? t('common.processing') : t('groupBuy.startNewGroup')}
-        </button>
       </div>
+
+      {/* Fixed Bottom Buttons */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-20">
+        <div className="max-w-2xl mx-auto space-y-2">
+          {/* Squad Buy Button (Top) */}
+          <button
+            onClick={handleSquadBuyClick}
+            disabled={isSquadBuying}
+            className="relative w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+          >
+            <Crown className="w-5 h-5" />
+            <span>{t('groupBuy.squadBuy.title')}</span>
+            {/* Limited Time Badge */}
+            <span className="absolute -top-2 -right-2 px-2.5 py-0.5 bg-red-600 text-white text-xs font-bold rounded-full animate-pulse shadow-md">
+              {t('common.limitedTime')}
+            </span>
+          </button>
+
+          {/* Regular Join Button (Bottom) */}
+          <button
+            onClick={() => handleJoinGroup()}
+            disabled={joiningSessionId === 'new'}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white py-3.5 rounded-xl font-bold text-base hover:from-purple-600 hover:to-pink-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            <ShoppingBag className="w-5 h-5" />
+            <span>
+              {joiningSessionId === 'new' 
+                ? t('common.processing') 
+                : `${t('groupBuy.startNewGroup')} (TJS ${product.price_per_person})`
+              }
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Squad Buy Confirm Modal */}
+      <SquadBuyConfirmModal
+        isOpen={showSquadConfirm}
+        onClose={() => !isSquadBuying && setShowSquadConfirm(false)}
+        onConfirm={handleConfirmSquadBuy}
+        product={product}
+        isProcessing={isSquadBuying}
+        t={t}
+      />
     </div>
   );
 }
