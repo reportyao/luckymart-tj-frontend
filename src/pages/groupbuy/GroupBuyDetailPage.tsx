@@ -298,20 +298,17 @@ function SquadBuyConfirmModal({
         </button>
 
         {/* Title */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-full mb-3">
-            <Crown className="w-8 h-8 text-white" />
-          </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+        <div className="text-center mb-4">
+          <h2 className="text-lg font-bold text-gray-800">
             {t('groupBuy.squadBuy.confirmTitle')}
           </h2>
-          <p className="text-gray-600 text-sm">
+          <p className="text-gray-500 text-xs mt-1">
             {t('groupBuy.squadBuy.confirmSubtitle')}
           </p>
         </div>
 
         {/* Price Details */}
-        <div className="bg-gray-50 rounded-xl p-4 mb-4 space-y-3">
+        <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-2">
           <div className="flex justify-between items-center text-sm">
             <span className="text-gray-600">{t('groupBuy.squadBuy.originalPrice')}</span>
             <span className="line-through text-gray-400">TJS {product.original_price.toFixed(2)}</span>
@@ -324,14 +321,14 @@ function SquadBuyConfirmModal({
             <span className="text-gray-600">{t('groupBuy.squadBuy.quantity')}</span>
             <span className="text-gray-800 font-medium">× {groupSize}</span>
           </div>
-          <div className="border-t border-gray-200 pt-3 flex justify-between items-center">
+          <div className="border-t border-gray-200 pt-2 flex justify-between items-center">
             <span className="text-gray-800 font-semibold">{t('groupBuy.squadBuy.totalPayment')}</span>
-            <span className="text-2xl font-bold text-orange-500">TJS {totalPrice.toFixed(2)}</span>
+            <span className="text-xl font-bold text-orange-500">TJS {totalPrice.toFixed(2)}</span>
           </div>
         </div>
 
         {/* Discount Info */}
-        <div className="bg-orange-50 rounded-xl px-4 py-2 mb-4 text-center">
+        <div className="bg-orange-50 rounded-xl px-3 py-1.5 mb-3 text-center">
           <span className="text-orange-600 text-sm font-semibold">
             {t('groupBuy.squadBuy.discountInfo', { 
               discount: ((totalPrice / product.original_price) * 100).toFixed(0) 
@@ -340,8 +337,8 @@ function SquadBuyConfirmModal({
         </div>
 
         {/* Benefits */}
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-4 mb-6">
-          <p className="text-sm font-semibold text-gray-700 mb-3 text-center">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-3 mb-4">
+          <p className="text-xs font-semibold text-gray-700 mb-2 text-center">
             {t('groupBuy.squadBuy.youWillGet')}
           </p>
           <div className="space-y-2">
@@ -376,7 +373,7 @@ function SquadBuyConfirmModal({
         <button
           onClick={onConfirm}
           disabled={isProcessing}
-          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-4 rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-3 rounded-xl font-bold text-base hover:from-yellow-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {isProcessing ? (
             <>
