@@ -1,3 +1,6 @@
+import { readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+
 // Vite 插件：给所有资源添加时间戳查询参数，并在 HTML 中添加随机 ID
 export default function timestampPlugin() {
   const timestamp = Date.now();
@@ -6,6 +9,18 @@ export default function timestampPlugin() {
   
   return {
     name: 'vite-plugin-timestamp',
+    buildStart() {
+      // 自动更新 public/version.json 的 buildTime
+      try {
+        const versionPath = resolve(process.cwd(), 'public/version.json');
+        const versionData = JSON.parse(readFileSync(versionPath, 'utf-8'));
+        versionData.buildTime = buildTime;
+        writeFileSync(versionPath, JSON.stringify(versionData, null, 2) + '\n');
+        console.log(`[timestamp] Updated version.json buildTime: ${buildTime}`);
+      } catch (e) {
+        console.warn('[timestamp] Failed to update version.json:', e.message);
+      }
+    },
     transformIndexHtml(html) {
       // 给所有 script 和 link 标签添加时间戳
       let result = html
