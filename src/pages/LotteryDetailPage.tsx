@@ -756,16 +756,22 @@ const LotteryDetailPage: React.FC = () => {
             <CountdownTimer 
               drawTime={lottery.draw_time} 
               onCountdownEnd={async () => {
-                // 倒计时结束后执行开奖
+                // 倒计时结束后调用统一开奖入口 auto-lottery-draw
                 try {
-                  console.log('开始开奖:', id);
-                  await lotteryService.drawLottery(id!);
-                  console.log('Draw successful');
+                  console.log('[LotteryDetail] 倒计时结束，开始开奖:', id);
+                  const { data, error } = await supabase.functions.invoke('auto-lottery-draw', {
+                    body: { lotteryId: id }
+                  });
+                  if (error || !data?.success) {
+                    console.error('[LotteryDetail] Draw failed:', error?.message || data?.error);
+                  } else {
+                    console.log('[LotteryDetail] Draw successful:', data);
+                  }
                   // 刷新页面查看开奖结果
                   await fetchLottery();
                 } catch (error: any) {
-                  console.error('Draw failed:', error);
-                  // 即使开奖失败也刷新页面，可能已经开奖了
+                  console.error('[LotteryDetail] Draw error:', error);
+                  // 即使开奖失败也刷新页面，可能已经被其他路径开奖了
                   await fetchLottery();
                 }
               }}

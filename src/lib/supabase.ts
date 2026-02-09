@@ -425,17 +425,22 @@ export const lotteryService: any = {
   },
 
   /**
-   * 执行开奖
+   * 执行开奖 - 统一使用 auto-lottery-draw Edge Function
    * @param lotteryId 积分商城 ID
    */
   async drawLottery(lotteryId: string): Promise<any> {
-    const { data, error } = await supabase.rpc('draw_lottery' as any, {
-      p_lottery_id: lotteryId
+    const { data, error } = await supabase.functions.invoke('auto-lottery-draw', {
+      body: { lotteryId }
     });
 
     if (error) {
-      console.error('Draw lottery failed:', error);
+      console.error('[lotteryService] Draw lottery failed:', error);
       throw new Error(`开奖失败: ${error.message}`);
+    }
+
+    if (!data?.success) {
+      console.error('[lotteryService] Draw lottery returned error:', data?.error);
+      throw new Error(`开奖失败: ${data?.error || 'Unknown error'}`);
     }
 
     return data;
