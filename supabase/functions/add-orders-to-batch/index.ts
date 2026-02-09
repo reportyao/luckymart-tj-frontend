@@ -2,11 +2,15 @@
  * 将订单加入批次 Edge Function
  * 
  * 功能：将选中的订单加入到指定批次
+ * 支持加入运输中（IN_TRANSIT_CHINA）和已到达（ARRIVED）的批次
+ * 加入已到达批次时，自动生成提货码并发送到货通知
  * 权限：仅管理员可调用
  */
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts'
 import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.42.0'
+import { generatePickupCode, calculatePickupCodeExpiry } from '../_shared/pickupCode.ts'
+import { sendBatchArrivedNotification } from '../_shared/batchNotification.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,7 +30,7 @@ interface AddOrdersRequest {
   send_notification?: boolean
 }
 
-// 内联通知功能
+// 内联通知功能（用于运输中批次的发货通知）
 const BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN')
 
 const notificationTemplates = {
@@ -151,18 +155,52 @@ serve(async (req) => {
       )
     }
 
-    // 检查批次状态
-    if (batch.status !== 'IN_TRANSIT_CHINA') {
+    // 检查批次状态 - 允许运输中和已到达的批次
+    const allowedStatuses = ['IN_TRANSIT_CHINA', 'ARRIVED']
+    if (!allowedStatuses.includes(batch.status)) {
       return new Response(
-        JSON.stringify({ success: false, error: '只能向运输中（中国段）的批次添加订单' }),
+        JSON.stringify({ success: false, error: '只能向运输中或已到达的批次添加订单' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
+    }
+
+    const isArrivedBatch = batch.status === 'ARRIVED'
+
+    // 如果是已到达批次，需要获取自提点信息用于生成提货码
+    let pickupPoint: any = null
+    if (isArrivedBatch) {
+      const { data: defaultPickupPoint } = await supabase
+        .from('pickup_points')
+        .select('id, name, name_i18n, address, address_i18n')
+        .eq('is_default', true)
+        .single()
+
+      if (defaultPickupPoint) {
+        pickupPoint = defaultPickupPoint
+      } else {
+        const { data: anyPickupPoint } = await supabase
+          .from('pickup_points')
+          .select('id, name, name_i18n, address, address_i18n')
+          .eq('is_active', true)
+          .limit(1)
+          .single()
+        
+        pickupPoint = anyPickupPoint
+      }
+
+      if (!pickupPoint) {
+        return new Response(
+          JSON.stringify({ success: false, error: '没有可用的自提点，无法为已到达批次生成提货码' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
     }
 
     const results = {
       success: [] as string[],
       failed: [] as { order_id: string; error: string }[],
       notifications_sent: 0,
+      pickup_codes_generated: 0,
     }
 
     for (const order of orders) {
@@ -290,7 +328,8 @@ serve(async (req) => {
         }
 
         // 创建批次订单关联记录
-        const { error: insertError } = await supabase
+        // 如果是已到达批次，直接标记为 NORMAL（正常到货）
+        const { data: insertedItem, error: insertError } = await supabase
           .from('batch_order_items')
           .insert({
             batch_id: batch_id,
@@ -304,8 +343,10 @@ serve(async (req) => {
             user_id: userId,
             user_telegram_id: userTelegramId ? parseInt(userTelegramId) : null,
             user_name: userName,
-            arrival_status: 'PENDING',
+            arrival_status: isArrivedBatch ? 'NORMAL' : 'PENDING',
           })
+          .select('id')
+          .single()
 
         if (insertError) {
           // 检查是否是唯一约束冲突
@@ -317,47 +358,141 @@ serve(async (req) => {
           continue
         }
 
-        // 更新订单的批次ID和物流状态
-        const updateData = {
-          batch_id: batch_id,
-          logistics_status: 'IN_TRANSIT_CHINA',
-        }
+        if (isArrivedBatch) {
+          // ========== 已到达批次：生成提货码 + 更新为 READY_FOR_PICKUP ==========
+          try {
+            const pickupCode = await generatePickupCode(supabase)
+            const expiresAt = calculatePickupCodeExpiry(30)
 
-        if (order.order_type === 'FULL_PURCHASE') {
-          await supabase
-            .from('full_purchase_orders')
-            .update(updateData)
-            .eq('id', order.order_id)
-        } else if (order.order_type === 'LOTTERY_PRIZE') {
-          await supabase
-            .from('prizes')
-            .update(updateData)
-            .eq('id', order.order_id)
-        } else if (order.order_type === 'GROUP_BUY') {
-          await supabase
-            .from('group_buy_results')
-            .update(updateData)
-            .eq('id', order.order_id)
+            // 更新 batch_order_items 的提货码信息
+            await supabase
+              .from('batch_order_items')
+              .update({
+                pickup_code: pickupCode,
+                pickup_code_generated_at: new Date().toISOString(),
+                pickup_code_expires_at: expiresAt,
+              })
+              .eq('id', insertedItem.id)
+
+            // 更新原订单表的提货码和物流状态
+            if (order.order_type === 'FULL_PURCHASE') {
+              await supabase
+                .from('full_purchase_orders')
+                .update({
+                  batch_id: batch_id,
+                  pickup_code: pickupCode,
+                  logistics_status: 'READY_FOR_PICKUP',
+                  pickup_point_id: pickupPoint?.id,
+                })
+                .eq('id', order.order_id)
+            } else if (order.order_type === 'LOTTERY_PRIZE') {
+              await supabase
+                .from('prizes')
+                .update({
+                  batch_id: batch_id,
+                  pickup_code: pickupCode,
+                  pickup_status: 'PENDING_PICKUP',
+                  logistics_status: 'READY_FOR_PICKUP',
+                  pickup_point_id: pickupPoint?.id,
+                  expires_at: expiresAt,
+                })
+                .eq('id', order.order_id)
+            } else if (order.order_type === 'GROUP_BUY') {
+              await supabase
+                .from('group_buy_results')
+                .update({
+                  batch_id: batch_id,
+                  pickup_code: pickupCode,
+                  pickup_status: 'PENDING_PICKUP',
+                  logistics_status: 'READY_FOR_PICKUP',
+                  pickup_point_id: pickupPoint?.id,
+                  expires_at: expiresAt,
+                })
+                .eq('id', order.order_id)
+            }
+
+            results.pickup_codes_generated++
+
+            // 发送到货提货通知
+            if (send_notification && userId && pickupPoint) {
+              try {
+                const sent = await sendBatchArrivedNotification(
+                  supabase,
+                  userId,
+                  productName,
+                  productNameI18n,
+                  pickupCode,
+                  pickupPoint.name,
+                  pickupPoint.name_i18n,
+                  pickupPoint.address,
+                  pickupPoint.address_i18n,
+                  expiresAt
+                )
+                if (sent) {
+                  // 更新通知状态
+                  await supabase
+                    .from('batch_order_items')
+                    .update({
+                      notification_sent: true,
+                      notification_sent_at: new Date().toISOString(),
+                    })
+                    .eq('id', insertedItem.id)
+                  results.notifications_sent++
+                }
+              } catch (notifyError) {
+                console.error('Failed to send arrival notification:', notifyError)
+              }
+            }
+
+          } catch (pickupCodeError) {
+            console.error('Failed to generate pickup code:', pickupCodeError)
+            results.failed.push({ order_id: order.order_id, error: '生成提货码失败' })
+            // 即使提货码生成失败，订单已加入批次，不回滚
+          }
+
+        } else {
+          // ========== 运输中批次：正常流程，更新为 IN_TRANSIT_CHINA ==========
+          const updateData = {
+            batch_id: batch_id,
+            logistics_status: 'IN_TRANSIT_CHINA',
+          }
+
+          if (order.order_type === 'FULL_PURCHASE') {
+            await supabase
+              .from('full_purchase_orders')
+              .update(updateData)
+              .eq('id', order.order_id)
+          } else if (order.order_type === 'LOTTERY_PRIZE') {
+            await supabase
+              .from('prizes')
+              .update(updateData)
+              .eq('id', order.order_id)
+          } else if (order.order_type === 'GROUP_BUY') {
+            await supabase
+              .from('group_buy_results')
+              .update(updateData)
+              .eq('id', order.order_id)
+          }
+
+          // 发送发货通知
+          if (send_notification && userId && batch.estimated_arrival_date) {
+            try {
+              const sent = await sendBatchShippedNotification(
+                supabase,
+                userId,
+                batch.batch_no,
+                batch.estimated_arrival_date
+              )
+              if (sent) {
+                results.notifications_sent++
+              }
+            } catch (notifyError) {
+              console.error('Failed to send notification:', notifyError)
+            }
+          }
         }
 
         results.success.push(order.order_id)
-
-        // 发送通知
-        if (send_notification && userId && batch.estimated_arrival_date) {
-          try {
-            const sent = await sendBatchShippedNotification(
-              supabase,
-              userId,
-              batch.batch_no,
-              batch.estimated_arrival_date
-            )
-            if (sent) {
-              results.notifications_sent++
-            }
-          } catch (notifyError) {
-            console.error('Failed to send notification:', notifyError)
-          }
-        }
 
       } catch (error) {
         console.error('Error processing order:', order.order_id, error)
@@ -365,11 +500,28 @@ serve(async (req) => {
       }
     }
 
+    // 更新批次的订单总数
+    const { data: batchItems } = await supabase
+      .from('batch_order_items')
+      .select('id')
+      .eq('batch_id', batch_id)
+    
+    if (batchItems) {
+      await supabase
+        .from('shipment_batches')
+        .update({ total_orders: batchItems.length })
+        .eq('id', batch_id)
+    }
+
+    const arrivedMsg = isArrivedBatch 
+      ? `，生成提货码 ${results.pickup_codes_generated} 个` 
+      : ''
+
     return new Response(
       JSON.stringify({
         success: true,
         data: results,
-        message: `成功添加 ${results.success.length} 个订单，失败 ${results.failed.length} 个`,
+        message: `成功添加 ${results.success.length} 个订单${arrivedMsg}，失败 ${results.failed.length} 个`,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
