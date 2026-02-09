@@ -740,6 +740,8 @@ export const referralService = {
       
       return {
         ...showoff,
+        // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
+        image_urls: (showoff as any).image_urls || (showoff as any).images || [],
         user: user || null,
         lottery: lottery || null,
         is_liked: likedIds.has(showoff.id),
@@ -901,7 +903,8 @@ export const referralService = {
         lottery_id: params.lottery_id || null, // 拼团商品时lottery_id为空,设置为null
         title: params.title || null, // 保存商品名称
         content: params.content,
-        image_urls: params.images, // 数据库字段名是 image_urls
+        images: params.images, // 数据库字段名可能是 images 或 image_urls
+        image_urls: params.images, // 同时写入两个字段以兼容不同的数据库 schema
         status: 'PENDING',
       })
       .select()

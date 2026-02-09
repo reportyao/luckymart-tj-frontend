@@ -162,6 +162,8 @@ const LotteryDetailPage: React.FC = () => {
           // 合并数据
           const showoffsWithUsers = showoffsData.map((showoff: any) => ({
             ...showoff,
+            // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
+            image_urls: showoff.image_urls || showoff.images || [],
             user: usersData?.find((u: any) => u.id === showoff.user_id) || null
           }));
 
@@ -170,6 +172,8 @@ const LotteryDetailPage: React.FC = () => {
           // 如果没有 user_id，也需要添加 user 字段以符合类型
           const showoffsWithNullUsers = showoffsData.map((showoff: any) => ({
             ...showoff,
+            // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
+            image_urls: showoff.image_urls || showoff.images || [],
             user: null
           }));
           setRandomShowoffs(showoffsWithNullUsers);

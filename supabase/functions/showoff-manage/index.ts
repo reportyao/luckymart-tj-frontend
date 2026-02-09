@@ -63,6 +63,7 @@ serve(async (req) => {
             lottery_id: entry.lottery_id,
             content,
             images,
+            image_urls: images, // 同时写入两个字段以兼容不同的数据库 schema
             status: 'PENDING', // 待审核
             likes_count: 0,
             comments_count: 0

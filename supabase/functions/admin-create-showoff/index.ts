@@ -129,6 +129,7 @@ serve(async (req) => {
       // 晒单内容
       content: content.trim(),
       images: images,
+      image_urls: images, // 同时写入两个字段以兼容不同的数据库 schema
       title: title?.trim() || null,
 
       // 关联信息

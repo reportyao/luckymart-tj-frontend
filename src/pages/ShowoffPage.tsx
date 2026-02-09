@@ -201,6 +201,8 @@ const ShowoffPage: React.FC = () => {
       // 6. 合并数据
       const enrichedData = showoffsData.map((showoff: any) => ({
         ...showoff,
+        // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
+        image_urls: showoff.image_urls || showoff.images || [],
         user: usersMap[showoff.user_id] || null,
         lottery: lotteriesMap[showoff.lottery_id] || null,
         is_liked: likedShowoffIds.has(showoff.id),
