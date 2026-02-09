@@ -137,7 +137,7 @@ const LotteryDetailPage: React.FC = () => {
 
   const fetchRandomShowoffs = useCallback(async () => {
     try {
-      // 获取最近的 3 个已审核晒单
+      // 获取最近的 3 个已审核晒单（包含 display_username 和 display_avatar_url 字段）
       const { data: showoffsData, error: showoffsError } = await supabase
         .from('showoffs')
         .select('*')
@@ -147,43 +147,38 @@ const LotteryDetailPage: React.FC = () => {
 
       if (showoffsError) throw showoffsError;
 
-      // 手动获取用户信息
       if (showoffsData && showoffsData.length > 0) {
-        const userIds = showoffsData.map((s: any) => s.user_id).filter(Boolean);
-        
+        // 批量获取真实用户信息（仅针对有 user_id 的晒单）
+        const userIds = [...new Set(showoffsData.map((s: any) => s.user_id).filter(Boolean))];
+        let usersMap: Record<string, any> = {};
+
         if (userIds.length > 0) {
           const { data: usersData, error: usersError } = await supabase
             .from('users')
-            .select('id, telegram_username, avatar_url')
+            .select('id, telegram_username, first_name, avatar_url')
             .in('id', userIds);
 
-          if (usersError) throw usersError;
-
-          // 合并数据
-          const showoffsWithUsers = showoffsData.map((showoff: any) => ({
-            ...showoff,
-            // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
-            image_urls: showoff.image_urls || showoff.images || [],
-            user: usersData?.find((u: any) => u.id === showoff.user_id) || null
-          }));
-
-          setRandomShowoffs(showoffsWithUsers);
-        } else {
-          // 如果没有 user_id，也需要添加 user 字段以符合类型
-          const showoffsWithNullUsers = showoffsData.map((showoff: any) => ({
-            ...showoff,
-            // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
-            image_urls: showoff.image_urls || showoff.images || [],
-            user: null
-          }));
-          setRandomShowoffs(showoffsWithNullUsers);
+          if (!usersError && usersData) {
+            usersData.forEach((u: any) => {
+              usersMap[u.id] = u;
+            });
+          }
         }
+
+        // 合并数据：优先使用运营晒单的 display_username/display_avatar_url，
+        // 其次使用真实用户的 telegram_username/first_name/avatar_url
+        const enrichedShowoffs = showoffsData.map((showoff: any) => ({
+          ...showoff,
+          image_urls: showoff.image_urls || showoff.images || [],
+          user: usersMap[showoff.user_id] || null
+        }));
+
+        setRandomShowoffs(enrichedShowoffs);
       } else {
         setRandomShowoffs([]);
       }
     } catch (error) {
       console.error('Failed to fetch random showoffs:', error);
-      // 即使失败也不影响页面其他功能
       setRandomShowoffs([]);
     }
   }, [supabase]);
@@ -905,32 +900,57 @@ const LotteryDetailPage: React.FC = () => {
           <h3 className="text-xl font-bold text-gray-900 border-b pb-2">{t('showoff.recentShowoffs')}</h3>
           {randomShowoffs.length > 0 ? (
             <div className="space-y-4">
-              {randomShowoffs.map((showoff, index) => (
-                <div key={showoff.id} className="border-b last:border-b-0 pb-4">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium text-gray-600">
-                      {showoff.user?.telegram_username ? showoff.user.telegram_username[0] : 'U'}
+              {randomShowoffs.map((showoff, index) => {
+                // 优先级：运营晒单的 display_username > 真实用户的 telegram_username > first_name > 匿名
+                const displayName = (showoff as any).display_username 
+                  || showoff.user?.telegram_username 
+                  || (showoff.user as any)?.first_name 
+                  || t('errors.anonymousUser');
+                const displayAvatar = (showoff as any).display_avatar_url 
+                  || showoff.user?.avatar_url;
+                const avatarInitial = displayName ? displayName.charAt(0).toUpperCase() : 'U';
+
+                return (
+                  <div key={showoff.id} className="border-b last:border-b-0 pb-4">
+                    <div className="flex items-center space-x-3 mb-2">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center text-sm font-bold text-blue-600 overflow-hidden flex-shrink-0">
+                        {displayAvatar ? (
+                          <img 
+                            src={displayAvatar} 
+                            alt="" 
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              (e.target as HTMLImageElement).parentElement!.innerText = avatarInitial;
+                            }}
+                          />
+                        ) : (
+                          avatarInitial
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-gray-800 truncate">{displayName}</p>
+                        <p className="text-xs text-gray-400">{formatDateTime(showoff.created_at)}</p>
+                      </div>
                     </div>
-                    <p className="font-semibold text-gray-800">{showoff.user?.telegram_username || t('errors.anonymousUser')}</p>
+                    <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
+                    {showoff.image_urls && showoff.image_urls.length > 0 && (
+                      <div className="flex space-x-2 overflow-x-auto">
+                        {showoff.image_urls.slice(0, 3).map((url, imgIndex) => (
+                          <LazyImage
+                            key={imgIndex}
+                            src={url}
+                            alt={`Showoff Image ${imgIndex + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                            width={80}
+                            height={80}
+                          />
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-700 mb-2 line-clamp-3">{showoff.content}</p>
-                  {showoff.image_urls && showoff.image_urls.length > 0 && (
-                    <div className="flex space-x-2 overflow-x-auto">
-                      {showoff.image_urls.slice(0, 3).map((url, imgIndex) => (
-                        <LazyImage
-                          key={imgIndex}
-                          src={url}
-                          alt={`Showoff Image ${imgIndex + 1}`}
-                          className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
-                          width={80}
-                          height={80}
-                        />
-                      ))}
-                    </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-2">{formatDateTime(showoff.created_at)}</p>
-                </div>
-              ))}
+                );
+              })}
               <Button variant="outline" className="w-full" onClick={() => navigate('/showoff')}>
                 {t('showoff.viewAll')}
               </Button>

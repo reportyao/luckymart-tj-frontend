@@ -44,6 +44,10 @@ interface NotificationData {
   level?: string;
   source?: string;
   invitee_name?: string;  // 被邀请人名称
+  
+  // 开奖提醒相关
+  lottery_title?: string;
+  lottery_id?: string;
 }
 
 // 多语言通知模板 - 根据用户确认的文案
@@ -231,6 +235,18 @@ const notificationTemplates = {
       `🎁 Реферальная награда получена\n\n💰 Размер награды: +${data.referral_amount} TJS\n👥 Источник: ${data.source || data.level || 'Награда за приглашение друзей'}\n\nСпасибо за продвижение TezBarakatTJ!`,
     tg: (data: NotificationData) => 
       `🎁 Ҷоизаи реферал дарёфт\n\n💰 Андозаи ҷоиза: +${data.referral_amount} TJS\n👥 Манбаъ: ${data.source || data.level || 'Ҷоизаи таклифи дӯстон'}\n\nТашаккур барои таблиғи TezBarakatTJ!`
+  },
+
+  // ==================== 8. 开奖提醒通知 ====================
+  
+  // 彩票即将开奖提醒
+  lottery_draw_soon: {
+    zh: (data: NotificationData) => 
+      `⏰ 开奖提醒\n\n🎰 商品: ${data.lottery_title || data.product_name || '未知商品'}\n🔢 您的参与码: ${data.ticket_number}\n⏰ 即将10分钟后开奖\n\n请留意开奖结果！`,
+    ru: (data: NotificationData) => 
+      `⏰ Напоминание о розыгрыше\n\n🎰 Товар: ${data.lottery_title || data.product_name || 'Неизвестный товар'}\n🔢 Ваш код участия: ${data.ticket_number}\n⏰ Розыгрыш через 10 минут\n\nСледите за результатами!`,
+    tg: (data: NotificationData) => 
+      `⏰ Огоҳӣ дар бораи бахтозмоӣ\n\n🎰 Мол: ${data.lottery_title || data.product_name || 'Моли номаълум'}\n🔢 Рамзи иштироки шумо: ${data.ticket_number}\n⏰ Бахтозмоӣ пас аз 10 дақиқа\n\nНатиҷаҳоро пайгирӣ кунед!`
   }
 };
 
@@ -268,6 +284,25 @@ async function sendTelegramMessage(
   }
 }
 
+/**
+ * 将用户的 language_code 或 preferred_language 映射为模板语言代码
+ * 映射规则：
+ *   ru, ru-* → ru（俄语）
+ *   zh, zh-hans, zh-hant, zh-* → zh（中文）
+ *   tg, tg-* → tg（塔吉克语）
+ *   其他（en, 未知等） → tg（塔吉克斯坦本地用户默认塔吉克语）
+ */
+function resolveLanguage(langCode: string | null | undefined): string {
+  if (!langCode) return 'tg';
+  const normalized = langCode.toLowerCase().trim();
+  if (normalized.startsWith('ru')) return 'ru';
+  if (normalized.startsWith('zh')) return 'zh';
+  if (normalized.startsWith('tg')) return 'tg';
+  // 英语和其他语言的用户在塔吉克斯坦，默认使用俄语（更通用）
+  if (normalized.startsWith('en')) return 'ru';
+  return 'tg';
+}
+
 // 格式化通知文本
 function formatNotificationText(
   notificationType: string,
@@ -278,31 +313,34 @@ function formatNotificationText(
   
   if (!template) {
     console.warn(`Unknown notification type: ${notificationType}`);
-    return `通知: ${JSON.stringify(data)}`;
+    // 未知类型时使用塔吉克语提示
+    return `Огоҳӣ: ${notificationType}`;
   }
 
-  // 默认使用中文，如果没有对应语言则使用中文
-  const languageCode = ['zh', 'ru', 'tg'].includes(language) ? language : 'zh';
-  const formatter = template[languageCode as keyof typeof template] || template['zh'];
+  // 使用 resolveLanguage 进行语言映射，默认塔吉克语
+  const languageCode = resolveLanguage(language);
+  const formatter = template[languageCode as keyof typeof template] || template['tg'];
   
   if (typeof formatter === 'function') {
     return formatter(data);
   }
   
-  return `通知: ${notificationType}`;
+  return `Огоҳӣ: ${notificationType}`;
 }
 
 // 处理单个通知
 async function processNotification(supabase: any, notification: any, botToken: string) {
   try {
     // 获取用户信息和语言偏好
+    // 优先使用 language_code（Telegram自动提供），其次 preferred_language（用户手动设置）
     const { data: user } = await supabase
       .from('users')
-      .select('preferred_language, telegram_id')
+      .select('preferred_language, language_code, telegram_id')
       .eq('id', notification.user_id)
       .single();
 
-    const language = user?.preferred_language || 'zh';
+    // 语言优先级：用户手动设置 > Telegram语言代码 > 默认塔吉克语
+    const language = resolveLanguage(user?.preferred_language !== 'zh' ? user?.preferred_language : user?.language_code);
     
     // 获取 telegram_chat_id，优先使用通知中的，否则从用户表查询
     let chatId = notification.telegram_chat_id;

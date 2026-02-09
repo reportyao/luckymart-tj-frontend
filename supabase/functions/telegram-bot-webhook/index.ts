@@ -74,8 +74,11 @@ const commands: BotCommand[] = [
     handler: async (message: TelegramMessage, supabase: any) => {
       const telegramId = message.from.id.toString();
       const chatId = message.chat.id;
+      // 语言检测：优先使用Telegram提供的language_code，默认塔吉克语
       const lang = message.from.language_code?.startsWith('ru') ? 'ru' : 
-                   message.from.language_code?.startsWith('tg') ? 'tg' : 'zh';
+                   message.from.language_code?.startsWith('zh') ? 'zh' :
+                   message.from.language_code?.startsWith('tg') ? 'tg' : 
+                   message.from.language_code?.startsWith('en') ? 'ru' : 'tg';
 
       try {
         // 查找或创建用户的Bot设置
@@ -251,9 +254,15 @@ async function getUserLanguage(chatId: number, supabase: any): Promise<string> {
       .eq('telegram_chat_id', chatId)
       .single();
 
-    return settings?.language_code || 'zh';
+    if (!settings?.language_code) return 'tg';
+    const lc = settings.language_code.toLowerCase();
+    if (lc.startsWith('ru')) return 'ru';
+    if (lc.startsWith('zh')) return 'zh';
+    if (lc.startsWith('tg')) return 'tg';
+    if (lc.startsWith('en')) return 'ru';
+    return 'tg';
   } catch {
-    return 'zh';
+    return 'tg';
   }
 }
 

@@ -138,14 +138,24 @@ async function checkLotteryDrawReminders(supabase: any): Promise<number> {
                 user_id: entry.user_id,
                 telegram_chat_id: settings.telegram_chat_id,
                 notification_type: 'lottery_draw_soon',
-                title: '开奖提醒',
-                message: '您参与的彩票即将开奖',
+                type: 'lottery_draw_soon',
+                title: 'Lottery Draw Reminder',
+                message: 'Your lottery is about to draw',
                 data: {
                   lottery_id: lottery.id,
                   lottery_title: lottery.title,
-                  ticket_number: entry.numbers // 7位数开奖码
+                  product_name: lottery.title,
+                  ticket_number: entry.numbers
                 },
-                priority: 2
+                payload: {
+                  lottery_id: lottery.id,
+                  lottery_title: lottery.title,
+                  product_name: lottery.title,
+                  ticket_number: entry.numbers
+                },
+                status: 'pending',
+                priority: 2,
+                scheduled_at: new Date().toISOString()
               });
 
             notificationsCreated++;
