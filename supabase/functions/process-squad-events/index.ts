@@ -116,8 +116,10 @@ async function handleCommission(event: QueuedEvent): Promise<void> {
  *   1. 获取或创建今日的 ai_chat_quota 记录
  *   2. 原子性地增加 bonus_quota
  *
- * 注意: 在 group-buy-squad v2 中，我们将 groupSize 次调用合并为一次，
- * 总量 = groupSize × 10。这减少了网络调用次数。
+ * 注意: ai-add-bonus 对 amount 有 1-100 的限制。
+ * 在 group-buy-squad v2 中，我们将 groupSize 次调用合并为一次，
+ * 总量 = groupSize × 10。当 groupSize > 10 时 amount 会超过 100，
+ * 因此需要分批调用，每批不超过 100。
  *
  * @param event - 队列事件，payload 包含 { user_id, amount, reason }
  */
@@ -126,22 +128,38 @@ async function handleAiReward(event: QueuedEvent): Promise<void> {
 
   console.log(`[Worker] Processing AI_REWARD: user=${user_id}, amount=${amount}, reason=${reason}`);
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-add-bonus`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ user_id, amount, reason }),
-  });
+  // ai-add-bonus 限制 amount 必须在 1-100 之间
+  // 当合并后的 amount 超过 100 时，需要分批调用
+  const MAX_AMOUNT_PER_CALL = 100;
+  let remaining = amount;
+  let totalAwarded = 0;
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`ai-add-bonus returned ${response.status}: ${errorText}`);
+  while (remaining > 0) {
+    const batchAmount = Math.min(remaining, MAX_AMOUNT_PER_CALL);
+
+    const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-add-bonus`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ user_id, amount: batchAmount, reason }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`ai-add-bonus returned ${response.status}: ${errorText} (awarded ${totalAwarded}/${amount} so far)`);
+    }
+
+    totalAwarded += batchAmount;
+    remaining -= batchAmount;
+
+    if (remaining > 0) {
+      console.log(`[Worker] AI_REWARD batch: awarded ${batchAmount}, remaining ${remaining}`);
+    }
   }
 
-  const result = await response.json();
-  console.log(`[Worker] AI_REWARD completed: user=${user_id}, amount=${amount}`);
+  console.log(`[Worker] AI_REWARD completed: user=${user_id}, total_awarded=${totalAwarded}`);
 }
 
 /**

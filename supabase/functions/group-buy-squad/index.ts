@@ -168,15 +168,41 @@ Deno.serve(async (req) => {
     console.log(`[SquadBuy] Starting squad buy: product=${product_id}, user=${user_id}`);
 
     // ============================================
-    // 步骤 1: 获取商品信息并校验
+    // 步骤 1-2-4: 并行查询商品、用户、钱包信息
     // ============================================
-    const { data: product, error: productError } = await supabase
-      .from('group_buy_products')
-      .select('*')
-      .eq('id', product_id)
-      .in('status', ['ACTIVE', 'active'])
-      .single();
+    // 【二次优化】将三个独立的数据库查询并行执行，节省 ~100ms 响应时间。
+    // 安全性说明:
+    //   - 这三个查询都是纯读操作，不涉及任何写入
+    //   - 商品查询只依赖 product_id（请求参数）
+    //   - 用户查询只依赖 user_id（请求参数）
+    //   - 钱包查询只依赖 user_id（请求参数）
+    //   - 三者之间没有数据依赖关系，可以安全并行
+    // ============================================
+    const [productResult, userResult, walletResult] = await Promise.all([
+      // 查询商品信息
+      supabase
+        .from('group_buy_products')
+        .select('*')
+        .eq('id', product_id)
+        .in('status', ['ACTIVE', 'active'])
+        .single(),
+      // 查询用户信息
+      supabase
+        .from('users')
+        .select('id, telegram_id')
+        .eq('id', user_id)
+        .single(),
+      // 查询 TJS 钱包
+      supabase
+        .from('wallets')
+        .select('*')
+        .eq('user_id', user_id)
+        .eq('type', 'TJS')
+        .single(),
+    ]);
 
+    // --- 校验商品 ---
+    const { data: product, error: productError } = productResult;
     if (productError || !product) {
       console.error('Product query error:', productError);
       return createResponse({ success: false, error: 'Product not found or inactive' }, 404);
@@ -190,12 +216,9 @@ Deno.serve(async (req) => {
     const groupSize = product.group_size ?? product.max_participants ?? 3;
     const productTitle = product.title ?? product.name_i18n ?? { zh: product.name };
 
-    // 校验库存
     if (stockQuantity <= soldQuantity) {
       return createResponse({ success: false, error: 'out_of_stock' }, 400);
     }
-
-    // 校验价格合理性
     if (pricePerPerson <= 0) {
       return createResponse({ success: false, error: 'Invalid product price' }, 400);
     }
@@ -205,23 +228,34 @@ Deno.serve(async (req) => {
 
     console.log(`[SquadBuy] Product: price=${pricePerPerson}, groupSize=${groupSize}, total=${totalCost}, refund=${refundPoints}`);
 
-    // ============================================
-    // 步骤 2: 获取用户信息
-    // ============================================
-    const { data: user, error: userError } = await supabase
-      .from('users')
-      .select('id, telegram_id')
-      .eq('id', user_id)
-      .single();
-
+    // --- 校验用户 ---
+    const { data: user, error: userError } = userResult;
     if (userError || !user) {
       console.error('User query error:', userError, 'user_id:', user_id);
       return createResponse({ success: false, error: 'User not found' }, 404);
     }
 
+    // --- 校验钱包 ---
+    const { data: tjsWallet, error: walletError } = walletResult;
+    if (walletError || !tjsWallet) {
+      console.error('Wallet query error:', walletError, 'user_id:', user_id);
+      return createResponse({ success: false, error: 'Wallet not found' }, 404);
+    }
+
+    const availableBalance = Number(tjsWallet.balance) - Number(tjsWallet.frozen_balance || 0);
+    if (availableBalance < totalCost) {
+      return createResponse({
+        success: false,
+        error: 'insufficient_balance',
+        required: totalCost,
+        current: availableBalance,
+      }, 400);
+    }
+
     // ============================================
     // 步骤 3: 检查用户是否已在进行中的session中（防重复）
     // 【修复】同时检查UUID和telegram_id，兼容历史数据
+    // 注意: 此查询依赖步骤 2 的 user.telegram_id，因此必须在并行查询之后执行
     // ============================================
     const { data: activeOrders } = await supabase
       .from('group_buy_orders')
@@ -232,32 +266,6 @@ Deno.serve(async (req) => {
 
     if (activeOrders && activeOrders.length > 0) {
       return createResponse({ success: false, error: 'already_in_active_session' }, 400);
-    }
-
-    // ============================================
-    // 步骤 4: 获取用户TJS钱包并校验余额
-    // ============================================
-    const { data: tjsWallet, error: walletError } = await supabase
-      .from('wallets')
-      .select('*')
-      .eq('user_id', user_id)
-      .eq('type', 'TJS')
-      .single();
-
-    if (walletError || !tjsWallet) {
-      console.error('Wallet query error:', walletError, 'user_id:', user_id);
-      return createResponse({ success: false, error: 'Wallet not found' }, 404);
-    }
-
-    // 检查可用余额（balance - frozen_balance）
-    const availableBalance = Number(tjsWallet.balance) - Number(tjsWallet.frozen_balance || 0);
-    if (availableBalance < totalCost) {
-      return createResponse({
-        success: false,
-        error: 'insufficient_balance',
-        required: totalCost,
-        current: availableBalance,
-      }, 400);
     }
 
     // ============================================
