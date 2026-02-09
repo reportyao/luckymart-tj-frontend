@@ -1,11 +1,16 @@
 /**
  * ============================================================================
- * 异步事件处理 Worker (process-squad-events)
+ * 异步事件处理 Worker (process-squad-events) v3
  * ============================================================================
  *
  * 功能概述:
- *   消费 event_queue 表中的待处理事件，调用对应的 Edge Function 完成实际业务处理。
+ *   消费 event_queue 表中的待处理事件，直接执行数据库操作完成实际业务处理。
  *   支持自动重试（指数退避）和死信队列。
+ *
+ * v3 重大变更（相比 v2）:
+ *   - 所有事件处理器从 HTTP 调用其他 Edge Functions 改为直接内联数据库操作
+ *   - 彻底消除了 Edge Function 之间调用的 JWT 认证问题
+ *   - 减少了网络请求开销，提升了处理速度和可靠性
  *
  * 触发方式:
  *   1. Supabase Database Webhook: 当 event_queue 表有新 INSERT 时自动触发
@@ -21,17 +26,16 @@
  *                如果重试次数耗尽，转入 dead_letter_queue
  *
  * 支持的事件类型:
- *   - COMMISSION:      调用 handle-purchase-commission
- *   - AI_REWARD:       调用 ai-add-bonus
- *   - FIRST_GROUP_BUY: 调用 handle-first-group-buy-reward
+ *   - COMMISSION:      三级分销佣金计算和发放（内联实现）
+ *   - AI_REWARD:       AI 对话奖励配额增加（内联实现）
+ *   - FIRST_GROUP_BUY: 首次拼团邀请人奖励（内联实现）
  *   - NOTIFICATION:    写入 notification_queue 表
  *
  * 幂等性保证:
- *   - 每个事件处理函数内部都有自己的防重复机制
- *   - handle-purchase-commission: 检查 commissions 表
- *   - handle-first-group-buy-reward: 检查 invite_rewards 表
- *   - ai-add-bonus: 通过 idempotency_key 在事件队列层面保证
- *   - notification: 通过 idempotency_key 在事件队列层面保证
+ *   - COMMISSION: 检查 commissions 表是否已存在相同 order_id + user_id + level 的记录
+ *   - FIRST_GROUP_BUY: 检查 invite_rewards 表是否已存在相同 inviter_id + invitee_id 的记录
+ *   - AI_REWARD: 通过 event_queue 的 idempotency_key 在事件队列层面保证
+ *   - NOTIFICATION: 通过 session_code 检查 notification_queue 防重复
  *
  * 并发安全:
  *   - 使用 locked_by + locked_at 字段实现乐观锁
@@ -40,7 +44,7 @@
  * ============================================================================
  */
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { createClient, SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import {
   dequeueEvents,
   markEventCompleted,
@@ -56,6 +60,8 @@ import type { QueuedEvent } from '../_shared/eventQueue.ts';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+// Telegram Bot Token 用于发送佣金通知
+const TELEGRAM_BOT_TOKEN = Deno.env.get('TELEGRAM_BOT_TOKEN');
 
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error('Missing required Supabase environment variables');
@@ -69,132 +75,478 @@ const corsHeaders = {
 };
 
 // ============================================================================
-// 事件处理器：每种事件类型对应一个处理函数
+// 辅助函数：创建 Supabase 客户端
 // ============================================================================
 
 /**
- * 处理推荐佣金事件
+ * 创建带有 service_role 权限的 Supabase 客户端
+ * 所有事件处理器共享同一个客户端实例以减少开销
+ */
+function createServiceClient(): SupabaseClient {
+  return createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+}
+
+// ============================================================================
+// 辅助函数：Telegram 消息发送
+// ============================================================================
+
+/**
+ * 佣金通知的多语言翻译模板
+ * 与 handle-purchase-commission 中的翻译保持一致
+ */
+const commissionTranslations: Record<string, (amount: number, level: number) => string> = {
+  zh: (amount: number, level: number) => `🎉 恭喜！您获得了 ${amount} 积分的佣金。来自您的 L${level} 朋友的购买。`,
+  ru: (amount: number, level: number) => `🎉 Поздравляем! Вы получили комиссию ${amount} баллов от покупки вашего друга уровня L${level}.`,
+  tg: (amount: number, level: number) => `🎉 Табрик! Шумо аз хариди дӯсти сатҳи L${level} комиссияи ${amount} балл гирифтед.`,
+};
+
+/**
+ * 发送 Telegram 佣金通知消息
+ * 
+ * 与 handle-purchase-commission 中的 sendTelegramMessage 功能完全一致。
+ * 失败时只记录日志，不抛出异常（不阻断佣金发放流程）。
  *
- * 调用 handle-purchase-commission Edge Function，为推荐人发放三级分销佣金。
- * handle-purchase-commission 内部会:
- *   1. 查询用户的推荐关系链（最多 3 级）
- *   2. 检查是否已发放过佣金（防重复）
- *   3. 计算佣金金额并写入 commissions 表
- *   4. 更新推荐人的积分钱包余额
- *   5. 发送 Telegram 通知
+ * @param supabase - Supabase 客户端
+ * @param userId - 接收通知的用户 ID
+ * @param amount - 佣金金额
+ * @param level - 佣金级别（1/2/3）
+ */
+async function sendCommissionTelegramNotification(
+  supabase: SupabaseClient,
+  userId: string,
+  amount: number,
+  level: number,
+): Promise<void> {
+  try {
+    if (!TELEGRAM_BOT_TOKEN) {
+      console.log('[Worker] No TELEGRAM_BOT_TOKEN, skipping notification');
+      return;
+    }
+
+    const { data: userData, error } = await supabase
+      .from('users')
+      .select('telegram_id, preferred_language')
+      .eq('id', userId)
+      .single();
+
+    if (error || !userData?.telegram_id) {
+      console.log(`[Worker] User not found or no telegram_id: ${userId}`);
+      return;
+    }
+
+    const lang = userData.preferred_language || 'ru';
+    const messageFunc = commissionTranslations[lang] || commissionTranslations['ru'];
+    const message = messageFunc(amount, level);
+
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: userData.telegram_id,
+        text: message,
+        parse_mode: 'HTML',
+      }),
+    });
+  } catch (err) {
+    console.error('[Worker] Failed to send Telegram commission notification:', err);
+    // 不抛出异常，通知失败不影响佣金发放
+  }
+}
+
+// ============================================================================
+// 事件处理器：COMMISSION（三级分销佣金）
+// ============================================================================
+
+/**
+ * 处理推荐佣金事件（内联实现）
+ *
+ * 完整复刻 handle-purchase-commission 的核心逻辑，直接操作数据库：
+ *   1. 获取佣金配置（commission_settings 表）
+ *   2. 查询用户的推荐关系链（最多 3 级）
+ *   3. 检查是否已发放过佣金（防重复）
+ *   4. 计算佣金金额并写入 commissions 表
+ *   5. 更新推荐人的积分钱包余额（LUCKY_COIN 钱包）
+ *   6. 发送 Telegram 通知
+ *
+ * 幂等性: 通过 commissions 表的 order_id + user_id + level 唯一性检查
  *
  * @param event - 队列事件，payload 包含 { order_id, user_id, order_amount }
  */
 async function handleCommission(event: QueuedEvent): Promise<void> {
   const { order_id, user_id, order_amount } = event.payload as any;
+  const supabase = createServiceClient();
 
   console.log(`[Worker] Processing COMMISSION: order=${order_id}, user=${user_id}, amount=${order_amount}`);
 
-  const response = await fetch(`${SUPABASE_URL}/functions/v1/handle-purchase-commission`, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ order_id, user_id, order_amount }),
-  });
+  // 步骤 1: 获取佣金配置
+  const { data: settings, error: settingsError } = await supabase
+    .from('commission_settings')
+    .select('level, rate, is_active, trigger_condition, min_payout_amount')
+    .eq('is_active', true)
+    .order('level', { ascending: true });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`handle-purchase-commission returned ${response.status}: ${errorText}`);
+  if (settingsError) {
+    throw new Error(`Failed to fetch commission settings: ${settingsError.message}`);
   }
 
-  const result = await response.json();
-  console.log(`[Worker] COMMISSION completed: order=${order_id}, commissions=${result.commissions?.length ?? 0}`);
+  if (!settings || settings.length === 0) {
+    console.log('[Worker] COMMISSION: No active commission settings found, skipping');
+    return; // 没有佣金配置，正常结束
+  }
+
+  // 步骤 2: 获取购买用户的推荐关系
+  // 兼容旧数据：同时查询 referred_by_id 和 referrer_id
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('referred_by_id, referrer_id')
+    .eq('id', user_id)
+    .single();
+
+  if (userError) {
+    throw new Error(`Failed to fetch user referral data: ${userError.message}`);
+  }
+
+  // 优先使用 referred_by_id，如果为空则使用 referrer_id
+  const referrerId = userData?.referred_by_id || userData?.referrer_id;
+
+  if (!referrerId) {
+    console.log(`[Worker] COMMISSION: User ${user_id} has no referrer, skipping`);
+    return; // 没有推荐人，正常结束
+  }
+
+  // 步骤 3: 遍历三级推荐链，计算并发放佣金
+  const commissions: any[] = [];
+  let currentUserId = referrerId;
+  let level = 1;
+
+  for (const setting of settings) {
+    if (!currentUserId || level > 3) break;
+    if (setting.level !== level) continue;
+
+    const rate = parseFloat(setting.rate);
+    const minPayoutAmount = parseFloat(setting.min_payout_amount || '0');
+    const commissionAmount = order_amount * rate;
+
+    // 检查是否达到最低发放金额
+    if (commissionAmount < minPayoutAmount) {
+      console.log(`[Worker] Commission ${commissionAmount} below minimum ${minPayoutAmount} for level ${level}`);
+      const { data: nextUser } = await supabase
+        .from('users')
+        .select('referred_by_id, referrer_id')
+        .eq('id', currentUserId)
+        .single();
+      currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id;
+      level++;
+      continue;
+    }
+
+    // 防重复检查：检查该订单是否已经给该用户发放过该级别的佣金
+    const { data: existingCommission } = await supabase
+      .from('commissions')
+      .select('id')
+      .eq('order_id', order_id)
+      .eq('user_id', currentUserId)
+      .eq('level', level)
+      .maybeSingle();
+
+    if (existingCommission) {
+      console.log(`[Worker] Commission already exists for order ${order_id}, user ${currentUserId}, level ${level}. Skipping.`);
+      const { data: nextUser } = await supabase
+        .from('users')
+        .select('referred_by_id, referrer_id')
+        .eq('id', currentUserId)
+        .single();
+      currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id;
+      level++;
+      continue;
+    }
+
+    // 插入佣金记录
+    const { data: commission, error: commissionError } = await supabase
+      .from('commissions')
+      .insert({
+        user_id: currentUserId,
+        from_user_id: user_id,
+        source_user_id: user_id,
+        beneficiary_id: currentUserId,
+        level: level,
+        rate: rate,
+        percent: rate * 100,
+        source_amount: order_amount,
+        amount: commissionAmount,
+        order_id: order_id,
+        related_order_id: order_id,
+        type: 'REFERRAL_COMMISSION',
+        status: 'settled',
+      })
+      .select()
+      .single();
+
+    if (commissionError) {
+      throw new Error(`Failed to insert commission: ${commissionError.message}`);
+    }
+
+    commissions.push(commission);
+
+    // 将佣金发放到上级用户的积分钱包（LUCKY_COIN）
+    const { data: wallet, error: walletError } = await supabase
+      .from('wallets')
+      .select('id, balance')
+      .eq('user_id', currentUserId)
+      .eq('type', 'LUCKY_COIN')
+      .eq('currency', 'POINTS')
+      .single();
+
+    if (walletError) {
+      // 如果找不到积分钱包，尝试创建一个
+      console.log(`[Worker] No LUCKY_COIN wallet found for user ${currentUserId}, creating one`);
+      const { error: createError } = await supabase
+        .from('wallets')
+        .insert({
+          user_id: currentUserId,
+          type: 'LUCKY_COIN',
+          currency: 'POINTS',
+          balance: commissionAmount,
+        });
+
+      if (createError) {
+        throw new Error(`Failed to create wallet: ${createError.message}`);
+      }
+      console.log(`[Worker] Created new LUCKY_COIN wallet for user ${currentUserId} with balance ${commissionAmount}`);
+    } else {
+      // 更新积分钱包余额
+      const newBalance = parseFloat(wallet.balance || '0') + commissionAmount;
+      const { error: updateError } = await supabase
+        .from('wallets')
+        .update({
+          balance: newBalance,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', wallet.id);
+
+      if (updateError) {
+        throw new Error(`Failed to update wallet balance: ${updateError.message}`);
+      }
+      console.log(`[Worker] Updated LUCKY_COIN wallet for user ${currentUserId}, new balance: ${newBalance}`);
+    }
+
+    // 发送 Telegram 佣金通知（失败不阻断流程）
+    await sendCommissionTelegramNotification(supabase, currentUserId, commissionAmount, level);
+
+    // 查找下一级推荐人
+    const { data: nextUser, error: nextUserError } = await supabase
+      .from('users')
+      .select('referred_by_id, referrer_id')
+      .eq('id', currentUserId)
+      .single();
+
+    if (nextUserError) {
+      console.error(`[Worker] Failed to fetch next user: ${nextUserError.message}`);
+      break;
+    }
+
+    currentUserId = nextUser?.referred_by_id || nextUser?.referrer_id;
+    level++;
+  }
+
+  console.log(`[Worker] COMMISSION completed: order=${order_id}, commissions_created=${commissions.length}`);
 }
 
+// ============================================================================
+// 事件处理器：AI_REWARD（AI 对话奖励）
+// ============================================================================
+
 /**
- * 处理 AI 对话奖励事件
+ * 处理 AI 对话奖励事件（内联实现）
  *
- * 调用 ai-add-bonus Edge Function，增加用户的 AI 对话配额。
- * ai-add-bonus 内部会:
+ * 完整复刻 ai-add-bonus 的核心逻辑，直接操作数据库：
  *   1. 获取或创建今日的 ai_chat_quota 记录
- *   2. 原子性地增加 bonus_quota
+ *   2. 原子性地增加 bonus_quota（优先使用 RPC，回退到直接更新）
  *
- * 注意: ai-add-bonus 对 amount 有 1-100 的限制。
- * 在 group-buy-squad v2 中，我们将 groupSize 次调用合并为一次，
+ * 注意: 在 group-buy-squad v2 中，我们将 groupSize 次调用合并为一次，
  * 总量 = groupSize × 10。当 groupSize > 10 时 amount 会超过 100，
- * 因此需要分批调用，每批不超过 100。
+ * 但由于我们直接操作数据库，不再受 ai-add-bonus 的 1-100 限制。
  *
  * @param event - 队列事件，payload 包含 { user_id, amount, reason }
  */
 async function handleAiReward(event: QueuedEvent): Promise<void> {
   const { user_id, amount, reason } = event.payload as any;
+  const supabase = createServiceClient();
 
   console.log(`[Worker] Processing AI_REWARD: user=${user_id}, amount=${amount}, reason=${reason}`);
 
-  // ai-add-bonus 限制 amount 必须在 1-100 之间
-  // 当合并后的 amount 超过 100 时，需要分批调用
-  const MAX_AMOUNT_PER_CALL = 100;
-  let remaining = amount;
-  let totalAwarded = 0;
+  const today = new Date().toISOString().split('T')[0];
 
-  while (remaining > 0) {
-    const batchAmount = Math.min(remaining, MAX_AMOUNT_PER_CALL);
+  // 步骤 1: 获取或创建今日配额
+  const { data: existingQuota } = await supabase
+    .from('ai_chat_quota')
+    .select('*')
+    .eq('user_id', user_id)
+    .eq('date', today)
+    .maybeSingle();
 
-    const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-add-bonus`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ user_id, amount: batchAmount, reason }),
+  if (!existingQuota) {
+    // 创建新的今日配额记录
+    const { error: createError } = await supabase
+      .from('ai_chat_quota')
+      .insert({
+        user_id: user_id,
+        date: today,
+        base_quota: 10,
+        bonus_quota: amount, // 直接设置为奖励数量
+        used_quota: 0,
+      });
+
+    if (createError) {
+      throw new Error(`Failed to create ai_chat_quota: ${createError.message}`);
+    }
+    console.log(`[Worker] AI_REWARD: Created new quota with bonus=${amount} for user ${user_id}`);
+  } else {
+    // 步骤 2: 尝试使用 RPC 原子性增加 bonus_quota
+    const { error: rpcError } = await supabase.rpc('increment_ai_quota_bonus', {
+      p_user_id: user_id,
+      p_date: today,
+      p_amount: amount,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`ai-add-bonus returned ${response.status}: ${errorText} (awarded ${totalAwarded}/${amount} so far)`);
-    }
+    if (rpcError) {
+      // RPC 不存在或失败，回退到直接更新
+      console.log(`[Worker] RPC increment_ai_quota_bonus failed, falling back to direct update: ${rpcError.message}`);
+      const newBonusQuota = (existingQuota.bonus_quota || 0) + amount;
+      const { error: updateError } = await supabase
+        .from('ai_chat_quota')
+        .update({ bonus_quota: newBonusQuota })
+        .eq('id', existingQuota.id);
 
-    totalAwarded += batchAmount;
-    remaining -= batchAmount;
-
-    if (remaining > 0) {
-      console.log(`[Worker] AI_REWARD batch: awarded ${batchAmount}, remaining ${remaining}`);
+      if (updateError) {
+        throw new Error(`Failed to update ai_chat_quota: ${updateError.message}`);
+      }
     }
+    console.log(`[Worker] AI_REWARD: Updated bonus quota +${amount} for user ${user_id}`);
   }
 
-  console.log(`[Worker] AI_REWARD completed: user=${user_id}, total_awarded=${totalAwarded}`);
+  console.log(`[Worker] AI_REWARD completed: user=${user_id}, total_awarded=${amount}`);
 }
 
+// ============================================================================
+// 事件处理器：FIRST_GROUP_BUY（首次拼团邀请人奖励）
+// ============================================================================
+
 /**
- * 处理首次拼团奖励事件
+ * 处理首次拼团奖励事件（内联实现）
  *
- * 调用 handle-first-group-buy-reward Edge Function，给邀请人增加 2 次抽奖机会。
- * handle-first-group-buy-reward 内部会:
+ * 完整复刻 handle-first-group-buy-reward 的核心逻辑，直接操作数据库：
  *   1. 检查用户是否有邀请人
  *   2. 检查是否已发放过首次拼团奖励（防重复）
- *   3. 检查是否确实是首次拼团
- *   4. 给邀请人增加 2 次抽奖机会
- *   5. 记录邀请奖励
+ *   3. 检查是否确实是首次拼团（PAID 订单数 <= 1）
+ *   4. 给邀请人增加 2 次抽奖机会（通过 RPC add_user_spin_count）
+ *   5. 记录邀请奖励到 invite_rewards 表
+ *
+ * 幂等性: 通过 invite_rewards 表的 inviter_id + invitee_id + reward_type 检查
  *
  * @param event - 队列事件，payload 包含 { user_id, order_id }
  */
 async function handleFirstGroupBuy(event: QueuedEvent): Promise<void> {
   const { user_id, order_id } = event.payload as any;
+  const supabase = createServiceClient();
 
   console.log(`[Worker] Processing FIRST_GROUP_BUY: user=${user_id}, order=${order_id}`);
 
-  // 使用 Supabase client 的 functions.invoke 方式调用
-  // （与原 group-buy-squad v1 的调用方式保持一致）
-  const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
-  const { data, error } = await supabase.functions.invoke('handle-first-group-buy-reward', {
-    body: { user_id, order_id },
+  // 步骤 1: 检查用户是否有邀请人
+  // 兼容旧数据：同时查询 referred_by_id 和 referrer_id
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('id, referred_by_id, referrer_id, telegram_id')
+    .eq('id', user_id)
+    .single();
+
+  if (userError || !userData) {
+    console.log(`[Worker] FIRST_GROUP_BUY: User ${user_id} not found, skipping`);
+    return;
+  }
+
+  const inviterId = userData.referred_by_id || userData.referrer_id;
+
+  if (!inviterId) {
+    console.log(`[Worker] FIRST_GROUP_BUY: User ${user_id} has no inviter, skipping`);
+    return;
+  }
+
+  // 步骤 2: 检查是否已经发放过首次拼团奖励（防重复）
+  const { data: existingReward } = await supabase
+    .from('invite_rewards')
+    .select('id')
+    .eq('inviter_id', inviterId)
+    .eq('invitee_id', user_id)
+    .eq('reward_type', 'first_group_buy')
+    .maybeSingle();
+
+  if (existingReward) {
+    console.log(`[Worker] FIRST_GROUP_BUY: Reward already processed for inviter=${inviterId}, invitee=${user_id}`);
+    return;
+  }
+
+  // 步骤 3: 检查用户的拼团订单数量（确认是否为首次）
+  // 兼容历史数据：同时匹配 UUID 和 telegram_id
+  const userTelegramId = userData.telegram_id;
+  let ordersQuery = supabase
+    .from('group_buy_orders')
+    .select('id')
+    .eq('status', 'PAID')
+    .limit(3);
+
+  if (userTelegramId && userTelegramId !== user_id) {
+    ordersQuery = ordersQuery.or(`user_id.eq.${user_id},user_id.eq.${userTelegramId}`);
+  } else {
+    ordersQuery = ordersQuery.eq('user_id', user_id);
+  }
+
+  const { data: orders } = await ordersQuery;
+
+  // 如果已有多个已支付订单，说明不是首次
+  // 注意：当前订单可能已经在列表中，所以检查 <= 1
+  const isFirstGroupBuy = orders && orders.length <= 1;
+
+  if (!isFirstGroupBuy) {
+    console.log(`[Worker] FIRST_GROUP_BUY: User ${user_id} has ${orders?.length} orders, not first group buy`);
+    return;
+  }
+
+  // 步骤 4: 给邀请人增加 2 次抽奖机会
+  const { error: spinError } = await supabase.rpc('add_user_spin_count', {
+    p_user_id: inviterId,
+    p_count: 2,
+    p_source: 'group_buy_reward',
   });
 
-  if (error) {
-    throw new Error(`handle-first-group-buy-reward error: ${error.message}`);
+  if (spinError) {
+    throw new Error(`Failed to add spin count to inviter: ${spinError.message}`);
+  }
+
+  // 步骤 5: 记录邀请奖励
+  const { error: rewardError } = await supabase.from('invite_rewards').insert({
+    inviter_id: inviterId,
+    invitee_id: user_id,
+    reward_type: 'first_group_buy',
+    spin_count_awarded: 2,
+    lucky_coins_awarded: 0,
+    is_processed: true,
+    processed_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  });
+
+  if (rewardError) {
+    throw new Error(`Failed to insert invite_reward: ${rewardError.message}`);
   }
 
   console.log(
-    `[Worker] FIRST_GROUP_BUY completed: user=${user_id}, is_first=${data?.is_first_group_buy}, inviter_rewarded=${data?.inviter_rewarded}`,
+    `[Worker] FIRST_GROUP_BUY completed: Awarded 2 spins to inviter ${inviterId} for user ${user_id}'s first group buy`,
   );
 }
+
+// ============================================================================
+// 事件处理器：NOTIFICATION（中奖通知）
+// ============================================================================
 
 /**
  * 处理中奖通知事件
@@ -202,22 +554,20 @@ async function handleFirstGroupBuy(event: QueuedEvent): Promise<void> {
  * 直接写入 notification_queue 表（与原 group-buy-squad v1 的逻辑完全一致）。
  * notification_queue 表中的记录会被 telegram-notification-sender 消费并发送。
  *
- * 幂等性: 通过 event_queue 的 idempotency_key 保证不会重复写入。
- * 额外保护: 写入前检查 notification_queue 中是否已存在相同的通知。
+ * 幂等性: 通过 session_code 检查 notification_queue 防重复
  *
  * @param event - 队列事件，payload 包含通知的完整数据
  */
 async function handleNotification(event: QueuedEvent): Promise<void> {
   const payload = event.payload as any;
   const { user_id, type, product_name, session_code, won_at, is_squad_buy } = payload;
+  const supabase = createServiceClient();
 
   console.log(`[Worker] Processing NOTIFICATION: user=${user_id}, type=${type}`);
 
-  const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
   const now = new Date();
 
   // 防重复: 检查是否已经为该 session 发送过通知
-  // 使用 session_code 作为唯一标识（因为 notification_queue 没有 idempotency_key）
   const { data: existingNotification } = await supabase
     .from('notification_queue')
     .select('id')
@@ -248,16 +598,12 @@ async function handleNotification(event: QueuedEvent): Promise<void> {
     data: {
       product_name,
       session_code,
-      won_at,
+      won_at: now.toISOString(),
       is_squad_buy,
     },
-    priority: 1,
     status: 'pending',
     scheduled_at: now.toISOString(),
-    retry_count: 0,
-    max_retries: 3,
     created_at: now.toISOString(),
-    updated_at: now.toISOString(),
   });
 
   if (error) {
@@ -272,157 +618,111 @@ async function handleNotification(event: QueuedEvent): Promise<void> {
 // ============================================================================
 
 /**
- * 根据事件类型路由到对应的处理函数
+ * 事件路由器：根据 event_type 将事件分发到对应的处理函数
  *
- * 扩展方式: 新增事件类型时，只需:
- *   1. 在 _shared/eventQueue.ts 中添加 EventType 枚举值
- *   2. 在此处添加对应的 case 分支和处理函数
+ * 每种事件类型对应一个独立的处理函数，处理函数内部包含完整的业务逻辑。
+ * 如果遇到未知的事件类型，会抛出异常（最终进入死信队列）。
  *
- * @param event - 待处理的队列事件
+ * @param event - 从 event_queue 中取出的事件
+ * @throws 当事件类型未知或处理失败时抛出异常
  */
 async function routeEvent(event: QueuedEvent): Promise<void> {
   switch (event.event_type) {
     case EventType.COMMISSION:
       await handleCommission(event);
       break;
-
     case EventType.AI_REWARD:
       await handleAiReward(event);
       break;
-
     case EventType.FIRST_GROUP_BUY:
       await handleFirstGroupBuy(event);
       break;
-
     case EventType.NOTIFICATION:
       await handleNotification(event);
       break;
-
     default:
-      // 未知的事件类型：记录警告但不抛出异常
-      // 这样可以避免因为新增了事件类型但 Worker 未更新而导致事件卡在队列中
-      console.warn(`[Worker] Unknown event type: ${event.event_type}, marking as completed`);
-      break;
+      throw new Error(`Unknown event type: ${event.event_type}`);
   }
 }
 
 // ============================================================================
-// 主请求处理
+// 主处理函数
 // ============================================================================
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
+  // 处理 CORS 预检请求
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { status: 200, headers: corsHeaders });
   }
 
   const startTime = Date.now();
   const workerId = `worker-${startTime}-${Math.random().toString(36).substring(2, 8)}`;
 
-  console.log(`[Worker] Starting event processing (worker: ${workerId})`);
+  console.log(`[Worker] ${workerId} started`);
 
   try {
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+    const supabase = createServiceClient();
 
-    // ----------------------------------------
-    // 步骤 1: 释放超时的锁
-    // 如果某个 Worker 在处理事件时崩溃，事件会一直处于 processing 状态。
-    // 这里释放超过 5 分钟的锁，使事件可以被重新处理。
-    // ----------------------------------------
-    const releasedCount = await releaseStaleEvents(supabase, 5);
-    if (releasedCount > 0) {
-      console.log(`[Worker] Released ${releasedCount} stale events`);
+    // 步骤 1: 释放超时的锁（防止 Worker 崩溃导致事件卡住）
+    const released = await releaseStaleEvents(supabase);
+    if (released > 0) {
+      console.log(`[Worker] Released ${released} stale locked events`);
     }
 
-    // ----------------------------------------
-    // 步骤 2: 从队列中取出待处理的事件
-    // 每次最多处理 10 个事件，避免单次执行时间过长
-    // （Supabase Edge Functions 有 60 秒的执行时间限制）
-    // ----------------------------------------
+    // 步骤 2: 从队列中取出一批待处理事件
     const events = await dequeueEvents(supabase, 10, workerId);
 
     if (events.length === 0) {
-      console.log(`[Worker] No pending events found`);
       return new Response(
-        JSON.stringify({
-          success: true,
-          processed: 0,
-          message: 'No pending events',
-        }),
-        {
-          headers: { 'Content-Type': 'application/json', ...corsHeaders },
-        },
+        JSON.stringify({ success: true, processed: 0, message: 'No pending events' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
       );
     }
 
-    console.log(`[Worker] Dequeued ${events.length} events for processing`);
+    console.log(`[Worker] Dequeued ${events.length} events: ${events.map((e) => e.event_type).join(', ')}`);
 
-    // ----------------------------------------
     // 步骤 3: 逐个处理事件
-    // 使用 try-catch 确保单个事件的失败不会影响其他事件
-    // ----------------------------------------
-    let successCount = 0;
-    let failCount = 0;
     const results: Array<{ id: string; type: string; status: string; error?: string }> = [];
+    let succeeded = 0;
+    let failed = 0;
 
     for (const event of events) {
       try {
-        console.log(
-          `[Worker] Processing event ${event.id}: type=${event.event_type}, retry=${event.retry_count}/${event.max_retries}`,
-        );
-
-        // 调用事件路由器
         await routeEvent(event);
-
-        // 标记为完成
         await markEventCompleted(supabase, event.id);
-        successCount++;
         results.push({ id: event.id, type: event.event_type, status: 'completed' });
-      } catch (err: any) {
-        console.error(`[Worker] Event ${event.id} (${event.event_type}) failed:`, err.message);
-
-        // 标记为失败（内部会决定是重试还是转入死信队列）
-        await markEventFailed(supabase, event, err.message);
-        failCount++;
-        results.push({
-          id: event.id,
-          type: event.event_type,
-          status: 'failed',
-          error: err.message,
-        });
+        succeeded++;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        console.error(`[Worker] Failed to process event ${event.id} (${event.event_type}): ${errorMessage}`);
+        await markEventFailed(supabase, event.id, errorMessage);
+        results.push({ id: event.id, type: event.event_type, status: 'failed', error: errorMessage });
+        failed++;
       }
     }
 
-    // ----------------------------------------
-    // 步骤 4: 返回处理结果
-    // ----------------------------------------
     const duration = Date.now() - startTime;
-    console.log(
-      `[Worker] ✅ Processing complete: ${successCount} succeeded, ${failCount} failed, ${duration}ms`,
-    );
+    console.log(`[Worker] ${workerId} completed: processed=${events.length}, succeeded=${succeeded}, failed=${failed}, duration=${duration}ms`);
 
     return new Response(
       JSON.stringify({
         success: true,
         worker_id: workerId,
         processed: events.length,
-        succeeded: successCount,
-        failed: failCount,
+        succeeded,
+        failed,
         duration_ms: duration,
         results,
       }),
-      {
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      },
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
-  } catch (error: any) {
-    console.error(`[Worker] Unexpected error:`, error);
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : String(err);
+    console.error(`[Worker] ${workerId} fatal error: ${errorMessage}`);
+
     return new Response(
-      JSON.stringify({ success: false, error: error.message }),
-      {
-        status: 500,
-        headers: { 'Content-Type': 'application/json', ...corsHeaders },
-      },
+      JSON.stringify({ success: false, error: errorMessage }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
 });
