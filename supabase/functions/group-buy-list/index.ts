@@ -101,34 +101,22 @@ Deno.serve(async (req) => {
 
       return createResponse({ success: true, data: mapProductToFrontend(product) });
     } else if (type === 'products') {
-      // 获取所有活跃的拼团商品
-      const { data: products, error } = await supabase
-        .from('group_buy_products')
-        .select('*')
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: false });
+      // 获取所有活跃的拼团商品（使用RPC函数合并N+1查询为单次SQL）
+      const { data: rpcResult, error } = await supabase
+        .rpc('get_active_products_with_sessions');
 
       if (error) {
+        console.error('RPC get_active_products_with_sessions error:', error);
         return createResponse({ success: false, error: error.message }, 500);
       }
 
-      // 为每个商品获取活跃的拼团会话数量
-      const productsWithSessions = await Promise.all(
-        products.map(async (product) => {
-          const { data: sessions } = await supabase
-            .from('group_buy_sessions')
-            .select('id, current_participants, group_size, expires_at')
-            .eq('product_id', product.id)
-            .eq('status', 'ACTIVE')
-            .gt('expires_at', new Date().toISOString());
-
-          return {
-            ...mapProductToFrontend(product),
-            active_sessions: sessions || [],
-            active_sessions_count: sessions?.length || 0,
-          };
-        })
-      );
+      // RPC返回的是原始数据库字段，需要通过 mapProductToFrontend 映射为前端格式
+      const products = Array.isArray(rpcResult) ? rpcResult : [];
+      const productsWithSessions = products.map((product: any) => ({
+        ...mapProductToFrontend(product),
+        active_sessions: product.active_sessions || [],
+        active_sessions_count: Array.isArray(product.active_sessions) ? product.active_sessions.length : 0,
+      }));
 
       return createResponse({ success: true, data: productsWithSessions });
     } else if (type === 'sessions') {
