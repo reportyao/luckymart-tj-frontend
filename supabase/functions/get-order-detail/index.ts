@@ -151,6 +151,52 @@ serve(async (req) => {
       }
     }
 
+    // 4. 如果以上都找不到，尝试通过 group_buy_orders.id 反查 group_buy_results
+    if (!orderData) {
+      const { data: gbOrder } = await supabase
+        .from('group_buy_orders')
+        .select('id, session_id, amount, user_id')
+        .eq('id', order_id)
+        .maybeSingle()
+
+      if (gbOrder) {
+        // 通过 session_id 和 user_id 查找对应的 group_buy_results
+        const gbOrderData = gbOrder as Record<string, unknown>
+        const { data: groupBuyResult } = await supabase
+          .from('group_buy_results')
+          .select('id, product_id, session_id, winner_order_id, created_at, status, logistics_status, pickup_code, pickup_status, claimed_at, batch_id, pickup_point_id, algorithm_data')
+          .eq('session_id', gbOrderData.session_id)
+          .eq('winner_id', user_id)
+          .maybeSingle()
+
+        if (groupBuyResult) {
+          orderType = 'group_buy'
+          const gbResult = groupBuyResult as Record<string, unknown>
+          productId = gbResult.product_id as string | null
+          const sessionId = gbResult.session_id as string | null
+          orderData = {
+            id: gbResult.id,
+            order_number: `GB-${sessionId?.substring(0, 8).toUpperCase() || 'UNKNOWN'}`,
+            status: gbResult.status,
+            total_amount: gbOrderData.amount || 0,
+            currency: 'TJS',
+            pickup_code: gbResult.pickup_code,
+            claimed_at: gbResult.claimed_at,
+            created_at: gbResult.created_at,
+            metadata: {
+              type: (gbResult.algorithm_data as any)?.type === 'squad_buy' ? 'auto_group_buy' : 'group_buy',
+              session_id: gbResult.session_id,
+              winner_order_id: gbResult.winner_order_id
+            },
+            lottery_id: gbResult.product_id,
+            pickup_point_id: gbResult.pickup_point_id,
+            logistics_status: gbResult.logistics_status,
+            batch_id: gbResult.batch_id
+          }
+        }
+      }
+    }
+
     if (!orderData) {
       return new Response(JSON.stringify({ error: 'Order not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }

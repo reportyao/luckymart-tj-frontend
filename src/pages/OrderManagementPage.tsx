@@ -233,8 +233,9 @@ const OrderManagementPage: React.FC = () => {
   const handleOrderClick = (order: UnifiedOrder) => {
     if (order.order_type === 'group_buy' && order.session_id) {
       // 已提货的拼团订单跳转到物流结果页（订单详情页）
-      if (order.pickup_status === 'PICKED_UP') {
-        navigate(`/order-detail/${order.id}`);
+      // 使用 result_id（group_buy_results 表的 ID）而非 order.id（group_buy_orders 表的 ID）
+      if (order.pickup_status === 'PICKED_UP' && order.result_id) {
+        navigate(`/order-detail/${order.result_id}`);
       } else {
         // 其他状态的拼团订单跳转到开奖结果页
         navigate(`/group-buy/result/${order.session_id}`);
