@@ -194,6 +194,7 @@ const PromoterCenterPage: React.FC = () => {
           },
           body: JSON.stringify({
             p_promoter_id: user.id,
+            p_log_date: new Date().toISOString().split('T')[0],
           }),
         }
       )
