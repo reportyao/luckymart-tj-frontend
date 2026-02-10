@@ -1,32 +1,19 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { useInviteStats } from '../hooks/useInviteStats';
-import { Lottery, supabase } from '../lib/supabase';
+import { Lottery } from '../lib/supabase';
 import { PurchaseModal } from '../components/lottery/PurchaseModal';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { LotteryCard } from '../components/lottery/LotteryCard';
 import { SafeMotion } from '../components/SafeMotion';
 import { ModulePreview } from '../components/home/ModulePreview';
 import { ProductList } from '../components/home/ProductList';
-import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
-import ReferralBanner from '../components/ReferralBanner';
+import { StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import BannerCarousel from '../components/BannerCarousel';
 import toast from 'react-hot-toast';
+import { useLotteries, useGroupBuyProducts } from '../hooks/useHomeData';
 
-interface GroupBuyProduct {
-  id: string;
-  title: { zh: string; ru: string; tg: string };
-  description: { zh: string; ru: string; tg: string };
-  image_url: string;
-  original_price: number;
-  price_per_person: number;
-  group_size: number;
-  timeout_hours: number;
-  active_sessions_count: number;
-  created_at?: string;
-}
 
 const HomePage: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -34,63 +21,22 @@ const HomePage: React.FC = () => {
   const { lotteryService } = useSupabase();
   const { stats: inviteStats } = useInviteStats();
   
-  // 积分商城数据
-  const [lotteries, setLotteries] = useState<Lottery[]>([]);
-  const [isLoadingLotteries, setIsLoadingLotteries] = useState(true);
-  
-  // 拼团数据
-  const [groupBuyProducts, setGroupBuyProducts] = useState<GroupBuyProduct[]>([]);
-  const [isLoadingGroupBuy, setIsLoadingGroupBuy] = useState(true);
+  // 使用 react-query hooks 获取数据（自动缓存、重试、后台刷新）
+  const {
+    data: lotteries = [],
+    isLoading: isLoadingLotteries,
+    refetch: refetchLotteries,
+  } = useLotteries();
 
-  // 加载积分商城数据
-  const loadLotteries = useCallback(async () => {
-    try {
-      setIsLoadingLotteries(true);
-      const data = await lotteryService.getActiveLotteries();
-      // 按创建时间从新到旧排序
-      const sortedLotteries = [...data].sort((a, b) => {
-        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-      });
-      setLotteries(sortedLotteries);
-    } catch (error: any) {
-      console.error('Failed to load lotteries:', error);
-      toast.error(t('error.networkError'));
-    } finally {
-      setIsLoadingLotteries(false);
-    }
-  }, [t, lotteryService]);
-
-  // 加载拼团数据
-  const loadGroupBuyProducts = useCallback(async () => {
-    try {
-      setIsLoadingGroupBuy(true);
-      const { data, error } = await supabase.functions.invoke('group-buy-list', {
-        body: { type: 'products' },
-      });
-
-      if (error) throw error;
-      if (data?.success) {
-        // 按创建时间从新到旧排序
-        const sortedProducts = [...data.data].sort((a: any, b: any) => {
-          return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-        });
-        setGroupBuyProducts(sortedProducts);
-      }
-    } catch (error) {
-      console.error('Failed to fetch group buy products:', error);
-    } finally {
-      setIsLoadingGroupBuy(false);
-    }
-  }, []);
+  const {
+    data: groupBuyProducts = [],
+    isLoading: isLoadingGroupBuy,
+  } = useGroupBuyProducts();
 
   const nav = useNavigate();
 
+  // 处理 Telegram start_param 重定向（仅在首次挂载时执行）
   useEffect(() => {
-    loadLotteries();
-    loadGroupBuyProducts();
-
-    // 处理 Telegram start_param 重定向
-    // 等待 Telegram SDK 加载完成
     const checkStartParam = () => {
       const WebApp = (window as any).Telegram?.WebApp || (window as any).__TELEGRAM_WEB_APP__;
       
@@ -151,7 +97,7 @@ const HomePage: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [loadLotteries, loadGroupBuyProducts, nav]);
+  }, [nav]);
 
   const [selectedLottery, setSelectedLottery] = useState<Lottery | null>(null);
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
@@ -166,7 +112,7 @@ const HomePage: React.FC = () => {
       await lotteryService.purchaseTickets(lotteryId, quantity);
       toast.success(t('lottery.purchaseSuccess'));
       // 购买成功后刷新列表和钱包
-      await loadLotteries();
+      await refetchLotteries();
       await refreshWallets();
     } catch (error: any) {
       toast.error(error.message || t('error.networkError'));

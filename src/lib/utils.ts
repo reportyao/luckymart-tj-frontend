@@ -24,16 +24,15 @@ export function formatDateTime(dateString: string): string {
       return '';
     }
     
-    // 使用 toLocaleString 自动转换为用户本地时区
-    // 不指定 timeZone，让浏览器自动使用用户的本地时区
-    return date.toLocaleString(undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(/\//g, '-').replace(',', '');
+    // 使用手动拼接确保跨环境输出一致的 YYYY-MM-DD HH:MM 格式
+    // 自动使用用户本地时区（getFullYear/getMonth 等方法基于本地时区）
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
   } catch (error) {
     console.error('formatDateTime error:', error);
     return '';
@@ -51,11 +50,12 @@ export function formatDate(dateString: string): string {
       return '';
     }
     
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '-');
+    // 使用手动拼接确保跨环境输出一致的 YYYY-MM-DD 格式
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch (error) {
     console.error('formatDate error:', error);
     return '';
@@ -227,3 +227,39 @@ export function getLocalizedText(
   
     return '';
   }
+
+/**
+ * 生成 Supabase Storage 图片变换 URL
+ * 利用 Supabase 的 image transformation API 按需调整图片尺寸和质量
+ * 如果 URL 不是 Supabase Storage 格式，则安全回退到原始 URL
+ * @param originalUrl 原始图片 URL
+ * @param options.width 目标宽度 (px)
+ * @param options.quality 图片质量 (1-100，默认 75)
+ * @returns 优化后的图片 URL 或原始 URL
+ */
+export function getOptimizedImageUrl(
+  originalUrl: string | null | undefined,
+  options: { width: number; quality?: number }
+): string {
+  if (!originalUrl) return '';
+  try {
+    const url = new URL(originalUrl);
+    // 仅处理 Supabase Storage 的公开对象 URL
+    // 格式: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+    if (url.pathname.includes('/storage/v1/object/public/')) {
+      const transformedPath = url.pathname.replace(
+        '/storage/v1/object/public/',
+        '/storage/v1/render/image/public/'
+      );
+      const newUrl = new URL(transformedPath, url.origin);
+      newUrl.searchParams.set('width', options.width.toString());
+      newUrl.searchParams.set('quality', (options.quality || 75).toString());
+      return newUrl.toString();
+    }
+    // 非 Supabase Storage URL，安全回退
+    return originalUrl;
+  } catch {
+    // URL 解析失败，安全回退
+    return originalUrl;
+  }
+}
