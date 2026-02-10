@@ -358,11 +358,28 @@ Deno.serve(async (req) => {
       }
 
       // 合并用户信息到订单
+      // 找到真实用户（非bot_squad）的用户名，用于替换机器人显示名
+      let realUsername = '';
+      orders?.forEach(order => {
+        const u = usersMap[order.user_id];
+        const uname = u?.telegram_username || u?.first_name || '';
+        if (uname && !uname.startsWith('bot_squad') && !uname.startsWith('Bot_squad') && !realUsername) {
+          realUsername = uname;
+        }
+      });
+
       const participants = orders?.map(order => {
         const user = usersMap[order.user_id];
+        let displayName = user?.telegram_username || user?.first_name || `User ${order.user_id.slice(-4)}`;
+        
+        // 如果是机器人用户，直接显示真实用户的用户名
+        if (displayName.startsWith('bot_squad') || displayName.startsWith('Bot_squad')) {
+          displayName = realUsername || 'User';
+        }
+        
         return {
           user_id: order.user_id,
-          username: user?.telegram_username || user?.first_name || `User ${order.user_id.slice(-4)}`,
+          username: displayName,
           avatar_url: user?.avatar_url,
           order_number: order.order_number,
           order_timestamp: order.order_timestamp,
