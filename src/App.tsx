@@ -45,10 +45,6 @@ import PromoterCenterPage from "./pages/PromoterCenterPage"
 const DebugFloatingButton = lazy(() => import("./components/debug/DebugFloatingButton").then(m => ({ default: m.DebugFloatingButton })))
 const DebugPage = lazy(() => import("./pages/DebugPage"))
 
-// 开发工具：仅在开发环境下懒加载，不会打包进生产环境
-const ReactQueryDevtools = import.meta.env.DEV
-  ? lazy(() => import("@tanstack/react-query-devtools").then(m => ({ default: m.ReactQueryDevtools })))
-  : () => null
 
 const MonitoringPage = import.meta.env.DEV
   ? lazy(() => import("./pages/MonitoringPage"))
@@ -129,11 +125,6 @@ function App() {
       )}
     </div>
       </Router>
-      {import.meta.env.DEV && (
-        <Suspense fallback={null}>
-          <ReactQueryDevtools initialIsOpen={false} />
-        </Suspense>
-      )}
     </RealtimeNotificationsProvider>
   )
 }
