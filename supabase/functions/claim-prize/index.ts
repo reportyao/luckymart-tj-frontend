@@ -14,7 +14,14 @@ const corsHeaders = {
  * 验证prizes表记录的字段完整性
  */
 function validatePrizeFields(prize: any, tableName: string): void {
-  const requiredFields = ['id', 'user_id', 'lottery_id'];
+  // 根据表名使用不同的必需字段列表
+  // prizes 表使用 user_id + lottery_id
+  // group_buy_results 表使用 winner_id + session_id + product_id
+  const requiredFieldsMap: Record<string, string[]> = {
+    'prizes': ['id', 'user_id', 'lottery_id'],
+    'group_buy_results': ['id', 'winner_id', 'session_id', 'product_id'],
+  };
+  const requiredFields = requiredFieldsMap[tableName] || ['id'];
   const pickupFields = ['pickup_code', 'pickup_status', 'pickup_point_id', 'expires_at', 'claimed_at'];
   
   // 检查必需字段
