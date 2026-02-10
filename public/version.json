@@ -1,5 +1,5 @@
 {
   "version": "2.3.0",
-  "buildTime": "2026-02-10T14:57:13.277Z",
+  "buildTime": "2026-02-10T15:13:51.329Z",
   "description": "修复晒单显示：支持display_username和display_avatar_url字段"
 }

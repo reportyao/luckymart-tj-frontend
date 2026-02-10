@@ -385,7 +385,7 @@ const PromoterCenterPage: React.FC = () => {
       {/* Tab 导航 */}
       {/* ============================================================ */}
       <div className="px-4 mt-4">
-        <div className="flex space-x-2 overflow-x-auto pb-1">
+        <div className="flex space-x-2 overflow-x-auto pb-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}>
           {([
             { key: 'overview' as ActiveTab, icon: '📊', label: t('promoter.tabOverview') },
             { key: 'materials' as ActiveTab, icon: '📱', label: t('promoter.tabMaterials') },
@@ -395,7 +395,7 @@ const PromoterCenterPage: React.FC = () => {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
-              className={`flex items-center space-x-1.5 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
+              className={`flex-shrink-0 flex items-center space-x-1.5 px-3.5 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-all ${
                 activeTab === tab.key
                   ? 'bg-green-600 text-white shadow-sm'
                   : 'bg-white text-gray-600 shadow-sm'
@@ -581,7 +581,7 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           </div>
         </div>
 
-        <p className="text-sm text-gray-500 mb-4">{t('promoter.checkInHint')}</p>
+        <p className="text-sm text-gray-500 mb-4 leading-relaxed">{t('promoter.checkInHint')}</p>
 
         <motion.button
           whileTap={{ scale: 0.95 }}
@@ -640,8 +640,10 @@ const MaterialsTab: React.FC<MaterialsTabProps> = ({
       >
         <div className="text-center mb-4">
           <p className="text-sm text-white/80 mb-2">{t('promoter.myInviteCode')}</p>
-          <div className="bg-white/20 backdrop-blur-sm rounded-xl px-6 py-4 inline-block">
-            <p className="text-3xl font-bold tracking-widest font-mono">{inviteCode}</p>
+          <div className="bg-white/25 backdrop-blur-sm rounded-xl px-6 py-4 inline-block min-w-[160px]">
+            <p className="text-3xl font-bold tracking-widest font-mono text-white drop-shadow-sm">
+              {inviteCode || '------'}
+            </p>
           </div>
         </div>
 
