@@ -1098,7 +1098,8 @@
       "discountInfo": "实际花费1/3资金购买原价商品！抓住机会！",
       "aiChats": "次AI对话机会",
       "alreadyInSession": "您已在进行中的拼团中，请等待完成后再包团"
-    }
+    },
+    "goToClaimPage": "立即领取"
   },
   "spin": {
     "title": "幸运转盘",

@@ -700,6 +700,15 @@ export default function GroupBuyResultPage() {
             {t('orders.claimNow')}
           </button>
         )}
+        {isWinner && result.id && (result.pickup_code || result.pickup_status === 'PENDING_PICKUP' || result.pickup_status === 'PICKED_UP') && (
+          <button
+            onClick={() => navigate(`/order-detail/${result.id}`)}
+            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
+          >
+            <Ticket className="w-5 h-5" />
+            {t('groupBuy.goToClaimPage')}
+          </button>
+        )}
         <button
           onClick={() => navigate('/group-buy')}
           className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
