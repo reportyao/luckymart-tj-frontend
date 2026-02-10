@@ -46,10 +46,6 @@ const DebugFloatingButton = lazy(() => import("./components/debug/DebugFloatingB
 const DebugPage = lazy(() => import("./pages/DebugPage"))
 
 
-const MonitoringPage = import.meta.env.DEV
-  ? lazy(() => import("./pages/MonitoringPage"))
-  : () => <NotFoundPage />
-
 function App() {
   const { showModal, closeModal, handleSuccess } = useBotFollowModal()
 
@@ -77,7 +73,6 @@ function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/subsidy-plan" element={<SubsidyPlanPage />} />
             <Route path="/bot" element={<BotPage />} />
-            <Route path="/monitoring" element={<Suspense fallback={null}><MonitoringPage /></Suspense>} />
             <Route path="/orders" element={<OrderManagementPage />} />
             <Route path="/notifications" element={<NotificationPage />} />
             <Route path="/invite" element={<InvitePage />} />
