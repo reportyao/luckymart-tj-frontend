@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -18,15 +18,49 @@ import {
   UsersIcon,
   TrophyIcon,
   LanguageIcon,
-  SparklesIcon
+  SparklesIcon,
+  MegaphoneIcon
 } from '@heroicons/react/24/outline'
 import { copyToClipboard } from '../lib/utils'
+import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase'
 import toast from 'react-hot-toast'
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation()
   const { user, logout } = useUser()
   const navigate = useNavigate()
+
+  // ========== 市场合伙人身份验证 ==========
+  const [isPromoter, setIsPromoter] = useState(false)
+
+  useEffect(() => {
+    // 通过RPC函数检查当前用户是否为活跃推广者（市场合伙人）
+    // 使用 SECURITY DEFINER 的RPC函数绕过RLS限制
+    const checkPromoterStatus = async () => {
+      if (!user?.id) return
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/rpc/get_promoter_center_data`,
+          {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ p_user_id: user.id, p_time_range: 'today' })
+          }
+        )
+        if (response.ok) {
+          const data = await response.json()
+          setIsPromoter(data?.success === true)
+        }
+      } catch (e) {
+        console.log('[ProfilePage] Promoter check not available')
+      }
+    }
+    checkPromoterStatus()
+  }, [user?.id])
 
   const handleCopyReferralLink = async () => {
     const code = user?.referral_code || user?.invite_code;
@@ -126,6 +160,14 @@ const ProfilePage: React.FC = () => {
       subtitle: t('showoff.viewMyShowoffs'),
       action: () => navigate('/showoff/my'),
     },
+    // 市场合伙人入口 - 仅对活跃推广者显示
+    ...(isPromoter ? [{
+      icon: MegaphoneIcon,
+      title: t('promoter.centerTitle'),
+      subtitle: t('promoter.centerSubtitle'),
+      action: () => navigate('/promoter-center'),
+      highlight: true,
+    }] : []),
   ]
 
   const getKycLevelText = (level: string) => {

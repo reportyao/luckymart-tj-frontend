@@ -39,6 +39,7 @@ import SpinLotteryPage from "./pages/SpinLotteryPage"
 import AIPage from "./pages/AIPage"
 import PendingPickupPage from "./pages/PendingPickupPage"
 import SubsidyPlanPage from "./pages/SubsidyPlanPage"
+import PromoterCenterPage from "./pages/PromoterCenterPage"
 
 // 调试面板：生产环境中通过连续点击5次"我的"触发，懒加载以减少初始包体积
 const DebugFloatingButton = lazy(() => import("./components/debug/DebugFloatingButton").then(m => ({ default: m.DebugFloatingButton })))
@@ -96,6 +97,7 @@ function App() {
             <Route path="/orders-management" element={<OrderManagementPage />} />
             <Route path="/order-detail/:id" element={<OrderDetailPage />} />
             <Route path="/showoff/my" element={<ShowoffPage />} />
+            <Route path="/promoter-center" element={<PromoterCenterPage />} />
             <Route path="/market/my-resales" element={<MarketPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/debug" element={<Suspense fallback={null}><DebugPage /></Suspense>} />
