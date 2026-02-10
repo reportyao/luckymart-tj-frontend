@@ -227,3 +227,39 @@ export function getLocalizedText(
   
     return '';
   }
+
+/**
+ * 生成 Supabase Storage 图片变换 URL
+ * 利用 Supabase 的 image transformation API 按需调整图片尺寸和质量
+ * 如果 URL 不是 Supabase Storage 格式，则安全回退到原始 URL
+ * @param originalUrl 原始图片 URL
+ * @param options.width 目标宽度 (px)
+ * @param options.quality 图片质量 (1-100，默认 75)
+ * @returns 优化后的图片 URL 或原始 URL
+ */
+export function getOptimizedImageUrl(
+  originalUrl: string | null | undefined,
+  options: { width: number; quality?: number }
+): string {
+  if (!originalUrl) return '';
+  try {
+    const url = new URL(originalUrl);
+    // 仅处理 Supabase Storage 的公开对象 URL
+    // 格式: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+    if (url.pathname.includes('/storage/v1/object/public/')) {
+      const transformedPath = url.pathname.replace(
+        '/storage/v1/object/public/',
+        '/storage/v1/render/image/public/'
+      );
+      const newUrl = new URL(transformedPath, url.origin);
+      newUrl.searchParams.set('width', options.width.toString());
+      newUrl.searchParams.set('quality', (options.quality || 75).toString());
+      return newUrl.toString();
+    }
+    // 非 Supabase Storage URL，安全回退
+    return originalUrl;
+  } catch {
+    // URL 解析失败，安全回退
+    return originalUrl;
+  }
+}

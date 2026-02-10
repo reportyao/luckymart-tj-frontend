@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LazyImage } from '../LazyImage';
-import { formatCurrency, getLocalizedText } from '../../lib/utils';
+import { formatCurrency, getLocalizedText, getOptimizedImageUrl } from '../../lib/utils';
 import { UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 interface BaseProduct {
@@ -98,8 +98,9 @@ export const ProductList: React.FC<ProductListProps> = ({
               <div className="w-24 h-24 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
                 {product.image_url ? (
                   <img
-                    src={product.image_url}
+                    src={getOptimizedImageUrl(product.image_url, { width: 200, quality: 75 })}
                     alt={getProductTitle(product)}
+                    loading="lazy"
                     className="w-full h-full object-cover"
                     style={{
                       minWidth: '100%',
