@@ -88,18 +88,28 @@ serve(async (req) => {
     // ========== 验证关联商品 (如果提供) ==========
     let lotteryTitle: string | null = null
     if (lottery_id) {
-      const { data: lottery, error: lotteryError } = await supabaseClient
-        .from('lotteries')
-        .select('id, title, title_i18n')
+      // 先尝试从库存商品表查找
+      const { data: product, error: productError } = await supabaseClient
+        .from('inventory_products')
+        .select('id, name, name_i18n')
         .eq('id', lottery_id)
         .single()
 
-      if (lotteryError || !lottery) {
-        throw new Error('关联的商品不存在')
+      if (!productError && product) {
+        lotteryTitle = product.name
+      } else {
+        // 回退到 lotteries 表查找（兼容旧数据）
+        const { data: lottery, error: lotteryError } = await supabaseClient
+          .from('lotteries')
+          .select('id, title, title_i18n')
+          .eq('id', lottery_id)
+          .single()
+
+        if (lotteryError || !lottery) {
+          throw new Error('关联的商品不存在')
+        }
+        lotteryTitle = lottery.title
       }
-      
-      // 获取商品标题用于记录
-      lotteryTitle = lottery.title
     }
 
     // ========== 生成随机数据 (如果未提供) ==========
