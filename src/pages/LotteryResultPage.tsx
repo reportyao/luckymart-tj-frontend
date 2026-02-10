@@ -20,6 +20,7 @@ import { useUser } from '@/contexts/UserContext';
 import { Tables } from '@/types/supabase';
 import { CountdownTimer } from '../components/CountdownTimer';
 import { lotteryService } from '@/lib/supabase';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 type Lottery = Tables<'lotteries'>;
 type Ticket = Tables<'tickets'>;
@@ -369,7 +370,7 @@ const LotteryResultPage: React.FC = () => {
         body: requestBody
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       const result = data as { success: boolean; error?: string; data?: any };
 

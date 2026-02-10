@@ -24,6 +24,7 @@ import { LazyImage } from '../components/LazyImage';
 import { LogisticsStatus } from '../components/LogisticsStatus';
 import { formatDateTime, formatCurrency, copyToClipboard } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface OrderDetail {
   id: string;
@@ -98,7 +99,7 @@ const OrderDetailPage: React.FC = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (!data) throw new Error('Order not found');
 
       setOrder(data);
@@ -176,7 +177,7 @@ const OrderDetailPage: React.FC = () => {
         }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (!data?.success) throw new Error(data?.error || 'Update failed');
 
       toast.success(t('orders.pickupPointUpdated') || '自提点更新成功');

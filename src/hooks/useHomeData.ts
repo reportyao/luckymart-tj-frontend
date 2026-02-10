@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { supabase, Lottery } from '../lib/supabase';
 import { queryKeys } from '../lib/react-query';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface GroupBuyProduct {
   id: string;
@@ -49,7 +50,7 @@ export function useGroupBuyProducts() {
         body: { type: 'products' },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (data?.success) {
         // 按创建时间从新到旧排序
         return [...data.data].sort(

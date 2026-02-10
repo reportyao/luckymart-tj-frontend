@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { Database, Tables } from '../types/supabase';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 // 导出常用的类型
 export type Lottery = Tables<'lotteries'>;
@@ -191,7 +192,7 @@ export const authService = {
         
         if (error) {
           console.error(`[Auth] Attempt ${attempt} failed:`, error);
-          lastError = new Error(`Telegram 认证失败: ${error.message}`);
+          lastError = new Error(await extractEdgeFunctionError(error));
           
           // 如果不是最后一次尝试，等待后重试
           if (attempt < maxRetries) {
@@ -386,7 +387,7 @@ export const lotteryService: any = {
 
     if (error) {
       console.error('Lottery purchase failed:', error);
-      throw new Error(`购买失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
 
     if (data?.error) {
@@ -435,7 +436,7 @@ export const lotteryService: any = {
 
     if (error) {
       console.error('[lotteryService] Draw lottery failed:', error);
-      throw new Error(`开奖失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
 
     if (!data?.success) {
@@ -537,7 +538,7 @@ export const walletService = {
 
     if (error) {
       console.error('Failed to exchange balance:', error);
-      throw new Error(`兑换失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
     
     // 检查返回的数据中是否有错误
@@ -593,7 +594,7 @@ export const referralService = {
 
     if (error) {
       console.error('Failed to fetch referral stats:', error);
-      throw new Error(`获取推荐统计失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
     
     return data.data as InviteStats;
@@ -615,7 +616,7 @@ export const referralService = {
 
     if (error) {
       console.error('Failed to fetch invited users:', error);
-      throw new Error(`获取邀请用户列表失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
     
     return data.data as InvitedUser[];
@@ -637,7 +638,7 @@ export const referralService = {
 
     if (error) {
       console.error('Failed to log share event:', error);
-      throw new Error(`记录分享事件失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
   },
 
@@ -652,7 +653,7 @@ export const referralService = {
 
     if (error) {
       console.error('Failed to activate bonus:', error);
-      throw new Error(`激活奖励失败: ${error.message}`);
+      throw new Error(await extractEdgeFunctionError(error));
     }
     
     return data as { success: boolean; bonus_amount?: number };

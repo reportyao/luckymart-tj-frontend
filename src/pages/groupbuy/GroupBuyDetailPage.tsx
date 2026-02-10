@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { cn, copyToClipboard } from '../../lib/utils';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
+import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
 
 interface PriceComparisonItem {
   platform: string;
@@ -503,7 +504,7 @@ export default function GroupBuyDetailPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.success) {
         toast.success(t('groupBuy.joinSuccess'));
@@ -580,7 +581,7 @@ export default function GroupBuyDetailPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (!data?.success) {
         throw new Error(data?.error || 'Squad buy failed');

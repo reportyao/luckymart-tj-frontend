@@ -21,6 +21,7 @@ import {
 import { LazyImage } from '../components/LazyImage';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 // 订单类型
 type OrderType = 'all' | 'group_buy' | 'lottery' | 'full_purchase';
@@ -119,7 +120,7 @@ const OrderManagementPage: React.FC = () => {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       return data;
     },
     enabled: !!user && !!sessionToken,

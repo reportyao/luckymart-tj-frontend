@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useUser } from '../../contexts/UserContext';
+import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
 import {
   ShoppingBag,
   Users,
@@ -59,7 +60,7 @@ export default function MyGroupBuysPage() {
         body: { type: 'my-orders', user_id: user.telegram_id },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (data?.success) {
         setOrders(data.data);
       }

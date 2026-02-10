@@ -9,6 +9,7 @@ import { uploadImages } from '../lib/uploadImage'
 import { ArrowLeft, Upload, CheckCircle2, Loader2, X, Image as ImageIcon } from 'lucide-react'
 import { formatCurrency } from '../lib/utils'
 import { FirstDepositNoticeModal } from '../components/wallet/FirstDepositNoticeModal'
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface PaymentConfig {
   id: string
@@ -115,7 +116,7 @@ export default function DepositPage() {
         body: { type: 'DEPOSIT' }
       })
 
-      if (error) throw error
+      if (error) throw new Error(await extractEdgeFunctionError(error))
       
       if (data?.success && data?.data) {
         setConfigs(data.data)
@@ -301,7 +302,7 @@ export default function DepositPage() {
         body: requestBody
       })
 
-      if (error) throw error
+      if (error) throw new Error(await extractEdgeFunctionError(error))
 
       if (data?.success) {
         setSuccess(true)

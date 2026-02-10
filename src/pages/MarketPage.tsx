@@ -16,6 +16,7 @@ import { LazyImage } from '../components/LazyImage';
 import { formatCurrency } from '../lib/utils';
 import { useSupabase } from '../contexts/SupabaseContext';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface MarketListing {
   id: string;
@@ -58,7 +59,7 @@ interface MarketListing {
 	        },
 	      });
 	
-	      if (error) throw error;
+	      if (error) throw new Error(await extractEdgeFunctionError(error));
 	
 	      const result = data as { success: boolean; data: any[]; error?: string };
 	
@@ -214,7 +215,7 @@ interface MarketListing {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       const result = data as { success: boolean; error?: string; data?: any };
 

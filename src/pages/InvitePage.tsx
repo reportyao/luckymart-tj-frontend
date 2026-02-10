@@ -15,6 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { formatCurrency, formatDateTime, copyToClipboard } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 // 接口已在 src/lib/supabase.ts 中定义
 const InvitePage: React.FC = () => {
@@ -82,7 +83,7 @@ const InvitePage: React.FC = () => {
         body: { user_id: user.id }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data) {
         setStats(data.stats || {

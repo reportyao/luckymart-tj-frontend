@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { ShoppingBag, Users, Clock, ChevronRight } from 'lucide-react';
+import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
 
 interface GroupBuyProduct {
   id: string;
@@ -40,7 +41,7 @@ export default function GroupBuyListPage() {
         body: { type: 'products' },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (data?.success) {
         // 按创建时间从新到旧排序
         const sortedProducts = [...data.data].sort((a: any, b: any) => {

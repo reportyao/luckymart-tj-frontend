@@ -4,6 +4,7 @@
  */
 
 import { supabase } from './supabase';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 // AI 配额类型
 export interface AIQuota {

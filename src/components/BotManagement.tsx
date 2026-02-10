@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Bot, MessageCircle, Bell, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface BotStats {
   totalUsers: number;
@@ -68,7 +69,7 @@ export default function BotManagement() {
 
       const { data, error } = await supabase.functions.invoke('telegram-bot-manager/setup');
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.success) {
         toast('Bot设置成功！', { icon: '✅' });
@@ -99,7 +100,7 @@ export default function BotManagement() {
         }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.success) {
         toast('测试消息发送成功！', { icon: '✅' });
@@ -120,7 +121,7 @@ export default function BotManagement() {
         body: { batchSize: 50 }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.processed !== undefined) {
         toast(`处理完成：发送${data.sent}条，取消${data.cancelled}条，失败${data.failed}条`, { icon: '📊' });

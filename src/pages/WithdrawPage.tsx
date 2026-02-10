@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabase'
 import { useUser } from '../contexts/UserContext'
 import { ArrowLeft, CheckCircle2 } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 export default function WithdrawPage() {
   const { t } = useTranslation()
@@ -84,7 +85,7 @@ export default function WithdrawPage() {
       console.log('[Debug] Withdraw - Response data:', data);
       console.log('[Debug] Withdraw - Response error:', error);
 
-      if (error) throw error
+      if (error) throw new Error(await extractEdgeFunctionError(error))
 
       if (data?.success) {
         setSuccess(true)

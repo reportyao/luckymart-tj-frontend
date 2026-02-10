@@ -14,6 +14,7 @@ import {
   TrophyIcon
 } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 // 奖项接口
 interface SpinReward {
@@ -218,7 +219,7 @@ const SpinLotteryPage: React.FC = () => {
         body: { user_id: user.id }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (data?.success) {
         setSpinData(data.data);
       }
@@ -252,7 +253,7 @@ const SpinLotteryPage: React.FC = () => {
         body: { user_id: user.id }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.success) {
         // 找到中奖奖项的索引

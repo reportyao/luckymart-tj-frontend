@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
 
 interface GroupBuyResult {
   id?: string;
@@ -153,7 +154,7 @@ export default function GroupBuyResultPage() {
         body: { type: 'session-result', session_id: sessionId },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
       if (data?.success) {
         setResult(data.data);
       }
@@ -197,7 +198,7 @@ export default function GroupBuyResultPage() {
         },
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       if (data?.success) {
         toast.success(t('orders.claimSuccess'));

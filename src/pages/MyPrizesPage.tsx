@@ -14,6 +14,7 @@ import {
 import { LazyImage } from '../components/LazyImage';
 import { formatDateTime } from '../lib/utils';
 import toast from 'react-hot-toast';
+import { extractEdgeFunctionError } from '../utils/edgeFunctionHelper'
 
 interface Prize {
   id: string;
@@ -52,7 +53,7 @@ const MyPrizesPage: React.FC = () => {
 	        },
 	      });
 	
-	      if (error) throw error;
+	      if (error) throw new Error(await extractEdgeFunctionError(error));
 	
 	      const result = data as { success: boolean; data: any[]; error?: string };
 	
@@ -281,7 +282,7 @@ const ShippingModal: React.FC<{
         }
       });
 
-      if (error) throw error;
+      if (error) throw new Error(await extractEdgeFunctionError(error));
 
       const result = data as { success: boolean; error?: string };
 
