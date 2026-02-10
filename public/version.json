@@ -1,5 +1,5 @@
 {
-  "version": "2.3.0",
-  "buildTime": "2026-02-10T19:52:57.261Z",
-  "description": "修复晒单显示：支持display_username和display_avatar_url字段"
+  "version": "2.4.0",
+  "buildTime": "2026-02-10T20:01:15.614Z",
+  "description": "修复版本检查无限刷新循环，集成Edge Function错误监控上报"
 }

@@ -1,7 +1,9 @@
 import { FunctionsHttpError } from '@supabase/supabase-js'
+import { errorMonitor } from '../services/ErrorMonitorService'
 
 /**
- * 从 Supabase Edge Function 错误中提取实际的业务错误信息
+ * 从 Supabase Edge Function 错误中提取实际的业务错误信息，
+ * 并自动上报到错误监控系统（ErrorMonitorService → error_logs 表 → 管理后台）。
  * 
  * 问题背景：
  * 当 Edge Function 返回非 2xx 状态码时，Supabase 客户端抛出 FunctionsHttpError，
@@ -13,23 +15,53 @@ import { FunctionsHttpError } from '@supabase/supabase-js'
  * `if (error) throw new Error(await extractEdgeFunctionError(error))`
  */
 export async function extractEdgeFunctionError(error: unknown): Promise<string> {
+  let errorMessage = 'Unknown error'
+  let apiEndpoint = ''
+  let statusCode = 0
+
   if (error instanceof FunctionsHttpError) {
     try {
       const response = error.context as Response
-      if (response && typeof response.json === 'function') {
-        const body = await response.json()
-        if (body?.error) return body.error
-        if (body?.message) return body.message
+      if (response) {
+        apiEndpoint = response.url || ''
+        statusCode = response.status || 0
+
+        if (typeof response.json === 'function') {
+          const body = await response.json()
+          if (body?.error) {
+            errorMessage = body.error
+          } else if (body?.message) {
+            errorMessage = body.message
+          } else {
+            errorMessage = error.message
+          }
+        } else {
+          errorMessage = error.message
+        }
+      } else {
+        errorMessage = error.message
       }
     } catch {
       // JSON 解析失败时回退到原始消息
+      errorMessage = error.message
     }
-    return error.message
+  } else if (error instanceof Error) {
+    errorMessage = error.message
+  } else {
+    errorMessage = String(error)
   }
 
-  if (error instanceof Error) {
-    return error.message
+  // 自动上报到错误监控系统（异步，不阻塞业务流程）
+  try {
+    errorMonitor.captureApiError(
+      apiEndpoint || 'edge-function',
+      'POST',
+      statusCode,
+      errorMessage,
+    )
+  } catch {
+    // 上报失败不影响业务
   }
 
-  return String(error)
+  return errorMessage
 }
