@@ -1,28 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useUser } from '../contexts/UserContext';
 import { useInviteStats } from '../hooks/useInviteStats';
 import { Lottery } from '../lib/supabase';
 import { PurchaseModal } from '../components/lottery/PurchaseModal';
 import { useSupabase } from '../contexts/SupabaseContext';
-import { LotteryCard } from '../components/lottery/LotteryCard';
 import { SafeMotion } from '../components/SafeMotion';
 import { ModulePreview } from '../components/home/ModulePreview';
 import { ProductList } from '../components/home/ProductList';
-import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import BannerCarousel from '../components/BannerCarousel';
 import toast from 'react-hot-toast';
 import { useLotteries, useGroupBuyProducts } from '../hooks/useHomeData';
-import { queryKeys } from '../lib/react-query';
-import { useQueryClient } from '@tanstack/react-query';
+
 
 const HomePage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user, profile, wallets, isLoading: userLoading, refreshWallets } = useUser();
   const { lotteryService } = useSupabase();
   const { stats: inviteStats } = useInviteStats();
-  const queryClient = useQueryClient();
   
   // 使用 react-query hooks 获取数据（自动缓存、重试、后台刷新）
   const {
