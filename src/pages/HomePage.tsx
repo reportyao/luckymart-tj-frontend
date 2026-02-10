@@ -11,7 +11,6 @@ import { SafeMotion } from '../components/SafeMotion';
 import { ModulePreview } from '../components/home/ModulePreview';
 import { ProductList } from '../components/home/ProductList';
 import { ArrowRightIcon, StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
-import ReferralBanner from '../components/ReferralBanner';
 import BannerCarousel from '../components/BannerCarousel';
 import toast from 'react-hot-toast';
 

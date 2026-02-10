@@ -1,28 +1,18 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { I18nextProvider } from 'react-i18next';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { setupGlobalErrorHandlers, suppressKnownWarnings } from './utils/errorHandlers';
 import { errorMonitor } from './services/ErrorMonitorService';
 import { checkVersion } from './utils/versionCheck';
+import { queryClient } from './lib/react-query';
 
 import i18n from './i18n/config';
 import './index.css';
 import App from './App';
 import { UserProvider } from './contexts/UserContext';
 import { SupabaseProvider } from './contexts/SupabaseContext';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60 * 5, // 5分钟内数据被认为是新鲜的
-      gcTime: 1000 * 60 * 30, // 30分钟后清除缓存
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 // 检查版本，防止加载旧版本（必须在最前面）
 checkVersion();
