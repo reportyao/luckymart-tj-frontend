@@ -24,16 +24,15 @@ export function formatDateTime(dateString: string): string {
       return '';
     }
     
-    // 使用 toLocaleString 自动转换为用户本地时区
-    // 不指定 timeZone，让浏览器自动使用用户的本地时区
-    return date.toLocaleString(undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false
-    }).replace(/\//g, '-').replace(',', '');
+    // 使用手动拼接确保跨环境输出一致的 YYYY-MM-DD HH:MM 格式
+    // 自动使用用户本地时区（getFullYear/getMonth 等方法基于本地时区）
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}`;
   } catch (error) {
     console.error('formatDateTime error:', error);
     return '';
@@ -51,11 +50,12 @@ export function formatDate(dateString: string): string {
       return '';
     }
     
-    return date.toLocaleDateString(undefined, {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '-');
+    // 使用手动拼接确保跨环境输出一致的 YYYY-MM-DD 格式
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
   } catch (error) {
     console.error('formatDate error:', error);
     return '';
