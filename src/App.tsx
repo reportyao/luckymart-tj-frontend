@@ -40,19 +40,14 @@ import AIPage from "./pages/AIPage"
 import PendingPickupPage from "./pages/PendingPickupPage"
 import SubsidyPlanPage from "./pages/SubsidyPlanPage"
 
-// 开发工具：仅在开发环境下懒加载，不会打包进生产环境
-const DebugFloatingButton = import.meta.env.DEV
-  ? lazy(() => import("./components/debug/DebugFloatingButton").then(m => ({ default: m.DebugFloatingButton })))
-  : () => null
+// 调试面板：生产环境中通过连续点击5次"我的"触发，懒加载以减少初始包体积
+const DebugFloatingButton = lazy(() => import("./components/debug/DebugFloatingButton").then(m => ({ default: m.DebugFloatingButton })))
+const DebugPage = lazy(() => import("./pages/DebugPage"))
 
+// 开发工具：仅在开发环境下懒加载，不会打包进生产环境
 const ReactQueryDevtools = import.meta.env.DEV
   ? lazy(() => import("@tanstack/react-query-devtools").then(m => ({ default: m.ReactQueryDevtools })))
   : () => null
-
-// 开发工具页面：仅在开发环境下懒加载
-const DebugPage = import.meta.env.DEV
-  ? lazy(() => import("./pages/DebugPage"))
-  : () => <NotFoundPage />
 
 const MonitoringPage = import.meta.env.DEV
   ? lazy(() => import("./pages/MonitoringPage"))
@@ -119,11 +114,9 @@ function App() {
         }}
       />
       
-      {import.meta.env.DEV && (
-        <Suspense fallback={null}>
-          <DebugFloatingButton />
-        </Suspense>
-      )}
+      <Suspense fallback={null}>
+        <DebugFloatingButton />
+      </Suspense>
       
       {/* Bot关注引导弹窗 */}
       {showModal && (
