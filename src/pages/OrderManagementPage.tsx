@@ -232,8 +232,13 @@ const OrderManagementPage: React.FC = () => {
 
   const handleOrderClick = (order: UnifiedOrder) => {
     if (order.order_type === 'group_buy' && order.session_id) {
-      // 拼团订单始终跳转到结果页，因为用户已经参与了拼团
-      navigate(`/group-buy/result/${order.session_id}`);
+      // 已提货的拼团订单跳转到物流结果页（订单详情页）
+      if (order.pickup_status === 'PICKED_UP') {
+        navigate(`/order-detail/${order.id}`);
+      } else {
+        // 其他状态的拼团订单跳转到开奖结果页
+        navigate(`/group-buy/result/${order.session_id}`);
+      }
     } else if (order.order_type === 'lottery' && order.lottery_id) {
       navigate(`/lottery/${order.lottery_id}`);
     } else if (order.order_type === 'full_purchase') {

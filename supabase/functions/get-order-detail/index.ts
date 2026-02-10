@@ -108,7 +108,7 @@ serve(async (req) => {
     if (!orderData) {
       const { data: groupBuyResult } = await supabase
         .from('group_buy_results')
-        .select(`id, product_id, session_id, winner_order_id, created_at, status, logistics_status, pickup_code, pickup_status, claimed_at, batch_id, pickup_point_id`)
+        .select(`id, product_id, session_id, winner_order_id, created_at, status, logistics_status, pickup_code, pickup_status, claimed_at, batch_id, pickup_point_id, algorithm_data`)
         .eq('id', order_id)
         .eq('winner_id', user_id)
         .maybeSingle()
@@ -138,7 +138,11 @@ serve(async (req) => {
           pickup_code: gbResult.pickup_code,
           claimed_at: gbResult.claimed_at,
           created_at: gbResult.created_at,
-          metadata: { type: 'group_buy', session_id: gbResult.session_id, winner_order_id: gbResult.winner_order_id },
+          metadata: {
+            type: (gbResult.algorithm_data as any)?.type === 'squad_buy' ? 'auto_group_buy' : 'group_buy',
+            session_id: gbResult.session_id,
+            winner_order_id: gbResult.winner_order_id
+          },
           lottery_id: gbResult.product_id,
           pickup_point_id: gbResult.pickup_point_id,
           logistics_status: gbResult.logistics_status,

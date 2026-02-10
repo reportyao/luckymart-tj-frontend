@@ -376,7 +376,9 @@
     "product": "Товар",
     "searchPlaceholder": "Поиск по номеру заказа или названию товара...",
     "type": "Тип",
-    "withdrawal": "Вывод средств"
+    "withdrawal": "Вывод средств",
+    "normalGroupBuy": "Обычная групповая покупка",
+    "autoGroupBuy": "Автоматическая группа"
   },
   "notification": {
     "notifications": "Центр уведомлений",

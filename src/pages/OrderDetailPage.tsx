@@ -116,6 +116,25 @@ const OrderDetailPage: React.FC = () => {
     return text[i18n.language] || text.zh || text.ru || text.tg || '';
   };
 
+  // 根据订单元数据获取订单类型标签
+  const getOrderTypeLabel = (orderData: OrderDetail): string => {
+    const metaType = orderData.metadata?.type;
+    switch (metaType) {
+      case 'prize':
+      case 'lottery':
+        return t('order.oneYuanShopping') || '一元购物';
+      case 'full_purchase':
+        return t('order.fullPurchase') || '全款购物';
+      case 'group_buy':
+        return t('order.normalGroupBuy') || '普通拼团';
+      case 'auto_group_buy':
+      case 'squad':
+        return t('order.autoGroupBuy') || '一键包团';
+      default:
+        return t('order.fullPurchase') || '全款购物';
+    }
+  };
+
   const copyPickupCode = async () => {
     if (order?.pickup_code) {
       const success = await copyToClipboard(order.pickup_code);
@@ -534,16 +553,6 @@ const OrderDetailPage: React.FC = () => {
               <h2 className="text-base font-bold text-gray-900">{t('orders.selectPickupPoint') || '选择自提点'}</h2>
             </div>
 
-            {order.pickup_point && !order.pickup_point.is_active && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                  {t('orders.originalPickupPointDisabled') || '原自提点已停用，请重新选择'}
-                </p>
-                <p className="text-xs text-yellow-700 mt-1">
-                  {t('orders.original') || '原'}: {getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}
-                </p>
-              </div>
-            )}
 
             <div className="space-y-3">
               <select
@@ -609,7 +618,7 @@ const OrderDetailPage: React.FC = () => {
 
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
               <span className="text-sm text-gray-500">{t('order.orderType') || '订单类型'}</span>
-              <span className="font-medium text-gray-900 text-sm">{t('order.fullPurchase') || '全款购买'}</span>
+              <span className="font-medium text-gray-900 text-sm">{getOrderTypeLabel(order)}</span>
             </div>
 
             <div className="flex items-center justify-between py-2 border-b border-gray-100">

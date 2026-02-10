@@ -376,7 +376,9 @@
     "product": "Мол",
     "searchPlaceholder": "Ҷустуҷӯи рақами фармоиш ё номи мол...",
     "type": "Намуд",
-    "withdrawal": "Баровардани пул"
+    "withdrawal": "Баровардани пул",
+    "normalGroupBuy": "Хариди гурӯҳии оддӣ",
+    "autoGroupBuy": "Гурӯҳи автоматикӣ"
   },
   "notification": {
     "notifications": "Маркази огоҳиномаҳо",

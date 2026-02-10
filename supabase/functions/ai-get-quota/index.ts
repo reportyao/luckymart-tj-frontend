@@ -54,7 +54,37 @@ async function validateSession(sessionToken: string) {
   };
 }
 
-// 获取或创建今日配额
+/**
+ * 获取最近一天的 bonus_quota 值（不是求和，而是取最近一天的值）
+ * 因为每天的 bonus_quota 已经包含了之前继承的值 + 当天新增的奖励
+ * 所以最近一天的值就是正确的累计值
+ */
+async function getLatestBonusQuota(userId: string, excludeDate: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  // 查询该用户最近一天（排除今天）的 bonus_quota，按日期降序取第一条
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/ai_chat_quota?user_id=eq.${userId}&date=neq.${excludeDate}&select=bonus_quota,date&order=date.desc&limit=1`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const records = await response.json();
+  if (!Array.isArray(records) || records.length === 0) {
+    return 0;
+  }
+
+  // 取最近一天的 bonus_quota 值
+  return records[0].bonus_quota || 0;
+}
+
+// 获取或创建今日配额（继承最近一天的 bonus_quota）
 async function getOrCreateQuota(userId: string) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -79,7 +109,10 @@ async function getOrCreateQuota(userId: string) {
     return quotas[0];
   }
 
-  // 创建新配额
+  // 创建新配额时，继承最近一天的 bonus_quota
+  const latestBonus = await getLatestBonusQuota(userId, today);
+  console.log(`[AI-GetQuota] Creating new daily quota for user ${userId}, carrying over latest bonus: ${latestBonus}`);
+
   const createResponse = await fetch(
     `${supabaseUrl}/rest/v1/ai_chat_quota`,
     {
@@ -94,7 +127,7 @@ async function getOrCreateQuota(userId: string) {
         user_id: userId,
         date: today,
         base_quota: 10,
-        bonus_quota: 0,
+        bonus_quota: latestBonus,
         used_quota: 0
       })
     }
@@ -135,7 +168,7 @@ serve(async (req) => {
     const totalQuota = quota.base_quota + quota.bonus_quota;
     const remainingQuota = Math.max(0, totalQuota - quota.used_quota);
 
-    console.log('[AI-GetQuota] Success:', { totalQuota, remainingQuota });
+    console.log('[AI-GetQuota] Success:', { totalQuota, remainingQuota, bonus: quota.bonus_quota });
 
     return new Response(
       JSON.stringify({ 

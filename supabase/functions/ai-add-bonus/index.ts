@@ -53,7 +53,34 @@ async function validateSession(sessionToken: string) {
   };
 }
 
-// 获取或创建今日配额
+/**
+ * 获取最近一天的 bonus_quota 值
+ * 最近一天的值已经包含了之前所有继承的值，所以直接取即可
+ */
+async function getLatestBonusQuota(userId: string, excludeDate: string) {
+  const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/ai_chat_quota?user_id=eq.${userId}&date=neq.${excludeDate}&select=bonus_quota,date&order=date.desc&limit=1`,
+    {
+      headers: {
+        'Authorization': `Bearer ${serviceRoleKey}`,
+        'apikey': serviceRoleKey,
+        'Content-Type': 'application/json'
+      }
+    }
+  );
+
+  const records = await response.json();
+  if (!Array.isArray(records) || records.length === 0) {
+    return 0;
+  }
+
+  return records[0].bonus_quota || 0;
+}
+
+// 获取或创建今日配额（继承最近一天的 bonus_quota）
 async function getOrCreateQuota(userId: string) {
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
@@ -78,7 +105,10 @@ async function getOrCreateQuota(userId: string) {
     return quotas[0];
   }
 
-  // 创建新配额
+  // 创建新配额时，继承最近一天的 bonus_quota
+  const latestBonus = await getLatestBonusQuota(userId, today);
+  console.log(`[AI-AddBonus] Creating new daily quota for user ${userId}, carrying over latest bonus: ${latestBonus}`);
+
   const createResponse = await fetch(
     `${supabaseUrl}/rest/v1/ai_chat_quota`,
     {
@@ -93,7 +123,7 @@ async function getOrCreateQuota(userId: string) {
         user_id: userId,
         date: today,
         base_quota: 10,
-        bonus_quota: 0,
+        bonus_quota: latestBonus,
         used_quota: 0
       })
     }
@@ -110,7 +140,7 @@ async function addBonusQuota(userId: string, amount: number, reason: string) {
   
   const today = new Date().toISOString().split('T')[0];
   
-  // 确保今日配额存在
+  // 确保今日配额存在（会自动继承最近一天的bonus）
   await getOrCreateQuota(userId);
   
   // 使用 RPC 调用来原子性地增加 bonus_quota
@@ -175,7 +205,6 @@ serve(async (req) => {
     }
 
     // 如果有 session_token，验证调用者身份
-    // 这里可以添加管理员权限检查
     if (session_token) {
       await validateSession(session_token);
     }

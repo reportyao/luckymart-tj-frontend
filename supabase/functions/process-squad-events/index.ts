@@ -386,21 +386,33 @@ async function handleAiReward(event: QueuedEvent): Promise<void> {
     .maybeSingle();
 
   if (!existingQuota) {
-    // 创建新的今日配额记录
+    // 获取最近一天的 bonus_quota（已包含之前所有继承的值）
+    const { data: latestRecord } = await supabase
+      .from('ai_chat_quota')
+      .select('bonus_quota')
+      .eq('user_id', user_id)
+      .neq('date', today)
+      .order('date', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const latestBonus = latestRecord?.bonus_quota || 0;
+    console.log(`[Worker] AI_REWARD: Latest bonus for user ${user_id}: ${latestBonus}`);
+
+    // 创建新的今日配额记录，继承最近一天的bonus + 新奖励
     const { error: createError } = await supabase
       .from('ai_chat_quota')
       .insert({
         user_id: user_id,
         date: today,
         base_quota: 10,
-        bonus_quota: amount, // 直接设置为奖励数量
+        bonus_quota: latestBonus + amount,
         used_quota: 0,
       });
 
     if (createError) {
       throw new Error(`Failed to create ai_chat_quota: ${createError.message}`);
     }
-    console.log(`[Worker] AI_REWARD: Created new quota with bonus=${amount} for user ${user_id}`);
+    console.log(`[Worker] AI_REWARD: Created new quota with bonus=${latestBonus + amount} (inherited=${latestBonus}, new=${amount}) for user ${user_id}`);
   } else {
     // 步骤 2: 尝试使用 RPC 原子性增加 bonus_quota
     const { error: rpcError } = await supabase.rpc('increment_ai_quota_bonus', {
