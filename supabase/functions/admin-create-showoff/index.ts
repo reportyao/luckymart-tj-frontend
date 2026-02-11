@@ -87,6 +87,7 @@ serve(async (req) => {
 
     // ========== 验证关联商品 (如果提供) ==========
     let lotteryTitle: string | null = null
+    let finalLotteryId: string | null = null
     if (lottery_id) {
       // 先尝试从库存商品表查找
       const { data: product, error: productError } = await supabaseClient
@@ -96,9 +97,11 @@ serve(async (req) => {
         .single()
 
       if (!productError && product) {
+        // 如果是库存商品,则不设置lottery_id(因为外键约束指向lotteries表)
         lotteryTitle = product.name
+        finalLotteryId = null
       } else {
-        // 回退到 lotteries 表查找（兼容旧数据）
+        // 回退到 lotteries 表查找(兼容旧数据)
         const { data: lottery, error: lotteryError } = await supabaseClient
           .from('lotteries')
           .select('id, title, title_i18n')
@@ -109,6 +112,7 @@ serve(async (req) => {
           throw new Error('关联的商品不存在')
         }
         lotteryTitle = lottery.title
+        finalLotteryId = lottery.id
       }
     }
 
@@ -143,7 +147,7 @@ serve(async (req) => {
       title: title?.trim() || null,
 
       // 关联信息
-      lottery_id: lottery_id || null,
+      lottery_id: finalLotteryId,
 
       // 状态信息
       status: 'APPROVED',  // 运营晒单直接批准
