@@ -76,8 +76,8 @@ const BannerCarousel: React.FC = () => {
           setImagesLoaded(true);
         }
       };
-      // 预加载当前语言对应的图片
-      img.src = getLocalizedImageUrl(banner);
+      // 预加载当前语言对应的优化图片
+      img.src = getOptimizedImageUrl(getLocalizedImageUrl(banner), { width: 800, quality: 80 });
     });
     
     // 超时后强制显示
@@ -174,7 +174,7 @@ const BannerCarousel: React.FC = () => {
             <img
               src={imageUrl}
               alt={banner.title}
-              className="w-full h-full object-contain"
+              className="w-full h-full object-cover"
               style={{
                 opacity: imagesLoaded ? 1 : 0,
                 transition: 'opacity 300ms ease-in-out',

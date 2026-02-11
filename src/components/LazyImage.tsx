@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useIntersectionObserver } from '@/hooks/usePerformance'
+import { getOptimizedImageUrl } from '@/lib/utils'
 
 interface LazyImageProps {
   src: string
@@ -11,11 +12,16 @@ interface LazyImageProps {
   onLoad?: () => void
   onError?: () => void
   objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
+  /** 是否启用 Supabase 图片变换优化，默认 true */
+  optimize?: boolean
+  /** 图片质量 (1-100)，默认 75 */
+  quality?: number
 }
 
 /**
  * 懒加载图片组件
  * 使用 IntersectionObserver 实现高效的图片懒加载
+ * 支持 Supabase Storage 图片变换优化
  */
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -27,7 +33,14 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   onLoad,
   onError,
   objectFit = 'cover',
+  optimize = true,
+  quality = 75,
 }) => {
+  // 根据 width 参数生成优化后的图片 URL（取 2x 以适配高清屏）
+  const optimizedSrc = optimize && width
+    ? getOptimizedImageUrl(src, { width: width * 2, quality })
+    : src
+
   const [imageSrc, setImageSrc] = useState(placeholder)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -35,7 +48,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const containerRef = useIntersectionObserver(
     (isVisible) => {
       if (isVisible && imageSrc === placeholder) {
-        setImageSrc(src)
+        setImageSrc(optimizedSrc)
       }
     },
     { threshold: 0.1 }
@@ -87,10 +100,8 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       ref={containerRef}
       className={`relative overflow-hidden bg-gray-200 ${className}`}
       style={{
-        width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : '100%',
-        minWidth: width ? `${width}px` : '100%',
-        minHeight: height ? `${height}px` : '100%',
+        width: width ? `${width}px` : undefined,
+        height: height ? `${height}px` : undefined,
       }}
     >
       <img
@@ -100,10 +111,6 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         className={`w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{
-          minWidth: '100%',
-          minHeight: '100%',
-        }}
       />
       {isLoading && (
         <div className="absolute inset-0 bg-gray-300 animate-pulse" />

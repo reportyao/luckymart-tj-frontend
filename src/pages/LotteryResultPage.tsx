@@ -13,7 +13,7 @@ import {
   GiftIcon,
   MapPinIcon
 } from '@heroicons/react/24/outline';
-import { formatDateTime, getLocalizedText } from '../lib/utils';
+import { formatDateTime, getLocalizedText, getOptimizedImageUrl } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { useSupabase } from '@/contexts/SupabaseContext';
 import { useUser } from '@/contexts/UserContext';
@@ -480,8 +480,9 @@ const LotteryResultPage: React.FC = () => {
         >
           <div className="flex items-start gap-4">
             <img
-              src={lottery.image_url || '/placeholder.png'}
+              src={getOptimizedImageUrl(lottery.image_url || '/placeholder.png', { width: 200, quality: 75 })}
               alt={getLocalizedText(lottery.title_i18n, 'zh')}
+              loading="lazy"
               className="w-24 h-24 object-cover rounded-xl"
             />
             <div className="flex-1">

@@ -14,7 +14,8 @@ import {
   getLotteryStatusColor,
   getTimeRemaining,
   cn,
-  getLocalizedText
+  getLocalizedText,
+  getOptimizedImageUrl
 } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { lotteryService } from '../lib/supabase';
@@ -446,7 +447,7 @@ const LotteryDetailPage: React.FC = () => {
           >
             {lottery.image_urls && lottery.image_urls.length > 0 ? (
               <img
-                src={lottery.image_urls[activeImageIndex]}
+                src={getOptimizedImageUrl(lottery.image_urls[activeImageIndex], { width: 800, quality: 80 })}
                 alt={title}
                 className="w-full h-full object-contain cursor-pointer"
               />

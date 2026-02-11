@@ -19,6 +19,7 @@ import {
 import { cn, copyToClipboard } from '../../lib/utils';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
+import { getOptimizedImageUrl } from '../../lib/utils'
 
 interface PriceComparisonItem {
   platform: string;
@@ -93,7 +94,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={images[0]}
+            src={getOptimizedImageUrl(images[0], { width: 800, quality: 80 })}
             alt={alt}
             className="w-full h-full object-contain"
           />
@@ -143,7 +144,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={images[currentIndex]}
+            src={getOptimizedImageUrl(images[currentIndex], { width: 800, quality: 80 })}
             alt={`${alt} - ${currentIndex + 1}`}
             className="w-full h-full object-contain"
           />

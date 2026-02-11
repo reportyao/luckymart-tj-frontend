@@ -1,5 +1,5 @@
 {
   "version": "2.4.0",
-  "buildTime": "2026-02-10T20:01:15.614Z",
+  "buildTime": "2026-02-11T14:59:18.384Z",
   "description": "修复版本检查无限刷新循环，集成Edge Function错误监控上报"
 }

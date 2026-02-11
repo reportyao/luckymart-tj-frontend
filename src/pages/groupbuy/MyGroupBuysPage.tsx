@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { useUser } from '../../contexts/UserContext';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
+import { getOptimizedImageUrl } from '../../lib/utils'
 import {
   ShoppingBag,
   Users,
@@ -223,8 +224,9 @@ export default function MyGroupBuysPage() {
               <div className="flex gap-4 p-4">
                 {/* Product Image */}
                 <img
-                  src={order.product.image_url}
+                  src={getOptimizedImageUrl(order.product.image_url, { width: 200, quality: 75 })}
                   alt={getLocalizedText(order.product.title)}
+                  loading="lazy"
                   className="w-24 h-24 object-cover rounded-xl"
                 />
 

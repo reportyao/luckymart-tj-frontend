@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { ShoppingBag, Users, Clock, ChevronRight } from 'lucide-react';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
+import { getOptimizedImageUrl } from '../../lib/utils'
 
 interface GroupBuyProduct {
   id: string;
@@ -147,8 +148,9 @@ export default function GroupBuyListPage() {
                   if (allImages.length === 1) {
                     return (
                       <img
-                        src={allImages[0]}
+                        src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
                         alt={getLocalizedText(product.title)}
+                        loading="lazy"
                         className="w-full h-48 object-cover"
                       />
                     );
@@ -161,8 +163,9 @@ export default function GroupBuyListPage() {
                         {allImages.map((img, index) => (
                           <div key={index} className="w-1/2 overflow-hidden">
                             <img
-                              src={img}
+                              src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                               alt={`${getLocalizedText(product.title)} ${index + 1}`}
+                              loading="lazy"
                               className="w-full h-full object-cover"
                             />
                           </div>
@@ -177,8 +180,9 @@ export default function GroupBuyListPage() {
                       <div className="flex h-48 gap-0.5 overflow-hidden">
                         <div className="w-1/2 overflow-hidden">
                           <img
-                            src={allImages[0]}
+                            src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
                             alt={`${getLocalizedText(product.title)} 1`}
+                            loading="lazy"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -186,8 +190,9 @@ export default function GroupBuyListPage() {
                           {allImages.slice(1, 3).map((img, index) => (
                             <div key={index} className="h-1/2 overflow-hidden">
                               <img
-                                src={img}
+                                src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                                 alt={`${getLocalizedText(product.title)} ${index + 2}`}
+                                loading="lazy"
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -205,8 +210,9 @@ export default function GroupBuyListPage() {
                     <div className="flex h-48 gap-0.5 overflow-hidden">
                       <div className="w-1/2 overflow-hidden">
                         <img
-                          src={displayImages[0]}
+                          src={getOptimizedImageUrl(displayImages[0], { width: 400, quality: 75 })}
                           alt={`${getLocalizedText(product.title)} 1`}
+                          loading="lazy"
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -214,8 +220,9 @@ export default function GroupBuyListPage() {
                         {displayImages.slice(1, 4).map((img, index) => (
                           <div key={index} className="h-1/3 overflow-hidden relative">
                             <img
-                              src={img}
+                              src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                               alt={`${getLocalizedText(product.title)} ${index + 2}`}
+                              loading="lazy"
                               className="w-full h-full object-cover"
                             />
                             {/* 最后一张图片显示剩余数量 */}

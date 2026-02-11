@@ -239,7 +239,13 @@ export function getLocalizedText(
  */
 export function getOptimizedImageUrl(
   originalUrl: string | null | undefined,
-  options: { width: number; quality?: number }
+  options: {
+    width: number;
+    height?: number;
+    quality?: number;
+    /** resize 模式: cover(裁切填充) | contain(完整显示) | fill(拉伸), 默认 cover */
+    resize?: 'cover' | 'contain' | 'fill';
+  }
 ): string {
   if (!originalUrl) return '';
   try {
@@ -253,7 +259,13 @@ export function getOptimizedImageUrl(
       );
       const newUrl = new URL(transformedPath, url.origin);
       newUrl.searchParams.set('width', options.width.toString());
+      if (options.height) {
+        newUrl.searchParams.set('height', options.height.toString());
+      }
       newUrl.searchParams.set('quality', (options.quality || 75).toString());
+      if (options.resize) {
+        newUrl.searchParams.set('resize', options.resize);
+      }
       return newUrl.toString();
     }
     // 非 Supabase Storage URL，安全回退

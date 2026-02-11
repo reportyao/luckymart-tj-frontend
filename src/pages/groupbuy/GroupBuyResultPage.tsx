@@ -21,6 +21,7 @@ import {
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
+import { getOptimizedImageUrl } from '../../lib/utils'
 
 interface GroupBuyResult {
   id?: string;
@@ -331,8 +332,9 @@ export default function GroupBuyResultPage() {
           <div className="p-4">
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               <img
-                src={result.product.image_url}
+                src={getOptimizedImageUrl(result.product.image_url, { width: 400, quality: 75 })}
                 alt={getLocalizedText(result.product.title)}
+                loading="lazy"
                 className="w-full h-48 object-cover opacity-75"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
@@ -585,8 +587,9 @@ export default function GroupBuyResultPage() {
         <div className="p-4">
           <div className="bg-white rounded-2xl shadow-md overflow-hidden">
             <img
-              src={result.product.image_url}
+              src={getOptimizedImageUrl(result.product.image_url, { width: 400, quality: 75 })}
               alt={getLocalizedText(result.product.title)}
+              loading="lazy"
               className="w-full h-48 object-cover"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="200"%3E%3Crect fill="%23f0f0f0" width="400" height="200"/%3E%3C/svg%3E';
