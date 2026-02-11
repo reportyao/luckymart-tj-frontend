@@ -12,8 +12,7 @@ import {
   getLotteryStatusColor,
   getTimeRemaining,
   cn,
-  getLocalizedText,
-  getOptimizedImageUrl
+  getLocalizedText
 } from '../../lib/utils'
 
 interface LotteryCardProps {
@@ -64,13 +63,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	  const handleCardClick = () => {
 	    navigate(`/lottery/${lottery.id}`);
 	  };
-
-  /**
-   * 根据图片在布局中的位置，返回优化后的 URL
-   * 大图使用 400px 宽度，小图使用 200px 宽度
-   */
-  const optimizeImg = (url: string, isLarge: boolean = false) =>
-    getOptimizedImageUrl(url, { width: isLarge ? 400 : 200, quality: 75 });
 	
 	  return (
 	    <motion.div
@@ -106,9 +98,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           if (allImages.length === 1) {
             return (
               <img 
-                src={optimizeImg(allImages[0], true)} 
+                src={allImages[0]} 
                 alt={lottery.title}
-                loading="lazy"
                 className="w-full h-full object-cover"
                 style={{ minWidth: '100%', minHeight: '100%' }}
               />
@@ -122,9 +113,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                 {allImages.map((img, index) => (
                   <div key={index} className="w-1/2 overflow-hidden">
                     <img
-                      src={optimizeImg(img)}
+                      src={img}
                       alt={`${lottery.title} ${index + 1}`}
-                      loading="lazy"
                       className="w-full h-full object-cover"
                       style={{ minWidth: '100%', minHeight: '100%' }}
                     />
@@ -140,9 +130,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
               <div className="flex h-full gap-0.5 overflow-hidden">
                 <div className="w-1/2 overflow-hidden">
                   <img
-                    src={optimizeImg(allImages[0], true)}
+                    src={allImages[0]}
                     alt={`${lottery.title} 1`}
-                    loading="lazy"
                     className="w-full h-full object-cover"
                     style={{ minWidth: '100%', minHeight: '100%' }}
                   />
@@ -151,9 +140,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                   {allImages.slice(1, 3).map((img, index) => (
                     <div key={index} className="h-1/2 overflow-hidden">
                       <img
-                        src={optimizeImg(img)}
+                        src={img}
                         alt={`${lottery.title} ${index + 2}`}
-                        loading="lazy"
                         className="w-full h-full object-cover"
                         style={{ minWidth: '100%', minHeight: '100%' }}
                       />
@@ -172,9 +160,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
             <div className="flex h-full gap-0.5 overflow-hidden">
               <div className="w-1/2 overflow-hidden">
                 <img
-                  src={optimizeImg(displayImages[0], true)}
+                  src={displayImages[0]}
                   alt={`${lottery.title} 1`}
-                  loading="lazy"
                   className="w-full h-full object-cover"
                   style={{ minWidth: '100%', minHeight: '100%' }}
                 />
@@ -183,9 +170,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                 {displayImages.slice(1, 4).map((img, index) => (
                   <div key={index} className="h-1/3 overflow-hidden relative">
                     <img
-                      src={optimizeImg(img)}
+                      src={img}
                       alt={`${lottery.title} ${index + 2}`}
-                      loading="lazy"
                       className="w-full h-full object-cover"
                       style={{ minWidth: '100%', minHeight: '100%' }}
                     />

@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { getOptimizedImageUrl } from '../lib/utils';
 
 interface Banner {
   id: string;
@@ -159,7 +158,7 @@ const BannerCarousel: React.FC = () => {
       {/* 渲染所有图片，通过 opacity 和 transform 控制平滑过渡 */}
       {banners.map((banner, index) => {
         const isActive = index === currentIndex;
-        const imageUrl = getOptimizedImageUrl(getLocalizedImageUrl(banner), { width: 800, quality: 80 });
+        const imageUrl = getLocalizedImageUrl(banner);
         return (
           <div
             key={`${banner.id}-${i18n.language}`}
