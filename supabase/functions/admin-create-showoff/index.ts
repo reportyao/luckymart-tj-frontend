@@ -89,6 +89,7 @@ serve(async (req) => {
     let lotteryTitle: string | null = null
     let lotteryTitleI18n: Record<string, string> | null = null
     let finalLotteryId: string | null = null
+    let finalInventoryProductId: string | null = null
     if (lottery_id) {
       // 先尝试从库存商品表查找
       const { data: product, error: productError } = await supabaseClient
@@ -102,6 +103,7 @@ serve(async (req) => {
         lotteryTitle = product.name
         lotteryTitleI18n = product.name_i18n || null
         finalLotteryId = null
+        finalInventoryProductId = product.id // 存储库存商品ID，便于前端查询商品名称
       } else {
         // 回退到 lotteries 表查找(兼容旧数据)
         const { data: lottery, error: lotteryError } = await supabaseClient
@@ -154,6 +156,7 @@ serve(async (req) => {
 
       // 关联信息
       lottery_id: finalLotteryId,
+      inventory_product_id: finalInventoryProductId,
 
       // 状态信息
       status: 'APPROVED',  // 运营晒单直接批准

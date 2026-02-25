@@ -54,6 +54,7 @@ export type Showoff = Tables<'showoffs'>;
 export type ShowoffWithDetails = Showoff & {
   user: UserProfile | null;
   lottery: Lottery | null;
+  inventory_product: { id: string; name: string; name_i18n: Record<string, string> | null; image_url: string | null } | null; // 关联的库存商品（用于未上架到积分商城的商品）
   is_liked: boolean;
   likes_count: number;
   lottery_title?: string;
@@ -61,6 +62,7 @@ export type ShowoffWithDetails = Showoff & {
   image_urls?: string[]; // 晒单图片数组
   title?: string; // 晒单标题
   title_i18n?: Record<string, string> | null; // 晒单多语言标题
+  inventory_product_id?: string | null; // 关联的库存商品ID
   // 运营晒单字段
   display_username?: string; // 运营晒单的虚拟用户昵称
   display_avatar_url?: string; // 运营晒单的虚拟用户头像

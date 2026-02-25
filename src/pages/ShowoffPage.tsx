@@ -135,9 +135,10 @@ const ShowoffPage: React.FC = () => {
 
       const showoffsData = await showoffsResponse.json();
 
-      // 2. 获取所有用户ID和彩票ID
+      // 2. 获取所有用户ID、彩票ID和库存商品ID
       const userIds = [...new Set(showoffsData.map((s: any) => s.user_id).filter(Boolean))];
       const lotteryIds = [...new Set(showoffsData.map((s: any) => s.lottery_id).filter(Boolean))];
+      const inventoryProductIds = [...new Set(showoffsData.map((s: any) => s.inventory_product_id).filter(Boolean))];
 
       // 3. 批量获取用户信息
       let usersMap: Record<string, any> = {};
@@ -179,7 +180,27 @@ const ShowoffPage: React.FC = () => {
         }
       }
 
-      // 5. 查询当前用户的点赞状态
+      // 5. 批量获取库存商品信息（用于运营晒单关联的未上架商品）
+      let inventoryProductsMap: Record<string, any> = {};
+      if (inventoryProductIds.length > 0) {
+        const inventoryResponse = await fetch(
+          `${supabaseUrl}/rest/v1/inventory_products?id=in.(${inventoryProductIds.join(",")})&select=id,name,name_i18n,image_url`,
+          {
+            headers: {
+              'Authorization': `Bearer ${supabaseKey}`,
+              'apikey': supabaseKey,
+            },
+          }
+        );
+        if (inventoryResponse.ok) {
+          const inventoryData = await inventoryResponse.json();
+          inventoryData.forEach((p: any) => {
+            inventoryProductsMap[p.id] = p;
+          });
+        }
+      }
+
+      // 6. 查询当前用户的点赞状态
       let likedShowoffIds = new Set<string>();
       if (user && showoffsData.length > 0) {
         const showoffIds = showoffsData.map((s: any) => s.id);
@@ -198,15 +219,20 @@ const ShowoffPage: React.FC = () => {
         }
       }
 
-      // 6. 合并数据
-      const enrichedData = showoffsData.map((showoff: any) => ({
-        ...showoff,
-        // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
-        image_urls: showoff.image_urls || showoff.images || [],
-        user: usersMap[showoff.user_id] || null,
-        lottery: lotteriesMap[showoff.lottery_id] || null,
-        is_liked: likedShowoffIds.has(showoff.id),
-      }));
+      // 7. 合并数据
+      const enrichedData = showoffsData.map((showoff: any) => {
+        // 获取关联的库存商品信息
+        const inventoryProduct = inventoryProductsMap[showoff.inventory_product_id] || null;
+        return {
+          ...showoff,
+          // 兼容数据库字段名差异：数据库可能使用 images 或 image_urls
+          image_urls: showoff.image_urls || showoff.images || [],
+          user: usersMap[showoff.user_id] || null,
+          lottery: lotteriesMap[showoff.lottery_id] || null,
+          inventory_product: inventoryProduct,
+          is_liked: likedShowoffIds.has(showoff.id),
+        };
+      });
 
       // 如果是加载更多，追加到现有数据
       if (isLoadMore) {
@@ -428,17 +454,19 @@ const ShowoffPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Prize Info */}
+                  {/* Prize Info - 仅在有商品关联信息时显示 */}
+                  {(showoff.title_i18n || showoff.title || showoff.lottery || showoff.inventory_product) && (
                   <div className="px-4 pb-3">
                     <div className="flex items-center space-x-2 p-3 bg-gradient-to-r from-yellow-50 to-orange-50 rounded-lg border border-yellow-200">
                       <TrophyIcon className="w-5 h-5 text-orange-600 flex-shrink-0" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {getLocalizedText(showoff.title_i18n, i18n.language) || showoff.title || getLocalizedText(showoff.lottery?.title_i18n, i18n.language) || showoff.lottery?.title || t('showoff.unknownLottery')}
+                          {getLocalizedText(showoff.title_i18n, i18n.language) || showoff.title || getLocalizedText(showoff.lottery?.title_i18n, i18n.language) || showoff.lottery?.title || getLocalizedText(showoff.inventory_product?.name_i18n, i18n.language) || showoff.inventory_product?.name || t('showoff.unknownLottery')}
                         </p>
                       </div>
                     </div>
                   </div>
+                  )}
 
                   {/* Content */}
                   <div className="px-4 pb-3">
