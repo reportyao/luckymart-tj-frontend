@@ -87,6 +87,7 @@ serve(async (req) => {
 
     // ========== 验证关联商品 (如果提供) ==========
     let lotteryTitle: string | null = null
+    let lotteryTitleI18n: Record<string, string> | null = null
     let finalLotteryId: string | null = null
     if (lottery_id) {
       // 先尝试从库存商品表查找
@@ -99,6 +100,7 @@ serve(async (req) => {
       if (!productError && product) {
         // 如果是库存商品,则不设置lottery_id(因为外键约束指向lotteries表)
         lotteryTitle = product.name
+        lotteryTitleI18n = product.name_i18n || null
         finalLotteryId = null
       } else {
         // 回退到 lotteries 表查找(兼容旧数据)
@@ -112,6 +114,7 @@ serve(async (req) => {
           throw new Error('关联的商品不存在')
         }
         lotteryTitle = lottery.title
+        lotteryTitleI18n = lottery.title_i18n || null
         finalLotteryId = lottery.id
       }
     }
@@ -144,7 +147,10 @@ serve(async (req) => {
       content: content.trim(),
       images: images,
       image_urls: images, // 同时写入两个字段以兼容不同的数据库 schema
-      title: title?.trim() || null,
+      // 标题优先级: 管理员自定义标题 > 关联商品名称
+      title: title?.trim() || lotteryTitle || null,
+      // 存储多语言标题，供前端国际化显示
+      title_i18n: lotteryTitleI18n || null,
 
       // 关联信息
       lottery_id: finalLotteryId,

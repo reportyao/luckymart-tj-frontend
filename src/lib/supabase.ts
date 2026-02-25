@@ -60,6 +60,7 @@ export type ShowoffWithDetails = Showoff & {
   reward_coins?: number;
   image_urls?: string[]; // 晒单图片数组
   title?: string; // 晒单标题
+  title_i18n?: Record<string, string> | null; // 晒单多语言标题
   // 运营晒单字段
   display_username?: string; // 运营晒单的虚拟用户昵称
   display_avatar_url?: string; // 运营晒单的虚拟用户头像
