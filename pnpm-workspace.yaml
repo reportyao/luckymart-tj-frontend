@@ -1,0 +1,5 @@
+ignoredBuiltDependencies:
+  - esbuild
+  - msw
+  - supabase
+  - unrs-resolver

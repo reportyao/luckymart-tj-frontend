@@ -23,9 +23,10 @@ interface LazyImageProps {
  * 懒加载图片组件
  * 使用 IntersectionObserver 实现高效的图片懒加载
  * 支持 Supabase Storage 图片变换优化
- * 
- * 注意：当不传 width/height 时，容器默认占满父元素 100%。
- * 调用方应确保父元素有明确的尺寸约束（如 w-24 h-24）。
+ *
+ * ⚠️ width / height 仅用于生成优化后的图片 URL（Supabase image transform），
+ *    不会作为容器的 CSS 尺寸。容器尺寸完全由外部 className / 父元素决定。
+ *    调用方应确保父元素有明确的尺寸约束（如 w-24 h-24、aspect-square 等）。
  */
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -104,12 +105,6 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     <div
       ref={containerRef}
       className={`relative overflow-hidden bg-gray-200 ${className}`}
-      style={{
-        width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : '100%',
-        minWidth: width ? `${width}px` : '100%',
-        minHeight: height ? `${height}px` : '100%',
-      }}
     >
       <img
         ref={imgRef}
@@ -118,10 +113,6 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         className={`w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
-        style={{
-          minWidth: '100%',
-          minHeight: '100%',
-        }}
       />
       {isLoading && (
         <div className="absolute inset-0 bg-gray-300 animate-pulse" />

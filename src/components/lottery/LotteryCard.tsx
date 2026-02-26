@@ -109,7 +109,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                 alt={lottery.title}
                 loading="lazy"
                 className="w-full h-full object-cover"
-                style={{ minWidth: '100%', minHeight: '100%' }}
               />
             );
           }
@@ -125,7 +124,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                       alt={`${lottery.title} ${index + 1}`}
                       loading="lazy"
                       className="w-full h-full object-cover"
-                      style={{ minWidth: '100%', minHeight: '100%' }}
                     />
                   </div>
                 ))}
@@ -143,7 +141,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                     alt={`${lottery.title} 1`}
                     loading="lazy"
                     className="w-full h-full object-cover"
-                    style={{ minWidth: '100%', minHeight: '100%' }}
                   />
                 </div>
                 <div className="w-1/2 flex flex-col gap-0.5">
@@ -154,7 +151,6 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                         alt={`${lottery.title} ${index + 2}`}
                         loading="lazy"
                         className="w-full h-full object-cover"
-                        style={{ minWidth: '100%', minHeight: '100%' }}
                       />
                     </div>
                   ))}
@@ -174,20 +170,18 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                   src={optimizeImg(displayImages[0], true)}
                   alt={`${lottery.title} 1`}
                   loading="lazy"
-                  className="w-full h-full object-cover"
-                  style={{ minWidth: '100%', minHeight: '100%' }}
-                />
-              </div>
-              <div className="w-1/2 flex flex-col gap-0.5">
-                {displayImages.slice(1, 4).map((img, index) => (
-                  <div key={index} className="h-1/3 overflow-hidden relative">
-                    <img
-                      src={optimizeImg(img)}
-                      alt={`${lottery.title} ${index + 2}`}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                      style={{ minWidth: '100%', minHeight: '100%' }}
-                    />
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="w-1/2 flex flex-col gap-0.5">
+                  {displayImages.slice(1, 4).map((img, index) => (
+                    <div key={index} className="h-1/3 overflow-hidden relative">
+                      <img
+                        src={optimizeImg(img)}
+                        alt={`${lottery.title} ${index + 2}`}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
                     {/* 最后一张图片显示剩余数量 */}
                     {index === 2 && remainingCount > 0 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

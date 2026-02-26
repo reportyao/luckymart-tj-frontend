@@ -45,19 +45,11 @@
     background-color: #f9fafb !important;
     min-height: 100vh;
   }
-}
 
-img {
-  object-position: top;
-}
-
-.fixed {
-  position: fixed;
-}
-
-/* 确保 Telegram WebApp 容器也有正确的背景 */
-.tg-viewport {
-  background-color: #f9fafb !important;
+  /* 确保 Telegram WebApp 容器也有正确的背景 */
+  .tg-viewport {
+    background-color: #f9fafb !important;
+  }
 }
 
 /* Loading spinner animation */
