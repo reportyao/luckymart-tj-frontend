@@ -35,8 +35,8 @@ export function RealtimeNotificationsProvider({ children }: RealtimeNotification
     switch (data?.notification_type) {
       case 'group_buy_win':
         toast.success(
-          `${t('notifications.groupBuyWin.title')}\n${t('notifications.groupBuyWin.description', { 
-            productName: data.data?.product_name 
+          `${t('notifications.groupBuyWin')}\n${t('notifications.groupBuyWinContent', { 
+            product: data.data?.product_name 
           })}`
         );
         break;
@@ -65,8 +65,8 @@ export function RealtimeNotificationsProvider({ children }: RealtimeNotification
 
       case 'lottery_win':
         toast.success(
-          `${t('notifications.lotteryWin.title')}\n${t('notifications.lotteryWin.description', { 
-            prize: data.data?.prize_amount 
+          `${t('notifications.lotteryWin')}\n${t('notifications.lotteryWinContent', { 
+            product: data.data?.prize_amount 
           })}`
         );
         break;
@@ -93,12 +93,6 @@ export function RealtimeNotificationsProvider({ children }: RealtimeNotification
 
   const handleError = (error: Error) => {
     console.error('Realtime notifications error:', error);
-    // Optionally show error toast
-    // toast({
-    //   title: 'Connection Error',
-    //   description: 'Failed to connect to realtime notifications',
-    //   variant: 'destructive',
-    // });
   };
 
   const { isConnected, lastMessage, reconnect, disconnect } = useRealtimeNotifications({
