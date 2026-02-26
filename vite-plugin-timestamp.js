@@ -1,10 +1,15 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { resolve } from 'path';
 
-// Vite 插件：给所有资源添加时间戳查询参数，并在 HTML 中添加随机 ID
+/**
+ * Vite 插件：构建时更新 version.json 的 buildTime，并替换 HTML 中的占位符。
+ * 
+ * 注意：不再给资源 URL 添加 ?v=timestamp 查询参数。
+ * Vite 构建会自动为所有输出文件名添加内容哈希（如 index-Vjnf1_2r.js），
+ * 这是更优的缓存失效策略。查询参数会破坏浏览器的长期缓存能力，
+ * 导致用户每次访问都重新下载所有资源。
+ */
 export default function timestampPlugin() {
-  const timestamp = Date.now();
-  const randomId = Math.random().toString(36).substring(2, 15);
   const buildTime = new Date().toISOString();
   
   return {
@@ -22,23 +27,8 @@ export default function timestampPlugin() {
       }
     },
     transformIndexHtml(html) {
-      // 给所有 script 和 link 标签添加时间戳
-      let result = html
-        .replace(
-          /(<script[^>]+src=")([^"]+)(")/g,
-          `$1$2?v=${timestamp}$3`
-        )
-        .replace(
-          /(<link[^>]+href=")([^"]+)(")/g,
-          `$1$2?v=${timestamp}$3`
-        );
-      
-      // 替换 __BUILD_TIME__ 和 __RANDOM_ID__ 占位符
-      result = result
-        .replace(/__BUILD_TIME__/g, buildTime)
-        .replace(/__RANDOM_ID__/g, randomId);
-      
-      return result;
+      // 仅替换 __BUILD_TIME__ 占位符（用于 HTML 注释中的构建时间标记）
+      return html.replace(/__BUILD_TIME__/g, buildTime);
     }
   };
 }
