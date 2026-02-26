@@ -12,24 +12,24 @@ import toast from 'react-hot-toast'
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate()
   const { i18n, t, ready } = useTranslation()
-  const [currentLanguage, setCurrentLanguage] = useState<string>('zh')
+  const [currentLanguage, setCurrentLanguage] = useState<string>('tg')
   const [isLoading, setIsLoading] = useState(true)
 
   const languages = [
-    { code: 'zh', name: '中文', nativeName: '简体中文' },
+    { code: 'tg', name: 'Tajik', nativeName: 'Тоҷикӣ' },
     { code: 'ru', name: 'Russian', nativeName: 'Русский' },
-    { code: 'tg', name: 'Tajik', nativeName: 'Тоҷикӣ' }
+    { code: 'zh', name: '中文', nativeName: '简体中文' }
   ]
 
   // 在组件挂载时初始化当前语言
   useEffect(() => {
     try {
-      const lang = i18n.language || localStorage.getItem('i18nextLng') || 'ru'
+      const lang = i18n.language || localStorage.getItem('i18nextLng') || 'tg'
       setCurrentLanguage(lang)
       setIsLoading(false)
     } catch (error) {
       console.error('Error initializing language:', error)
-      setCurrentLanguage('ru')
+      setCurrentLanguage('tg')
       setIsLoading(false)
     }
   }, [i18n.language])
@@ -40,13 +40,8 @@ const SettingsPage: React.FC = () => {
       setCurrentLanguage(languageCode)
       localStorage.setItem('i18nextLng', languageCode)
       
-      // 根据语言显示不同的提示
-      const messages: Record<string, string> = {
-        zh: t('settings.languageChangedToZh'),
-        ru: 'Язык изменен на русский',
-        tg: 'Забон ба тоҷикӣ иваз шуд'
-      }
-      toast.success(messages[languageCode] || t('settings.languageChanged'))
+      // 切换语言后，t() 已经指向新语言，直接使用 t() 获取提示文本
+      toast.success(t('settings.languageChanged'))
       
       // 不再强制导航回个人中心，保持在当前页面
       // React组件会自动响应i18n语言变化重新渲染
@@ -62,7 +57,7 @@ const SettingsPage: React.FC = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
+          <p className="mt-4 text-gray-600">{t('common.loading')}</p>
         </div>
       </div>
     )
@@ -79,7 +74,7 @@ const SettingsPage: React.FC = () => {
           >
             <ArrowLeftIcon className="w-6 h-6 text-gray-600" />
           </button>
-          <h1 className="text-xl font-bold text-gray-900">系统设置</h1>
+          <h1 className="text-xl font-bold text-gray-900">{t('settings.title')}</h1>
         </div>
       </div>
 
@@ -89,9 +84,9 @@ const SettingsPage: React.FC = () => {
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center space-x-2">
               <LanguageIcon className="w-5 h-5 text-gray-600" />
-              <h2 className="text-base font-semibold text-gray-900">语言设置</h2>
+              <h2 className="text-base font-semibold text-gray-900">{t('settings.languageSetting')}</h2>
             </div>
-            <p className="text-sm text-gray-500 mt-1">选择您的首选语言</p>
+            <p className="text-sm text-gray-500 mt-1">{t('settings.selectLanguage')}</p>
           </div>
           
           <div className="divide-y divide-gray-100">

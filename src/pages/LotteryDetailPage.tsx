@@ -281,7 +281,7 @@ const LotteryDetailPage: React.FC = () => {
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
     
     if (luckyCoinsBalance < totalCost) {
-      toast.error(t('wallet.insufficientLuckyCoins') || `t('lottery.insufficientBalance', { required: totalCost, current: luckyCoinsBalance })`);
+      toast.error(t('wallet.insufficientLuckyCoins'));
       return;
     }
 
@@ -356,18 +356,18 @@ const LotteryDetailPage: React.FC = () => {
 
     // 检查全款购买是否启用
     if (!fullPurchaseEnabled) {
-      toast.error(t('lottery.fullPurchaseDisabled') || '该商品不支持全款购买');
+      toast.error(t('lottery.fullPurchaseDisabled'));
       return;
     }
 
     // 检查库存（使用库存商品库存或剩余份数）
     if (fullPurchaseStock <= 0) {
-      toast.error(t('lottery.fullPurchaseOutOfStock') || '库存不足，无法全款购买');
+      toast.error(t('lottery.fullPurchaseOutOfStock'));
       return;
     }
 
     if (!isActive) {
-      toast.error(t('lottery.notActive') || '商品当前不可购买');
+      toast.error(t('lottery.notActive'));
       return;
     }
 
@@ -472,7 +472,7 @@ const LotteryDetailPage: React.FC = () => {
                     e.stopPropagation();
                   }}
                   className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 active:bg-black/80 transition-colors z-20"
-                  aria-label="上一张图片"
+                  aria-label="Previous image"
                 >
                   <ChevronLeftIcon className="w-6 h-6" />
                 </button>
@@ -488,7 +488,7 @@ const LotteryDetailPage: React.FC = () => {
                     e.stopPropagation();
                   }}
                   className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 text-white p-3 rounded-full hover:bg-black/70 active:bg-black/80 transition-colors z-20"
-                  aria-label="下一张图片"
+                  aria-label="Next image"
                 >
                   <ChevronRightIcon className="w-6 h-6" />
                 </button>
@@ -515,7 +515,7 @@ const LotteryDetailPage: React.FC = () => {
                       "w-2.5 h-2.5 rounded-full transition-all",
                       index === activeImageIndex ? "bg-white w-5" : "bg-white/60"
                     )}
-                    aria-label={`切换到第${index + 1}张图片`}
+                    aria-label={`Switch to image ${index + 1}`}
                   />
                 ))}
               </div>
@@ -652,7 +652,7 @@ const LotteryDetailPage: React.FC = () => {
               "px-3 py-1 rounded-full text-sm font-medium whitespace-nowrap",
               getLotteryStatusColor(lottery.status)
             )}>
-              {getLotteryStatusText(lottery.status)}
+              {getLotteryStatusText(lottery.status, t)}
             </span>
           </div>
 

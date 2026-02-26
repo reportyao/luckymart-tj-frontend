@@ -92,7 +92,7 @@ const MarketCreatePage: React.FC = () => {
         {
           id: '1',
           lottery_id: 'lottery1',
-          lottery_title: 'iPhone 15 Pro Max 积分商城',
+          lottery_title: 'iPhone 15 Pro Max',
           lottery_image: 'https://images.unsplash.com/photo-1695048133142-1a20484d2569?w=400',
           ticket_numbers: '023,024,025',
           purchase_price: 30,
@@ -103,7 +103,7 @@ const MarketCreatePage: React.FC = () => {
         {
           id: '2',
           lottery_id: 'lottery2',
-          lottery_title: 'MacBook Pro 积分商城',
+          lottery_title: 'MacBook Pro',
           lottery_image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=400',
           ticket_numbers: '045,046',
           purchase_price: 20,
@@ -178,7 +178,7 @@ const MarketCreatePage: React.FC = () => {
           body: JSON.stringify({
             prizeId: selectedTicket,
             price: parseFloat(sellingPrice),
-            description: `转售 ${selectedTicketData?.lottery_title}`,
+            description: `${t('market.resale')} ${selectedTicketData?.lottery_title}`,
           }),
         }
       );

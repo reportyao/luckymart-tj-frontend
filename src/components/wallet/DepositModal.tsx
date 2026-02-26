@@ -11,6 +11,7 @@ interface DepositModalProps {
 }
 
 const PRESET_AMOUNTS = [10, 50, 100, 500, 1000, 5000];
+const MIN_DEPOSIT = 10;
 
 export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const { t } = useTranslation();
@@ -26,8 +27,8 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
       return;
     }
 
-    if (depositAmount < 10) {
-      toast.error('最小充值金额为 10 TJS');
+    if (depositAmount < MIN_DEPOSIT) {
+      toast.error(t('deposit.minAmountError', { min: MIN_DEPOSIT }));
       return;
     }
 
@@ -92,7 +93,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
             {/* Payment Method Selection */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                支付方式
+                {t('deposit.paymentMethod')}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -105,7 +106,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
                 >
                   <CreditCardIcon className={`w-5 h-5 ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className={`font-medium ${paymentMethod === 'card' ? 'text-blue-600' : 'text-gray-700'}`}>
-                    银行卡
+                    {t('deposit.bankCard')}
                   </span>
                 </button>
                 <button
@@ -118,7 +119,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
                 >
                   <BanknotesIcon className={`w-5 h-5 ${paymentMethod === 'bank' ? 'text-blue-600' : 'text-gray-400'}`} />
                   <span className={`font-medium ${paymentMethod === 'bank' ? 'text-blue-600' : 'text-gray-700'}`}>
-                    银行转账
+                    {t('deposit.bankTransfer')}
                   </span>
                 </button>
               </div>
@@ -127,7 +128,7 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
             {/* Preset Amounts */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
-                快速选择金额
+                {t('deposit.quickSelect')}
               </label>
               <div className="grid grid-cols-3 gap-2">
                 {PRESET_AMOUNTS.map((presetAmount) => (
@@ -149,14 +150,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
             {/* Custom Amount Input */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                自定义金额
+                {t('deposit.customAmount')}
               </label>
               <div className="relative">
                 <input
                   type="number"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  placeholder="输入充值金额"
+                  placeholder={t('deposit.inputPlaceholder')}
                   className="w-full px-4 py-3 pr-16 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   min="10"
                   step="10"
@@ -166,14 +167,14 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
                 </span>
               </div>
               <p className="mt-2 text-xs text-gray-500">
-                最小充值金额: 10 TJS
+                {t('deposit.minAmountHint', { min: MIN_DEPOSIT })}
               </p>
             </div>
 
             {/* Notice */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
               <p className="text-sm text-yellow-800">
-                <strong>提示:</strong> 充值功能当前为演示模式,实际支付网关集成中。
+                {t('deposit.demoNotice')}
               </p>
             </div>
           </div>
@@ -198,10 +199,10 @@ export const DepositModal: React.FC<DepositModalProps> = ({ isOpen, onClose, onS
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  处理中...
+                  {t('common.loading')}
                 </span>
               ) : (
-                `确认充值 ${amount ? parseFloat(amount).toFixed(2) : '0.00'} TJS`
+                t('deposit.confirmDeposit', { amount: amount ? parseFloat(amount).toFixed(2) : '0.00' })
               )}
             </button>
           </div>

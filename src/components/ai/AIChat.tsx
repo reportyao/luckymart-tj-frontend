@@ -21,13 +21,13 @@ interface AIChatProps {
   onQuotaUpdate: () => void;
 }
 
-// 错误消息映射 (中文)
-const ERROR_MESSAGES: Record<string, string> = {
-  'QUOTA_EXCEEDED': '今日提问次数已用完，邀请好友或参与拼团可获得更多次数！',
-  'SENSITIVE_CONTENT': '抱歉，我无法回答这个问题。请换一个话题。',
-  'AI_ERROR': '发生错误，请重试。',
-  'UNAUTHORIZED': '请先登录。',
-  'DEFAULT': '发生错误，请重试。'
+// 错误消息翻译键映射
+const ERROR_MESSAGE_KEYS: Record<string, string> = {
+  'QUOTA_EXCEEDED': 'ai.error.quotaExceeded',
+  'SENSITIVE_CONTENT': 'ai.error.sensitiveContent',
+  'AI_ERROR': 'ai.error.aiError',
+  'UNAUTHORIZED': 'ai.error.unauthorized',
+  'DEFAULT': 'ai.error.default'
 };
 
 export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuotaUpdate }: AIChatProps) {
@@ -105,10 +105,10 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
       console.error('AI chat error:', error);
       
       // 根据错误类型显示不同提示
-      let errorMessage = ERROR_MESSAGES['DEFAULT'];
+      let errorMessage = t(ERROR_MESSAGE_KEYS['DEFAULT']);
       
       if (error instanceof AIServiceError) {
-        errorMessage = ERROR_MESSAGES[error.code] || error.message || ERROR_MESSAGES['DEFAULT'];
+        errorMessage = ERROR_MESSAGE_KEYS[error.code] ? t(ERROR_MESSAGE_KEYS[error.code]) : (error.message || t(ERROR_MESSAGE_KEYS['DEFAULT']));
       }
       
       toast.error(errorMessage, {
@@ -206,7 +206,7 @@ export function AIChat({ initialMessages = [], onMessagesChange, onBack, onQuota
         
         {/* AI免责声明 */}
         <div className="text-center text-xs text-gray-400 mt-2">
-          AI танҳо барои маълумот аст, на мавқеи расмӣ.
+          {t('ai.disclaimer')}
         </div>
       </div>
     </div>

@@ -27,7 +27,7 @@ interface WinningLottery {
 }
 
 const ShowoffCreatePage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const { user } = useUser();
   const [winningLotteries, setWinningLotteries] = useState<WinningLottery[]>([]);
@@ -44,7 +44,7 @@ const ShowoffCreatePage: React.FC = () => {
       
       if (!user?.id) {
         console.error('[ShowoffCreatePage] User ID is missing');
-        throw new Error('未登录');
+        throw new Error('Not authenticated');
       }
 
       const supabaseUrl = SUPABASE_URL;
@@ -65,7 +65,7 @@ const ShowoffCreatePage: React.FC = () => {
       if (!prizesResponse.ok) {
         const errorText = await prizesResponse.text();
         console.error('[ShowoffCreatePage] Prizes fetch failed:', errorText);
-        throw new Error(`获取中奖记录失败: ${prizesResponse.status}`);
+        throw new Error(`Failed to fetch prizes: ${prizesResponse.status}`);
       }
 
       const prizes = await prizesResponse.json();
@@ -170,9 +170,9 @@ const ShowoffCreatePage: React.FC = () => {
       // 抽奖中奖记录
       const lotteryWinnings: WinningLottery[] = availablePrizes.map((prize: any) => {
         // 获取商品名称，优先使用 prize_name，其次使用 lottery.title
-        const lotteryTitle = prize.prize_name || prize.lottery?.title || '未知积分商城';
+        const lotteryTitle = prize.prize_name || prize.lottery?.title || t('showoff.unknownLottery');
         // 如果 title 是字符串，直接使用；如果是对象，使用中文版本作为显示
-        const displayTitle = typeof lotteryTitle === 'string' ? lotteryTitle : (lotteryTitle.zh || lotteryTitle.ru || lotteryTitle.tg || '未知积分商城');
+        const displayTitle = typeof lotteryTitle === 'string' ? lotteryTitle : (lotteryTitle[i18n.language] || lotteryTitle.tg || lotteryTitle.ru || lotteryTitle.zh || t('showoff.unknownLottery'));
         
         return {
           id: prize.id,
@@ -191,14 +191,14 @@ const ShowoffCreatePage: React.FC = () => {
       const groupBuyWinnings: WinningLottery[] = availableGroupBuyResults.map((result: any) => {
         const product = result.product;
         // 获取商品名称，优先使用 title（多语言），其次使用 name
-        const productTitle = product?.title || product?.name || '拼团商品';
+        const productTitle = product?.title || product?.name || t('showoff.unknownGroupBuy');
         // 如果 title 是对象，使用中文版本作为显示；如果是字符串，直接使用
-        const displayTitle = typeof productTitle === 'object' ? (productTitle.zh || productTitle.ru || productTitle.tg || '拼团商品') : productTitle;
+        const displayTitle = typeof productTitle === 'object' ? (productTitle[i18n.language] || productTitle.tg || productTitle.ru || productTitle.zh || t('showoff.unknownGroupBuy')) : productTitle;
         
         return {
           id: result.id,
           lottery_id: null, // 拼团商品不属于lotteries表,设置为null
-          lottery_title: `拼团中奖 - ${displayTitle}`,
+          lottery_title: `${t('showoff.groupBuyWin')} - ${displayTitle}`,
           lottery_title_full: productTitle, // 保存完整的 title（可能是字符串或对象）
           prize_name: displayTitle,
           prize_image: product?.image_url || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23f0f0f0" width="400" height="400"/%3E%3C/svg%3E',
@@ -455,14 +455,14 @@ const ShowoffCreatePage: React.FC = () => {
               {content.length}/500
             </p>
             {content.length > 0 && content.length < 10 && (
-              <p className="text-sm text-red-500">至少10个字</p>
+              <p className="text-sm text-red-500">{t('showoff.minContentLength')}</p>
             )}
           </div>
         </div>
 
         {/* Image Upload */}
         <div className="bg-white rounded-xl p-4">
-          <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.uploadImages')} ({t('showoff.maxImages') || '最多9张'})</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.uploadImages')} ({t('showoff.maxImages')})</h3>
           <div className="grid grid-cols-3 gap-3">
             {images.map((image, index) => (
               <div key={index} className="relative aspect-square">
@@ -497,33 +497,33 @@ const ShowoffCreatePage: React.FC = () => {
             )}
           </div>
           <p className="text-xs text-gray-500 mt-3">
-            * {t('showoff.imageFormatHint') || '支持JPG、PNG格式,单张图片不超过5MB'}
+            * {t('showoff.imageFormatHint')}
           </p>
         </div>
 
         {/* Tips */}
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-          <h4 className="font-medium text-blue-900 mb-2">{t('showoff.tips') || '温馨提示'}</h4>
+          <h4 className="font-medium text-blue-900 mb-2">{t('showoff.tips')}</h4>
           <ul className="space-y-1 text-sm text-blue-800">
-            <li>• {t('showoff.tip1') || '请上传真实的中奖照片,虚假晒单将被删除'}</li>
-            <li>• {t('showoff.tip2') || '晒单内容需经过审核后才会显示'}</li>
-            <li>• {t('showoff.tip3') || '优质晒单有机会获得平台奖励'}</li>
-            <li>• {t('showoff.tip4') || '请勿发布违法违规、广告等不当内容'}</li>
+            <li>• {t('showoff.tip1')}</li>
+            <li>• {t('showoff.tip2')}</li>
+            <li>• {t('showoff.tip3')}</li>
+            <li>• {t('showoff.tip4')}</li>
           </ul>
         </div>
 
         {/* Preview */}
         {selectedLotteryData && content && images.length > 0 && (
           <div className="bg-white rounded-xl p-4">
-            <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.preview') || '预览'}</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.preview')}</h3>
             <div className="border border-gray-200 rounded-lg p-4">
               <div className="flex items-center space-x-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-pink-400 rounded-full flex items-center justify-center text-white font-bold">
                   {user?.telegram_username?.charAt(0) || user?.telegram_username?.charAt(0) || 'U'}
                 </div>
                 <div>
-                  <p className="font-medium text-gray-900">{user?.telegram_username || user?.telegram_username || '用户'}</p>
-                  <p className="text-xs text-gray-500">刚刚</p>
+                  <p className="font-medium text-gray-900">{user?.telegram_username || t('common.user')}</p>
+                  <p className="text-xs text-gray-500">{t('common.justNow')}</p>
                 </div>
               </div>
 
@@ -551,7 +551,7 @@ const ShowoffCreatePage: React.FC = () => {
                       images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'
                     }`}
                   >
-	                    <LazyImage src={image} alt={`预览${idx + 1}`} className="w-full h-full object-cover" />
+	                    <LazyImage src={image} alt={`${t('showoff.preview')} ${idx + 1}`} className="w-full h-full object-cover" />
                     {idx === 3 && images.length > 4 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span className="text-white text-xl font-bold">+{images.length - 4}</span>

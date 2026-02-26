@@ -326,7 +326,7 @@ const LotteryResultPage: React.FC = () => {
     
     // 检查是否还在加载中
     if (isLoadingPrizeInfo || isLoadingPickupPoints) {
-      toast.error(t('common.loading') || '加载中，请稍候...');
+      toast.error(t('common.loading'));
       return;
     }
     
@@ -337,7 +337,7 @@ const LotteryResultPage: React.FC = () => {
     
     // 检查是否有可用的自提点
     if (pickupPoints.length === 0) {
-      toast.error(t('orders.noPickupPoints') || '暂无可用的自提点，请联系客服');
+      toast.error(t('orders.noPickupPoints'));
       console.error('[ClaimPrize] No pickup points available');
       return;
     }

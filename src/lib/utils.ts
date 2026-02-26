@@ -62,15 +62,28 @@ export function formatDate(dateString: string): string {
   }
 }
 
-// 获取抽奖状态文本
-export function getLotteryStatusText(status: string): string {
+// 获取抽奖状态文本（支持国际化）
+export function getLotteryStatusText(status: string, t?: (key: string) => string): string {
+  if (t) {
+    const keyMap: Record<string, string> = {
+      'ACTIVE': 'lottery.statusActive',
+      'UPCOMING': 'lottery.statusUpcoming',
+      'COMPLETED': 'lottery.statusCompleted',
+      'SOLD_OUT': 'lottery.statusSoldOut',
+      'DRAWN': 'lottery.statusDrawn',
+      'CANCELLED': 'lottery.statusCancelled'
+    };
+    const key = keyMap[status];
+    return key ? t(key) : status;
+  }
+  // Fallback without t function (for backward compatibility)
   const statusMap: Record<string, string> = {
-    'ACTIVE': '进行中',
-    'UPCOMING': '即将开始',
-    'COMPLETED': '已完成',
-    'SOLD_OUT': '已售完',
-    'DRAWN': '已开奖',
-    'CANCELLED': '已取消'
+    'ACTIVE': 'Active',
+    'UPCOMING': 'Upcoming',
+    'COMPLETED': 'Completed',
+    'SOLD_OUT': 'Sold Out',
+    'DRAWN': 'Drawn',
+    'CANCELLED': 'Cancelled'
   };
   return statusMap[status] || status;
 }
@@ -113,21 +126,37 @@ export function getTimeRemaining(endTime: string): {
   return { total: diff, days, hours, minutes, seconds };
 }
 
-// Get time remaining as formatted string
-export function getTimeRemainingText(endTime: string): string {
+// Get time remaining as formatted string (supports i18n)
+export function getTimeRemainingText(endTime: string, t?: (key: string, opts?: any) => string): string {
   const { total, days, hours, minutes } = getTimeRemaining(endTime);
   
-  if (total <= 0) return '已结束';
-  if (days > 0) return `${days}天${hours}小时`;
-  if (hours > 0) return `${hours}小时${minutes}分钟`;
-  return `${minutes}分钟`;
+  if (t) {
+    if (total <= 0) return t('common.ended');
+    if (days > 0) return t('common.daysHours', { days, hours });
+    if (hours > 0) return t('common.hoursMinutes', { hours, minutes });
+    return t('common.minutesOnly', { minutes });
+  }
+  // Fallback without t function
+  if (total <= 0) return 'Ended';
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }
 
-// 获取钱包类型文本
-export function getWalletTypeText(type: string): string {
+// 获取钱包类型文本（支持国际化）
+export function getWalletTypeText(type: string, t?: (key: string) => string): string {
+  if (t) {
+    const keyMap: Record<string, string> = {
+      'BALANCE': 'wallet.balance',
+      'LUCKY_COIN': 'wallet.luckyCoin'
+    };
+    const key = keyMap[type];
+    return key ? t(key) : type;
+  }
+  // Fallback without t function
   const typeMap: Record<string, string> = {
-    'BALANCE': '余额',
-    'LUCKY_COIN': '积分'
+    'BALANCE': 'Balance',
+    'LUCKY_COIN': 'Lucky Coin'
   };
   return typeMap[type] || type;
 }

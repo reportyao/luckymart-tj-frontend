@@ -193,21 +193,21 @@ const OrderPage: React.FC = () => {
 
   const getOrderTypeLabel = (type: string): string => {
     const labels: Record<string, string> = {
-      LOTTERY_PURCHASE: t('order.lotteryPurchase') || '抽奖购买',
-      FULL_PURCHASE: t('order.fullPurchase') || '全款购买',
-      COIN_EXCHANGE: t('order.coinExchange') || '积分兑换',
-      DEPOSIT: t('order.deposit') || '充值',
-      WITHDRAWAL: t('order.withdrawal') || '提现'
+      LOTTERY_PURCHASE: t('order.lotteryPurchase'),
+      FULL_PURCHASE: t('order.fullPurchase'),
+      COIN_EXCHANGE: t('order.coinExchange'),
+      DEPOSIT: t('order.deposit'),
+      WITHDRAWAL: t('order.withdrawal')
     };
     return labels[type] || type;
   };
 
   const getOrderStatusLabel = (status: string): string => {
     const labels: Record<string, string> = {
-      PENDING: t('order.pending') || '待处理',
-      COMPLETED: t('order.completed') || '已完成',
-      CANCELLED: t('order.cancelled') || '已取消',
-      FAILED: t('order.failed') || '失败'
+      PENDING: t('order.pending'),
+      COMPLETED: t('order.completed'),
+      CANCELLED: t('order.cancelled'),
+      FAILED: t('order.failed')
     };
     return labels[status] || status;
   };
@@ -246,7 +246,7 @@ const OrderPage: React.FC = () => {
     <div className="pb-20 bg-gray-50 min-h-screen">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-4 py-6 sticky top-0 z-10">
-        <h1 className="text-2xl font-bold text-gray-900">{t('order.myOrders') || '我的订单'}</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{t('order.myOrders')}</h1>
         
         {/* Search Bar */}
         <div className="mt-4 flex space-x-2">
@@ -256,7 +256,7 @@ const OrderPage: React.FC = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t('order.searchPlaceholder') || '搜索订单号或商品名称...'}
+              placeholder={t('order.searchPlaceholder')}
               className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -282,7 +282,7 @@ const OrderPage: React.FC = () => {
           >
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('order.orderStatus') || '订单状态'}
+                {t('order.orderStatus')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {['all', 'PENDING', 'COMPLETED', 'CANCELLED', 'FAILED'].map((status) => (
@@ -295,7 +295,7 @@ const OrderPage: React.FC = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {status === 'all' ? (t('common.all') || '全部') : getOrderStatusLabel(status)}
+                    {status === 'all' ? (t('common.all')) : getOrderStatusLabel(status)}
                   </button>
                 ))}
               </div>
@@ -303,7 +303,7 @@ const OrderPage: React.FC = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('order.orderType') || '订单类型'}
+                {t('order.orderType')}
               </label>
               <div className="flex flex-wrap gap-2">
                 {['all', 'LOTTERY_PURCHASE', 'FULL_PURCHASE', 'COIN_EXCHANGE'].map((type) => (
@@ -316,7 +316,7 @@ const OrderPage: React.FC = () => {
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                     }`}
                   >
-                    {type === 'all' ? (t('common.all') || '全部') : getOrderTypeLabel(type)}
+                    {type === 'all' ? (t('common.all')) : getOrderTypeLabel(type)}
                   </button>
                 ))}
               </div>
@@ -334,7 +334,7 @@ const OrderPage: React.FC = () => {
         ) : filteredOrders.length === 0 ? (
           <div className="bg-white rounded-xl p-12 text-center">
             <TicketIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">{t('order.noOrders') || '暂无订单'}</p>
+            <p className="text-gray-500">{t('order.noOrders')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -364,13 +364,13 @@ const OrderPage: React.FC = () => {
                 {/* Order Details */}
                 <div className="space-y-2 border-t border-gray-100 pt-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">{t('order.type') || '类型'}:</span>
+                    <span className="text-sm text-gray-600">{t('order.type')}:</span>
                     <span className="text-sm font-medium text-gray-900">{getOrderTypeLabel(order.type)}</span>
                   </div>
                   
                   {order.lottery_title && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{t('order.product') || '商品'}:</span>
+                      <span className="text-sm text-gray-600">{t('order.product')}:</span>
                       <span className="text-sm font-medium text-gray-900 text-right max-w-[200px] truncate">
                         {order.lottery_title}
                       </span>
@@ -379,20 +379,20 @@ const OrderPage: React.FC = () => {
 
                   {order.purchased_numbers && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{t('order.numbers') || '号码'}:</span>
+                      <span className="text-sm text-gray-600">{t('order.numbers')}:</span>
                       <span className="text-sm font-medium text-gray-900">{order.purchased_numbers}</span>
                     </div>
                   )}
 
                   {order.pickup_code && (
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">{t('order.pickupCode') || '提货码'}:</span>
+                      <span className="text-sm text-gray-600">{t('order.pickupCode')}:</span>
                       <span className="text-sm font-bold text-orange-600 text-lg">{order.pickup_code}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="text-sm text-gray-600">{t('order.amount') || '金额'}:</span>
+                    <span className="text-sm text-gray-600">{t('order.amount')}:</span>
                     <span className="text-lg font-bold text-blue-600">
                       {formatCurrency(order.currency, order.amount)}
                     </span>

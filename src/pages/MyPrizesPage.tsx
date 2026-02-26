@@ -31,7 +31,7 @@ interface Prize {
 const MyPrizesPage: React.FC = () => {
   const { supabase } = useSupabase();
   const { user, sessionToken } = useUser();
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const [prizes, setPrizes] = useState<Prize[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -63,7 +63,7 @@ const MyPrizesPage: React.FC = () => {
           id: prize.id,
           lottery_id: prize.lottery_id,
           lottery_period: prize.lottery?.period || prize.period || '',
-          lottery_title: prize.lottery?.title || prize.lottery?.title_i18n?.zh || prize.prize_name || '奖品',
+          lottery_title: prize.lottery?.title || prize.lottery?.title_i18n?.[i18n.language] || prize.lottery?.title_i18n?.tg || prize.prize_name || t('myPrizes.prize'),
           lottery_image: prize.lottery?.image_url || prize.prize_image || '',
           winning_code: prize.winning_code || '',
           prize_value: prize.prize_value || 0,
@@ -80,7 +80,7 @@ const MyPrizesPage: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [supabase, user, sessionToken, t]);
+  }, [supabase, user, sessionToken, t, i18n.language]);
 
   useEffect(() => {
     loadPrizes();
@@ -165,7 +165,7 @@ const MyPrizesPage: React.FC = () => {
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-500">期号: {prize.lottery_period}</span>
+                  <span className="text-xs text-gray-500">{t('myPrizes.periodLabel')}: {prize.lottery_period}</span>
                   {getStatusBadge(prize.status)}
                 </div>
                 <h3 className="text-lg font-bold mb-2">{prize.lottery_title}</h3>
@@ -182,7 +182,7 @@ const MyPrizesPage: React.FC = () => {
                 <span>{formatDateTime(prize.won_at)}</span>
               </div>
               <div className="text-right">
-                <p className="text-xs text-gray-500">奖品价值</p>
+                <p className="text-xs text-gray-500">{t('myPrizes.prizeValue')}</p>
                 <p className="text-xl font-bold text-yellow-600">TJS{prize.prize_value.toFixed(2)}</p>
               </div>
             </div>
@@ -194,14 +194,14 @@ const MyPrizesPage: React.FC = () => {
                   className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors"
                 >
                   <TruckIcon className="w-5 h-5" />
-                  <span>申请发货</span>
+                  <span>{t('myPrizes.applyShipping')}</span>
                 </button>
                 <button
                   onClick={() => handleResell(prize)}
                   className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
                 >
                   <ShoppingBagIcon className="w-5 h-5" />
-                  <span>转售</span>
+                  <span>{t('myPrizes.resell')}</span>
                 </button>
               </div>
             )}
@@ -211,12 +211,12 @@ const MyPrizesPage: React.FC = () => {
         {prizes.length === 0 && (
           <div className="text-center py-12">
             <TrophyIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 mb-2">您还没有中奖记录</p>
+            <p className="text-gray-500 mb-2">{t('myPrizes.noPrizes')}</p>
             <button
               onClick={() => navigate('/lottery')}
               className="text-blue-600 font-medium hover:underline"
             >
-              去参与积分商城 →
+              {t('myPrizes.goToLottery')} →
             </button>
           </div>
         )}
@@ -290,11 +290,11 @@ const ShippingModal: React.FC<{
         throw new Error(result.error || 'Failed to submit shipping request');
       }
 
-      toast.success(t('myPrizes.shippingRequestSuccess') || t('myPrizes.shippingRequestSuccess'));
+      toast.success(t('myPrizes.shippingRequestSuccess'));
       onSuccess();
     } catch (error: any) {
       console.error('Shipping request error:', error);
-      toast.error(error.message || t('myPrizes.shippingRequestError') || t('myPrizes.shippingRequestFailed'));
+      toast.error(error.message || t('myPrizes.shippingRequestError'));
     } finally {
       setIsSubmitting(false);
     }
@@ -308,7 +308,7 @@ const ShippingModal: React.FC<{
         className="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
       >
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex items-center justify-between">
-          <h3 className="text-lg font-bold">填写收货地址</h3>
+          <h3 className="text-lg font-bold">{t('myPrizes.shippingTitle')}</h3>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -320,7 +320,7 @@ const ShippingModal: React.FC<{
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              收货人姓名 *
+              {t('myPrizes.recipientName')} *
             </label>
             <input
               type="text"
@@ -328,13 +328,13 @@ const ShippingModal: React.FC<{
               value={formData.recipient_name}
               onChange={(e) => setFormData({ ...formData, recipient_name: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="请输入收货人姓名"
+              placeholder={t('myPrizes.recipientNamePlaceholder')}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              联系电话 *
+              {t('myPrizes.phone')} *
             </label>
             <input
               type="tel"
@@ -348,7 +348,7 @@ const ShippingModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              详细地址 *
+              {t('myPrizes.address')} *
             </label>
             <textarea
               required
@@ -356,14 +356,14 @@ const ShippingModal: React.FC<{
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="请输入详细地址"
+              placeholder={t('myPrizes.addressPlaceholder')}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                城市 *
+                {t('myPrizes.city')} *
               </label>
               <input
                 type="text"
@@ -371,12 +371,12 @@ const ShippingModal: React.FC<{
                 value={formData.city}
                 onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="杜尚别"
+                placeholder={t('myPrizes.cityPlaceholder')}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                邮编
+                {t('myPrizes.postalCode')}
               </label>
               <input
                 type="text"
@@ -390,14 +390,14 @@ const ShippingModal: React.FC<{
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              备注
+              {t('myPrizes.notes')}
             </label>
             <textarea
               rows={2}
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-              placeholder="其他备注信息(可选)"
+              placeholder={t('myPrizes.notesPlaceholder')}
             />
           </div>
 
@@ -407,14 +407,14 @@ const ShippingModal: React.FC<{
               onClick={onClose}
               className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-50 transition-colors"
             >
-              取消
+              {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
               className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isSubmitting ? '提交中...' : '确认提交'}
+              {isSubmitting ? t('common.submitting') : t('common.confirmSubmit')}
             </button>
           </div>
         </form>

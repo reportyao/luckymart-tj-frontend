@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useIntersectionObserver } from '@/hooks/usePerformance'
+import { useTranslation } from 'react-i18next'
 import { getOptimizedImageUrl } from '@/lib/utils'
 
 interface LazyImageProps {
@@ -44,6 +45,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   const [imageSrc, setImageSrc] = useState(placeholder)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+  const { t } = useTranslation()
   const imgRef = useRef<HTMLImageElement | null>(null)
   const containerRef = useIntersectionObserver(
     (isVisible) => {
@@ -117,7 +119,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
       )}
       {hasError && (
         <div className="absolute inset-0 flex items-center justify-center bg-gray-300">
-          <span className="text-gray-500 text-sm">加载失败</span>
+          <span className="text-gray-500 text-sm">{t('common.loadFailed')}</span>
         </div>
       )}
     </div>

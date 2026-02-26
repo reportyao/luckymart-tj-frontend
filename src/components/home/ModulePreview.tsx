@@ -45,7 +45,7 @@ export const ModulePreview: React.FC<ModulePreviewProps> = ({
   iconBgTo,
   icon,
 }) => {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   // 获取商品标题
   const getProductTitle = (product: ProductPreviewItem) => {
@@ -120,7 +120,7 @@ export const ModulePreview: React.FC<ModulePreviewProps> = ({
           </div>
         ) : (
           <div className="text-center py-4 text-gray-400 text-sm">
-            暂无商品
+            {t('common.noProducts')}
           </div>
         )}
       </div>

@@ -83,7 +83,7 @@ const WalletPage: React.FC = () => {
         amount: Number(d.amount),
         status: d.status === 'APPROVED' ? 'COMPLETED' : d.status,
         created_at: d.created_at,
-        description: (d as any).notes || d.admin_note || '充值',
+        description: (d as any).notes || d.admin_note || t('wallet.deposit'),
         source: 'deposit_requests'
       })) : []
       
@@ -101,7 +101,7 @@ const WalletPage: React.FC = () => {
         amount: -Number(w.amount),
         status: w.status === 'APPROVED' ? 'COMPLETED' : w.status,
         created_at: w.created_at,
-        description: (w as any).notes || w.admin_note || '提现',
+        description: (w as any).notes || w.admin_note || t('wallet.withdraw'),
         source: 'withdrawal_requests'
       })) : []
       
@@ -169,7 +169,7 @@ const WalletPage: React.FC = () => {
       'WITHDRAWAL': t('wallet.transactionType.withdrawal'),
       'ONE_YUAN_PURCHASE': t('wallet.transactionType.oneYuanPurchase'),
       'LOTTERY_PURCHASE': t('wallet.transactionType.lotteryPurchase'),
-      'FULL_PURCHASE': t('wallet.transactionType.fullPurchase') || '全款购买',
+      'FULL_PURCHASE': t('wallet.transactionType.fullPurchase'),
       'LOTTERY_REFUND': t('wallet.transactionType.lotteryRefund'),
       'LOTTERY_PRIZE': t('wallet.transactionType.lotteryPrize'),
       'REFERRAL_BONUS': t('wallet.transactionType.referralBonus'),

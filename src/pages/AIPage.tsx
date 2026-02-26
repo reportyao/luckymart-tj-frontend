@@ -11,13 +11,13 @@ import { AIServiceError } from '../lib/aiService';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
-// 错误消息映射 (中文)
-const ERROR_MESSAGES: Record<string, string> = {
-  'QUOTA_EXCEEDED': '今日提问次数已用完，邀请好友或参与拼团可获得更多次数！',
-  'SENSITIVE_CONTENT': '抱歉，我无法回答这个问题。请换一个话题。',
-  'AI_ERROR': '发生错误，请重试。',
-  'UNAUTHORIZED': '请先登录。',
-  'DEFAULT': '发生错误，请重试。'
+// 错误消息翻译键映射
+const ERROR_MESSAGE_KEYS: Record<string, string> = {
+  'QUOTA_EXCEEDED': 'ai.error.quotaExceeded',
+  'SENSITIVE_CONTENT': 'ai.error.sensitiveContent',
+  'AI_ERROR': 'ai.error.aiError',
+  'UNAUTHORIZED': 'ai.error.unauthorized',
+  'DEFAULT': 'ai.error.default'
 };
 
 interface Message {
@@ -130,13 +130,12 @@ export default function AIPage() {
       setMessages([userMessage]);
       
       // 根据错误类型显示不同提示
-      let errorMessage = ERROR_MESSAGES['DEFAULT'];
+      let errorMessage = t(ERROR_MESSAGE_KEYS['DEFAULT']);
       
       if (error instanceof AIServiceError) {
-        // 优先使用 ERROR_MESSAGES 中的映射，如果没有则使用 error.message
-        errorMessage = ERROR_MESSAGES[error.code] || ERROR_MESSAGES['DEFAULT'];
+        errorMessage = ERROR_MESSAGE_KEYS[error.code] ? t(ERROR_MESSAGE_KEYS[error.code]) : t(ERROR_MESSAGE_KEYS['DEFAULT']);
       } else if (error instanceof Error) {
-        errorMessage = error.message || ERROR_MESSAGES['DEFAULT'];
+        errorMessage = error.message || t(ERROR_MESSAGE_KEYS['DEFAULT']);
       }
       
       toast.error(errorMessage, {

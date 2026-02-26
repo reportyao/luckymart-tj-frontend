@@ -96,7 +96,7 @@ const MyTicketsPage: React.FC = () => {
       })) || []);
 
     } catch (error) {
-      console.error('加载参与记录失败:', error);
+      console.error('Failed to load tickets:', error);
       toast.error(t('error.loadFailed'));
     } finally {
       setIsLoading(false);
@@ -112,7 +112,7 @@ const MyTicketsPage: React.FC = () => {
     if (success) {
       toast.success(t('lottery.winningCodeCopied'));
     } else {
-      toast.error(t('common.copyFailed') || '复制失败');
+      toast.error(t('common.copyFailed'));
     }
   };
 
@@ -133,7 +133,7 @@ const MyTicketsPage: React.FC = () => {
   if (!lottery) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">积分商城不存在</p>
+        <p className="text-gray-500">{t('myTickets.lotteryNotFound')}</p>
       </div>
     );
   }
@@ -152,7 +152,7 @@ const MyTicketsPage: React.FC = () => {
           >
             <ArrowLeftIcon className="w-5 h-5" />
           </button>
-          <h1 className="text-lg font-bold flex-1">我的参与码</h1>
+          <h1 className="text-lg font-bold flex-1">{t('myTickets.title')}</h1>
           <TicketIcon className="w-6 h-6 text-blue-600" />
         </div>
       </div>
@@ -170,15 +170,15 @@ const MyTicketsPage: React.FC = () => {
             />
             <div className="flex-1">
               <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">
-                <span>期号: {lottery.period}</span>
+                <span>{t('myTickets.period')}: {lottery.period}</span>
               </div>
               <h2 className="text-lg font-bold mb-2">{lottery.title}</h2>
               <div className="flex items-center space-x-4 text-sm">
                 <span className="text-gray-600">
-                  票价: <span className="font-semibold text-blue-600">TJS{lottery.ticket_price.toFixed(2)}</span>
+                  {t('myTickets.ticketPrice')}: <span className="font-semibold text-blue-600">TJS{lottery.ticket_price.toFixed(2)}</span>
                 </span>
                 <span className="text-gray-600">
-                  进度: <span className="font-semibold">{lottery.sold_tickets}/{lottery.total_tickets}</span>
+                  {t('myTickets.progress')}: <span className="font-semibold">{lottery.sold_tickets}/{lottery.total_tickets}</span>
                 </span>
               </div>
             </div>
@@ -190,14 +190,14 @@ const MyTicketsPage: React.FC = () => {
                 <div className="flex items-center space-x-3">
                   <TrophyIcon className="w-6 h-6 text-yellow-600" />
                   <div>
-                    <p className="text-xs text-gray-600">中奖码</p>
+                    <p className="text-xs text-gray-600">{t('myTickets.winningCode')}</p>
                     <p className="text-lg font-bold text-yellow-700 font-mono">{formatWinningCode(winningCode)}</p>
                   </div>
                 </div>
                 {hasWinning && (
                   <div className="flex items-center space-x-2 text-green-600">
                     <CheckCircleIcon className="w-5 h-5" />
-                    <span className="text-sm font-medium">恭喜中奖!</span>
+                    <span className="text-sm font-medium">{t('myTickets.congratsWin')}</span>
                   </div>
                 )}
               </div>
@@ -209,17 +209,17 @@ const MyTicketsPage: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           <div className="bg-white rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-blue-600">{tickets.length}</p>
-            <p className="text-sm text-gray-600 mt-1">我的参与码</p>
+            <p className="text-sm text-gray-600 mt-1">{t('myTickets.myEntries')}</p>
           </div>
           <div className="bg-white rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-yellow-600">{tickets.filter(t => t.is_winning).length}</p>
-            <p className="text-sm text-gray-600 mt-1">中奖数量</p>
+            <p className="text-sm text-gray-600 mt-1">{t('myTickets.winCount')}</p>
           </div>
         </div>
 
         {/* 参与码列表 */}
         <div className="space-y-3">
-          <h3 className="text-lg font-bold px-2">参与码列表</h3>
+          <h3 className="text-lg font-bold px-2">{t('myTickets.entryList')}</h3>
           {tickets.map((ticket, index) => (
             <motion.div
               key={ticket.id}
@@ -241,7 +241,7 @@ const MyTicketsPage: React.FC = () => {
                     </span>
                     {ticket.is_winning && (
                       <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
-                        中奖
+                        {t('myTickets.won')}
                       </span>
                     )}
                   </div>
@@ -254,7 +254,7 @@ const MyTicketsPage: React.FC = () => {
                   onClick={() => copyCode(ticket.numbers)}
                   className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
                 >
-                  复制
+                  {t('common.copy')}
                 </button>
               </div>
             </motion.div>
@@ -264,7 +264,7 @@ const MyTicketsPage: React.FC = () => {
         {tickets.length === 0 && (
           <div className="text-center py-12">
             <TicketIcon className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">您还没有购买此积分商城的彩票</p>
+            <p className="text-gray-500">{t('myTickets.noTickets')}</p>
           </div>
         )}
       </div>

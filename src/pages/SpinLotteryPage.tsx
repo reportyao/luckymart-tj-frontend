@@ -143,7 +143,7 @@ const SpinWheel: React.FC<{
   while (displayRewards.length < 6) {
     displayRewards.push({
       id: `placeholder-${displayRewards.length}`,
-      reward_name: '谢谢惠顾',
+      reward_name: t('spinLottery.thankYou'),
       reward_name_i18n: { zh: '谢谢惠顾', ru: 'Спасибо!', tg: 'Ташаккур!' },
       reward_type: 'NONE',
       reward_amount: 0,
@@ -320,7 +320,7 @@ const SpinLotteryPage: React.FC = () => {
       toast.success(t('spin.linkCopied'));
       setTimeout(() => setCopied(false), 2000);
     } else {
-      toast.error(t('common.copyFailed') || '复制失败');
+      toast.error(t('common.copyFailed'));
     }
   };
 

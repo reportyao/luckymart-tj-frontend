@@ -105,8 +105,8 @@ const ProfilePage: React.FC = () => {
   const featureCards = [
     {
       icon: ShoppingBagIcon,
-      title: t('profile.pendingPickup') || '待提货',
-      subtitle: t('profile.viewPendingPickup') || '查看待提货',
+      title: t('profile.pendingPickup'),
+      subtitle: t('profile.viewPendingPickup'),
       color: 'from-blue-500 to-blue-600',
       action: () => navigate('/pending-pickup'),
     },

@@ -47,7 +47,7 @@ export const ProductList: React.FC<ProductListProps> = ({
   title,
   products,
   isLoading = false,
-  emptyText = '暂无商品',
+  emptyText,
   linkPrefix,
 }) => {
   const { t, i18n } = useTranslation();
@@ -184,7 +184,7 @@ export const ProductList: React.FC<ProductListProps> = ({
       ) : (
         <div className="px-4">
           <div className="bg-white rounded-xl p-8 text-center text-gray-400">
-            {emptyText}
+            {emptyText || t('common.noProducts')}
           </div>
         </div>
       )}

@@ -160,7 +160,7 @@ export default function DepositPage() {
     
     if (invalidFiles.length > 0) {
       console.error('[DepositPage] Invalid file types detected:', invalidFiles)
-      alert(t('deposit.invalidFileType') || '请选择图片文件')
+      alert(t('deposit.invalidFileType'))
       e.target.value = ''
       return
     }
@@ -217,7 +217,7 @@ export default function DepositPage() {
       setUploadProgress(0)
       
       const errorMessage = error instanceof Error ? error.message : String(error)
-      alert(`${t('deposit.imageUploadFailed') || '图片上传失败'}: ${errorMessage}`)
+      alert(`${t('deposit.imageUploadFailed')}: ${errorMessage}`)
       
       setTimeout(() => {
         setUploadStatus('idle')
@@ -500,8 +500,8 @@ export default function DepositPage() {
               <div className="flex flex-col items-center">
                 <Loader2 className="w-8 h-8 text-purple-600 animate-spin mb-2" />
                 <span className="text-sm text-purple-600 font-medium">
-                  {uploadStatus === 'compressing' && (t('deposit.compressing') || '压缩中...')}
-                  {uploadStatus === 'uploading' && (t('deposit.uploading') || '上传中...')}
+                  {uploadStatus === 'compressing' && (t('deposit.compressing'))}
+                  {uploadStatus === 'uploading' && (t('deposit.uploading'))}
                 </span>
                 {/* 进度条 */}
                 <div className="w-48 h-2 bg-purple-200 rounded-full mt-2 overflow-hidden">
@@ -516,21 +516,21 @@ export default function DepositPage() {
               <div className="flex flex-col items-center">
                 <CheckCircle2 className="w-8 h-8 text-green-500 mb-2" />
                 <span className="text-sm text-green-600 font-medium">
-                  {t('deposit.uploadSuccess') || '上传成功！'}
+                  {t('deposit.uploadSuccess')}
                 </span>
               </div>
             ) : uploadStatus === 'error' ? (
               <div className="flex flex-col items-center">
                 <X className="w-8 h-8 text-red-500 mb-2" />
                 <span className="text-sm text-red-600 font-medium">
-                  {t('deposit.uploadFailed') || '上传失败，请重试'}
+                  {t('deposit.uploadFailed')}
                 </span>
               </div>
             ) : (
               <>
                 <Upload className="w-8 h-8 text-gray-400 mb-2" />
                 <span className="text-sm text-gray-600">{t('wallet.clickToUpload')}</span>
-                <span className="text-xs text-gray-400 mt-1">{t('deposit.supportedFormats') || '支持 JPG、PNG、WebP 格式'}</span>
+                <span className="text-xs text-gray-400 mt-1">{t('deposit.supportedFormats')}</span>
               </>
             )}
             <input
@@ -555,7 +555,7 @@ export default function DepositPage() {
             <div className="mt-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm text-gray-600">
-                  {t('deposit.uploadedImages') || '已上传'} ({uploadedImages.length})
+                  {t('deposit.uploadedImages')} ({uploadedImages.length})
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">

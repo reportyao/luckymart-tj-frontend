@@ -22,59 +22,9 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
   onClose,
   onConfirm,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   if (!isOpen) return null;
-
-  const currentLang = i18n.language as 'zh' | 'ru' | 'tg';
-
-  // 三语版本的提示内容
-  const content = {
-    zh: {
-      title: '温馨提示',
-      point1: {
-        text: 'TezBarakat 的商品均享受平台专属补贴，价格极具优势。因此，除质量问题外，',
-        highlight: '所有商品暂不支持退换货',
-        suffix: '，敬请谅解。'
-      },
-      point2: {
-        text: '目前我们仅在',
-        highlight: '杜尚别 (Dushanbe)',
-        suffix: '市内提供自提点服务。购买前，请务必确认您能在杜尚别完成取货。'
-      },
-      button: '我已了解并同意'
-    },
-    tg: {
-      title: 'Огоҳиномаи муҳим',
-      point1: {
-        text: 'Ҳамаи молҳо дар TezBarakat бо нархҳои махсуси субсидияшуда пешниҳод мегарданд. Аз ин рӯ, ба ғайр аз ҳолатҳои нуқсони сифат, ',
-        highlight: 'молҳо баргардонида ё иваз карда намешаванд',
-        suffix: '.'
-      },
-      point2: {
-        text: 'Айни замон хизматрасонии мо танҳо дар шаҳри ',
-        highlight: 'Душанбе',
-        suffix: ' дастрас аст. Лутфан, пеш аз харид боварӣ ҳосил кунед, ки Шумо метавонед молро аз нуқтаҳои қабул дар Душанбе гиред.'
-      },
-      button: 'Ман фаҳмидам ва розӣ ҳастам'
-    },
-    ru: {
-      title: 'Важное уведомление',
-      point1: {
-        text: 'Все товары на TezBarakat продаются по специальным субсидированным ценам. В связи с этим, за исключением случаев производственного брака, ',
-        highlight: 'возврат и обмен товаров не предусмотрен',
-        suffix: '.'
-      },
-      point2: {
-        text: 'В настоящее время мы работаем только в городе ',
-        highlight: 'Душанбе',
-        suffix: '. Пожалуйста, перед покупкой убедитесь, что вы сможете забрать заказ в одном из наших пунктов выдачи в Душанбе.'
-      },
-      button: 'Я ознакомился и согласен'
-    }
-  };
-
-  const text = content[currentLang] || content.ru;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
@@ -86,7 +36,7 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <Info className="w-6 h-6" />
               </div>
-              <h2 className="text-xl font-bold">{text.title}</h2>
+              <h2 className="text-xl font-bold">{t('firstDeposit.title')}</h2>
             </div>
             <button
               onClick={onClose}
@@ -105,11 +55,11 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
               1
             </div>
             <p className="text-gray-700 leading-relaxed">
-              {text.point1.text}
+              {t('firstDeposit.point1Text')}
               <span className="font-bold text-red-600">
-                {text.point1.highlight}
+                {t('firstDeposit.point1Highlight')}
               </span>
-              {text.point1.suffix}
+              {t('firstDeposit.point1Suffix')}
             </p>
           </div>
 
@@ -119,20 +69,18 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
               2
             </div>
             <p className="text-gray-700 leading-relaxed">
-              {text.point2.text}
+              {t('firstDeposit.point2Text')}
               <span className="font-bold text-red-600">
-                {text.point2.highlight}
+                {t('firstDeposit.point2Highlight')}
               </span>
-              {text.point2.suffix}
+              {t('firstDeposit.point2Suffix')}
             </p>
           </div>
 
           {/* Warning Box */}
           <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
             <p className="text-sm text-yellow-800">
-              {currentLang === 'zh' && '⚠️ 请仔细阅读以上条款，点击确认即表示您已知晓并同意。'}
-              {currentLang === 'tg' && '⚠️ Лутфан, шартҳои боло ба диққат хонед. Пахш кардани тугмаи тасдиқ маънои онро дорад, ки Шумо бо онҳо шинос шудед ва розӣ ҳастед.'}
-              {currentLang === 'ru' && '⚠️ Пожалуйста, внимательно ознакомьтесь с условиями выше. Нажимая кнопку подтверждения, вы соглашаетесь с ними.'}
+              {t('firstDeposit.warning')}
             </p>
           </div>
         </div>
@@ -143,7 +91,7 @@ export const FirstDepositNoticeModal: React.FC<FirstDepositNoticeModalProps> = (
             onClick={onConfirm}
             className="w-full py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-xl hover:from-blue-600 hover:to-purple-700 transition-all shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
           >
-            {text.button}
+            {t('firstDeposit.confirmButton')}
           </button>
         </div>
       </div>

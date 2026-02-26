@@ -134,7 +134,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                             if (success) {
                               toast.success(t('common.copied'));
                             } else {
-                              toast.error(t('common.copyFailed') || '复制失败');
+                              toast.error(t('common.copyFailed'));
                             }
                           }}
                           className="text-sm text-blue-600 hover:text-blue-700 font-medium"
@@ -190,7 +190,7 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   
                   <div className="text-center">
                     <div className="text-2xl font-bold text-gray-900">{quantity}</div>
-                    <div className="text-xs text-gray-500 mt-1">{t('lottery.max')} {maxPurchase} 张</div>
+                    <div className="text-xs text-gray-500 mt-1">{t('lottery.max')} {maxPurchase} {t('lottery.ticketUnit')}</div>
                   </div>
 
                   <button

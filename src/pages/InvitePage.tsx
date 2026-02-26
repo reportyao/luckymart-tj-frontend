@@ -151,7 +151,7 @@ const InvitePage: React.FC = () => {
       toast.success(t('invite.linkCopied'));
       setTimeout(() => setCopied(false), 2000);
     } else {
-      toast.error(t('common.copyFailed') || '复制失败');
+      toast.error(t('common.copyFailed'));
     }
   };
 
@@ -160,7 +160,7 @@ const InvitePage: React.FC = () => {
     if (success) {
       toast.success(t('invite.codeCopied'));
     } else {
-      toast.error(t('common.copyFailed') || '复制失败');
+      toast.error(t('common.copyFailed'));
     }
   };
 

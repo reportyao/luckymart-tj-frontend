@@ -82,8 +82,8 @@ const NotificationPage: React.FC = () => {
             id: `deposit_${d.id}`,
             user_id: d.user_id,
             type: 'DEPOSIT',
-            title: d.status === 'APPROVED' ? '充值成功' : d.status === 'REJECTED' ? '充值失败' : '充值处理中',
-            content: `充值金额: ${d.amount} TJS${d.status === 'PENDING' ? ' (待审核)' : ''}`,
+            title: d.status === 'APPROVED' ? t('notifications.depositSuccess') : d.status === 'REJECTED' ? t('notifications.depositFailed') : t('notifications.depositPending'),
+            content: t('notifications.depositAmount', { amount: d.amount }) + (d.status === 'PENDING' ? ` (${t('notifications.pendingReview')})` : ''),
             related_id: d.id,
             related_type: 'deposit',
             is_read: d.status !== 'PENDING',
@@ -107,8 +107,8 @@ const NotificationPage: React.FC = () => {
             id: `withdraw_${w.id}`,
             user_id: w.user_id,
             type: 'WITHDRAWAL',
-            title: w.status === 'APPROVED' ? '提现成功' : w.status === 'REJECTED' ? '提现失败' : '提现处理中',
-            content: `提现金额: ${w.amount} TJS${w.status === 'PENDING' ? ' (待审核)' : ''}`,
+            title: w.status === 'APPROVED' ? t('notifications.withdrawSuccess') : w.status === 'REJECTED' ? t('notifications.withdrawFailed') : t('notifications.withdrawPending'),
+            content: t('notifications.withdrawAmount', { amount: w.amount }) + (w.status === 'PENDING' ? ` (${t('notifications.pendingReview')})` : ''),
             related_id: w.id,
             related_type: 'withdrawal',
             is_read: w.status !== 'PENDING',
@@ -142,8 +142,8 @@ const NotificationPage: React.FC = () => {
               id: `exchange_${e.id}`,
               user_id: user.id,
               type: 'COIN_EXCHANGE',
-              title: '积分兑换',
-              content: e.description || `兑换金额: ${Math.abs(e.amount)} TJS`,
+              title: t('notifications.coinExchange'),
+              content: e.description || t('notifications.exchangeAmount', { amount: Math.abs(e.amount) }),
               related_id: e.id,
               related_type: 'exchange',
               is_read: true,
@@ -176,17 +176,17 @@ const NotificationPage: React.FC = () => {
           groupBuyResults.forEach((order: any) => {
             const sessionStatus = order.session?.status;
             const isWinner = order.session?.winner_id === user.id || order.session?.winner_id === userTelegramId;
-            const productTitle = order.session?.product?.name_i18n?.[i18n.language] || order.session?.product?.name_i18n?.zh || '拼团商品';
+            const productTitle = order.session?.product?.name_i18n?.[i18n.language] || order.session?.product?.name_i18n?.tg || t('notifications.groupBuyProduct');
             
             if (sessionStatus === 'SUCCESS' || sessionStatus === 'COMPLETED') {
               allNotifications.push({
                 id: `groupbuy_${order.id}`,
                 user_id: user.id,
                 type: isWinner ? 'GROUP_BUY_WIN' : 'GROUP_BUY_LOSE',
-                title: isWinner ? t('notifications.groupBuyWin') || '🎉 拼团中奖!' : t('notifications.groupBuyLose') || '拼团未中奖',
+                title: isWinner ? t('notifications.groupBuyWin') : t('notifications.groupBuyLose'),
                 content: isWinner 
-                  ? t('notifications.groupBuyWinContent', { product: productTitle }) || `恭喜您在拼团中中奖，获得${productTitle}!` 
-                  : t('notifications.groupBuyLoseContent') || '很遗憾，本次拼团未中奖，已退还积分',
+                  ? t('notifications.groupBuyWinContent', { product: productTitle })
+                  : t('notifications.groupBuyLoseContent'),
                 related_id: order.session_id,
                 related_type: 'group_buy',
                 is_read: true,
@@ -198,8 +198,8 @@ const NotificationPage: React.FC = () => {
                 id: `groupbuy_timeout_${order.id}`,
                 user_id: user.id,
                 type: 'GROUP_BUY_TIMEOUT',
-                title: t('notifications.groupBuyTimeout') || '拼团未成团',
-                content: t('notifications.groupBuyTimeoutContent') || '拼团超时未成团，资金已原路退回余额',
+                title: t('notifications.groupBuyTimeout'),
+                content: t('notifications.groupBuyTimeoutContent'),
                 related_id: order.session_id,
                 related_type: 'group_buy',
                 is_read: true,
@@ -238,7 +238,7 @@ const NotificationPage: React.FC = () => {
           }
           
           ordersData.forEach((order: any) => {
-            const lotteryTitle = order.lottery?.title_i18n?.[i18n.language] || order.lottery?.title_i18n?.zh || '积分商品';
+            const lotteryTitle = order.lottery?.title_i18n?.[i18n.language] || order.lottery?.title_i18n?.tg || t('notifications.lotteryProduct');
             const prize = prizeMap.get(order.lottery_id);
             
             // 购买记录
@@ -246,8 +246,8 @@ const NotificationPage: React.FC = () => {
               id: `lottery_purchase_${order.id}`,
               user_id: user.id,
               type: 'LOTTERY_PURCHASE',
-              title: t('notifications.lotteryPurchase') || '积分商城参与',
-              content: t('notifications.lotteryPurchaseContent', { product: lotteryTitle, count: order.ticket_count || 1 }) || `您已参与${lotteryTitle}，购买${order.ticket_count || 1}张彩票`,
+              title: t('notifications.lotteryPurchase'),
+              content: t('notifications.lotteryPurchaseContent', { product: lotteryTitle, count: order.ticket_count || 1 }),
               related_id: order.id,
               related_type: 'lottery',
               is_read: true,
@@ -263,8 +263,8 @@ const NotificationPage: React.FC = () => {
                   id: `lottery_win_${order.id}`,
                   user_id: user.id,
                   type: 'LOTTERY_WIN',
-                  title: t('notifications.lotteryWin') || '🎉 积分商城中奖!',
-                  content: t('notifications.lotteryWinContent', { product: lotteryTitle }) || `恭喜您在积分商城中奖，获得${lotteryTitle}!`,
+                  title: t('notifications.lotteryWin'),
+                  content: t('notifications.lotteryWinContent', { product: lotteryTitle }),
                   related_id: prize.id,
                   related_type: 'prize',
                   is_read: true,
@@ -305,18 +305,18 @@ const NotificationPage: React.FC = () => {
               switch (tx.type) {
                 case 'REFERRAL_BONUS':
                   type = 'REFERRAL_REWARD';
-                  title = t('notifications.referralReward') || '推荐奖励';
-                  content = t('notifications.referralRewardContent', { amount: tx.amount }) || `您获得推荐奖励 ${tx.amount} TJS`;
+                  title = t('notifications.referralReward');
+                  content = t('notifications.referralRewardContent', { amount: tx.amount });
                   break;
                 case 'FRIEND_CASHBACK':
                   type = 'FRIEND_CASHBACK';
-                  title = t('notifications.friendCashback') || '消费返现';
-                  content = t('notifications.friendCashbackContent', { amount: tx.amount }) || `好友消费返现 ${tx.amount} TJS`;
+                  title = t('notifications.friendCashback');
+                  content = t('notifications.friendCashbackContent', { amount: tx.amount });
                   break;
                 case 'SPIN_REWARD':
                   type = 'SPIN_REWARD';
-                  title = t('notifications.spinReward') || '转盘奖励';
-                  content = t('notifications.spinRewardContent', { amount: tx.amount }) || `转盘抽奖获得 ${tx.amount}`;
+                  title = t('notifications.spinReward');
+                  content = t('notifications.spinRewardContent', { amount: tx.amount });
                   break;
               }
               
@@ -391,7 +391,7 @@ const NotificationPage: React.FC = () => {
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );
-      toast.success('已标记为已读');
+      toast.success(t('notifications.markedAsRead'));
     } catch (error) {
       console.error('Failed to mark as read:', error);
       toast.error(t('error.networkError'));
@@ -408,7 +408,7 @@ const NotificationPage: React.FC = () => {
         .eq('is_read', false);
       
       setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      toast.success('全部标记为已读');
+      toast.success(t('notifications.allMarkedAsRead'));
     } catch (error) {
       console.error('Failed to mark all as read:', error);
       toast.error(t('error.networkError'));
@@ -426,7 +426,7 @@ const NotificationPage: React.FC = () => {
       }
       
       setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      toast.success('通知已删除');
+      toast.success(t('notifications.deleted'));
     } catch (error) {
       console.error('Failed to delete notification:', error);
       toast.error(t('error.networkError'));
@@ -629,7 +629,7 @@ const NotificationPage: React.FC = () => {
                           className="flex items-center space-x-1 text-xs font-medium text-blue-600 hover:text-blue-700"
                         >
                           <CheckIcon className="w-4 h-4" />
-                          <span>{t('notification.markRead') || '标记已读'}</span>
+                          <span>{t('notification.markRead')}</span>
                         </button>
                       )}
                       {!notification.id.includes('_') && (
@@ -637,7 +637,7 @@ const NotificationPage: React.FC = () => {
                           onClick={() => deleteNotification(notification.id)}
                           className="text-xs font-medium text-red-600 hover:text-red-700"
                         >
-                          {t('common.delete') || '删除'}
+                          {t('common.delete')}
                         </button>
                       )}
                     </div>

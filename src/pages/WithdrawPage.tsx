@@ -49,7 +49,7 @@ export default function WithdrawPage() {
     const availableBalance = balance - frozenBalance
     
     if (amountNum > availableBalance) {
-      toast.error(`${t('wallet.insufficientBalance')}\n可用余额: ${availableBalance.toFixed(2)} TJS（总余额: ${balance.toFixed(2)} TJS，已冻结: ${frozenBalance.toFixed(2)} TJS）`)
+      toast.error(`${t('wallet.insufficientBalance')}\n${t('wallet.availableBalance')}: ${availableBalance.toFixed(2)} TJS (${t('wallet.totalBalance')}: ${balance.toFixed(2)} TJS, ${t('wallet.frozenBalance')}: ${frozenBalance.toFixed(2)} TJS)`)
       return
     }
 

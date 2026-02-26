@@ -105,7 +105,7 @@ const OrderDetailPage: React.FC = () => {
       setOrder(data);
     } catch (error) {
       console.error('Error fetching order detail:', error);
-      toast.error(t('orders.loadError') || '加载订单失败');
+      toast.error(t('orders.loadError'));
     } finally {
       setLoading(false);
     }
@@ -123,16 +123,16 @@ const OrderDetailPage: React.FC = () => {
     switch (metaType) {
       case 'prize':
       case 'lottery':
-        return t('order.oneYuanShopping') || '一元购物';
+        return t('order.oneYuanShopping');
       case 'full_purchase':
-        return t('order.fullPurchase') || '全款购物';
+        return t('order.fullPurchase');
       case 'group_buy':
-        return t('order.normalGroupBuy') || '普通拼团';
+        return t('order.normalGroupBuy');
       case 'auto_group_buy':
       case 'squad':
-        return t('order.autoGroupBuy') || '一键包团';
+        return t('order.autoGroupBuy');
       default:
-        return t('order.fullPurchase') || '全款购物';
+        return t('order.fullPurchase');
     }
   };
 
@@ -140,9 +140,9 @@ const OrderDetailPage: React.FC = () => {
     if (order?.pickup_code) {
       const success = await copyToClipboard(order.pickup_code);
       if (success) {
-        toast.success(t('lottery.winningCodeCopied') || '提货码已复制');
+        toast.success(t('lottery.winningCodeCopied'));
       } else {
-        toast.error(t('common.copyFailed') || '复制失败');
+        toast.error(t('common.copyFailed'));
       }
     }
   };
@@ -151,9 +151,9 @@ const OrderDetailPage: React.FC = () => {
     if (order?.order_number) {
       const success = await copyToClipboard(order.order_number);
       if (success) {
-        toast.success(t('order.orderNumberCopied') || '订单号已复制');
+        toast.success(t('order.orderNumberCopied'));
       } else {
-        toast.error(t('common.copyFailed') || '复制失败');
+        toast.error(t('common.copyFailed'));
       }
     }
   };
@@ -161,7 +161,7 @@ const OrderDetailPage: React.FC = () => {
   // 更新自提点
   const handleUpdatePickupPoint = async () => {
     if (!selectedPickupPointId || !order) {
-      toast.error(t('orders.pleaseSelectPickupPoint') || '请选择自提点');
+      toast.error(t('orders.pleaseSelectPickupPoint'));
       return;
     }
 
@@ -180,13 +180,13 @@ const OrderDetailPage: React.FC = () => {
       if (error) throw new Error(await extractEdgeFunctionError(error));
       if (!data?.success) throw new Error(data?.error || 'Update failed');
 
-      toast.success(t('orders.pickupPointUpdated') || '自提点更新成功');
+      toast.success(t('orders.pickupPointUpdated'));
       
       // 重新加载订单详情
       await fetchOrderDetail();
     } catch (error: any) {
       console.error('Error updating pickup point:', error);
-      toast.error(t('orders.updatePickupPointError') || '更新自提点失败');
+      toast.error(t('orders.updatePickupPointError'));
     } finally {
       setIsUpdatingPickupPoint(false);
     }
@@ -195,62 +195,62 @@ const OrderDetailPage: React.FC = () => {
   const getStatusInfo = (status: string) => {
     const statusMap: Record<string, { text: string; color: string; bgColor: string; icon: React.ReactNode }> = {
       'PENDING': { 
-        text: t('orders.statusPending') || '待处理', 
+        text: t('orders.statusPending'), 
         color: 'text-yellow-700', 
         bgColor: 'bg-yellow-100',
         icon: <ClockIcon className="w-5 h-5" />
       },
       'COMPLETED': { 
-        text: t('orders.statusCompleted') || '已完成', 
+        text: t('orders.statusCompleted'), 
         color: 'text-green-700', 
         bgColor: 'bg-green-100',
         icon: <CheckCircleSolidIcon className="w-5 h-5" />
       },
       'PENDING_PICKUP': { 
-        text: t('orders.statusPendingPickup') || '待提货', 
+        text: t('orders.statusPendingPickup'), 
         color: 'text-blue-700', 
         bgColor: 'bg-blue-100',
         icon: <TruckIcon className="w-5 h-5" />
       },
       'PENDING_CLAIM': { 
-        text: t('orders.statusPendingClaim') || '待领取', 
+        text: t('orders.statusPendingClaim'), 
         color: 'text-orange-700', 
         bgColor: 'bg-orange-100',
         icon: <GiftIcon className="w-5 h-5" />
       },
       'PICKED_UP': { 
-        text: t('orders.statusPickedUp') || '已提货', 
+        text: t('orders.statusPickedUp'), 
         color: 'text-green-700', 
         bgColor: 'bg-green-100',
         icon: <CheckCircleSolidIcon className="w-5 h-5" />
       },
       'EXPIRED': { 
-        text: t('orders.statusExpired') || '已过期', 
+        text: t('orders.statusExpired'), 
         color: 'text-red-700', 
         bgColor: 'bg-red-100',
         icon: <ClockIcon className="w-5 h-5" />
       },
       // 物流状态
       'PENDING_SHIPMENT': { 
-        text: t('logistics.pendingShipment') || '待发货', 
+        text: t('logistics.pendingShipment'), 
         color: 'text-gray-700', 
         bgColor: 'bg-gray-100',
         icon: <ClockIcon className="w-5 h-5" />
       },
       'IN_TRANSIT_CHINA': { 
-        text: t('logistics.inTransitChina') || '中国段运输中', 
+        text: t('logistics.inTransitChina'), 
         color: 'text-blue-700', 
         bgColor: 'bg-blue-100',
         icon: <TruckIcon className="w-5 h-5" />
       },
       'IN_TRANSIT_TAJIKISTAN': { 
-        text: t('logistics.inTransitTajikistan') || '塔吉克斯坦段运输中', 
+        text: t('logistics.inTransitTajikistan'), 
         color: 'text-purple-700', 
         bgColor: 'bg-purple-100',
         icon: <TruckIcon className="w-5 h-5" />
       },
       'READY_FOR_PICKUP': { 
-        text: t('logistics.readyForPickup') || '已到达，待提货', 
+        text: t('logistics.readyForPickup'), 
         color: 'text-green-700', 
         bgColor: 'bg-green-100',
         icon: <MapPinIcon className="w-5 h-5" />
@@ -302,12 +302,12 @@ const OrderDetailPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 flex flex-col items-center justify-center px-4">
         <GiftIcon className="w-16 h-16 text-gray-400 mb-4" />
-        <p className="text-gray-600 mb-4">{t('orders.noOrders') || '未找到订单'}</p>
+        <p className="text-gray-600 mb-4">{t('orders.noOrders')}</p>
         <button
           onClick={() => navigate(-1)}
           className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
         >
-          {t('common.back') || '返回'}
+          {t('common.back')}
         </button>
       </div>
     );
@@ -316,7 +316,7 @@ const OrderDetailPage: React.FC = () => {
   // 优先显示物流状态，其次是提货状态
   const displayStatus = order.logistics_status || order.pickup_status || order.status;
   const statusInfo = getStatusInfo(displayStatus);
-  const productTitle = getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title || t('order.unknownProduct') || '未知商品';
+  const productTitle = getLocalizedText(order.lotteries?.title_i18n) || order.metadata?.product_title || t('order.unknownProduct');
   const productImage = order.lotteries?.image_url || order.metadata?.product_image;
   const remainingDays = getRemainingDays();
 
@@ -333,13 +333,13 @@ const OrderDetailPage: React.FC = () => {
               >
                 <ArrowLeftIcon className="w-6 h-6" />
               </button>
-              <h1 className="text-xl font-bold">{t('order.orderDetails') || '订单详情'}</h1>
+              <h1 className="text-xl font-bold">{t('order.orderDetails')}</h1>
             </div>
             <button
               onClick={fetchOrderDetail}
               disabled={loading}
               className="p-2 hover:bg-white/20 rounded-lg transition disabled:opacity-50"
-              title={t('common.refresh') || '刷新'}
+              title={t('common.refresh')}
             >
               <ArrowPathIcon className={`w-6 h-6 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -363,17 +363,17 @@ const OrderDetailPage: React.FC = () => {
               {/* 显示物流状态描述 */}
               {order.logistics_status && (
                 <p className="text-sm text-gray-600 mt-1">
-                  {order.logistics_status === 'PENDING_SHIPMENT' && (t('logistics.pendingShipmentDesc') || '您的订单正在等待发货，请耐心等待。')}
-                  {order.logistics_status === 'IN_TRANSIT_CHINA' && (t('logistics.inTransitChinaDesc') || '您的包裹正在中国境内运输，即将发往塔吉克斯坦。')}
-                  {order.logistics_status === 'IN_TRANSIT_TAJIKISTAN' && (t('logistics.inTransitTajikistanDesc') || '您的包裹已到达塔吉克斯坦，正在派送至自提点。')}
-                  {order.logistics_status === 'READY_FOR_PICKUP' && (t('logistics.readyForPickupDesc') || '您的包裹已到达自提点，请携带提货码前往提货。')}
-                  {order.logistics_status === 'PICKED_UP' && (t('logistics.pickedUpDesc') || '您已成功提货，感谢您的购买！')}
+                  {order.logistics_status === 'PENDING_SHIPMENT' && (t('logistics.pendingShipmentDesc'))}
+                  {order.logistics_status === 'IN_TRANSIT_CHINA' && (t('logistics.inTransitChinaDesc'))}
+                  {order.logistics_status === 'IN_TRANSIT_TAJIKISTAN' && (t('logistics.inTransitTajikistanDesc'))}
+                  {order.logistics_status === 'READY_FOR_PICKUP' && (t('logistics.readyForPickupDesc'))}
+                  {order.logistics_status === 'PICKED_UP' && (t('logistics.pickedUpDesc'))}
                 </p>
               )}
               {/* 显示剩余提货天数 */}
               {order.logistics_status === 'READY_FOR_PICKUP' && !isExpired() && remainingDays > 0 && (
                 <p className="text-sm text-orange-600 mt-1 font-medium">
-                  {t('order.remainingDays', { days: remainingDays }) || `剩余 ${remainingDays} 天提货`}
+                  {t('order.remainingDays', { days: remainingDays })}
                 </p>
               )}
             </div>
@@ -389,7 +389,7 @@ const OrderDetailPage: React.FC = () => {
         >
           <div className="flex items-center space-x-2 mb-4">
             <ShoppingBagIcon className="w-5 h-5 text-purple-600" />
-            <h2 className="text-base font-bold text-gray-900">{t('order.productInfo') || '商品信息'}</h2>
+            <h2 className="text-base font-bold text-gray-900">{t('order.productInfo')}</h2>
           </div>
           
           {/* 商品标题（多语言支持） */}
@@ -421,7 +421,7 @@ const OrderDetailPage: React.FC = () => {
           
           {/* 支付金额 */}
           <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-            <span className="text-sm text-gray-600">{t('order.paymentAmount') || '支付金额'}</span>
+            <span className="text-sm text-gray-600">{t('order.paymentAmount')}</span>
             <div className="flex items-baseline gap-1">
               <span className="text-sm text-gray-500">{order.currency}</span>
               <span className="text-xl font-bold text-purple-600">
@@ -456,7 +456,7 @@ const OrderDetailPage: React.FC = () => {
           >
             <div className="flex items-center space-x-2 mb-4">
               <TicketIcon className="w-5 h-5" />
-              <h2 className="text-base font-bold">{t('orders.pickupCode') || '提货码'}</h2>
+              <h2 className="text-base font-bold">{t('orders.pickupCode')}</h2>
             </div>
 
             <div className="bg-white/20 backdrop-blur-sm rounded-xl p-4 mb-4">
@@ -467,7 +467,7 @@ const OrderDetailPage: React.FC = () => {
                 <button
                   onClick={copyPickupCode}
                   className="p-2 hover:bg-white/20 rounded-lg transition"
-                  title={t('common.copy') || '复制'}
+                  title={t('common.copy')}
                 >
                   <DocumentDuplicateIcon className="w-6 h-6" />
                 </button>
@@ -477,7 +477,7 @@ const OrderDetailPage: React.FC = () => {
             <div className="flex items-center space-x-2 text-sm opacity-90">
               <ClockIcon className="w-4 h-4" />
               <span>
-                {t('orders.validUntil') || '有效期至'}: {formatDateTime(getExpiryDate()?.toISOString() || '')}
+                {t('orders.validUntil')}: {formatDateTime(getExpiryDate()?.toISOString() || '')}
               </span>
             </div>
           </motion.div>
@@ -493,7 +493,7 @@ const OrderDetailPage: React.FC = () => {
           >
             <div className="flex items-center space-x-2 mb-4">
               <MapPinIcon className="w-5 h-5 text-purple-600" />
-              <h2 className="text-base font-bold text-gray-900">{t('orders.pickupPointInfo') || '自提点信息'}</h2>
+              <h2 className="text-base font-bold text-gray-900">{t('orders.pickupPointInfo')}</h2>
             </div>
 
             <div className="space-y-3">
@@ -502,7 +502,7 @@ const OrderDetailPage: React.FC = () => {
                   <MapPinIcon className="w-4 h-4 text-purple-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">{t('orders.pickupPointName') || '自提点名称'}</p>
+                  <p className="text-sm text-gray-500">{t('orders.pickupPointName')}</p>
                   <p className="font-medium text-gray-900">
                     {getLocalizedText(order.pickup_point.name_i18n) || order.pickup_point.name}
                   </p>
@@ -514,7 +514,7 @@ const OrderDetailPage: React.FC = () => {
                   <TruckIcon className="w-4 h-4 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">{t('orders.pickupPointAddress') || '地址'}</p>
+                  <p className="text-sm text-gray-500">{t('orders.pickupPointAddress')}</p>
                   <p className="font-medium text-gray-900">
                     {getLocalizedText(order.pickup_point.address_i18n) || order.pickup_point.address}
                   </p>
@@ -527,7 +527,7 @@ const OrderDetailPage: React.FC = () => {
                     <PhoneIcon className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">{t('orders.pickupPointPhone') || '联系电话'}</p>
+                    <p className="text-sm text-gray-500">{t('orders.pickupPointPhone')}</p>
                     <a 
                       href={`tel:${order.pickup_point.contact_phone}`}
                       className="font-medium text-purple-600 hover:underline"
@@ -551,7 +551,7 @@ const OrderDetailPage: React.FC = () => {
           >
             <div className="flex items-center space-x-2 mb-4">
               <MapPinIcon className="w-5 h-5 text-purple-600" />
-              <h2 className="text-base font-bold text-gray-900">{t('orders.selectPickupPoint') || '选择自提点'}</h2>
+              <h2 className="text-base font-bold text-gray-900">{t('orders.selectPickupPoint')}</h2>
             </div>
 
 
@@ -561,7 +561,7 @@ const OrderDetailPage: React.FC = () => {
                 onChange={(e) => setSelectedPickupPointId(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               >
-                <option value="">{t('orders.pleaseSelect') || '请选择自提点'}</option>
+                <option value="">{t('orders.pleaseSelect')}</option>
                 {order.available_pickup_points.map((point) => (
                   <option key={point.id} value={point.id}>
                     {getLocalizedText(point.name_i18n) || point.name} - {getLocalizedText(point.address_i18n) || point.address}
@@ -577,12 +577,12 @@ const OrderDetailPage: React.FC = () => {
                 {isUpdatingPickupPoint ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                    {t('orders.updating') || '更新中...'}
+                    {t('orders.updating')}
                   </>
                 ) : (
                   <>
                     <CheckCircleIcon className="w-5 h-5 mr-2" />
-                    {t('orders.confirmSelection') || '确认选择'}
+                    {t('orders.confirmSelection')}
                   </>
                 )}
               </button>
@@ -599,18 +599,18 @@ const OrderDetailPage: React.FC = () => {
         >
           <div className="flex items-center space-x-2 mb-4">
             <CalendarIcon className="w-5 h-5 text-purple-600" />
-            <h2 className="text-base font-bold text-gray-900">{t('order.orderInfo') || '订单信息'}</h2>
+            <h2 className="text-base font-bold text-gray-900">{t('order.orderInfo')}</h2>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500">{t('order.orderNumber') || '订单号'}</span>
+              <span className="text-sm text-gray-500">{t('order.orderNumber')}</span>
               <div className="flex items-center space-x-2">
                 <span className="font-medium text-gray-900 text-sm">{order.order_number}</span>
                 <button
                   onClick={copyOrderNumber}
                   className="p-1 hover:bg-gray-100 rounded transition"
-                  title={t('common.copy') || '复制'}
+                  title={t('common.copy')}
                 >
                   <DocumentDuplicateIcon className="w-4 h-4 text-gray-400" />
                 </button>
@@ -618,17 +618,17 @@ const OrderDetailPage: React.FC = () => {
             </div>
 
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500">{t('order.orderType') || '订单类型'}</span>
+              <span className="text-sm text-gray-500">{t('order.orderType')}</span>
               <span className="font-medium text-gray-900 text-sm">{getOrderTypeLabel(order)}</span>
             </div>
 
             <div className="flex items-center justify-between py-2 border-b border-gray-100">
-              <span className="text-sm text-gray-500">{t('order.orderTime') || '下单时间'}</span>
+              <span className="text-sm text-gray-500">{t('order.orderTime')}</span>
               <span className="font-medium text-gray-900 text-sm">{formatDateTime(order.created_at)}</span>
             </div>
 
             <div className="flex items-center justify-between py-2">
-              <span className="text-sm text-gray-500">{t('order.paymentAmount') || '支付金额'}</span>
+              <span className="text-sm text-gray-500">{t('order.paymentAmount')}</span>
               <span className="font-bold text-purple-600">{formatCurrency(order.currency, order.total_amount)}</span>
             </div>
           </div>
@@ -647,9 +647,9 @@ const OrderDetailPage: React.FC = () => {
                 <GiftIcon className="w-4 h-4 text-amber-600" />
               </div>
               <div>
-                <h3 className="font-medium text-amber-800 mb-1">{t('order.pickupTips') || '温馨提示'}</h3>
+                <h3 className="font-medium text-amber-800 mb-1">{t('order.pickupTips')}</h3>
                 <p className="text-sm text-amber-700">
-                  {t('order.pickupTipsContent') || '请在有效期内前往自提点提货，出示提货码即可领取商品。'}
+                  {t('order.pickupTipsContent')}
                 </p>
               </div>
             </div>

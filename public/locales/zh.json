@@ -35,7 +35,20 @@
     "limitedTime": "限时",
     "hour": "小时",
     "minute": "分钟",
-    "copiedToClipboard": "已复制到剪贴板"
+    "copiedToClipboard": "已复制到剪贴板",
+    "copied": "已复制",
+    "copyFailed": "复制失败",
+    "done": "完成",
+    "linkCopied": "链接已复制",
+    "retry": "重试",
+    "retryText": "重试",
+    "loadFailed": "加载失败",
+    "backToHome": "返回首页",
+    "ended": "已结束",
+    "daysHours": "{{days}}天{{hours}}小时",
+    "hoursMinutes": "{{hours}}小时{{minutes}}分钟",
+    "minutesOnly": "{{minutes}}分钟",
+    "noProducts": "暂无商品"
   },
   "nav": {
     "home": "首页",
@@ -163,7 +176,7 @@
     "insufficientBalance": "积分余额不足，需要 {{required}} 积分，当前余额 {{current}} 积分",
     "priceComparison": "全网价格对比",
     "purchaseOptions": "购买方式",
-    "luckyPurchase": "一元购物",
+    "luckyPurchase": "一索莫尼购物",
     "fullPurchase": "全款购买",
     "fullPurchasePrice": "全款价格",
     "buyAllNow": "全款购买",
@@ -198,7 +211,26 @@
     "totalEntries": "总参与条目",
     "unitPrice": "单价",
     "totalQuantity": "总数",
-    "purchaseLimit": "限购"
+    "purchaseLimit": "限购",
+    "drawn": "已开奖",
+    "fullPurchaseDisabled": "该商品不支持全款购买",
+    "fullPurchaseOutOfStock": "库存不足，无法全款购买",
+    "max": "最多",
+    "notActive": "商品当前不可购买",
+    "purchaseQuantity": "购买数量",
+    "purchaseSuccessTitle": "购买成功！",
+    "purchaseTicket": "购买参与码",
+    "startTime": "开始时间",
+    "total": "合计",
+    "viewAllCodesHint": "点击查看所有参与码",
+    "winningCodeGenerated": "参与码已生成",
+    "statusActive": "进行中",
+    "statusUpcoming": "即将开始",
+    "statusCompleted": "已完成",
+    "statusSoldOut": "已售完",
+    "statusDrawn": "已开奖",
+    "statusCancelled": "已取消",
+    "ticketUnit": "张"
   },
   "fairness": {
     "title": "为什么这个算法公平？",
@@ -307,7 +339,7 @@
     "transactionType": {
       "deposit": "充值",
       "withdrawal": "提现",
-      "oneYuanPurchase": "参与一元购物",
+      "oneYuanPurchase": "参与一索莫尼购物",
       "lotteryPurchase": "参与积分商城",
       "lotteryRefund": "积分商城退款",
       "lotteryPrize": "入选奖励",
@@ -335,7 +367,9 @@
     },
     "noTransactions": "暂无交易记录",
     "balanceUpdated": "余额已更新",
-    "checkBalance": "查看钱包余额"
+    "checkBalance": "查看钱包余额",
+    "walletNotFound": "未找到钱包，请先充值",
+    "withdrawal": "提现"
   },
   "notification": {
     "notifications": "通知中心",
@@ -351,7 +385,15 @@
     "systemAnnouncement": "系统公告",
     "accountSecurity": "账户安全",
     "unread": "未读",
-    "read": "已读"
+    "read": "已读",
+    "markRead": "标记已读",
+    "depositApproved": "充值已通过",
+    "depositRejected": "充值被拒绝",
+    "depositPending": "充值审核中",
+    "withdrawalApproved": "提现已通过",
+    "withdrawalRejected": "提现被拒绝",
+    "withdrawalPending": "提现审核中",
+    "exchangeCompleted": "兑换完成"
   },
   "order": {
     "myOrders": "我的订单",
@@ -389,10 +431,10 @@
     "unknownProduct": "未知商品",
     "pickupTips": "温馨提示",
     "pickupTipsContent": "温馨提示：请在有效期内前往自提点提货，出示提货码即可领取商品。",
-    "prize": "积分商城一元购物",
-    "groupBuy": "拼团购买成功",
-    "lottery": "积分商城全款购买",
-    "oneYuanShopping": "一元购物",
+    "prize": "中奖商品",
+    "groupBuy": "拼团中奖",
+    "lottery": "积分商城",
+    "oneYuanShopping": "一索莫尼购物",
     "normalGroupBuy": "普通拼团",
     "autoGroupBuy": "一键包团"
   },
@@ -425,7 +467,7 @@
     "userId": "用户ID",
     "subtitle": "邀请好友，赚取丰厚佣金和奖励",
     "copied": "已复制",
-    "shareText": "一元钱居然可以买那么多东西？真实可信我已经在用了。{{inviteLink}}",
+    "shareText": "一索莫尼居然可以买那么多东西？真实可信我已经在用了。{{inviteLink}}",
     "shareTitle": "幸运超市 - 邀请好友",
     "firstDepositBonus": "首充奖励激活",
     "bonusAmount": "奖励金额：{{amount}} TJS",
@@ -466,7 +508,9 @@
     "activationSuccess": "首充奖励激活成功，获得 {{amount}} TJS",
     "activationFailed": "首充奖励激活失败，请检查条件是否满足",
     "linkCopied": "邀请链接已复制到剪贴板",
-    "codeCopied": "邀请码已复制到剪贴板"
+    "codeCopied": "邀请码已复制到剪贴板",
+    "share": "分享",
+    "telegram_username": "Telegram 用户名"
   },
   "profile": {
     "pendingPickup": "待提货",
@@ -495,7 +539,8 @@
     "pendingPrizes": "待处理",
     "totalValue": "总价值",
     "viewShowoffs": "查看晒单",
-    "viewOrders": "查看所有订单"
+    "viewOrders": "查看所有订单",
+    "myProfile": "我的资料"
   },
   "auth": {
     "welcome": "欢迎来到 TezBarakat",
@@ -503,7 +548,9 @@
     "loginWithTelegram": "通过 Telegram 登录",
     "guestMode": "游客模式",
     "pleaseLogin": "请通过 Telegram 访问此应用",
-    "loginSuccess": "登录成功！"
+    "loginSuccess": "登录成功！",
+    "loggedOut": "已退出登录",
+    "loginFailed": "登录失败"
   },
   "error": {
     "networkError": "网络错误，请稍后重试",
@@ -514,7 +561,14 @@
     "validationError": "数据验证失败",
     "unknownError": "未知错误",
     "purchaseFailed": "购买失败，请重试",
-    "notLoggedIn": "请先登录"
+    "notLoggedIn": "请先登录",
+    "loadFailed": "加载失败",
+    "networkSlow": "网络较慢，请稍后再试",
+    "pageNotFound": "页面未找到",
+    "pageNotFoundDescription": "抱歉，您访问的页面不存在。",
+    "pageError": "页面出错了",
+    "pageErrorDesc": "页面遇到了一些问题，请尝试刷新页面。",
+    "refresh": "刷新页面"
   },
   "success": {
     "operationSuccess": "操作成功",
@@ -589,7 +643,22 @@
     "imageFormatHint": "支持JPG、PNG格式,单张图片不超过5MB",
     "groupBuy": "拼团",
     "lottery": "抽奖",
-    "pickupCode": "提货码"
+    "pickupCode": "提货码",
+    "minChars": "至少10个字",
+    "justNow": "刚刚",
+    "createTitle": "发布晒单",
+    "selectProduct": "选择商品",
+    "noProducts": "暂无可晒单的商品",
+    "writeReview": "写评价",
+    "reviewPlaceholder": "分享您对商品的使用感受...",
+    "addPhotos": "添加照片",
+    "rating": "评分",
+    "publishing": "发布中...",
+    "publishSuccess": "晒单发布成功！",
+    "reviewRequired": "请填写评价内容",
+    "ratingRequired": "请选择评分",
+    "retry": "重试",
+    "imageAlt": "晒单图片"
   },
   "prize": {
     "prizeManagement": "中奖管理",
@@ -666,7 +735,8 @@
     "noResellableTickets": "暂无可转售的票券",
     "buyToResellHint": "购买票券后可在此转售",
     "unknownItem": "未知商品",
-    "createFailed": "发布转售失败"
+    "createFailed": "发布转售失败",
+    "resale": "转售"
   },
   "bot": {
     "botManagement": "Bot管理",
@@ -755,7 +825,7 @@
   "share": {
     "buttonText": "分享到Telegram群组",
     "successMessage": "分享成功！进度已更新",
-    "shareText": "🎁 我在TezBarakat玩一元积分商城，邀请你也来试试！\n首充10索莫尼立得2.5索莫尼！\n使用我的邀请码：{{inviteCode}}"
+    "shareText": "🎁 我在TezBarakat玩一索莫尼积分商城，邀请你也来试试！\n首充10索莫尼立得2.5索莫尼！\n使用我的邀请码：{{inviteCode}}"
   },
   "errors": {
     "pleaseLogin": "请先登录",
@@ -779,13 +849,14 @@
     "pleaseEnterAddress": "请输入详细地址",
     "loadError": "加载失败",
     "applyShipping": "申请发货",
-    "resell": "转售"
+    "resell": "转售",
+    "shippingRequestError": "发货请求出错"
   },
   "deposit": {
     "title": "充值",
     "failedToLoadConfig": "获取支付配置失败",
     "imageUploadSuccess": "图片上传成功",
-    "imageUploadFailed": "图片上传失败，请重试",
+    "imageUploadFailed": "图片上传失败",
     "pleaseUploadProof": "请上传充值凭证",
     "submitFailed": "提交充值申请失败",
     "uploading": "上传中...",
@@ -794,7 +865,36 @@
     "uploadFailed": "上传失败，请重试",
     "uploadedImages": "已上传",
     "supportedFormats": "支持 JPG、PNG、WebP 格式",
-    "invalidFileType": "请选择图片文件"
+    "invalidFileType": "请选择图片文件",
+    "minAmountError": "最小充值金额为 {{min}} TJS",
+    "inputPlaceholder": "输入充值金额",
+    "minAmountHint": "最小充值金额: {{min}} TJS",
+    "confirmDeposit": "确认充值 {{amount}} TJS",
+    "demoNotice": "提示: 充值功能当前为演示模式，实际支付网关集成中。",
+    "paymentMethod": "支付方式",
+    "bankCard": "银行卡",
+    "bankTransfer": "银行转账",
+    "quickSelect": "快速选择金额",
+    "customAmount": "自定义金额",
+    "firstDepositTitle": "欢迎来到 TezBarakat！",
+    "firstDepositDesc": "参与购物前需要先充值余额。最低充值金额为 1 索莫尼。",
+    "goDeposit": "去充值",
+    "laterRemind": "稍后再说",
+    "amountLabel": "充值金额",
+    "amountPlaceholder": "请输入充值金额",
+    "minAmount": "最低充值: {{amount}} 索莫尼",
+    "maxAmount": "最高充值: {{amount}} 索莫尼",
+    "uploadReceipt": "上传转账凭证",
+    "receiptHint": "请上传转账截图或支付凭证照片",
+    "submit": "确认充值",
+    "submitting": "提交中...",
+    "success": "充值申请已提交！",
+    "invalidAmount": "请输入正确的金额",
+    "bankInfo": "转账信息",
+    "bankName": "银行名称",
+    "accountNumber": "账号",
+    "accountName": "收款人",
+    "copied": "已复制"
   },
   "withdraw": {
     "title": "提现",
@@ -808,7 +908,41 @@
     "enterAccountHolder": "请输入账户持有人姓名",
     "enterAccountNumber": "请输入银行账号",
     "confirm": "确认提现",
-    "enterAmount": "输入提现金额"
+    "enterAmount": "输入提现金额",
+    "minWithdrawError": "最小提现金额为 {{min}} TJS",
+    "maxWithdrawError": "单笔最大提现金额为 {{max}} TJS",
+    "availableBalance": "可提现余额",
+    "withdrawAmount": "提现金额",
+    "actualReceived": "实际到账",
+    "bankInfo": "银行信息",
+    "bankPlaceholder": "例如: Amonatbank",
+    "accountHolderPlaceholder": "请输入账户持有人姓名",
+    "accountNumberPlaceholder": "请输入银行账号",
+    "notice": "提现须知:",
+    "noticeProcessing": "提现申请提交后将在1-3个工作日内处理",
+    "noticeAccuracy": "请确保银行信息准确，错误信息可能导致提现失败",
+    "noticeDemo": "提现功能当前为演示模式，实际流程集成中",
+    "confirmWithdraw": "确认提现",
+    "availableBalanceDetail": "可用余额: {{available}} TJS（总余额: {{total}} TJS）",
+    "bankName": "银行名称",
+    "accountHolder": "账户持有人",
+    "accountNumber": "银行账号",
+    "fee": "手续费: {{fee}}%",
+    "range": "提现范围: {{min}} - {{max}} TJS",
+    "amountLabel": "提现金额",
+    "amountPlaceholder": "请输入提现金额",
+    "currentBalance": "当前余额: {{amount}} 索莫尼",
+    "minAmount": "最低提现: {{amount}} 索莫尼",
+    "bankCardNumber": "银行卡号",
+    "bankCardPlaceholder": "请输入银行卡号",
+    "bankCardHolder": "持卡人姓名",
+    "bankCardHolderPlaceholder": "请输入持卡人姓名",
+    "submit": "确认提现",
+    "submitting": "提交中...",
+    "success": "提现申请已提交！",
+    "invalidAmount": "请输入正确的金额",
+    "insufficientBalance": "余额不足",
+    "actualAmount": "实际到账: {{amount}} 索莫尼"
   },
   "orders": {
     "title": "订单管理",
@@ -910,7 +1044,8 @@
     "updatePickupPointError": "更新自提点失败",
     "pleaseSelectPickupPoint": "请选择自提点",
     "originalPickupPointDisabled": "原自提点已停用，请重新选择",
-    "original": "原"
+    "original": "原",
+    "statusPendingClaim": "待领取"
   },
   "notifications": {
     "congratulations": "恭喜入选!",
@@ -919,22 +1054,54 @@
     "drawReminder": "开奖提醒",
     "maintenanceNotice": "系统维护通知",
     "securityTip": "安全提示",
-    "groupBuyWin": "🎉 拼团入选!",
-    "groupBuyWinContent": "恭喜您在拼团中入选，获得{{product}}!",
+    "groupBuyWin": "🎉 拼团中奖！",
+    "groupBuyWinContent": "恭喜！您赢得了 {{product}}！",
     "groupBuyLose": "拼团未中奖",
-    "groupBuyLoseContent": "很遗憾，本次拼团未入选，已退还积分",
+    "groupBuyLoseContent": "很遗憾，您未被选中。积分已退还",
     "groupBuyTimeout": "拼团未成团",
     "groupBuyTimeoutContent": "拼团超时未成团，资金已原路退回余额",
     "lotteryPurchase": "积分商城参与",
     "lotteryPurchaseContent": "您已参与{{product}}，购买{{count}}张彩票",
-    "lotteryWin": "🎉 积分商城入选!",
-    "lotteryWinContent": "恭喜您在积分商城入选，获得{{product}}!",
+    "lotteryWin": "🎉 积分商城中奖！",
+    "lotteryWinContent": "恭喜！您赢得了 {{product}}！",
     "referralReward": "推荐奖励",
     "referralRewardContent": "您获得推荐奖励 {{amount}} TJS",
     "friendCashback": "消费返现",
     "friendCashbackContent": "好友消费返现 {{amount}} TJS",
     "spinReward": "转盘奖励",
-    "spinRewardContent": "转盘抽奖获得 {{amount}}"
+    "spinRewardContent": "转盘抽奖获得 {{amount}}",
+    "deposit": {
+      "title": "💰 充值成功",
+      "description": "您的账户已充值 {{amount}} TJS"
+    },
+    "groupBuyRefund": {
+      "title": "↩️ 退款通知",
+      "description": "拼团退款 {{amount}} TJS"
+    },
+    "withdrawalCompleted": {
+      "title": "✅ 提现完成",
+      "description": "您的提现申请已处理完成"
+    },
+    "lotteryPurchaseContent_one": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_few": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_many": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_other": "您已参与{{product}}，购买了{{count}}张彩票",
+    "markedAsRead": "已标记为已读",
+    "allMarkedAsRead": "全部标记为已读",
+    "deleted": "通知已删除",
+    "depositSuccess": "充值成功",
+    "depositFailed": "充值失败",
+    "depositPending": "充值处理中",
+    "depositAmount": "充值金额: {{amount}} 索莫尼",
+    "withdrawSuccess": "提现成功",
+    "withdrawFailed": "提现失败",
+    "withdrawPending": "提现处理中",
+    "withdrawAmount": "提现金额: {{amount}} 索莫尼",
+    "pendingReview": "待审核",
+    "coinExchange": "积分兑换",
+    "exchangeAmount": "兑换金额: {{amount}} 索莫尼",
+    "groupBuyProduct": "拼团商品",
+    "lotteryProduct": "积分商品"
   },
   "cities": {
     "dushanbe": "杜尚别",
@@ -953,7 +1120,17 @@
   "settings": {
     "languageChangedToZh": "语言已切换为中文",
     "languageChanged": "语言已切换",
-    "languageChangeFailed": "语言切换失败"
+    "languageChangeFailed": "语言切换失败",
+    "title": "设置",
+    "languageTitle": "语言设置",
+    "languageDescription": "选择您的首选语言",
+    "languageSetting": "语言设置",
+    "selectLanguage": "选择您的首选语言",
+    "language": "语言",
+    "about": "关于应用",
+    "version": "版本",
+    "clearCache": "清除缓存",
+    "cacheCleared": "缓存已清除"
   },
   "debug": {
     "pageLoaded": "调试页面已加载",
@@ -1011,7 +1188,8 @@
       "won": "已中奖",
       "lost": "未入选",
       "refunded": "已退款",
-      "timeout": "已过期"
+      "timeout": "已过期",
+      "unknown": "未知状态"
     },
     "filter": {
       "all": "全部",
@@ -1024,7 +1202,7 @@
     "noProducts": "暂无拼团商品",
     "stayTuned": "敬请期待",
     "confirmJoin": "确认参与",
-    "confirmJoinMessage": "确认花费 {{amount}} 元参与拼团吗？",
+    "confirmJoinMessage": "确认花费 {{amount}} 索莫尼参与拼团吗？",
     "verificationTitle": "公平性验证",
     "timestampSum": "时间戳总和",
     "verificationFormula": "验证公式",
@@ -1178,7 +1356,7 @@
     "section2Title": "🎁 为什么商品这么便宜，甚至 1 索莫尼就能买？",
     "section2Content": "这不是骗局，这是一场对未来的投资！\n\n我们坚信中亚电商的巨大潜力。为了让更多塔吉克朋友体验到“网购”的便利与实惠，我们联合国际投资方正式启动了 “千万索莫尼用户补贴计划”。\n\n每一件特价商品的背后，都有平台为您支付差价。我们的目标很简单：让您买得开心，让我们赢得口碑。",
     "section3Title": "📍 我们就在您身边（杜尚别自提点）",
-    "section3Content": "我们不是虚拟的网站，我们在杜尚别有实体仓库，看得见、摸得着！\n\n**服务范围：** 杜尚别全市\n\n**取货方式：** 仓库自提（支持现场验货，满意再拿走！）\n\n**仓库地址：** Zarafshon 市场附近 (rяdom s rяnkom Zarafshon)\n\n**联系电话：** +992 770000611",
+    "section3Content": "我们不是虚拟的网站，我们在杜尚别有实体仓库，看得见、摸得着！\n**服务范围：** 杜尚别全市\n**取货方式：** 仓库自提（支持现场验货，满意再拿走！）\n**仓库地址：** Zarafshon 市场附近（扎拉夫尚市场旁）\n**联系电话：** +992 770000611",
     "section4Title": "💰 钱包与积分规则（透明公开）",
     "section4Content": "**余额 (Balance)：** 这是您的现金资产。支持充值，随时可申请提现。\n\n**积分 (Points)：** 这是平台的奖励金。\n\n**如何获得？** 可用余额 1:1 兑换；或在参与拼团未中奖时，系统自动全额返还。\n\n**如何使用？** 仅限在“积分商城”兑换商品，不可提现。",
     "section5Title": "🛡️ 7天无忧售后承诺",
@@ -1186,7 +1364,7 @@
   },
   "ai": {
     "title": "TezBarakat AI",
-    "subtitle": "и пешрафта барои Тоҷикистон",
+    "subtitle": "服务塔吉克斯坦的先进人工智能",
     "backButton": "返回",
     "placeholder": "输入您的问题...",
     "sendButton": "发送",
@@ -1198,7 +1376,19 @@
     "usageQuota": "{{used}}/{{total}}",
     "disclaimer": "AI仅供参考，非官方立场",
     "footer": "TezBarakat AI",
-    "footerDesc": "为塔吉克斯坦人民服务的高级人工智能"
+    "footerDesc": "为塔吉克斯坦人民服务的高级人工智能",
+    "error": {
+      "quotaExceeded": "今日提问次数已用完，邀请好友或参与拼团可获得更多次数！",
+      "sensitiveContent": "抱歉，我无法回答这个问题。请换一个话题。",
+      "aiError": "发生错误，请重试。",
+      "unauthorized": "请先登录。",
+      "default": "发生错误，请重试",
+      "AI_ERROR": "AI 服务出错，请稍后再试",
+      "NETWORK_ERROR": "网络错误，请检查网络连接",
+      "RATE_LIMIT": "请求过于频繁，请稍后再试",
+      "INVALID_RESPONSE": "响应格式错误，请重试",
+      "UNKNOWN": "未知错误，请稍后再试"
+    }
   },
   "promoter": {
     "centerTitle": "市场合伙人",
@@ -1244,5 +1434,74 @@
     "leaderboardTitle": "推广排行榜",
     "noLeaderboard": "暂无排行数据",
     "me": "我"
+  },
+  "onboarding": {
+    "title": "邀请好友，获得终身佣金",
+    "subtitle": "直推 3% · 二级 1% · 三级 0.5%",
+    "description": "好友每次消费，系统自动为您发放佣金，以积分形式用于参与抽奖",
+    "buttonText": "创建推荐链接",
+    "skipText": "稍后再说"
+  },
+  "language": "zh",
+  "prizes": {
+    "prizeValue": "奖品价值",
+    "requestShipping": "申请发货",
+    "resell": "转售",
+    "noPrizes": "暂无奖品",
+    "fillAddress": "填写收货地址",
+    "recipientPlaceholder": "请输入收货人姓名",
+    "addressPlaceholder": "请输入详细地址",
+    "cityPlaceholder": "杜尚别",
+    "notesPlaceholder": "其他备注信息（可选）",
+    "myPrizes": "我的奖品",
+    "filterAll": "全部",
+    "filterPending": "待处理",
+    "filterShipping": "运输中",
+    "filterCompleted": "已完成",
+    "noPrizesHint": "参与抽奖活动，赢取精美奖品！",
+    "goLottery": "去参与抽奖",
+    "wonDate": "中奖日期",
+    "ticketNumber": "参与码",
+    "pickupCode": "提货码",
+    "statusPending": "待处理",
+    "statusShipping": "运输中",
+    "statusCompleted": "已完成",
+    "statusRejected": "已拒绝",
+    "statusExpired": "已过期",
+    "viewOrder": "查看订单",
+    "copyPickupCode": "复制提货码",
+    "pickupCodeCopied": "提货码已复制"
+  },
+  "tickets": {
+    "lotteryNotFound": "积分商城不存在",
+    "myTickets": "我的参与码",
+    "winningNumber": "中奖码",
+    "congratulations": "恭喜中奖！",
+    "myParticipationCodes": "我的参与码",
+    "winCount": "中奖数量",
+    "ticketList": "参与码列表",
+    "noTickets": "暂无参与码",
+    "filterActive": "进行中",
+    "filterWon": "已中奖",
+    "filterLost": "未中奖",
+    "noTicketsHint": "购买参与码，参与抽奖赢大奖！",
+    "goLottery": "去参与抽奖",
+    "purchaseDate": "购买日期",
+    "drawTime": "开奖时间",
+    "ticketNumbers": "参与码",
+    "amount": "金额",
+    "statusActive": "进行中",
+    "statusWon": "已中奖！",
+    "statusLost": "未中奖",
+    "viewLottery": "查看抽奖",
+    "viewPrize": "查看奖品"
+  },
+  "notFound": {
+    "title": "页面未找到",
+    "description": "您访问的页面不存在或已被删除。",
+    "goHome": "返回首页"
+  },
+  "spinLottery": {
+    "thankYou": "谢谢惠顾"
   }
 }

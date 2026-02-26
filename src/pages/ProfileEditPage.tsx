@@ -94,7 +94,7 @@ const ProfileEditPage: React.FC = () => {
             </button>
           </div>
           
-          <p className="text-sm text-gray-500 mt-3">{t('common.upload') || 'Upload'}</p>
+          <p className="text-sm text-gray-500 mt-3">{t('common.upload')}</p>
         </div>
       </div>
 
@@ -169,7 +169,7 @@ const ProfileEditPage: React.FC = () => {
       <div className="mx-4 mt-4">
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
           <p className="text-sm text-blue-800">
-            💡 <strong>{t('common.note') || 'Note'}:</strong> Telegram account info will not be affected.
+            💡 <strong>{t('common.note')}:</strong> Telegram account info will not be affected.
           </p>
         </div>
       </div>

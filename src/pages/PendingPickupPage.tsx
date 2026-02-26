@@ -30,17 +30,17 @@ interface PendingPickupItem {
 const getLogisticsStatusText = (status: string | undefined, t: any): string => {
   switch (status) {
     case 'PENDING_SHIPMENT':
-      return t('logistics.pendingShipment') || '待发货';
+      return t('logistics.pendingShipment');
     case 'IN_TRANSIT_CHINA':
-      return t('logistics.inTransitChina') || '中国段运输中';
+      return t('logistics.inTransitChina');
     case 'IN_TRANSIT_TAJIKISTAN':
-      return t('logistics.inTransitTajikistan') || '塔吉克斯坦段运输中';
+      return t('logistics.inTransitTajikistan');
     case 'READY_FOR_PICKUP':
-      return t('logistics.readyForPickup') || '已到达，待提货';
+      return t('logistics.readyForPickup');
     case 'PICKED_UP':
-      return t('logistics.pickedUp') || '已提货';
+      return t('logistics.pickedUp');
     default:
-      return t('logistics.pendingShipment') || '待发货';
+      return t('logistics.pendingShipment');
   }
 };
 
@@ -276,13 +276,13 @@ const PendingPickupPage: React.FC = () => {
   const getTypeText = (type: string): string => {
     switch (type) {
       case 'full_purchase':
-        return t('order.fullPurchase') || '全款购买';
+        return t('order.fullPurchase');
       case 'prize':
-        return t('order.prize') || '中奖商品';
+        return t('order.prize');
       case 'groupbuy':
-        return t('order.groupBuy') || '拼团中奖';
+        return t('order.groupBuy');
       case 'lottery':
-        return t('order.lottery') || '积分商城';
+        return t('order.lottery');
       default:
         return '';
     }
@@ -300,7 +300,7 @@ const PendingPickupPage: React.FC = () => {
             <ArrowLeftIcon className="w-6 h-6 text-gray-600" />
           </button>
           <h1 className="text-lg font-bold text-gray-900">
-            {t('profile.pendingPickup') || '待提货'}
+            {t('profile.pendingPickup')}
           </h1>
           <div className="w-10" />
         </div>
@@ -331,10 +331,10 @@ const PendingPickupPage: React.FC = () => {
           >
             <CubeIcon className="w-16 h-16 text-gray-200 mx-auto mb-4" />
             <p className="text-gray-500 font-medium">
-              {t('profile.noPendingPickup') || '暂无待提货商品'}
+              {t('profile.noPendingPickup')}
             </p>
             <p className="text-sm text-gray-400 mt-1">
-              {t('profile.pendingPickupHint') || '完成订单后，商品将在此显示'}
+              {t('profile.pendingPickupHint')}
             </p>
           </motion.div>
         ) : (
@@ -374,8 +374,8 @@ const PendingPickupPage: React.FC = () => {
                         </h3>
                         <p className="text-xs text-gray-500 mt-1">
                           {getTypeText(item.type)}
-                          {item.participationCode && ` • 参与码: ${item.participationCode}`}
-                          {item.sessionCode && ` • 会话码: ${item.sessionCode}`}
+                          {item.participationCode && ` • ${t('orders.participationCode')}: ${item.participationCode}`}
+                          {item.sessionCode && ` • ${t('orders.sessionCode')}: ${item.sessionCode}`}
                         </p>
                         <p className="text-xs text-gray-400 mt-1">
                           {formatDateTime(item.createdAt)}
@@ -399,7 +399,7 @@ const PendingPickupPage: React.FC = () => {
                       </span>
                       {item.pickupCode && item.logisticsStatus === 'READY_FOR_PICKUP' && (
                         <span className="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-medium rounded-full">
-                          提货码: {item.pickupCode}
+                          {t('orders.pickupCode')}: {item.pickupCode}
                         </span>
                       )}
                     </div>

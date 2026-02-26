@@ -3,9 +3,10 @@ import { initReactI18next } from 'react-i18next'
 import LanguageDetector from 'i18next-browser-languagedetector'
 import HttpBackend from 'i18next-http-backend'
 
-// 仅内联 ru 翻译作为 fallback（塔吉克斯坦用户的默认语言）
-// 其他语言（zh、tg）将通过 HTTP 按需加载
-import ruTranslation from './locales/ru.json'
+// 内联 tg（塔吉克语）翻译作为默认语言
+// 塔吉克斯坦是主要运营市场，塔吉克语用户占多数
+// 其他语言（ru、zh）将通过 HTTP 按需加载
+import tgTranslation from './locales/tg.json'
 
 // 自定义 Telegram 语言检测器
 // 注册为 i18next-browser-languagedetector 的自定义检测器插件
@@ -40,24 +41,26 @@ i18n
   .use(languageDetector) // 浏览器语言检测器（已包含自定义 Telegram 检测器）
   .use(initReactI18next) // 集成 React
   .init({
-    // 内联 ru 翻译，确保 fallback 语言立即可用，不会闪烁
+    // 内联 tg 翻译，确保塔吉克语用户首次加载时不会看到其他语言闪烁
     resources: {
-      ru: { translation: ruTranslation }
+      tg: { translation: tgTranslation }
     },
-    // 对于非 ru 语言，通过 HTTP 后端加载
+    // 对于非 tg 语言，通过 HTTP 后端加载
     partialBundledLanguages: true,
     backend: {
       loadPath: '/locales/{{lng}}.json'
     },
-    fallbackLng: 'ru',
+    fallbackLng: 'tg',
     lng: undefined, // 让检测器自动检测
     supportedLngs: ['zh', 'ru', 'tg'],
     interpolation: {
       escapeValue: false
     },
     detection: {
-      // Telegram 检测器优先级最高，其次是 localStorage（用户手动切换的语言），最后是浏览器语言
-      order: ['telegram', 'localStorage', 'navigator'],
+      // localStorage 优先（用户手动切换的语言应被尊重），
+      // 其次是 Telegram 检测器（首次使用时从 Telegram 获取语言偏好），
+      // 最后是浏览器语言
+      order: ['localStorage', 'telegram', 'navigator'],
       caches: ['localStorage']
     },
     saveMissing: false,

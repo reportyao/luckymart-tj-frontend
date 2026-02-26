@@ -29,6 +29,54 @@ function isChunkLoadError(error: any): boolean {
   );
 }
 
+/**
+ * ErrorBoundary 是在 React 组件树之外运行的，无法使用 useTranslation() hook。
+ * 因此使用静态多语言文本，根据 localStorage 中缓存的语言偏好显示对应语言。
+ * 回退语言为塔吉克语（tg），与 i18n 配置保持一致。
+ */
+const ERROR_TEXTS: Record<string, {
+  appError: string;
+  appErrorDescription: string;
+  reloadApp: string;
+  techDetails: string;
+  errorMessage: string;
+  componentStack: string;
+}> = {
+  tg: {
+    appError: 'Дар барнома хатогӣ рух дод 😔',
+    appErrorDescription: 'Мо ин хатогиро сабт кардем, гурӯҳи техникӣ ҳарчи зудтар ислоҳ мекунад.',
+    reloadApp: 'Барномаро аз нав бор кунед',
+    techDetails: 'Тафсилоти техникӣ',
+    errorMessage: 'Паёми хатогӣ:',
+    componentStack: 'Стеки компонентҳо:',
+  },
+  ru: {
+    appError: 'Произошла ошибка 😔',
+    appErrorDescription: 'Мы зафиксировали эту ошибку, техническая команда исправит её в ближайшее время.',
+    reloadApp: 'Перезагрузить приложение',
+    techDetails: 'Технические детали',
+    errorMessage: 'Сообщение об ошибке:',
+    componentStack: 'Стек компонентов:',
+  },
+  zh: {
+    appError: '应用出错了 😔',
+    appErrorDescription: '我们已记录此错误，技术团队将尽快修复。',
+    reloadApp: '重新加载应用',
+    techDetails: '技术详情',
+    errorMessage: '错误信息:',
+    componentStack: '组件堆栈:',
+  },
+};
+
+function getErrorTexts() {
+  try {
+    const lang = localStorage.getItem('i18nextLng') || 'tg';
+    return ERROR_TEXTS[lang] || ERROR_TEXTS['tg'];
+  } catch {
+    return ERROR_TEXTS['tg'];
+  }
+}
+
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { hasError: boolean; error: any; errorInfo: any; isChunkError: boolean }
@@ -117,7 +165,8 @@ export class ErrorBoundary extends React.Component<
         );
       }
 
-      // 通用错误 UI（非网络错误）
+      // 通用错误 UI（非网络错误）— 根据用户语言偏好显示
+      const texts = getErrorTexts();
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
@@ -126,9 +175,9 @@ export class ErrorBoundary extends React.Component<
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.996-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">应用出错了 😔</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">{texts.appError}</h2>
             <p className="text-gray-600 mb-6">
-              我们已记录此错误，技术团队将尽快修复。
+              {texts.appErrorDescription}
             </p>
             
             <div className="space-y-3">
@@ -136,20 +185,20 @@ export class ErrorBoundary extends React.Component<
                 onClick={this.handleReload}
                 className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
-                重新加载应用
+                {texts.reloadApp}
               </button>
               
               {process.env.NODE_ENV === 'development' && (
                 <details className="mt-4 text-left">
                   <summary className="text-sm text-gray-600 cursor-pointer hover:text-gray-800">
-                    技术详情
+                    {texts.techDetails}
                   </summary>
                   <div className="mt-3 p-3 bg-gray-50 rounded border text-xs font-mono text-gray-700 max-h-40 overflow-auto">
-                    <strong>错误信息:</strong>
+                    <strong>{texts.errorMessage}</strong>
                     <pre className="whitespace-pre-wrap">{serializeError(this.state.error)}</pre>
                     {this.state.errorInfo && (
                       <>
-                        <strong className="block mt-3">组件堆栈:</strong>
+                        <strong className="block mt-3">{texts.componentStack}</strong>
                         <pre className="whitespace-pre-wrap">{this.state.errorInfo.componentStack}</pre>
                       </>
                     )}

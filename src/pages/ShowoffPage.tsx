@@ -130,7 +130,7 @@ const ShowoffPage: React.FC = () => {
       );
 
       if (!showoffsResponse.ok) {
-        throw new Error('获取晒单失败');
+        throw new Error('Failed to fetch showoffs');
       }
 
       const showoffsData = await showoffsResponse.json();
@@ -355,7 +355,7 @@ const ShowoffPage: React.FC = () => {
       if (success) {
         toast.success(t('common.linkCopied'));
       } else {
-        toast.error(t('common.copyFailed') || '复制失败');
+        toast.error(t('common.copyFailed'));
       }
     }
   };
@@ -400,7 +400,7 @@ const ShowoffPage: React.FC = () => {
               className="flex items-center space-x-2 mx-auto px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
             >
               <ArrowPathIcon className="w-5 h-5" />
-              <span>重试</span>
+              <span>{t('common.retry')}</span>
             </button>
           </div>
         ) : showoffs.length === 0 ? (
@@ -487,7 +487,7 @@ const ShowoffPage: React.FC = () => {
                         >
 	                          <LazyImage
 	                            src={image}
-	                            alt={`晒单图片${idx + 1}`}
+	                            alt={`${t('showoff.showoffImage')} ${idx + 1}`}
 	                            className="w-full h-full object-cover"
 	                            width={200}
 	                            height={200}
@@ -547,7 +547,7 @@ const ShowoffPage: React.FC = () => {
                 {isLoadingMore && (
                   <div className="flex items-center space-x-2 text-purple-600">
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
-                    <span className="text-sm">加载中...</span>
+                    <span className="text-sm">{t('common.loading')}</span>
                   </div>
                 )}
               </div>
