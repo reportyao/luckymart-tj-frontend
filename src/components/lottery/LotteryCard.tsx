@@ -109,6 +109,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                 alt={lottery.title}
                 loading="lazy"
                 className="w-full h-full object-cover"
+                style={{ minWidth: '100%', minHeight: '100%' }}
               />
             );
           }
@@ -124,6 +125,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                       alt={`${lottery.title} ${index + 1}`}
                       loading="lazy"
                       className="w-full h-full object-cover"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
                     />
                   </div>
                 ))}
@@ -141,6 +143,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                     alt={`${lottery.title} 1`}
                     loading="lazy"
                     className="w-full h-full object-cover"
+                    style={{ minWidth: '100%', minHeight: '100%' }}
                   />
                 </div>
                 <div className="w-1/2 flex flex-col gap-0.5">
@@ -151,6 +154,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                         alt={`${lottery.title} ${index + 2}`}
                         loading="lazy"
                         className="w-full h-full object-cover"
+                        style={{ minWidth: '100%', minHeight: '100%' }}
                       />
                     </div>
                   ))}
@@ -171,6 +175,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                   alt={`${lottery.title} 1`}
                   loading="lazy"
                   className="w-full h-full object-cover"
+                  style={{ minWidth: '100%', minHeight: '100%' }}
                 />
               </div>
               <div className="w-1/2 flex flex-col gap-0.5">
@@ -181,6 +186,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                       alt={`${lottery.title} ${index + 2}`}
                       loading="lazy"
                       className="w-full h-full object-cover"
+                      style={{ minWidth: '100%', minHeight: '100%' }}
                     />
                     {/* 最后一张图片显示剩余数量 */}
                     {index === 2 && remainingCount > 0 && (
