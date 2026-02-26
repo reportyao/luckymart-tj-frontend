@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next'
 import { 
   formatCurrency, 
   formatDateTime, 
-  getLotteryStatusText, 
   getLotteryStatusColor,
   getTimeRemaining,
   cn,

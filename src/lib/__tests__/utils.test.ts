@@ -57,13 +57,27 @@ describe('utils', () => {
   });
 
   describe('getLotteryStatusText', () => {
-    it('should return correct status text', () => {
-      expect(getLotteryStatusText('ACTIVE')).toBe('进行中');
-      expect(getLotteryStatusText('UPCOMING')).toBe('即将开始');
-      expect(getLotteryStatusText('COMPLETED')).toBe('已完成');
-      expect(getLotteryStatusText('SOLD_OUT')).toBe('已售完');
-      expect(getLotteryStatusText('DRAWN')).toBe('已开奖');
-      expect(getLotteryStatusText('CANCELLED')).toBe('已取消');
+    it('should return English fallback text when t is not provided', () => {
+      expect(getLotteryStatusText('ACTIVE')).toBe('Active');
+      expect(getLotteryStatusText('UPCOMING')).toBe('Upcoming');
+      expect(getLotteryStatusText('COMPLETED')).toBe('Completed');
+      expect(getLotteryStatusText('SOLD_OUT')).toBe('Sold Out');
+      expect(getLotteryStatusText('DRAWN')).toBe('Drawn');
+      expect(getLotteryStatusText('CANCELLED')).toBe('Cancelled');
+    });
+
+    it('should use t function when provided', () => {
+      const mockT = (key: string) => {
+        const map: Record<string, string> = {
+          'lottery.statusActive': '进行中',
+          'lottery.statusUpcoming': '即将开始',
+          'lottery.statusCompleted': '已完成',
+        };
+        return map[key] || key;
+      };
+      expect(getLotteryStatusText('ACTIVE', mockT)).toBe('进行中');
+      expect(getLotteryStatusText('UPCOMING', mockT)).toBe('即将开始');
+      expect(getLotteryStatusText('COMPLETED', mockT)).toBe('已完成');
     });
 
     it('should return original status for unknown status', () => {
@@ -85,37 +99,76 @@ describe('utils', () => {
   });
 
   describe('getTimeRemainingText', () => {
-    it('should return "已结束" for past dates', () => {
+    it('should return "Ended" for past dates when t is not provided', () => {
       const pastDate = new Date(Date.now() - 1000).toISOString();
-      expect(getTimeRemainingText(pastDate)).toBe('已结束');
+      expect(getTimeRemainingText(pastDate)).toBe('Ended');
+    });
+
+    it('should use t function for past dates when provided', () => {
+      const mockT = (key: string) => {
+        const map: Record<string, string> = {
+          'common.ended': '已结束',
+        };
+        return map[key] || key;
+      };
+      const pastDate = new Date(Date.now() - 1000).toISOString();
+      expect(getTimeRemainingText(pastDate, mockT)).toBe('已结束');
     });
 
     it('should return days and hours for future dates', () => {
       const futureDate = new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(); // 25 hours
       const result = getTimeRemainingText(futureDate);
-      expect(result).toContain('天');
-      expect(result).toContain('小时');
+      expect(result).toContain('d');
+      expect(result).toContain('h');
     });
 
     it('should return hours and minutes for dates within 24 hours', () => {
       const futureDate = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2 hours
       const result = getTimeRemainingText(futureDate);
-      expect(result).toContain('小时');
-      expect(result).toContain('分钟');
+      expect(result).toContain('h');
+      expect(result).toContain('m');
     });
 
     it('should return minutes for dates within 1 hour', () => {
       const futureDate = new Date(Date.now() + 30 * 60 * 1000).toISOString(); // 30 minutes
       const result = getTimeRemainingText(futureDate);
-      expect(result).toContain('分钟');
-      expect(result).not.toContain('小时');
+      expect(result).toContain('m');
+      expect(result).not.toContain('h');
+    });
+
+    it('should use t function for time formatting when provided', () => {
+      const mockT = (key: string, opts?: any) => {
+        const map: Record<string, string> = {
+          'common.ended': '已结束',
+          'common.daysHours': `${opts?.days}天${opts?.hours}小时`,
+          'common.hoursMinutes': `${opts?.hours}小时${opts?.minutes}分钟`,
+          'common.minutesOnly': `${opts?.minutes}分钟`,
+        };
+        return map[key] || key;
+      };
+      const futureDate = new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString();
+      const result = getTimeRemainingText(futureDate, mockT);
+      expect(result).toContain('天');
+      expect(result).toContain('小时');
     });
   });
 
   describe('getWalletTypeText', () => {
-    it('should return correct wallet type text', () => {
-      expect(getWalletTypeText('BALANCE')).toBe('余额');
-      expect(getWalletTypeText('LUCKY_COIN')).toBe('积分');
+    it('should return English fallback text when t is not provided', () => {
+      expect(getWalletTypeText('BALANCE')).toBe('Balance');
+      expect(getWalletTypeText('LUCKY_COIN')).toBe('Lucky Coin');
+    });
+
+    it('should use t function when provided', () => {
+      const mockT = (key: string) => {
+        const map: Record<string, string> = {
+          'wallet.balance': '余额',
+          'wallet.luckyCoin': '积分',
+        };
+        return map[key] || key;
+      };
+      expect(getWalletTypeText('BALANCE', mockT)).toBe('余额');
+      expect(getWalletTypeText('LUCKY_COIN', mockT)).toBe('积分');
     });
 
     it('should return original type for unknown type', () => {

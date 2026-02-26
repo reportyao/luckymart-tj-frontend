@@ -48,7 +48,9 @@
     "daysHours": "{{days}} рӯз {{hours}} соат",
     "hoursMinutes": "{{hours}} соат {{minutes}} дақиқа",
     "minutesOnly": "{{minutes}} дақиқа",
-    "noProducts": "Маҳсулот нест"
+    "noProducts": "Маҳсулот нест",
+    "justNow": "Ҳамин лаҳза",
+    "confirmSubmit": "Тасдиқи ирсол"
   },
   "nav": {
     "home": "Асосӣ",
@@ -369,7 +371,9 @@
     "noTransactions": "Сабтҳои амалиёт нест",
     "checkBalance": "Тавозунро тафтиш кунед",
     "walletNotFound": "Ҳамён ёфт нашуд, лутфан баланси худро пур кунед",
-    "withdrawal": "Баровардан"
+    "withdrawal": "Баровардан",
+    "totalBalance": "Тавозуни умумӣ",
+    "frozenBalance": "Тавозуни яхкарда"
   },
   "order": {
     "myOrders": "Фармоишҳои ман",
@@ -658,7 +662,11 @@
     "reviewRequired": "Лутфан шарҳ нависед",
     "ratingRequired": "Лутфан баҳо гузоред",
     "retry": "Такрор кардан",
-    "imageAlt": "Сурати пост"
+    "imageAlt": "Сурати пост",
+    "groupBuyWin": "Ғалаба дар хариди гурӯҳӣ",
+    "minContentLength": "Ҳадди ақали дарозии мундариҷа: 10 аломат",
+    "unknownGroupBuy": "Хариди гурӯҳии номаълум",
+    "showoffImage": "Сурати намоиш"
   },
   "market": {
     "resaleMarket": "Бозори фурӯши дубора",
@@ -851,7 +859,23 @@
     "loadError": "Хатогии боркунӣ",
     "applyShipping": "Дархости интиқол",
     "resell": "Дубора фурӯхтан",
-    "shippingRequestError": "Хатои дархости интиқол"
+    "shippingRequestError": "Хатои дархости интиқол",
+    "noPrizes": "Шумо ҳоло ягон ҷоиза надоред",
+    "goToLottery": "Ба қуръакашиҳо гузаред",
+    "periodLabel": "Давра",
+    "prize": "Ҷоиза",
+    "prizeValue": "Арзиши ҷоиза",
+    "shippingTitle": "Суроғаи интиқол",
+    "recipientName": "Номи гиранда",
+    "recipientNamePlaceholder": "Номи гирандаро ворид кунед",
+    "phone": "Телефон",
+    "city": "Шаҳр",
+    "cityPlaceholder": "Шаҳрро ворид кунед",
+    "postalCode": "Рамзи почта",
+    "address": "Суроға",
+    "addressPlaceholder": "Суроғаи муфассалро ворид кунед",
+    "notes": "Эзоҳот",
+    "notesPlaceholder": "Эзоҳоти иловагӣ (ихтиёрӣ)"
   },
   "deposit": {
     "title": "Пур кардани баланс",
@@ -1046,7 +1070,9 @@
     "original": "Аслӣ",
     "fullPurchaseCount": "Пардохти пурра",
     "tabFullPurchase": "Пардохти пурра",
-    "statusPendingClaim": "Дар интизории гирифтан"
+    "statusPendingClaim": "Дар интизории гирифтан",
+    "participationCode": "Рамзи иштирок",
+    "sessionCode": "Рамзи ҷаласа"
   },
   "notifications": {
     "congratulations": "Табрик бо бурд!",
@@ -1503,5 +1529,30 @@
   },
   "spinLottery": {
     "thankYou": "Ташаккур!"
+  },
+  "firstDeposit": {
+    "title": "Хуш омадед!",
+    "point1Text": "Ҳисобро ба маблағи ",
+    "point1Highlight": "ягон маблағ",
+    "point1Suffix": " пур кунед ва харидро оғоз кунед",
+    "point2Text": "Гиред ",
+    "point2Highlight": "тангаҳои бонусӣ",
+    "point2Suffix": " барои пуркунии аввалин",
+    "warning": "Ҳадди ақали маблағи пуркунӣ: 1 сомонӣ",
+    "confirmButton": "Ҳозир пур кунед"
+  },
+  "myTickets": {
+    "title": "Иштирокҳои ман",
+    "noTickets": "Шумо ҳоло дар қуръакашиҳо иштирок накардаед",
+    "myEntries": "Рақамҳои ман",
+    "entryList": "Рӯйхати рақамҳо",
+    "period": "Давра",
+    "progress": "Пешрафт",
+    "ticketPrice": "Нархи билет",
+    "winningCode": "Рақами ғолиб",
+    "congratsWin": "Табрик! Шумо ғолиб шудед!",
+    "won": "Ғолиб шуд",
+    "winCount": "Шумораи ғалабаҳо",
+    "lotteryNotFound": "Қуръакашӣ ёфт нашуд"
   }
 }

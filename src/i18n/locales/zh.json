@@ -48,7 +48,9 @@
     "daysHours": "{{days}}天{{hours}}小时",
     "hoursMinutes": "{{hours}}小时{{minutes}}分钟",
     "minutesOnly": "{{minutes}}分钟",
-    "noProducts": "暂无商品"
+    "noProducts": "暂无商品",
+    "justNow": "刚刚",
+    "confirmSubmit": "确认提交"
   },
   "nav": {
     "home": "首页",
@@ -369,7 +371,9 @@
     "balanceUpdated": "余额已更新",
     "checkBalance": "查看钱包余额",
     "walletNotFound": "未找到钱包，请先充值",
-    "withdrawal": "提现"
+    "withdrawal": "提现",
+    "totalBalance": "总余额",
+    "frozenBalance": "冻结余额"
   },
   "notification": {
     "notifications": "通知中心",
@@ -658,7 +662,11 @@
     "reviewRequired": "请填写评价内容",
     "ratingRequired": "请选择评分",
     "retry": "重试",
-    "imageAlt": "晒单图片"
+    "imageAlt": "晒单图片",
+    "groupBuyWin": "拼团中奖",
+    "minContentLength": "内容最少10个字符",
+    "unknownGroupBuy": "未知拼团",
+    "showoffImage": "晒单图片"
   },
   "prize": {
     "prizeManagement": "中奖管理",
@@ -850,7 +858,23 @@
     "loadError": "加载失败",
     "applyShipping": "申请发货",
     "resell": "转售",
-    "shippingRequestError": "发货请求出错"
+    "shippingRequestError": "发货请求出错",
+    "noPrizes": "您暂无奖品",
+    "goToLottery": "去参与抽奖",
+    "periodLabel": "期号",
+    "prize": "奖品",
+    "prizeValue": "奖品价值",
+    "shippingTitle": "收货地址",
+    "recipientName": "收件人姓名",
+    "recipientNamePlaceholder": "请输入收件人姓名",
+    "phone": "联系电话",
+    "city": "城市",
+    "cityPlaceholder": "请输入城市",
+    "postalCode": "邮政编码",
+    "address": "详细地址",
+    "addressPlaceholder": "请输入详细地址",
+    "notes": "备注",
+    "notesPlaceholder": "补充说明（选填）"
   },
   "deposit": {
     "title": "充值",
@@ -1045,7 +1069,9 @@
     "pleaseSelectPickupPoint": "请选择自提点",
     "originalPickupPointDisabled": "原自提点已停用，请重新选择",
     "original": "原",
-    "statusPendingClaim": "待领取"
+    "statusPendingClaim": "待领取",
+    "participationCode": "参与码",
+    "sessionCode": "场次编号"
   },
   "notifications": {
     "congratulations": "恭喜入选!",
@@ -1503,5 +1529,30 @@
   },
   "spinLottery": {
     "thankYou": "谢谢惠顾"
+  },
+  "firstDeposit": {
+    "title": "欢迎！",
+    "point1Text": "充值 ",
+    "point1Highlight": "任意金额",
+    "point1Suffix": " 即可开始购物",
+    "point2Text": "获得 ",
+    "point2Highlight": "奖励积分",
+    "point2Suffix": " 首充奖励",
+    "warning": "最低充值金额：1 索莫尼",
+    "confirmButton": "立即充值"
+  },
+  "myTickets": {
+    "title": "我的参与",
+    "noTickets": "您还没有参与过抽奖",
+    "myEntries": "我的号码",
+    "entryList": "号码列表",
+    "period": "期号",
+    "progress": "进度",
+    "ticketPrice": "票价",
+    "winningCode": "中奖号码",
+    "congratsWin": "恭喜中奖！",
+    "won": "已中奖",
+    "winCount": "中奖次数",
+    "lotteryNotFound": "抽奖未找到"
   }
 }

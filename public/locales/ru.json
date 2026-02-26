@@ -48,7 +48,9 @@
     "daysHours": "{{days}} д. {{hours}} ч.",
     "hoursMinutes": "{{hours}} ч. {{minutes}} мин.",
     "minutesOnly": "{{minutes}} мин.",
-    "noProducts": "Нет товаров"
+    "noProducts": "Нет товаров",
+    "justNow": "Только что",
+    "confirmSubmit": "Подтвердить отправку"
   },
   "nav": {
     "home": "Главная",
@@ -369,7 +371,9 @@
     "noTransactions": "Нет транзакций",
     "checkBalance": "Проверить баланс",
     "walletNotFound": "Кошелёк не найден, пожалуйста, пополните баланс",
-    "withdrawal": "Вывод"
+    "withdrawal": "Вывод",
+    "totalBalance": "Общий баланс",
+    "frozenBalance": "Замороженный баланс"
   },
   "order": {
     "myOrders": "Мои заказы",
@@ -658,7 +662,11 @@
     "reviewRequired": "Пожалуйста, напишите отзыв",
     "ratingRequired": "Пожалуйста, поставьте оценку",
     "retry": "Повторить",
-    "imageAlt": "Фото晒单"
+    "imageAlt": "Фото晒单",
+    "groupBuyWin": "Выигрыш в групповой покупке",
+    "minContentLength": "Минимальная длина содержания: 10 символов",
+    "unknownGroupBuy": "Неизвестная групповая покупка",
+    "showoffImage": "Фото отзыва"
   },
   "market": {
     "resaleMarket": "Рынок перепродажи",
@@ -851,7 +859,23 @@
     "loadError": "Ошибка загрузки",
     "applyShipping": "Запросить доставку",
     "resell": "Перепродать",
-    "shippingRequestError": "Ошибка запроса на доставку"
+    "shippingRequestError": "Ошибка запроса на доставку",
+    "noPrizes": "У вас пока нет призов",
+    "goToLottery": "Перейти к розыгрышам",
+    "periodLabel": "Период",
+    "prize": "Приз",
+    "prizeValue": "Стоимость приза",
+    "shippingTitle": "Адрес доставки",
+    "recipientName": "Имя получателя",
+    "recipientNamePlaceholder": "Введите имя получателя",
+    "phone": "Телефон",
+    "city": "Город",
+    "cityPlaceholder": "Введите город",
+    "postalCode": "Почтовый индекс",
+    "address": "Адрес",
+    "addressPlaceholder": "Введите подробный адрес",
+    "notes": "Примечания",
+    "notesPlaceholder": "Дополнительные примечания (необязательно)"
   },
   "deposit": {
     "title": "Пополнение баланса",
@@ -1046,7 +1070,9 @@
     "original": "Оригинал",
     "fullPurchaseCount": "Полная оплата",
     "tabFullPurchase": "Полная оплата",
-    "statusPendingClaim": "Ожидает получения"
+    "statusPendingClaim": "Ожидает получения",
+    "participationCode": "Код участия",
+    "sessionCode": "Код сессии"
   },
   "notifications": {
     "congratulations": "Поздравляем с выигрышем!",
@@ -1503,5 +1529,30 @@
   },
   "spinLottery": {
     "thankYou": "Спасибо!"
+  },
+  "firstDeposit": {
+    "title": "Добро пожаловать!",
+    "point1Text": "Пополните счёт на ",
+    "point1Highlight": "любую сумму",
+    "point1Suffix": " и начните покупки",
+    "point2Text": "Получите ",
+    "point2Highlight": "бонусные монеты",
+    "point2Suffix": " за первое пополнение",
+    "warning": "Минимальная сумма пополнения: 1 сомони",
+    "confirmButton": "Пополнить сейчас"
+  },
+  "myTickets": {
+    "title": "Мои участия",
+    "noTickets": "Вы ещё не участвовали в розыгрышах",
+    "myEntries": "Мои номера",
+    "entryList": "Список номеров",
+    "period": "Период",
+    "progress": "Прогресс",
+    "ticketPrice": "Цена билета",
+    "winningCode": "Выигрышный номер",
+    "congratsWin": "Поздравляем! Вы выиграли!",
+    "won": "Выиграл",
+    "winCount": "Количество выигрышей",
+    "lotteryNotFound": "Розыгрыш не найден"
   }
 }
