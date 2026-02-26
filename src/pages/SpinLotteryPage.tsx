@@ -60,6 +60,7 @@ const SpinWheel: React.FC<{
   onSpinEnd: () => void;
   language: string;
 }> = ({ rewards, isSpinning, targetIndex, onSpinEnd, language }) => {
+  const { t } = useTranslation();
   const [highlightIndex, setHighlightIndex] = useState<number | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
