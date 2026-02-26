@@ -7,18 +7,44 @@ const serializeError = (error: any) => {
   return JSON.stringify(error, null, 2);
 };
 
+/**
+ * 判断错误是否为 chunk/模块 加载失败
+ * 这类错误通常由网络问题或版本更新导致
+ */
+function isChunkLoadError(error: any): boolean {
+  if (!(error instanceof Error)) return false;
+
+  const message = error.message.toLowerCase();
+  const name = error.name.toLowerCase();
+
+  return (
+    message.includes('failed to fetch dynamically imported module') ||
+    message.includes('failed to fetch') ||
+    message.includes('network error') ||
+    message.includes('load failed') ||
+    message.includes('unexpected token') ||
+    message.includes('error loading dynamically imported module') ||
+    name.includes('chunkerror') ||
+    name.includes('chunkloaderror')
+  );
+}
+
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
-  { hasError: boolean; error: any; errorInfo: any }
+  { hasError: boolean; error: any; errorInfo: any; isChunkError: boolean }
 > {
   constructor(props: { children: React.ReactNode }) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null, errorInfo: null, isChunkError: false };
   }
 
   static getDerivedStateFromError(error: any) {
     // 更新 state，使下一次渲染显示降级后的 UI
-    return { hasError: true, error };
+    return { 
+      hasError: true, 
+      error,
+      isChunkError: isChunkLoadError(error)
+    };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -33,13 +59,14 @@ export class ErrorBoundary extends React.Component<
     )) {
       console.warn('Suppressed Framer Motion DOM error:', error);
       // 重置错误状态，不显示错误 UI
-      this.setState({ hasError: false, error: null, errorInfo: null });
+      this.setState({ hasError: false, error: null, errorInfo: null, isChunkError: false });
       return;
     }
 
     this.setState({
       error,
-      errorInfo
+      errorInfo,
+      isChunkError: isChunkLoadError(error)
     });
   }
 
@@ -49,12 +76,48 @@ export class ErrorBoundary extends React.Component<
   };
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null, errorInfo: null });
+    this.setState({ hasError: false, error: null, errorInfo: null, isChunkError: false });
   };
 
   render() {
     if (this.state.hasError) {
-            // 统一错误显示，提供用户友好的 Fallback UI
+      // 针对 Chunk 加载失败的专用 UI（网络问题或版本更新）
+      if (this.state.isChunkError) {
+        return (
+          <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
+              <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-yellow-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.14 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" />
+                </svg>
+              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Хатои пайвастшавӣ
+              </h2>
+              <p className="text-gray-600 mb-2 text-sm">
+                Connection error / Ошибка соединения
+              </p>
+              <p className="text-gray-500 mb-6 text-sm">
+                Лутфан интернети худро санҷед ва дубора кӯшиш кунед.
+              </p>
+              
+              <div className="space-y-3">
+                <button
+                  onClick={this.handleReload}
+                  className="w-full bg-[#2B5D3A] text-white py-3 px-4 rounded-lg hover:bg-[#234a2e] transition-colors font-medium text-base"
+                >
+                  Дубора кӯшиш кунед
+                </button>
+                <p className="text-xs text-gray-400">
+                  Please check your internet and try again
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // 通用错误 UI（非网络错误）
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-lg p-6 max-w-md w-full text-center">
