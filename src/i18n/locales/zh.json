@@ -974,7 +974,11 @@
     "withdrawalCompleted": {
       "title": "✅ 提现完成",
       "description": "您的提现申请已处理完成"
-    }
+    },
+    "lotteryPurchaseContent_one": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_few": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_many": "您已参与{{product}}，购买了{{count}}张彩票",
+    "lotteryPurchaseContent_other": "您已参与{{product}}，购买了{{count}}张彩票"
   },
   "cities": {
     "dushanbe": "杜尚别",
@@ -1292,5 +1296,6 @@
     "description": "好友每次消费，系统自动为您发放佣金，以积分形式用于参与抽奖",
     "buttonText": "创建推荐链接",
     "skipText": "稍后再说"
-  }
+  },
+  "language": "zh"
 }

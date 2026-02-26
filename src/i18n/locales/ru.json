@@ -975,7 +975,11 @@
     "withdrawalCompleted": {
       "title": "✅ Вывод средств завершён",
       "description": "Ваш запрос на вывод средств обработан"
-    }
+    },
+    "lotteryPurchaseContent_one": "Вы участвуете в {{product}}, куплен {{count}} билет",
+    "lotteryPurchaseContent_few": "Вы участвуете в {{product}}, куплено {{count}} билета",
+    "lotteryPurchaseContent_many": "Вы участвуете в {{product}}, куплено {{count}} билетов",
+    "lotteryPurchaseContent_other": "Вы участвуете в {{product}}, куплено {{count}} билетов"
   },
   "cities": {
     "dushanbe": "Душанбе",
@@ -1292,5 +1296,6 @@
     "leaderboardTitle": "Рейтинг промоутеров",
     "noLeaderboard": "Нет данных рейтинга",
     "me": "Я"
-  }
+  },
+  "language": "ru"
 }

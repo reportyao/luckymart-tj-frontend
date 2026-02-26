@@ -975,7 +975,11 @@
     "withdrawalCompleted": {
       "title": "✅ Баровардани маблағ анҷом ёфт",
       "description": "Дархости баровардани маблағи шумо коркард шуд"
-    }
+    },
+    "lotteryPurchaseContent_one": "Шумо дар {{product}} иштирок мекунед, {{count}} билет харидед",
+    "lotteryPurchaseContent_few": "Шумо дар {{product}} иштирок мекунед, {{count}} билет харидед",
+    "lotteryPurchaseContent_many": "Шумо дар {{product}} иштирок мекунед, {{count}} билет харидед",
+    "lotteryPurchaseContent_other": "Шумо дар {{product}} иштирок мекунед, {{count}} билет харидед"
   },
   "cities": {
     "dushanbe": "Душанбе",
@@ -1292,5 +1296,6 @@
     "leaderboardTitle": "Рейтинги промоутерҳо",
     "noLeaderboard": "Маълумот нест",
     "me": "Ман"
-  }
+  },
+  "language": "tg"
 }
