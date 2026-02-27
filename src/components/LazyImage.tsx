@@ -110,7 +110,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
         ref={imgRef}
         src={imageSrc}
         alt={alt}
-        className={`w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
+        className={`absolute inset-0 w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
       />
