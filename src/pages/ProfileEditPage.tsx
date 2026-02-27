@@ -81,7 +81,7 @@ const ProfileEditPage: React.FC = () => {
               <img 
                 src={telegramUser.photo_url} 
                 alt="Avatar"
-                className="w-24 h-24 rounded-full border-4 border-gray-100"
+                style={{ width: '96px', height: '96px', borderRadius: '9999px', border: '4px solid #f3f4f6', objectFit: 'cover', maxWidth: 'none' }}
               />
             ) : (
               <div className="w-24 h-24 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">

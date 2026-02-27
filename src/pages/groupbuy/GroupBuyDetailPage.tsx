@@ -96,7 +96,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           <img
             src={getOptimizedImageUrl(images[0], { width: 800, quality: 80 })}
             alt={alt}
-            className="w-full h-full object-contain"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', maxWidth: 'none' }}
           />
         </div>
         {/* Image Modal */}
@@ -114,7 +114,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={images[0]}
               alt={alt}
-              className="max-w-full max-h-full object-contain p-4 cursor-pointer"
+              style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', padding: '16px', cursor: 'pointer' }}
               onClick={() => setIsModalOpen(false)}
             />
           </div>
@@ -146,7 +146,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           <img
             src={getOptimizedImageUrl(images[currentIndex], { width: 800, quality: 80 })}
             alt={`${alt} - ${currentIndex + 1}`}
-            className="w-full h-full object-contain"
+            style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', maxWidth: 'none' }}
           />
         </div>
         
@@ -210,7 +210,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
             <img
               src={images[currentIndex]}
               alt={`${alt} - ${currentIndex + 1}`}
-              className="w-full h-full object-contain cursor-pointer"
+              style={{ width: '100%', height: '100%', objectFit: 'contain', cursor: 'pointer', maxWidth: 'none' }}
               onClick={() => setIsModalOpen(false)}
             />
             <button
@@ -839,7 +839,7 @@ export default function GroupBuyDetailPage() {
                           <img
                             src={order.users?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`}
                             alt={order.users?.telegram_username || order.users?.first_name || 'User'}
-                            className="w-12 h-12 rounded-full border-2 border-purple-200 object-cover"
+                            style={{ width: '48px', height: '48px', borderRadius: '9999px', border: '2px solid #e9d5ff', objectFit: 'cover', maxWidth: 'none' }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${encodeURIComponent(order.users?.telegram_username || order.users?.first_name || 'U')}&background=random&size=48`;
                             }}

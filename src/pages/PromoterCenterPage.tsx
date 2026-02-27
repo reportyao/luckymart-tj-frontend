@@ -340,7 +340,7 @@ const PromoterCenterPage: React.FC = () => {
           <div className="flex items-center space-x-3">
             <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
               {user?.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-12 h-12 rounded-full object-cover" 
+                <img src={user.avatar_url} alt="" style={{ width: '48px', height: '48px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }} 
                   onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
               ) : (
                 <span className="text-xl font-bold">{user?.first_name?.[0] || 'P'}</span>
@@ -815,7 +815,7 @@ const TeamTab: React.FC<TeamTabProps> = ({ team, t }) => {
               >
                 <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                   {member.avatar_url ? (
-                    <img src={member.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover"
+                    <img src={member.avatar_url} alt="" style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
                       onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                   ) : (
                     member.name.charAt(0).toUpperCase()
@@ -901,7 +901,7 @@ const LeaderboardTab: React.FC<LeaderboardTabProps> = ({ leaderboard, t }) => {
               {/* 头像 */}
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
                 {person.avatar_url ? (
-                  <img src={person.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover"
+                  <img src={person.avatar_url} alt="" style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
                 ) : (
                   person.name.charAt(0).toUpperCase()

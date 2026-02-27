@@ -1,40 +1,35 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { useIntersectionObserver } from '@/hooks/usePerformance';
+import React, { useState, useEffect, useRef, useCallback, CSSProperties } from 'react';
 
 interface OptimizedImageProps {
   src: string;
   alt: string;
   placeholder?: string;
   className?: string;
+  style?: CSSProperties;
   width?: number;
   height?: number;
   onLoad?: () => void;
   onError?: () => void;
-  // WebP support
   webpSrc?: string;
-  // Responsive image support
   srcSet?: string;
   sizes?: string;
-  // Loading strategy
   loading?: 'lazy' | 'eager';
-  // Blur placeholder
   blurDataURL?: string;
 }
 
 /**
- * Optimized Image Component with WebP support, responsive images, and blur placeholder
- * Features:
- * - Lazy loading with IntersectionObserver
- * - WebP format with fallback to original format
- * - Responsive images with srcSet
- * - Blur placeholder for better UX
- * - Loading states with animations
+ * Optimized Image Component v4
+ * 修复与 LazyImage v4 相同的问题：
+ * - 使用 top/left/right/bottom:0 代替 width/height:100%
+ * - IntersectionObserver + fallback 超时
+ * - 内联样式覆盖 Tailwind v4 preflight
  */
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
   alt,
   placeholder,
   className = '',
+  style: externalStyle,
   width,
   height,
   onLoad,
@@ -45,145 +40,163 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   loading = 'lazy',
   blurDataURL,
 }) => {
-  const [imageSrc, setImageSrc] = useState<string | undefined>(
-    loading === 'eager' ? src : placeholder || blurDataURL
-  );
-  const [imageWebpSrc, setImageWebpSrc] = useState<string | undefined>(
-    loading === 'eager' ? webpSrc : undefined
-  );
+  const [shouldLoad, setShouldLoad] = useState(loading === 'eager');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const pictureRef = useRef<HTMLPictureElement | null>(null);
-
-  // Check if browser supports WebP
-  const supportsWebP = useMemo(() => {
-    if (typeof window === 'undefined') return false;
-    const canvas = document.createElement('canvas');
-    if (canvas.getContext && canvas.getContext('2d')) {
-      return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;
-    }
-    return false;
-  }, []);
-
-  // Intersection Observer for lazy loading
-  const containerRef = useIntersectionObserver(
-    (isVisible) => {
-      if (isVisible && loading === 'lazy') {
-        setImageSrc(src);
-        if (webpSrc && supportsWebP) {
-          setImageWebpSrc(webpSrc);
-        }
-      }
-    },
-    { threshold: 0.1, rootMargin: '50px' }
-  );
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const img = imgRef.current;
-    if (!img) return;
+    if (loading === 'eager') return;
 
-    const handleLoad = () => {
-      setIsLoading(false);
-      onLoad?.();
-    };
+    const el = containerRef.current;
+    if (!el) {
+      setShouldLoad(true);
+      return;
+    }
 
-    const handleError = () => {
-      setIsLoading(false);
-      setHasError(true);
-      // Fallback to original image if WebP fails
-      if (imageWebpSrc) {
-        setImageWebpSrc(undefined);
-        setImageSrc(src);
-      } else {
-        onError?.();
+    fallbackTimerRef.current = setTimeout(() => {
+      setShouldLoad(true);
+    }, 500);
+
+    if (typeof IntersectionObserver !== 'undefined') {
+      try {
+        observerRef.current = new IntersectionObserver(
+          (entries) => {
+            if (entries[0]?.isIntersecting) {
+              setShouldLoad(true);
+              observerRef.current?.disconnect();
+              if (fallbackTimerRef.current) {
+                clearTimeout(fallbackTimerRef.current);
+                fallbackTimerRef.current = null;
+              }
+            }
+          },
+          { threshold: 0.01, rootMargin: '200px' }
+        );
+        observerRef.current.observe(el);
+      } catch {
+        setShouldLoad(true);
       }
-    };
-
-    img.addEventListener('load', handleLoad);
-    img.addEventListener('error', handleError);
+    } else {
+      setShouldLoad(true);
+    }
 
     return () => {
-      img.removeEventListener('load', handleLoad);
-      img.removeEventListener('error', handleError);
+      observerRef.current?.disconnect();
+      if (fallbackTimerRef.current) {
+        clearTimeout(fallbackTimerRef.current);
+      }
     };
-  }, [onLoad, onError, imageWebpSrc, src]);
+  }, [loading]);
 
-  // Convert src to WebP if browser supports and webpSrc not provided
-  const getWebPSrc = (originalSrc: string): string | undefined => {
-    if (!supportsWebP) return undefined;
-    if (webpSrc) return webpSrc;
-    
-    // Try to generate WebP URL from original
-    if (originalSrc.includes('.jpg') || originalSrc.includes('.jpeg') || originalSrc.includes('.png')) {
-      return originalSrc.replace(/\.(jpg|jpeg|png)/, '.webp');
-    }
-    return undefined;
+  const handleLoad = useCallback(() => {
+    setIsLoading(false);
+    onLoad?.();
+  }, [onLoad]);
+
+  const handleError = useCallback(() => {
+    setIsLoading(false);
+    setHasError(true);
+    onError?.();
+  }, [onError]);
+
+  const containerClassName = className
+    .replace(/\bobject-(cover|contain|fill|none|scale-down)\b/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  let resolvedObjectFit: CSSProperties['objectFit'] = 'cover';
+  if (className.includes('object-contain')) resolvedObjectFit = 'contain';
+  else if (className.includes('object-fill')) resolvedObjectFit = 'fill';
+  else if (className.includes('object-none')) resolvedObjectFit = 'none';
+  else if (className.includes('object-scale-down')) resolvedObjectFit = 'scale-down';
+
+  const containerStyle: CSSProperties = {
+    position: 'relative',
+    overflow: 'hidden',
+    width: width ? `${width}px` : undefined,
+    height: height ? `${height}px` : undefined,
+    ...externalStyle,
   };
 
-  const computedWebpSrc = imageWebpSrc || getWebPSrc(src);
+  const imgStyle: CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
+    objectFit: resolvedObjectFit,
+    objectPosition: 'center',
+    maxWidth: 'none',
+    display: 'block',
+    transition: 'opacity 0.5s, transform 0.5s',
+    opacity: isLoading ? 0 : 1,
+    transform: isLoading ? 'scale(0.95)' : 'scale(1)',
+  };
+
+  const overlayStyle: CSSProperties = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  };
 
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden bg-gray-200 ${className}`}
-      style={{
-        width: width ? `${width}px` : '100%',
-        height: height ? `${height}px` : 'auto',
-        aspectRatio: width && height ? `${width}/${height}` : 'auto',
-      }}
+      className={containerClassName}
+      style={containerStyle}
     >
-      {/* Blur placeholder */}
       {blurDataURL && isLoading && (
         <div
-          className="absolute inset-0 bg-cover bg-center blur-sm scale-110"
           style={{
+            ...overlayStyle,
             backgroundImage: `url(${blurDataURL})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: 'blur(4px)',
+            transform: 'scale(1.1)',
           }}
         />
       )}
 
-      {/* Picture element for WebP support */}
-      {computedWebpSrc ? (
-        <picture ref={pictureRef}>
-          <source type="image/webp" srcSet={computedWebpSrc} />
-          <img
-            ref={imgRef}
-            src={imageSrc}
-            alt={alt}
-            srcSet={srcSet}
-            sizes={sizes}
-            loading={loading}
-            decoding="async"
-            className={`w-full h-full object-cover transition-all duration-500 ${
-              isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-            }`}
-          />
-        </picture>
-      ) : (
+      {shouldLoad ? (
         <img
           ref={imgRef}
-          src={imageSrc}
+          src={src}
           alt={alt}
           srcSet={srcSet}
           sizes={sizes}
-          loading={loading}
           decoding="async"
-          className={`w-full h-full object-cover transition-all duration-500 ${
-            isLoading ? 'opacity-0 scale-95' : 'opacity-100 scale-100'
-          }`}
+          onLoad={handleLoad}
+          onError={handleError}
+          style={imgStyle}
         />
-      )}
+      ) : null}
 
-      {/* Loading indicator */}
       {isLoading && !blurDataURL && (
-        <div className="absolute inset-0 bg-gradient-to-br from-gray-200 via-gray-300 to-gray-200 animate-pulse" />
+        <div style={{ ...overlayStyle, backgroundColor: '#e5e7eb' }} />
       )}
 
-      {/* Error state */}
       {hasError && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-300 text-gray-500">
-          <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          style={{
+            ...overlayStyle,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#e5e7eb',
+            color: '#9ca3af',
+          }}
+        >
+          <svg style={{ width: '32px', height: '32px', marginBottom: '4px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -191,7 +204,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
               d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
             />
           </svg>
-          <span className="text-sm">Failed to load image</span>
+          <span style={{ fontSize: '0.75rem' }}>Failed to load</span>
         </div>
       )}
     </div>

@@ -449,7 +449,7 @@ const LotteryDetailPage: React.FC = () => {
               <img
                 src={getOptimizedImageUrl(lottery.image_urls[activeImageIndex], { width: 800, quality: 80 })}
                 alt={title}
-                className="w-full h-full object-contain cursor-pointer"
+                style={{ width: '100%', height: '100%', objectFit: 'contain', cursor: 'pointer', display: 'block', maxWidth: 'none' }}
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gray-200">
@@ -547,7 +547,7 @@ const LotteryDetailPage: React.FC = () => {
               <img
                 src={lottery.image_urls[activeImageIndex]}
                 alt={title}
-                className="max-w-full max-h-full object-contain cursor-pointer"
+                style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', cursor: 'pointer' }}
                 onClick={() => setIsImageModalOpen(false)}
               />
               {lottery.image_urls.length > 1 && (
@@ -919,7 +919,7 @@ const LotteryDetailPage: React.FC = () => {
                           <img 
                             src={displayAvatar} 
                             alt="" 
-                            className="w-full h-full object-cover"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                             onError={(e) => {
                               (e.target as HTMLImageElement).style.display = 'none';
                               (e.target as HTMLImageElement).parentElement!.innerText = avatarInitial;
@@ -942,9 +942,9 @@ const LotteryDetailPage: React.FC = () => {
                             key={imgIndex}
                             src={url}
                             alt={`Showoff Image ${imgIndex + 1}`}
-                            className="w-20 h-20 object-cover rounded-lg flex-shrink-0"
                             width={80}
                             height={80}
+                            style={{ width: '80px', height: '80px', borderRadius: '0.5rem', flexShrink: 0 }}
                           />
                         ))}
                       </div>

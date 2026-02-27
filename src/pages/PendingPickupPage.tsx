@@ -350,16 +350,16 @@ const PendingPickupPage: React.FC = () => {
               >
                 <div className="flex gap-4">
                   {/* 商品图片 */}
-                  <div className="w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <div style={{ width: '80px', height: '80px', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
                     {item.productImage ? (
                       <img
                         src={getOptimizedImageUrl(item.productImage, { width: 160, quality: 75 })}
                         alt={item.productTitle}
                         loading="lazy"
-                        className="w-full h-full object-cover"
+                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', maxWidth: 'none' }}
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <CubeIcon className="w-8 h-8 text-gray-300" />
                       </div>
                     )}

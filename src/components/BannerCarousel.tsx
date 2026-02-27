@@ -174,8 +174,12 @@ const BannerCarousel: React.FC = () => {
             <img
               src={imageUrl}
               alt={banner.title}
-              className="w-full h-full object-cover"
               style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+                maxWidth: 'none',
                 opacity: imagesLoaded ? 1 : 0,
                 transition: 'opacity 300ms ease-in-out',
               }}

@@ -142,7 +142,7 @@ export const Layout: React.FC<LayoutProps> = ({
                   <img 
                     src="/tezbarakat-logo.png" 
                     alt="TezBarakat Logo"
-                    className="w-10 h-10 object-contain"
+                    style={{ width: '40px', height: '40px', objectFit: 'contain', maxWidth: 'none' }}
                   />
                 </picture>
                 <div>
@@ -155,7 +155,7 @@ export const Layout: React.FC<LayoutProps> = ({
                 <img 
                   src={telegramUser.photo_url} 
                   alt="Avatar"
-                  className="w-10 h-10 rounded-full"
+                  style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
                 />
               )}
             </div>

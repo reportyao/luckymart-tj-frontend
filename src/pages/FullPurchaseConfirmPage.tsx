@@ -211,9 +211,9 @@ const FullPurchaseConfirmPage: React.FC = () => {
               <LazyImage
                 src={lottery.image_urls[0]}
                 alt={title}
-                className="w-24 h-24 object-cover rounded-lg"
                 width={96}
                 height={96}
+                style={{ width: '96px', height: '96px', borderRadius: '0.5rem', flexShrink: 0 }}
               />
             )}
             

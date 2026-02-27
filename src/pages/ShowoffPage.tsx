@@ -435,7 +435,7 @@ const ShowoffPage: React.FC = () => {
                               <img 
                                 src={showoff.display_avatar_url || showoff.user?.avatar_url} 
                                 alt="" 
-                                className="w-full h-full object-cover"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                                 onError={(e) => {
                                   (e.target as HTMLImageElement).style.display = 'none';
                                   const displayName = showoff.display_username || showoff.user?.telegram_username;
@@ -481,17 +481,21 @@ const ShowoffPage: React.FC = () => {
 	                      {(showoff.image_urls as string[]).map((image, idx) => (
                         <div
                           key={idx}
-                          className={`relative rounded-lg overflow-hidden ${
-                            (showoff.image_urls as string[]).length === 1 ? 'aspect-[4/3]' : 'aspect-square'
-                          }`}
+                          style={{
+                            position: 'relative',
+                            borderRadius: '0.5rem',
+                            overflow: 'hidden',
+                            width: '100%',
+                            paddingBottom: (showoff.image_urls as string[]).length === 1 ? '75%' : '100%',
+                          }}
                         >
-	                          <LazyImage
-	                            src={image}
-	                            alt={`${t('showoff.showoffImage')} ${idx + 1}`}
-	                            className="w-full h-full object-cover"
-	                            width={200}
-	                            height={200}
-	                          />
+		                          <LazyImage
+		                            src={image}
+		                            alt={`${t('showoff.showoffImage')} ${idx + 1}`}
+		                            width={200}
+		                            height={200}
+		                            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+		                          />
                         </div>
                       ))}
                     </div>

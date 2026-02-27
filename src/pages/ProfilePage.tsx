@@ -194,7 +194,7 @@ const ProfilePage: React.FC = () => {
 	              <img 
 	                src={user.avatar_url} 
 	                alt="Avatar"
-	                className="w-16 h-16 rounded-full border-4 border-white/20 object-cover"
+	                style={{ width: '64px', height: '64px', borderRadius: '9999px', border: '4px solid rgba(255,255,255,0.2)', objectFit: 'cover', maxWidth: 'none' }}
                   onError={(e) => {
                     console.error('Avatar load failed:', user.avatar_url);
                     // 如果加载失败，隐藏图片显示占位符

@@ -159,9 +159,9 @@ const MyPrizesPage: React.FC = () => {
               <LazyImage
                 src={prize.lottery_image}
                 alt={prize.lottery_title}
-                className="w-20 h-20 rounded-xl object-cover"
                 width={80}
                 height={80}
+                style={{ width: '80px', height: '80px', borderRadius: '0.75rem', flexShrink: 0 }}
               />
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">

@@ -227,7 +227,7 @@ export default function MyGroupBuysPage() {
                   src={getOptimizedImageUrl(order.product.image_url, { width: 200, quality: 75 })}
                   alt={getLocalizedText(order.product.title)}
                   loading="lazy"
-                  className="w-24 h-24 object-cover rounded-xl"
+                  style={{ width: '96px', height: '96px', objectFit: 'cover', borderRadius: '0.75rem', flexShrink: 0, maxWidth: 'none' }}
                 />
 
                 {/* Order Info */}

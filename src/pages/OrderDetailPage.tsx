@@ -400,22 +400,25 @@ const OrderDetailPage: React.FC = () => {
             <div className="mb-4">
               <div className="grid grid-cols-3 gap-2">
                 {order.lotteries.image_urls.slice(0, 3).map((url, index) => (
-                  <LazyImage
-                    key={index}
-                    src={url}
-                    alt={`${productTitle} - ${index + 1}`}
-                    className="w-full h-24 rounded-lg object-cover"
-                  />
+                  <div key={index} style={{ position: 'relative', width: '100%', paddingBottom: '75%', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                    <LazyImage
+                      src={url}
+                      alt={`${productTitle} - ${index + 1}`}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  </div>
                 ))}
               </div>
             </div>
           ) : productImage ? (
             <div className="mb-4">
-              <LazyImage
-                src={productImage}
-                alt={productTitle}
-                className="w-full h-48 rounded-lg object-cover"
-              />
+              <div style={{ position: 'relative', width: '100%', paddingBottom: '50%', borderRadius: '0.5rem', overflow: 'hidden' }}>
+                <LazyImage
+                  src={productImage}
+                  alt={productTitle}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
             </div>
           ) : null}
           

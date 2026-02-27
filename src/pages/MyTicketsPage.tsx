@@ -164,9 +164,9 @@ const MyTicketsPage: React.FC = () => {
             <LazyImage
               src={lottery.image_url}
               alt={lottery.title}
-              className="w-24 h-24 rounded-xl object-cover"
               width={96}
               height={96}
+              style={{ width: '96px', height: '96px', borderRadius: '0.75rem', flexShrink: 0 }}
             />
             <div className="flex-1">
               <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">

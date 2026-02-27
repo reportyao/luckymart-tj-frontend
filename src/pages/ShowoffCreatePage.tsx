@@ -407,9 +407,9 @@ const ShowoffCreatePage: React.FC = () => {
                   <LazyImage
                     src={lottery.prize_image}
                     alt={lottery.prize_name}
-                    className="w-16 h-16 object-cover rounded-lg"
                     width={64}
                     height={64}
+                    style={{ width: '64px', height: '64px', borderRadius: '0.5rem', flexShrink: 0 }}
                   />
                   <div className="flex-1 text-left">
                     <div className="flex items-center space-x-2">
@@ -465,14 +465,14 @@ const ShowoffCreatePage: React.FC = () => {
           <h3 className="font-semibold text-gray-900 mb-3">{t('showoff.uploadImages')} ({t('showoff.maxImages')})</h3>
           <div className="grid grid-cols-3 gap-3">
             {images.map((image, index) => (
-              <div key={index} className="relative aspect-square">
-	                <LazyImage
-	                  src={image}
-	                  alt={`${t('showoff.uploadImages')} ${index + 1}`}
-	                  className="w-full h-full object-cover rounded-lg"
-	                  width={100} // 假设网格项宽度约为 100px
-	                  height={100}
-	                />
+              <div key={index} style={{ position: 'relative', width: '100%', paddingBottom: '100%' }}>
+		                <LazyImage
+		                  src={image}
+		                  alt={`${t('showoff.uploadImages')} ${index + 1}`}
+		                  width={100}
+		                  height={100}
+		                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '0.5rem' }}
+		                />
                 <button
                   onClick={() => removeImage(index)}
                   className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
@@ -547,11 +547,15 @@ const ShowoffCreatePage: React.FC = () => {
                 {images.slice(0, 4).map((image, idx) => (
                   <div
                     key={idx}
-                    className={`relative rounded-lg overflow-hidden ${
-                      images.length === 1 ? 'aspect-[4/3]' : 'aspect-square'
-                    }`}
+                    style={{
+                      position: 'relative',
+                      borderRadius: '0.5rem',
+                      overflow: 'hidden',
+                      width: '100%',
+                      paddingBottom: images.length === 1 ? '75%' : '100%',
+                    }}
                   >
-	                    <LazyImage src={image} alt={`${t('showoff.preview')} ${idx + 1}`} className="w-full h-full object-cover" />
+		                    <LazyImage src={image} alt={`${t('showoff.preview')} ${idx + 1}`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }} />
                     {idx === 3 && images.length > 4 && (
                       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                         <span className="text-white text-xl font-bold">+{images.length - 4}</span>

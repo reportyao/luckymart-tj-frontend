@@ -156,9 +156,9 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
                   <LazyImage
                     src={lottery.image_url}
                     alt={getLocalizedText(lottery.name_i18n as Record<string, string> | null, t('language')) || lottery.title}
-                    className="w-20 h-20 rounded-xl object-cover"
                     width={80}
                     height={80}
+                    style={{ width: '80px', height: '80px', borderRadius: '0.75rem', flexShrink: 0 }}
                   />
                 ) : (
                   <div className="w-20 h-20 rounded-xl bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">

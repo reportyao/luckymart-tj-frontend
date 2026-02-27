@@ -151,7 +151,7 @@ export default function GroupBuyListPage() {
                         src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
                         alt={getLocalizedText(product.title)}
                         loading="lazy"
-                        className="w-full h-48 object-cover"
+                        style={{ width: '100%', height: '192px', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                       />
                     );
                   }
@@ -159,14 +159,14 @@ export default function GroupBuyListPage() {
                   // 2张图片：左右平分
                   if (allImages.length === 2) {
                     return (
-                      <div className="flex h-48 gap-0.5 overflow-hidden">
+                      <div style={{ display: 'flex', height: '192px', gap: '2px', overflow: 'hidden' }}>
                         {allImages.map((img, index) => (
-                          <div key={index} className="w-1/2 overflow-hidden">
+                          <div key={index} style={{ width: '50%', overflow: 'hidden' }}>
                             <img
                               src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                               alt={`${getLocalizedText(product.title)} ${index + 1}`}
                               loading="lazy"
-                              className="w-full h-full object-cover"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                             />
                           </div>
                         ))}
@@ -177,23 +177,23 @@ export default function GroupBuyListPage() {
                   // 3张图片：左边大图 + 右边两小图
                   if (allImages.length === 3) {
                     return (
-                      <div className="flex h-48 gap-0.5 overflow-hidden">
-                        <div className="w-1/2 overflow-hidden">
+                      <div style={{ display: 'flex', height: '192px', gap: '2px', overflow: 'hidden' }}>
+                        <div style={{ width: '50%', overflow: 'hidden' }}>
                           <img
                             src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
                             alt={`${getLocalizedText(product.title)} 1`}
                             loading="lazy"
-                            className="w-full h-full object-cover"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                           />
                         </div>
-                        <div className="w-1/2 flex flex-col gap-0.5">
+                        <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                           {allImages.slice(1, 3).map((img, index) => (
-                            <div key={index} className="h-1/2 overflow-hidden">
+                            <div key={index} style={{ height: '50%', overflow: 'hidden' }}>
                               <img
                                 src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                                 alt={`${getLocalizedText(product.title)} ${index + 2}`}
                                 loading="lazy"
-                                className="w-full h-full object-cover"
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                               />
                             </div>
                           ))}
@@ -207,23 +207,23 @@ export default function GroupBuyListPage() {
                   const remainingCount = allImages.length - 4;
                   
                   return (
-                    <div className="flex h-48 gap-0.5 overflow-hidden">
-                      <div className="w-1/2 overflow-hidden">
+                    <div style={{ display: 'flex', height: '192px', gap: '2px', overflow: 'hidden' }}>
+                      <div style={{ width: '50%', overflow: 'hidden' }}>
                         <img
                           src={getOptimizedImageUrl(displayImages[0], { width: 400, quality: 75 })}
                           alt={`${getLocalizedText(product.title)} 1`}
                           loading="lazy"
-                          className="w-full h-full object-cover"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                         />
                       </div>
-                      <div className="w-1/2 flex flex-col gap-0.5">
+                      <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                         {displayImages.slice(1, 4).map((img, index) => (
-                          <div key={index} className="h-1/3 overflow-hidden relative">
+                          <div key={index} style={{ height: '33.333%', overflow: 'hidden', position: 'relative' }}>
                             <img
                               src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
                               alt={`${getLocalizedText(product.title)} ${index + 2}`}
                               loading="lazy"
-                              className="w-full h-full object-cover"
+                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
                             />
                             {/* 最后一张图片显示剩余数量 */}
                             {index === 2 && remainingCount > 0 && (

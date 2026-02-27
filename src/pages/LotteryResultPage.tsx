@@ -483,7 +483,7 @@ const LotteryResultPage: React.FC = () => {
               src={getOptimizedImageUrl(lottery.image_url || '/placeholder.png', { width: 200, quality: 75 })}
               alt={getLocalizedText(lottery.title_i18n, 'zh')}
               loading="lazy"
-              className="w-24 h-24 object-cover rounded-xl"
+              style={{ width: '96px', height: '96px', objectFit: 'cover', borderRadius: '0.75rem', flexShrink: 0, maxWidth: 'none' }}
             />
             <div className="flex-1">
               <h2 className="text-xl font-bold text-gray-900 mb-2">
@@ -568,7 +568,7 @@ const LotteryResultPage: React.FC = () => {
                   <img
                     src={winningUser.user.avatar_url || '/default-avatar.png'}
                     alt={winningUser.user.telegram_username || winningUser.user.first_name || 'Winner'}
-                    className="w-12 h-12 rounded-full border-4 border-white"
+                    style={{ width: '48px', height: '48px', borderRadius: '9999px', border: '4px solid white', objectFit: 'cover', maxWidth: 'none' }}
                   />
                   <div className={`text-left ${isCurrentUserWinner ? 'text-white' : 'text-gray-900'}`}>
                     <p className="font-semibold">
@@ -706,7 +706,7 @@ const LotteryResultPage: React.FC = () => {
                   <img
                     src={participant.user.avatar_url || '/default-avatar.png'}
                     alt={participant.user.telegram_username || participant.user.first_name || 'User'}
-                    className={`w-8 h-8 rounded-full ${participant.user.id === lottery.winning_user_id ? 'ring-2 ring-yellow-400' : ''}`}
+                    style={{ width: '32px', height: '32px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none', ...(participant.user.id === lottery.winning_user_id ? { boxShadow: '0 0 0 2px #facc15' } : {}) }}
                   />
                   {participant.user.id === lottery.winning_user_id && (
                     <TrophyIcon className="w-4 h-4 text-yellow-500 absolute -top-1 -right-1 bg-white rounded-full p-0.5" />

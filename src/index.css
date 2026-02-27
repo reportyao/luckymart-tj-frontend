@@ -53,40 +53,56 @@
 }
 
 /*
- * ⚠️ 关键修复：覆盖 Tailwind v4 preflight 的 img { height: auto }
+ * ⚠️ 关键修复：覆盖 Tailwind v4 preflight 的 img { height: auto; max-width: 100% }
  *
- * Tailwind v4 在 @layer base 中设置了 img { max-width: 100%; height: auto }。
- * 在标准浏览器中，@layer utilities 中的 .h-full { height: 100% } 和
- * .object-cover { object-fit: cover } 可以正确覆盖 base 层的规则。
+ * Tailwind v4 preflight 设置了 img { max-width: 100%; height: auto }
+ * 这会导致在固定尺寸容器中使用 object-fit: cover 的图片无法正确填充。
  *
- * 但在 Telegram WebView（部分旧版 Chromium 内核）中，CSS @layer 可能不被
- * 完全支持，导致 height: auto 无法被 .h-full 覆盖，图片按原始尺寸显示。
- *
- * 解决方案：在 unlayered 区域（最高优先级）添加修复规则。
- * 使用 .object-cover 选择器确保只影响需要裁剪的图片。
- * 使用 .h-full、.w-full 选择器确保尺寸类正确生效。
+ * 以下规则放在 @layer 外部，优先级高于 @layer base 中的 preflight。
+ * 使用 !important 确保在 Telegram WebView（旧版 Chromium）中也能生效。
  */
+
+/* 当 img 有内联 style 设置了 position:absolute 时，覆盖 preflight */
+img[style*="absolute"] {
+  max-width: none !important;
+  height: auto !important;
+  height: unset !important;
+}
+
+/* 兜底：当 img 使用 Tailwind class 时确保正确显示 */
 img.object-cover,
+img.object-contain,
 img.h-full,
 img.w-full {
-  max-width: none;
+  max-width: none !important;
 }
 
 img.object-cover {
-  object-fit: cover;
-  object-position: center;
+  object-fit: cover !important;
+  object-position: center !important;
+}
+
+img.object-contain {
+  object-fit: contain !important;
+  object-position: center !important;
 }
 
 img.h-full {
-  height: 100%;
+  height: 100% !important;
 }
 
 img.w-full {
-  width: 100%;
+  width: 100% !important;
 }
 
 /* Loading spinner animation */
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* Pulse animation for loading placeholders */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

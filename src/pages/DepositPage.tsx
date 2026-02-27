@@ -564,7 +564,7 @@ export default function DepositPage() {
                     <img 
                       src={img} 
                       alt={`proof-${idx}`} 
-                      className="w-full h-24 object-cover rounded-lg border border-gray-200" 
+                      style={{ width: '100%', height: '96px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid #e5e7eb', maxWidth: 'none' }} 
                     />
                     <button
                       onClick={(e) => {

@@ -441,7 +441,7 @@ const InvitePage: React.FC = () => {
                         <img
                           src={invitedUser.avatar_url}
                           alt="Avatar"
-                          className="w-10 h-10 rounded-full object-cover"
+                          style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
                           onError={(e) => {
                             // 如果图片加载失败，显示首字母
                             e.currentTarget.style.display = 'none';
