@@ -84,7 +84,8 @@ export const ModulePreview: React.FC<ModulePreviewProps> = ({
           <div className="grid grid-cols-4 gap-2">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="animate-pulse">
-                <div className="aspect-square bg-gray-200 rounded-lg mb-1"></div>
+                {/* 使用 padding-bottom 实现正方形占位，兼容所有浏览器 */}
+                <div style={{ width: '100%', paddingBottom: '100%', backgroundColor: '#e5e7eb', borderRadius: '0.5rem', marginBottom: '0.25rem' }}></div>
                 <div className="h-3 bg-gray-200 rounded w-3/4"></div>
               </div>
             ))}
@@ -97,18 +98,51 @@ export const ModulePreview: React.FC<ModulePreviewProps> = ({
                 to={`${linkTo}/${product.id}`}
                 className="group"
               >
-                <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden mb-1 relative">
+                {/* 
+                  使用 padding-bottom: 100% 实现正方形容器（兼容所有浏览器）
+                  而非 aspect-ratio: 1/1（部分旧版 WebView 不支持）
+                */}
+                <div
+                  style={{
+                    width: '100%',
+                    paddingBottom: '100%',
+                    position: 'relative',
+                    borderRadius: '0.5rem',
+                    overflow: 'hidden',
+                    marginBottom: '0.25rem',
+                    backgroundColor: '#f3f4f6',
+                  }}
+                >
                   {product.image_url ? (
                     <LazyImage
                       src={product.image_url}
                       alt={getProductTitle(product)}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
                       width={80}
                       height={80}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                      }}
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">
-                      <span className="text-xs">No Image</span>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#9ca3af',
+                        backgroundColor: '#f3f4f6',
+                      }}
+                    >
+                      <span style={{ fontSize: '0.75rem' }}>No Image</span>
                     </div>
                   )}
                 </div>

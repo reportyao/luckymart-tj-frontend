@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, CSSProperties } from 'react'
 import { motion } from 'framer-motion'
 import { ClockIcon, UserGroupIcon, StarIcon } from '@heroicons/react/24/outline'
 import { Lottery } from '../../lib/supabase'
@@ -19,6 +19,19 @@ interface LotteryCardProps {
   lottery: Lottery
   onPurchase?: (lottery: Lottery) => void
   className?: string
+}
+
+/**
+ * 所有 img 标签的内联样式，确保在 Telegram WebView 中正确显示
+ * 使用内联样式覆盖 Tailwind v4 preflight 的 img { height: auto; max-width: 100% }
+ */
+const imgCoverStyle: CSSProperties = {
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+  objectPosition: 'center',
+  display: 'block',
+  maxWidth: 'none',
 }
 
 export const LotteryCard: React.FC<LotteryCardProps> = ({
@@ -83,7 +96,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	      )}
 	    >
       {/* 抽奖图片 - 智能展示图片，根据图片数量自动调整布局 */}
-      <div className="relative h-36 bg-white">
+      <div style={{ position: 'relative', height: '144px', overflow: 'hidden', backgroundColor: '#ffffff' }}>
         {(() => {
           const allImages = lottery.image_urls && lottery.image_urls.length > 0 
             ? lottery.image_urls 
@@ -92,7 +105,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           // 无图片：显示默认图标
           if (allImages.length === 0) {
             return (
-              <div className="w-full h-full flex items-center justify-center">
+              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div className="text-center text-white">
                   <StarIcon className="w-12 h-12 mx-auto mb-2" />
                   <p className="text-sm font-medium">{lottery.title}</p>
@@ -108,7 +121,7 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
                 src={optimizeImg(allImages[0], true)} 
                 alt={lottery.title}
                 loading="lazy"
-                className="w-full h-full object-cover"
+                style={imgCoverStyle}
               />
             );
           }
@@ -116,14 +129,14 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           // 2张图片：左右平分
           if (allImages.length === 2) {
             return (
-              <div className="flex h-full gap-0.5 overflow-hidden">
+              <div style={{ display: 'flex', height: '100%', gap: '2px', overflow: 'hidden' }}>
                 {allImages.map((img, index) => (
-                  <div key={index} className="w-1/2 overflow-hidden">
+                  <div key={index} style={{ width: '50%', overflow: 'hidden' }}>
                     <img
                       src={optimizeImg(img)}
                       alt={`${lottery.title} ${index + 1}`}
                       loading="lazy"
-                      className="w-full h-full object-cover"
+                      style={imgCoverStyle}
                     />
                   </div>
                 ))}
@@ -134,23 +147,23 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           // 3张图片：左边大图 + 右边两小图
           if (allImages.length === 3) {
             return (
-              <div className="flex h-full gap-0.5 overflow-hidden">
-                <div className="w-1/2 overflow-hidden">
+              <div style={{ display: 'flex', height: '100%', gap: '2px', overflow: 'hidden' }}>
+                <div style={{ width: '50%', overflow: 'hidden' }}>
                   <img
                     src={optimizeImg(allImages[0], true)}
                     alt={`${lottery.title} 1`}
                     loading="lazy"
-                    className="w-full h-full object-cover"
+                    style={imgCoverStyle}
                   />
                 </div>
-                <div className="w-1/2 flex flex-col gap-0.5">
+                <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
                   {allImages.slice(1, 3).map((img, index) => (
-                    <div key={index} className="h-1/2 overflow-hidden">
+                    <div key={index} style={{ height: '50%', overflow: 'hidden' }}>
                       <img
                         src={optimizeImg(img)}
                         alt={`${lottery.title} ${index + 2}`}
                         loading="lazy"
-                        className="w-full h-full object-cover"
+                        style={imgCoverStyle}
                       />
                     </div>
                   ))}
@@ -164,27 +177,37 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
           const remainingCount = allImages.length - 4;
           
           return (
-            <div className="flex h-full gap-0.5 overflow-hidden">
-              <div className="w-1/2 overflow-hidden">
+            <div style={{ display: 'flex', height: '100%', gap: '2px', overflow: 'hidden' }}>
+              <div style={{ width: '50%', overflow: 'hidden' }}>
                 <img
                   src={optimizeImg(displayImages[0], true)}
                   alt={`${lottery.title} 1`}
                   loading="lazy"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="w-1/2 flex flex-col gap-0.5">
-                  {displayImages.slice(1, 4).map((img, index) => (
-                    <div key={index} className="h-1/3 overflow-hidden relative">
-                      <img
-                        src={optimizeImg(img)}
-                        alt={`${lottery.title} ${index + 2}`}
-                        loading="lazy"
-                        className="w-full h-full object-cover"
-                      />
+                  style={imgCoverStyle}
+                />
+              </div>
+              <div style={{ width: '50%', display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                {displayImages.slice(1, 4).map((img, index) => (
+                  <div key={index} style={{ height: '33.333%', overflow: 'hidden', position: 'relative' }}>
+                    <img
+                      src={optimizeImg(img)}
+                      alt={`${lottery.title} ${index + 2}`}
+                      loading="lazy"
+                      style={imgCoverStyle}
+                    />
                     {/* 最后一张图片显示剩余数量 */}
                     {index === 2 && remainingCount > 0 && (
-                      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}>
                         <span className="text-white font-bold text-lg">+{remainingCount}</span>
                       </div>
                     )}

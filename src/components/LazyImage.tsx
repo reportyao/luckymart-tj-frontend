@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, CSSProperties } from 'react'
 import { useIntersectionObserver } from '@/hooks/usePerformance'
 import { useTranslation } from 'react-i18next'
 import { getOptimizedImageUrl } from '@/lib/utils'
@@ -8,6 +8,8 @@ interface LazyImageProps {
   alt: string
   placeholder?: string
   className?: string
+  /** 额外的容器内联样式 */
+  style?: CSSProperties
   width?: number
   height?: number
   onLoad?: () => void
@@ -24,15 +26,19 @@ interface LazyImageProps {
  * 使用 IntersectionObserver 实现高效的图片懒加载
  * 支持 Supabase Storage 图片变换优化
  *
- * ⚠️ width / height 仅用于生成优化后的图片 URL（Supabase image transform），
- *    不会作为容器的 CSS 尺寸。容器尺寸完全由外部 className / 父元素决定。
- *    调用方应确保父元素有明确的尺寸约束（如 w-24 h-24、aspect-square 等）。
+ * ⚠️ 关键设计说明：
+ *    - width / height 仅用于生成优化后的图片 URL（Supabase image transform），
+ *      不会作为容器的 CSS 尺寸。
+ *    - 所有关键样式使用内联 style 确保在 Telegram WebView 中的兼容性。
+ *    - 容器的外部尺寸由 className 或 style prop 决定。
+ *    - 内部 img 使用绝对定位 + 内联样式填充容器。
  */
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
   alt,
   placeholder = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23f0f0f0" width="400" height="300"/%3E%3C/svg%3E',
   className = '',
+  style: externalStyle,
   width,
   height,
   onLoad,
@@ -84,42 +90,67 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     }
   }, [onLoad, onError])
 
-  // 根据objectFit参数获取对应的CSS类
-  const getObjectFitClass = () => {
-    switch (objectFit) {
-      case 'contain':
-        return 'object-contain'
-      case 'fill':
-        return 'object-fill'
-      case 'none':
-        return 'object-none'
-      case 'scale-down':
-        return 'object-scale-down'
-      case 'cover':
-      default:
-        return 'object-cover'
-    }
+  // 容器样式：position:relative + overflow:hidden 是核心
+  // 外部传入的 style 可以覆盖默认值
+  const containerStyle: CSSProperties = {
+    position: 'relative',
+    overflow: 'hidden',
+    backgroundColor: '#e5e7eb',
+    ...externalStyle,
   }
 
   return (
     <div
       ref={containerRef}
-      className={`relative overflow-hidden bg-gray-200 ${className}`}
+      className={className}
+      style={containerStyle}
     >
       <img
         ref={imgRef}
         src={imageSrc}
         alt={alt}
-        className={`absolute inset-0 w-full h-full ${getObjectFitClass()} transition-opacity duration-300 ${
-          isLoading ? 'opacity-0' : 'opacity-100'
-        }`}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          objectFit: objectFit,
+          objectPosition: 'center',
+          opacity: isLoading ? 0 : 1,
+          transition: 'opacity 0.3s',
+          // 关键：覆盖 Tailwind v4 preflight 的 img { max-width:100%; height:auto }
+          maxWidth: 'none',
+        }}
       />
       {isLoading && (
-        <div className="absolute inset-0 bg-gray-300 animate-pulse" />
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: '#d1d5db',
+            animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+          }}
+        />
       )}
       {hasError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-300">
-          <span className="text-gray-500 text-sm">{t('common.loadFailed')}</span>
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#d1d5db',
+          }}
+        >
+          <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>{t('common.loadFailed')}</span>
         </div>
       )}
     </div>
