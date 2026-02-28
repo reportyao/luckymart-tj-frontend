@@ -1075,7 +1075,8 @@
     "original": "原",
     "statusPendingClaim": "待领取",
     "participationCode": "参与码",
-    "sessionCode": "场次编号"
+    "sessionCode": "场次编号",
+    "pickupPointPhotos": "自提点照片"
   },
   "notifications": {
     "congratulations": "恭喜入选!",

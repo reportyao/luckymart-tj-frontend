@@ -59,6 +59,7 @@ interface OrderDetail {
     address_i18n: any;
     contact_phone: string;
     is_active: boolean;
+    photos?: string[];
   } | null;
   available_pickup_points?: Array<{
     id: string;
@@ -81,6 +82,7 @@ const OrderDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPickupPointId, setSelectedPickupPointId] = useState<string>('');
   const [isUpdatingPickupPoint, setIsUpdatingPickupPoint] = useState(false);
+  const [previewPhoto, setPreviewPhoto] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -551,6 +553,29 @@ const OrderDetailPage: React.FC = () => {
                   </div>
                 </div>
               )}
+
+              {/* 自提点照片 */}
+              {order.pickup_point.photos && order.pickup_point.photos.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-sm text-gray-500 mb-2">{t('orders.pickupPointPhotos')}</p>
+                  <div className="flex space-x-2">
+                    {order.pickup_point.photos.map((photo, index) => (
+                      <div
+                        key={index}
+                        className="w-20 h-20 rounded-lg overflow-hidden cursor-pointer border border-gray-200 hover:border-purple-400 transition-colors"
+                        onClick={() => setPreviewPhoto(photo)}
+                      >
+                        <img
+                          src={photo}
+                          alt={`${t('orders.pickupPointInfo')} ${index + 1}`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -669,9 +694,31 @@ const OrderDetailPage: React.FC = () => {
             </div>
           </motion.div>
         )}
-      </div>
+       </div>
+
+      {/* 图片预览模态框 */}
+      {previewPhoto && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setPreviewPhoto(null)}
+        >
+          <div className="relative max-w-full max-h-full">
+            <img
+              src={previewPhoto}
+              alt="Preview"
+              className="max-w-full max-h-[85vh] object-contain rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setPreviewPhoto(null)}
+              className="absolute -top-3 -right-3 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg text-gray-600 hover:text-gray-900"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
 export default OrderDetailPage;

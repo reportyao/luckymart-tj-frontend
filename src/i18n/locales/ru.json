@@ -1076,7 +1076,8 @@
     "tabFullPurchase": "Полная оплата",
     "statusPendingClaim": "Ожидает получения",
     "participationCode": "Код участия",
-    "sessionCode": "Код сессии"
+    "sessionCode": "Код сессии",
+    "pickupPointPhotos": "Фото пункта выдачи"
   },
   "notifications": {
     "congratulations": "Поздравляем с выигрышем!",

@@ -220,7 +220,7 @@ serve(async (req) => {
 
       // 已选自提点 (增加 is_active 检查)
       orderData.pickup_point_id ? (async () => {
-        const { data } = await supabase.from('pickup_points').select('id, name, name_i18n, address, address_i18n, contact_phone, is_active').eq('id', orderData!.pickup_point_id).maybeSingle()
+        const { data } = await supabase.from('pickup_points').select('id, name, name_i18n, address, address_i18n, contact_phone, is_active, photos').eq('id', orderData!.pickup_point_id).maybeSingle()
         return data
       })() : Promise.resolve(null),
 

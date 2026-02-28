@@ -1076,7 +1076,8 @@
     "tabFullPurchase": "Пардохти пурра",
     "statusPendingClaim": "Дар интизории гирифтан",
     "participationCode": "Рамзи иштирок",
-    "sessionCode": "Рамзи ҷаласа"
+    "sessionCode": "Рамзи ҷаласа",
+    "pickupPointPhotos": "Сурати нуқтаи қабул"
   },
   "notifications": {
     "congratulations": "Табрик бо бурд!",
