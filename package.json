@@ -29,7 +29,9 @@
     "i18n:validate": "node scripts/i18n-validate.mjs",
     "i18n:validate:strict": "node scripts/i18n-validate.mjs --strict",
     "i18n:check": "node scripts/i18n-check.mjs",
-    "i18n:check:missing": "node scripts/i18n-check.mjs --missing-only"
+    "i18n:check:missing": "node scripts/i18n-check.mjs --missing-only",
+    "i18n:sync": "node scripts/i18n-sync.mjs",
+    "i18n:sync:check": "node scripts/i18n-sync.mjs --check"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
