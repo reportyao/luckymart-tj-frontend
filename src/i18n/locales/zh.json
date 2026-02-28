@@ -1200,8 +1200,9 @@
     "joinFailed": "参与失败",
     "insufficientBalance": "余额不足",
     "alreadyJoined": "您已参与该拼团",
-    "congratulations": "恭喜中奖！",
+    "congratulations": "恭喜获得商品！",
     "youWon": "您是幸运儿！",
+    "viewNow": "立即查看",
     "notWinning": "很遗憾，未入选",
     "refundedLuckyCoins": "已退还积分",
     "winner": "中奖者",
@@ -1303,7 +1304,8 @@
       "aiChats": "次AI对话机会",
       "alreadyInSession": "您已在进行中的拼团中，请等待完成后再包团"
     },
-    "goToClaimPage": "立即领取"
+    "goToClaimPage": "立即领取",
+    "viewNow": "立即查看"
   },
   "spin": {
     "title": "幸运转盘",
