@@ -1201,8 +1201,9 @@
     "joinFailed": "Хатогӣ",
     "insufficientBalance": "Маблағ кофӣ нест",
     "alreadyJoined": "Шумо аллакай иштирок кардаед",
-    "congratulations": "Табрик!",
+    "congratulations": "Табрик бо гирифтани мол!",
     "youWon": "Шумо интихоб шудед!",
+    "viewNow": "Ҳозир дидан",
     "notWinning": "Набурдед",
     "refundedLuckyCoins": "Бонус баргашта шуд",
     "winner": "Ғолиб",
@@ -1304,7 +1305,8 @@
       "aiChats": "сессияҳои чати AI",
       "alreadyInSession": "Шумо аллакай дар гурӯҳи фаъол ширкат доред, интизор шавед"
     },
-    "goToClaimPage": "Ҳозир гиред"
+    "goToClaimPage": "Ҳозир гиред",
+    "gotProduct": "Табрик бо гирифтани мол!"
   },
   "spin": {
     "title": "Чархи бахт",

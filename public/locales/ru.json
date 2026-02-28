@@ -1201,8 +1201,9 @@
     "joinFailed": "Ошибка",
     "insufficientBalance": "Недостаточно средств",
     "alreadyJoined": "Вы уже участвуете",
-    "congratulations": "Поздравляем!",
+    "congratulations": "Поздравляем с получением товара!",
     "youWon": "Вы победили!",
+    "viewNow": "Посмотреть",
     "notWinning": "Не выбраны",
     "refundedLuckyCoins": "Возвращено монет",
     "winner": "Победитель",
@@ -1304,7 +1305,8 @@
       "aiChats": "AI чат сессий",
       "alreadyInSession": "Вы уже участвуете в активной группе, дождитесь завершения"
     },
-    "goToClaimPage": "Получить сейчас"
+    "goToClaimPage": "Получить сейчас",
+    "gotProduct": "Поздравляем с получением товара!"
   },
   "spin": {
     "title": "Колесо удачи",

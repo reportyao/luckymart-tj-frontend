@@ -456,19 +456,15 @@ export default function GroupBuyResultPage() {
   // 已开奖的情况（SUCCESS）
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 pb-20">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-6 rounded-b-3xl shadow-lg">
+      {/* Header - 简化为返回按钮 */}
+      <div className="bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-4 rounded-b-3xl shadow-lg">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-white hover:text-pink-100 mb-4"
+          className="flex items-center gap-2 text-white hover:text-pink-100"
         >
           <ChevronLeft className="w-6 h-6" />
           {t('common.back')}
         </button>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Trophy className="w-7 h-7" />
-          {t('groupBuy.drawResult')}
-        </h1>
       </div>
 
       {/* Winner Announcement */}
@@ -479,36 +475,15 @@ export default function GroupBuyResultPage() {
             <h2 className="text-3xl font-bold text-white mb-2">
               {t('groupBuy.congratulations')}
             </h2>
-            <p className="text-white text-lg">{t('groupBuy.youWon')}</p>
             
-            {/* 显示提货状态 */}
-            {result.pickup_status === 'PENDING_CLAIM' && !result.pickup_code && (
-              <button
-                onClick={openClaimModal}
-                className="mt-4 px-6 py-3 bg-white text-orange-500 rounded-xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 mx-auto"
-              >
-                <Gift className="w-5 h-5" />
-                {t('orders.claimNow')}
-              </button>
-            )}
-            
-            {/* 显示提货码 */}
-            {result.pickup_code && (
-              <div className="mt-4 bg-white/20 backdrop-blur-sm rounded-xl p-4">
-                <div className="flex items-center justify-center gap-2 text-white mb-2">
-                  <Ticket className="w-5 h-5" />
-                  <span className="font-medium">{t('orders.pickupCode')}:</span>
-                </div>
-                <div className="text-4xl font-bold text-white font-mono tracking-wider">
-                  {result.pickup_code}
-                </div>
-                {result.expires_at && (
-                  <p className="text-white/80 text-sm mt-2">
-                    {t('orders.validUntil')}: {formatDateTime(result.expires_at).split(' ')[0]}
-                  </p>
-                )}
-              </div>
-            )}
+            {/* 立即查看按钮 - 跳转到订单详情页 */}
+            <button
+              onClick={() => result.id ? navigate(`/order-detail/${result.id}`) : navigate('/orders')}
+              className="mt-6 px-8 py-3 bg-white text-orange-500 rounded-xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center gap-2 mx-auto text-lg"
+            >
+              <Gift className="w-5 h-5" />
+              {t('groupBuy.viewNow')}
+            </button>
           </div>
         ) : isParticipant ? (
           // 【新增】未中奖参与者的提示
@@ -693,39 +668,7 @@ export default function GroupBuyResultPage() {
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="p-4 space-y-3">
-        {isWinner && result.pickup_status === 'PENDING_CLAIM' && !result.pickup_code && (
-          <button
-            onClick={openClaimModal}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
-          >
-            <Gift className="w-5 h-5" />
-            {t('orders.claimNow')}
-          </button>
-        )}
-        {isWinner && result.id && (result.pickup_code || result.pickup_status === 'PENDING_PICKUP' || result.pickup_status === 'PICKED_UP') && (
-          <button
-            onClick={() => navigate(`/order-detail/${result.id}`)}
-            className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center gap-2"
-          >
-            <Ticket className="w-5 h-5" />
-            {t('groupBuy.goToClaimPage')}
-          </button>
-        )}
-        <button
-          onClick={() => navigate('/group-buy')}
-          className="w-full bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-shadow"
-        >
-          {t('groupBuy.browseProducts')}
-        </button>
-        <button
-          onClick={() => navigate('/orders')}
-          className="w-full bg-white text-purple-500 py-4 rounded-2xl font-bold shadow-md hover:shadow-lg transition-shadow"
-        >
-          {t('orders.title')}
-        </button>
-      </div>
+      {/* 底部按钮已移除，中奖者通过卡片内的“立即查看”按钮跳转 */}
 
       {/* Claim Modal */}
       {showClaimModal && (
