@@ -289,18 +289,20 @@ export default function GroupBuyResultPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 pb-20">
         {/* Header */}
-        <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-6 rounded-b-3xl shadow-lg">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-white hover:text-gray-200 mb-4"
-          >
-            <ChevronLeft className="w-6 h-6" />
-            {t('common.back')}
-          </button>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Clock className="w-7 h-7" />
-            {t('groupBuy.sessionTimeout')}
-          </h1>
+        <div className="bg-gradient-to-r from-gray-500 to-gray-600 text-white p-4 rounded-b-3xl shadow-lg">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1 text-white hover:text-gray-200 shrink-0"
+            >
+              <ChevronLeft className="w-6 h-6" />
+              {t('common.back')}
+            </button>
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Clock className="w-6 h-6" />
+              {t('groupBuy.sessionTimeout')}
+            </h1>
+          </div>
         </div>
 
         {/* Timeout Notice */}
