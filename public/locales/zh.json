@@ -1305,7 +1305,7 @@
       "alreadyInSession": "您已在进行中的拼团中，请等待完成后再包团"
     },
     "goToClaimPage": "立即领取",
-    "gotProduct": "恭喜获得商品！"
+    "viewNow": "立即查看"
   },
   "spin": {
     "title": "幸运转盘",
