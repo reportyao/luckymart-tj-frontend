@@ -50,7 +50,9 @@
     "minutesOnly": "{{minutes}} мин.",
     "noProducts": "Нет товаров",
     "justNow": "Только что",
-    "confirmSubmit": "Подтвердить отправку"
+    "confirmSubmit": "Подтвердить отправку",
+    "freeShippingPromo": "0 TJS за доставку! TezBarakat дарит вам 15 TJS.",
+    "freeShippingAmount": "0 TJS"
   },
   "nav": {
     "home": "Главная",
@@ -80,7 +82,9 @@
     "lottery": "Бонусный магазин",
     "lotteryDesc": "Удача для каждого",
     "groupBuyProducts": "Товары групповой покупки",
-    "lotteryProducts": "Товары бонусного магазина"
+    "lotteryProducts": "Товары бонусного магазина",
+    "freeShippingLine1": "Из Китая",
+    "freeShippingLine2": "0 сомони за доставку!"
   },
   "lottery": {
     "hall": "Зал бонусный магазин",
@@ -1305,8 +1309,7 @@
       "aiChats": "AI чат сессий",
       "alreadyInSession": "Вы уже участвуете в активной группе, дождитесь завершения"
     },
-    "goToClaimPage": "Получить сейчас",
-    "viewNow": "Посмотреть"
+    "goToClaimPage": "Получить сейчас"
   },
   "spin": {
     "title": "Колесо удачи",

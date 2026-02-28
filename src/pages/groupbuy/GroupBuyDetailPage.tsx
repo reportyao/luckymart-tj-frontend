@@ -389,6 +389,16 @@ function SquadBuyConfirmModal({
             </>
           )}
         </button>
+
+        {/* Free Shipping Promo */}
+        <p className="text-center text-xs text-gray-500 mt-3">
+          {t('common.freeShippingPromo').split('0 TJS').map((part: string, i: number) => (
+            <span key={i}>
+              {i > 0 && <span className="font-bold text-red-500">0 TJS</span>}
+              {part}
+            </span>
+          ))}
+        </p>
       </div>
     </div>
   );

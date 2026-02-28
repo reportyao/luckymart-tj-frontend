@@ -376,6 +376,17 @@ const OrderDetailPage: React.FC = () => {
                   {t('order.remainingDays', { days: remainingDays })}
                 </p>
               )}
+              {/* 已提货 - 运费补贴文案 */}
+              {order.logistics_status === 'PICKED_UP' && (
+                <p className="text-xs text-gray-500 mt-2">
+                  {t('common.freeShippingPromo').split('0 TJS').map((part: string, i: number) => (
+                    <span key={i}>
+                      {i > 0 && <span className="font-bold text-red-500">0 TJS</span>}
+                      {part}
+                    </span>
+                  ))}
+                </p>
+              )}
             </div>
           </div>
         </motion.div>

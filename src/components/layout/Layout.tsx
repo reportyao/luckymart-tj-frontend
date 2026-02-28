@@ -150,14 +150,19 @@ export const Layout: React.FC<LayoutProps> = ({
                   <p className="text-xs text-gray-500">{t('home.tagline')}</p>
                 </div>
               </div>
-              
-              {user && telegramUser?.photo_url && (
-                <img 
-                  src={telegramUser.photo_url} 
-                  alt="Avatar"
-                  style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
-                />
-              )}
+              <div className="flex items-center gap-3">
+                <div className="text-right">
+                  <p className="text-xs font-semibold text-emerald-600">{t('home.freeShippingLine1')}</p>
+                  <p className="text-xs font-bold text-red-500">{t('home.freeShippingLine2')}</p>
+                </div>
+                {user && telegramUser?.photo_url && (
+                  <img 
+                    src={telegramUser.photo_url} 
+                    alt="Avatar"
+                    style={{ width: '40px', height: '40px', borderRadius: '9999px', objectFit: 'cover', maxWidth: 'none' }}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </motion.header>

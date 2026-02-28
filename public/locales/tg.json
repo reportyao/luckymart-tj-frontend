@@ -50,7 +50,9 @@
     "minutesOnly": "{{minutes}} дақиқа",
     "noProducts": "Маҳсулот нест",
     "justNow": "Ҳамин лаҳза",
-    "confirmSubmit": "Тасдиқи ирсол"
+    "confirmSubmit": "Тасдиқи ирсол",
+    "freeShippingPromo": "Интиқол 0 TJS! TezBarakat ба шумо 15 TJS тӯҳфа мекунад.",
+    "freeShippingAmount": "0 TJS"
   },
   "nav": {
     "home": "Асосӣ",
@@ -80,7 +82,9 @@
     "lottery": "Лоторея",
     "lotteryDesc": "Бахт барои ҳама",
     "groupBuyProducts": "Молҳои хариди гурӯҳӣ",
-    "lotteryProducts": "Молҳои лоторея"
+    "lotteryProducts": "Молҳои лоторея",
+    "freeShippingLine1": "Мустақим аз Чин!",
+    "freeShippingLine2": "0 сомонӣ!"
   },
   "lottery": {
     "hall": "Толори лоторея",
@@ -1305,8 +1309,7 @@
       "aiChats": "сессияҳои чати AI",
       "alreadyInSession": "Шумо аллакай дар гурӯҳи фаъол ширкат доред, интизор шавед"
     },
-    "goToClaimPage": "Ҳозир гиред",
-    "viewNow": "Ҳозир дидан"
+    "goToClaimPage": "Ҳозир гиред"
   },
   "spin": {
     "title": "Чархи бахт",

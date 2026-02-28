@@ -50,7 +50,9 @@
     "minutesOnly": "{{minutes}}分钟",
     "noProducts": "暂无商品",
     "justNow": "刚刚",
-    "confirmSubmit": "确认提交"
+    "confirmSubmit": "确认提交",
+    "freeShippingPromo": "本单0运费，TezBarakat为您补贴，节省15TJS运费",
+    "freeShippingAmount": "0 TJS"
   },
   "nav": {
     "home": "首页",
@@ -80,7 +82,9 @@
     "lottery": "积分商城",
     "lotteryDesc": "积分商城，人人有机会",
     "groupBuyProducts": "拼团商品",
-    "lotteryProducts": "积分商品"
+    "lotteryProducts": "积分商品",
+    "freeShippingLine1": "中国直邮",
+    "freeShippingLine2": "全场0运费"
   },
   "lottery": {
     "hall": "积分商城大厅",
@@ -1304,8 +1308,7 @@
       "aiChats": "次AI对话机会",
       "alreadyInSession": "您已在进行中的拼团中，请等待完成后再包团"
     },
-    "goToClaimPage": "立即领取",
-    "viewNow": "立即查看"
+    "goToClaimPage": "立即领取"
   },
   "spin": {
     "title": "幸运转盘",
