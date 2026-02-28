@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "rm -rf node_modules/.vite-temp && NODE_OPTIONS=--max-old-space-size=4096 tsc -b && NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production || exit 1",
+    "build": "node scripts/pre-build-check.mjs && rm -rf node_modules/.vite-temp && NODE_OPTIONS=--max-old-space-size=4096 tsc -b && NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production || exit 1",
     "build:prod": "rm -rf node_modules/.vite-temp && NODE_OPTIONS=--max-old-space-size=4096 tsc -b && NODE_OPTIONS=--max-old-space-size=4096 vite build --mode production || exit 1",
     "build:deploy": "npm run build && npm run deploy",
     "deploy": "rm -rf /var/www/tezbarakat-frontend/* && cp -r dist/* /var/www/tezbarakat-frontend/ && echo 'Deployed to Nginx directory successfully'",
@@ -31,7 +31,8 @@
     "i18n:check": "node scripts/i18n-check.mjs",
     "i18n:check:missing": "node scripts/i18n-check.mjs --missing-only",
     "i18n:sync": "node scripts/i18n-sync.mjs",
-    "i18n:sync:check": "node scripts/i18n-sync.mjs --check"
+    "i18n:sync:check": "node scripts/i18n-sync.mjs --check",
+    "prebuild:check": "node scripts/pre-build-check.mjs"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
