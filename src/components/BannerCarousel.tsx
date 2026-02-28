@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '../lib/supabase';
-import { getOptimizedImageUrl } from '../lib/utils';
+// getOptimizedImageUrl removed to fix image issues
 
 interface Banner {
   id: string;
@@ -77,7 +77,7 @@ const BannerCarousel: React.FC = () => {
         }
       };
       // 预加载当前语言对应的优化图片
-      img.src = getOptimizedImageUrl(getLocalizedImageUrl(banner), { width: 800, quality: 80 });
+      img.src = getLocalizedImageUrl(banner);
     });
     
     // 超时后强制显示
@@ -159,7 +159,7 @@ const BannerCarousel: React.FC = () => {
       {/* 渲染所有图片，通过 opacity 和 transform 控制平滑过渡 */}
       {banners.map((banner, index) => {
         const isActive = index === currentIndex;
-        const imageUrl = getOptimizedImageUrl(getLocalizedImageUrl(banner), { width: 800, quality: 80 });
+        const imageUrl = getLocalizedImageUrl(banner);
         return (
           <div
             key={`${banner.id}-${i18n.language}`}

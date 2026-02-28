@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, CSSProperties } from 'react';
+import React, { useState, useCallback, CSSProperties } from 'react';
 
 interface OptimizedImageProps {
   src: string;
@@ -18,11 +18,11 @@ interface OptimizedImageProps {
 }
 
 /**
- * Optimized Image Component v4
- * 修复与 LazyImage v4 相同的问题：
- * - 使用 top/left/right/bottom:0 代替 width/height:100%
- * - IntersectionObserver + fallback 超时
- * - 内联样式覆盖 Tailwind v4 preflight
+ * Optimized Image Component v5
+ * 与 LazyImage v5 保持一致：
+ * - 移除自定义 IntersectionObserver 懒加载
+ * - 使用浏览器原生 loading="lazy"
+ * - 容器由外部控制布局
  */
 export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
@@ -40,57 +40,8 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   loading = 'lazy',
   blurDataURL,
 }) => {
-  const [shouldLoad, setShouldLoad] = useState(loading === 'eager');
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
-  const imgRef = useRef<HTMLImageElement | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    if (loading === 'eager') return;
-
-    const el = containerRef.current;
-    if (!el) {
-      setShouldLoad(true);
-      return;
-    }
-
-    fallbackTimerRef.current = setTimeout(() => {
-      setShouldLoad(true);
-    }, 500);
-
-    if (typeof IntersectionObserver !== 'undefined') {
-      try {
-        observerRef.current = new IntersectionObserver(
-          (entries) => {
-            if (entries[0]?.isIntersecting) {
-              setShouldLoad(true);
-              observerRef.current?.disconnect();
-              if (fallbackTimerRef.current) {
-                clearTimeout(fallbackTimerRef.current);
-                fallbackTimerRef.current = null;
-              }
-            }
-          },
-          { threshold: 0.01, rootMargin: '200px' }
-        );
-        observerRef.current.observe(el);
-      } catch {
-        setShouldLoad(true);
-      }
-    } else {
-      setShouldLoad(true);
-    }
-
-    return () => {
-      observerRef.current?.disconnect();
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current);
-      }
-    };
-  }, [loading]);
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
@@ -126,17 +77,14 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
     width: '100%',
     height: '100%',
     objectFit: resolvedObjectFit,
     objectPosition: 'center',
     maxWidth: 'none',
     display: 'block',
-    transition: 'opacity 0.5s, transform 0.5s',
+    transition: 'opacity 0.3s',
     opacity: isLoading ? 0 : 1,
-    transform: isLoading ? 'scale(0.95)' : 'scale(1)',
   };
 
   const overlayStyle: CSSProperties = {
@@ -149,7 +97,6 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
   return (
     <div
-      ref={containerRef}
       className={containerClassName}
       style={containerStyle}
     >
@@ -166,19 +113,17 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         />
       )}
 
-      {shouldLoad ? (
-        <img
-          ref={imgRef}
-          src={src}
-          alt={alt}
-          srcSet={srcSet}
-          sizes={sizes}
-          decoding="async"
-          onLoad={handleLoad}
-          onError={handleError}
-          style={imgStyle}
-        />
-      ) : null}
+      <img
+        src={src}
+        alt={alt}
+        srcSet={srcSet}
+        sizes={sizes}
+        loading={loading}
+        decoding="async"
+        onLoad={handleLoad}
+        onError={handleError}
+        style={imgStyle}
+      />
 
       {isLoading && !blurDataURL && (
         <div style={{ ...overlayStyle, backgroundColor: '#e5e7eb' }} />

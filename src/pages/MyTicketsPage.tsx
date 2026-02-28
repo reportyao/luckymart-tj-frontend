@@ -161,13 +161,13 @@ const MyTicketsPage: React.FC = () => {
         {/* 积分商城信息卡片 */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
           <div className="flex space-x-4">
-            <LazyImage
-              src={lottery.image_url}
-              alt={lottery.title}
-              width={96}
-              height={96}
-              style={{ width: '96px', height: '96px', borderRadius: '0.75rem', flexShrink: 0 }}
-            />
+            <div style={{ position: 'relative', width: '96px', height: '96px', flexShrink: 0, borderRadius: '0.75rem', overflow: 'hidden' }}>
+              <LazyImage
+                src={lottery.image_url}
+                alt={lottery.title}
+                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+              />
+            </div>
             <div className="flex-1">
               <div className="flex items-center space-x-2 text-xs text-gray-500 mb-1">
                 <span>{t('myTickets.period')}: {lottery.period}</span>

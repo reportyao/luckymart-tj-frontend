@@ -153,13 +153,13 @@ export const PurchaseModal: React.FC<PurchaseModalProps> = ({
               {/* 商品信息 */}
               <div className="flex items-start space-x-4">
                 {lottery.image_url ? (
-                  <LazyImage
-                    src={lottery.image_url}
-                    alt={getLocalizedText(lottery.name_i18n as Record<string, string> | null, t('language')) || lottery.title}
-                    width={80}
-                    height={80}
-                    style={{ width: '80px', height: '80px', borderRadius: '0.75rem', flexShrink: 0 }}
-                  />
+                  <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '0.75rem', overflow: 'hidden' }}>
+                    <LazyImage
+                      src={lottery.image_url}
+                      alt={getLocalizedText(lottery.name_i18n as Record<string, string> | null, t('language')) || lottery.title}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  </div>
                 ) : (
                   <div className="w-20 h-20 rounded-xl bg-gradient-to-r from-purple-400 to-pink-400 flex items-center justify-center">
                     <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

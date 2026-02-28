@@ -208,13 +208,13 @@ const FullPurchaseConfirmPage: React.FC = () => {
           
           <div className="flex gap-4">
             {lottery.image_urls && lottery.image_urls.length > 0 && (
-              <LazyImage
-                src={lottery.image_urls[0]}
-                alt={title}
-                width={96}
-                height={96}
-                style={{ width: '96px', height: '96px', borderRadius: '0.5rem', flexShrink: 0 }}
-              />
+              <div style={{ position: 'relative', width: '96px', height: '96px', flexShrink: 0, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                <LazyImage
+                  src={lottery.image_urls[0]}
+                  alt={title}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
             )}
             
             <div className="flex-1">

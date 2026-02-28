@@ -332,13 +332,11 @@ interface MarketListing {
               >
                 <div className="flex">
                   {/* Image */}
-                  <div style={{ width: '128px', height: '128px', flexShrink: 0, overflow: 'hidden' }}>
+                  <div style={{ position: 'relative', width: '128px', height: '128px', flexShrink: 0, overflow: 'hidden' }}>
                     <LazyImage
                       src={listing.lottery_image}
                       alt={listing.lottery_title}
-                      width={128}
-                      height={128}
-                      style={{ width: '100%', height: '100%' }}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
                     />
                   </div>
 

@@ -156,13 +156,13 @@ const MyPrizesPage: React.FC = () => {
             className="bg-white rounded-2xl p-6 shadow-sm"
           >
             <div className="flex space-x-4 mb-4">
-              <LazyImage
-                src={prize.lottery_image}
-                alt={prize.lottery_title}
-                width={80}
-                height={80}
-                style={{ width: '80px', height: '80px', borderRadius: '0.75rem', flexShrink: 0 }}
-              />
+              <div style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '0.75rem', overflow: 'hidden' }}>
+                <LazyImage
+                  src={prize.lottery_image}
+                  alt={prize.lottery_title}
+                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                />
+              </div>
               <div className="flex-1">
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-xs text-gray-500">{t('myPrizes.periodLabel')}: {prize.lottery_period}</span>

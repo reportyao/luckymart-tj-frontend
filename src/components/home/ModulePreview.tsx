@@ -117,8 +117,6 @@ export const ModulePreview: React.FC<ModulePreviewProps> = ({
                     <LazyImage
                       src={product.image_url}
                       alt={getProductTitle(product)}
-                      width={80}
-                      height={80}
                       style={{
                         position: 'absolute',
                         top: 0,

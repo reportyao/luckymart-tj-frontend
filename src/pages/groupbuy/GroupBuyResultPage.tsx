@@ -21,7 +21,7 @@ import {
 import confetti from 'canvas-confetti';
 import toast from 'react-hot-toast';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
-import { getOptimizedImageUrl } from '../../lib/utils'
+// getOptimizedImageUrl removed to fix thumbnail enlargement issue
 
 interface GroupBuyResult {
   id?: string;
@@ -332,7 +332,7 @@ export default function GroupBuyResultPage() {
           <div className="p-4">
             <div className="bg-white rounded-2xl shadow-md overflow-hidden">
               <img
-                src={getOptimizedImageUrl(result.product.image_url, { width: 400, quality: 75 })}
+                src={result.product.image_url}
                 alt={getLocalizedText(result.product.title)}
                 loading="lazy"
                 style={{ width: '100%', height: '192px', objectFit: 'cover', opacity: 0.75, display: 'block', maxWidth: 'none' }}
@@ -587,7 +587,7 @@ export default function GroupBuyResultPage() {
         <div className="p-4">
           <div className="bg-white rounded-2xl shadow-md overflow-hidden">
             <img
-              src={getOptimizedImageUrl(result.product.image_url, { width: 400, quality: 75 })}
+              src={result.product.image_url}
               alt={getLocalizedText(result.product.title)}
               loading="lazy"
               style={{ width: '100%', height: '192px', objectFit: 'cover', display: 'block', maxWidth: 'none' }}

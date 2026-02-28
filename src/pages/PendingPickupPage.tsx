@@ -5,7 +5,7 @@ import { useSupabase } from '../contexts/SupabaseContext';
 import { useUser } from '../contexts/UserContext';
 import { ArrowLeftIcon, CubeIcon, TruckIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
-import { formatCurrency, formatDateTime, getLocalizedText, getOptimizedImageUrl } from '../lib/utils';
+import { formatCurrency, formatDateTime, getLocalizedText } from '../lib/utils';
 import { motion } from 'framer-motion';
 
 interface PendingPickupItem {
@@ -353,7 +353,7 @@ const PendingPickupPage: React.FC = () => {
                   <div style={{ width: '80px', height: '80px', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0, position: 'relative' }}>
                     {item.productImage ? (
                       <img
-                        src={getOptimizedImageUrl(item.productImage, { width: 160, quality: 75 })}
+                        src={item.productImage}
                         alt={item.productTitle}
                         loading="lazy"
                         style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', maxWidth: 'none' }}

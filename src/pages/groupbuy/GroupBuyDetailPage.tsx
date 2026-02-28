@@ -19,7 +19,7 @@ import {
 import { cn, copyToClipboard } from '../../lib/utils';
 import { ChevronRightIcon } from '@heroicons/react/24/outline';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
-import { getOptimizedImageUrl } from '../../lib/utils'
+// getOptimizedImageUrl removed to fix thumbnail enlargement issue
 
 interface PriceComparisonItem {
   platform: string;
@@ -94,7 +94,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={getOptimizedImageUrl(images[0], { width: 800, quality: 80 })}
+            src={images[0]}
             alt={alt}
             style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', maxWidth: 'none' }}
           />
@@ -144,7 +144,7 @@ function ImageCarousel({ images, alt }: { images: string[]; alt: string }) {
           onClick={() => setIsModalOpen(true)}
         >
           <img
-            src={getOptimizedImageUrl(images[currentIndex], { width: 800, quality: 80 })}
+            src={images[currentIndex]}
             alt={`${alt} - ${currentIndex + 1}`}
             style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', maxWidth: 'none' }}
           />

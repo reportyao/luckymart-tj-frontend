@@ -15,7 +15,6 @@ import {
   getTimeRemaining,
   cn,
   getLocalizedText,
-  getOptimizedImageUrl
 } from '../lib/utils';
 import toast from 'react-hot-toast';
 import { lotteryService } from '../lib/supabase';
@@ -447,7 +446,7 @@ const LotteryDetailPage: React.FC = () => {
           >
             {lottery.image_urls && lottery.image_urls.length > 0 ? (
               <img
-                src={getOptimizedImageUrl(lottery.image_urls[activeImageIndex], { width: 800, quality: 80 })}
+                src={lottery.image_urls[activeImageIndex]}
                 alt={title}
                 style={{ width: '100%', height: '100%', objectFit: 'contain', cursor: 'pointer', display: 'block', maxWidth: 'none' }}
               />
@@ -938,14 +937,13 @@ const LotteryDetailPage: React.FC = () => {
                     {showoff.image_urls && showoff.image_urls.length > 0 && (
                       <div className="flex space-x-2 overflow-x-auto">
                         {showoff.image_urls.slice(0, 3).map((url, imgIndex) => (
-                          <LazyImage
-                            key={imgIndex}
-                            src={url}
-                            alt={`Showoff Image ${imgIndex + 1}`}
-                            width={80}
-                            height={80}
-                            style={{ width: '80px', height: '80px', borderRadius: '0.5rem', flexShrink: 0 }}
-                          />
+                          <div key={imgIndex} style={{ position: 'relative', width: '80px', height: '80px', flexShrink: 0, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                            <LazyImage
+                              src={url}
+                              alt={`Showoff Image ${imgIndex + 1}`}
+                              style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                            />
+                          </div>
                         ))}
                       </div>
                     )}

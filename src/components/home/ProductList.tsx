@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LazyImage } from '../LazyImage';
-import { formatCurrency, getLocalizedText, getOptimizedImageUrl } from '../../lib/utils';
+import { formatCurrency, getLocalizedText } from '../../lib/utils';
 import { UserGroupIcon, ClockIcon } from '@heroicons/react/24/outline';
 
 interface BaseProduct {
@@ -97,7 +97,7 @@ export const ProductList: React.FC<ProductListProps> = ({
               >
                 {product.image_url ? (
                   <img
-                    src={getOptimizedImageUrl(product.image_url, { width: 200, quality: 75 })}
+                    src={product.image_url}
                     alt={getProductTitle(product)}
                     loading="lazy"
                     style={{

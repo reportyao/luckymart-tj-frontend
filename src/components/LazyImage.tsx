@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef, useCallback, CSSProperties } from 'react'
+import React, { useState, useCallback, CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
-import { getOptimizedImageUrl } from '@/lib/utils'
 
 interface LazyImageProps {
   src: string
@@ -14,21 +13,27 @@ interface LazyImageProps {
   onLoad?: () => void
   onError?: () => void
   objectFit?: 'cover' | 'contain' | 'fill' | 'none' | 'scale-down'
-  /** 是否启用 Supabase 图片变换优化，默认 true */
-  optimize?: boolean
-  /** 图片质量 (1-100)，默认 75 */
-  quality?: number
 }
 
 /**
- * 懒加载图片组件 v4 - 彻底修复所有环境下的图片显示
+ * 图片组件 v5 - 移除自定义懒加载，回归浏览器原生 loading="lazy"
  *
- * 核心修复（v4）：
- * 1. img 使用 `top:0;left:0;right:0;bottom:0` 而非 `width:100%;height:100%`
- *    → 解决 paddingBottom 撑高的容器中 height:100% 计算为 0 的问题
- * 2. IntersectionObserver + fallback 超时机制
- * 3. 图片加载失败时自动回退到原始 URL
- * 4. 所有样式使用内联 style，兼容 Tailwind v4 preflight
+ * 核心修复（v5）：
+ * 1. 移除 IntersectionObserver 自定义懒加载逻辑，使用浏览器原生 loading="lazy"
+ * 2. 移除 getOptimizedImageUrl 图片变换（之前 width*2 导致缩略图被放大）
+ * 3. 容器不再强制设置 position:relative，由外部控制布局
+ * 4. img 样式由外部 style 控制，组件只负责加载状态和错误处理
+ *
+ * 标准使用方式（参考 OrderManagementPage）：
+ * ```
+ * <div style={{ position: 'relative', width: '80px', height: '80px', overflow: 'hidden', borderRadius: '0.75rem' }}>
+ *   <LazyImage
+ *     src={imageUrl}
+ *     alt="description"
+ *     style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+ *   />
+ * </div>
+ * ```
  */
 export const LazyImage: React.FC<LazyImageProps> = ({
   src,
@@ -41,69 +46,10 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   onLoad,
   onError,
   objectFit = 'cover',
-  optimize = true,
-  quality = 75,
 }) => {
-  // 生成优化后的图片 URL（取 2x 以适配高清屏）
-  const optimizedSrc = optimize && width
-    ? getOptimizedImageUrl(src, { width: width * 2, quality })
-    : src
-
-  const [shouldLoad, setShouldLoad] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
-  const [useFallbackSrc, setUseFallbackSrc] = useState(false)
   const { t } = useTranslation()
-  const containerRef = useRef<HTMLDivElement | null>(null)
-  const imgRef = useRef<HTMLImageElement | null>(null)
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const fallbackTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const actualSrc = useFallbackSrc ? src : optimizedSrc
-
-  // IntersectionObserver + fallback 超时
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) {
-      setShouldLoad(true)
-      return
-    }
-
-    fallbackTimerRef.current = setTimeout(() => {
-      setShouldLoad(true)
-    }, 500)
-
-    if (typeof IntersectionObserver !== 'undefined') {
-      try {
-        observerRef.current = new IntersectionObserver(
-          (entries) => {
-            const entry = entries[0]
-            if (entry && entry.isIntersecting) {
-              setShouldLoad(true)
-              observerRef.current?.disconnect()
-              if (fallbackTimerRef.current) {
-                clearTimeout(fallbackTimerRef.current)
-                fallbackTimerRef.current = null
-              }
-            }
-          },
-          { threshold: 0.01, rootMargin: '200px' }
-        )
-        observerRef.current.observe(el)
-      } catch {
-        setShouldLoad(true)
-      }
-    } else {
-      setShouldLoad(true)
-    }
-
-    return () => {
-      observerRef.current?.disconnect()
-      if (fallbackTimerRef.current) {
-        clearTimeout(fallbackTimerRef.current)
-      }
-    }
-  }, [])
 
   const handleLoad = useCallback(() => {
     setIsLoading(false)
@@ -111,14 +57,10 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   }, [onLoad])
 
   const handleError = useCallback(() => {
-    if (!useFallbackSrc && optimizedSrc !== src) {
-      setUseFallbackSrc(true)
-      return
-    }
     setIsLoading(false)
     setHasError(true)
     onError?.()
-  }, [useFallbackSrc, optimizedSrc, src, onError])
+  }, [onError])
 
   // 从 className 中检测 objectFit 覆盖
   let resolvedObjectFit = objectFit
@@ -128,36 +70,24 @@ export const LazyImage: React.FC<LazyImageProps> = ({
   else if (className.includes('object-none')) resolvedObjectFit = 'none'
   else if (className.includes('object-scale-down')) resolvedObjectFit = 'scale-down'
 
+  // 从 className 中移除 object-* 类（已通过内联样式处理）
   const containerClassName = className
     .replace(/\bobject-(cover|contain|fill|none|scale-down)\b/g, '')
     .replace(/\s+/g, ' ')
     .trim()
 
-  // 容器样式
+  // 容器样式：保持 relative + overflow:hidden 以支持加载占位和错误提示
   const containerStyle: CSSProperties = {
     position: 'relative',
     overflow: 'hidden',
     ...externalStyle,
   }
 
-  /**
-   * ⚠️ 关键修复（v4）：
-   * img 使用 top/left/right/bottom: 0 + position: absolute 来填满容器，
-   * 而不是 width: 100% + height: 100%。
-   *
-   * 原因：当容器使用 paddingBottom: 100% 来创建正方形时，
-   * 容器的 content height 为 0，导致 height: 100% = 0px，
-   * objectFit: cover 在 0 高度上无法工作。
-   *
-   * 使用 top:0;bottom:0 则直接参考容器的 padding box 边界，
-   * 不依赖 content height，在所有情况下都能正确填充。
-   */
+  // img 样式：absolute 填充容器
   const imgStyle: CSSProperties = {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
     width: '100%',
     height: '100%',
     objectFit: resolvedObjectFit,
@@ -168,7 +98,7 @@ export const LazyImage: React.FC<LazyImageProps> = ({
     display: 'block',
   }
 
-  // 占位/错误层也使用 inset 方式
+  // 占位/错误层
   const overlayStyle: CSSProperties = {
     position: 'absolute',
     top: 0,
@@ -179,20 +109,17 @@ export const LazyImage: React.FC<LazyImageProps> = ({
 
   return (
     <div
-      ref={containerRef}
       className={containerClassName}
       style={containerStyle}
     >
-      {shouldLoad ? (
-        <img
-          ref={imgRef}
-          src={actualSrc}
-          alt={alt}
-          onLoad={handleLoad}
-          onError={handleError}
-          style={imgStyle}
-        />
-      ) : null}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        onLoad={handleLoad}
+        onError={handleError}
+        style={imgStyle}
+      />
 
       {isLoading && (
         <div style={{ ...overlayStyle, backgroundColor: '#e5e7eb' }} />

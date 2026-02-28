@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { supabase } from '../../lib/supabase';
 import { ShoppingBag, Users, Clock, ChevronRight } from 'lucide-react';
 import { extractEdgeFunctionError } from '../../utils/edgeFunctionHelper'
-import { getOptimizedImageUrl } from '../../lib/utils'
+// getOptimizedImageUrl removed to fix thumbnail enlargement issue
 
 interface GroupBuyProduct {
   id: string;
@@ -148,7 +148,7 @@ export default function GroupBuyListPage() {
                   if (allImages.length === 1) {
                     return (
                       <img
-                        src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
+                        src={allImages[0]}
                         alt={getLocalizedText(product.title)}
                         loading="lazy"
                         style={{ width: '100%', height: '192px', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
@@ -163,7 +163,7 @@ export default function GroupBuyListPage() {
                         {allImages.map((img, index) => (
                           <div key={index} style={{ width: '50%', overflow: 'hidden' }}>
                             <img
-                              src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
+                              src={img}
                               alt={`${getLocalizedText(product.title)} ${index + 1}`}
                               loading="lazy"
                               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
@@ -180,7 +180,7 @@ export default function GroupBuyListPage() {
                       <div style={{ display: 'flex', height: '192px', gap: '2px', overflow: 'hidden' }}>
                         <div style={{ width: '50%', overflow: 'hidden' }}>
                           <img
-                            src={getOptimizedImageUrl(allImages[0], { width: 400, quality: 75 })}
+                            src={allImages[0]}
                             alt={`${getLocalizedText(product.title)} 1`}
                             loading="lazy"
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
@@ -190,7 +190,7 @@ export default function GroupBuyListPage() {
                           {allImages.slice(1, 3).map((img, index) => (
                             <div key={index} style={{ height: '50%', overflow: 'hidden' }}>
                               <img
-                                src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
+                                src={img}
                                 alt={`${getLocalizedText(product.title)} ${index + 2}`}
                                 loading="lazy"
                                 style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
@@ -210,7 +210,7 @@ export default function GroupBuyListPage() {
                     <div style={{ display: 'flex', height: '192px', gap: '2px', overflow: 'hidden' }}>
                       <div style={{ width: '50%', overflow: 'hidden' }}>
                         <img
-                          src={getOptimizedImageUrl(displayImages[0], { width: 400, quality: 75 })}
+                          src={displayImages[0]}
                           alt={`${getLocalizedText(product.title)} 1`}
                           loading="lazy"
                           style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}
@@ -220,7 +220,7 @@ export default function GroupBuyListPage() {
                         {displayImages.slice(1, 4).map((img, index) => (
                           <div key={index} style={{ height: '33.333%', overflow: 'hidden', position: 'relative' }}>
                             <img
-                              src={getOptimizedImageUrl(img, { width: 200, quality: 75 })}
+                              src={img}
                               alt={`${getLocalizedText(product.title)} ${index + 2}`}
                               loading="lazy"
                               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', maxWidth: 'none' }}

@@ -404,13 +404,13 @@ const ShowoffCreatePage: React.FC = () => {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <LazyImage
-                    src={lottery.prize_image}
-                    alt={lottery.prize_name}
-                    width={64}
-                    height={64}
-                    style={{ width: '64px', height: '64px', borderRadius: '0.5rem', flexShrink: 0 }}
-                  />
+                  <div style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                    <LazyImage
+                      src={lottery.prize_image}
+                      alt={lottery.prize_name}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  </div>
                   <div className="flex-1 text-left">
                     <div className="flex items-center space-x-2">
                       <p className="font-medium text-gray-900">{lottery.prize_name}</p>
@@ -469,8 +469,6 @@ const ShowoffCreatePage: React.FC = () => {
 		                <LazyImage
 		                  src={image}
 		                  alt={`${t('showoff.uploadImages')} ${index + 1}`}
-		                  width={100}
-		                  height={100}
 		                  style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', borderRadius: '0.5rem' }}
 		                />
                 <button

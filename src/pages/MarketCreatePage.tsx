@@ -251,13 +251,13 @@ const MarketCreatePage: React.FC = () => {
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
-                  <LazyImage
-                    src={ticket.lottery_image}
-                    alt={ticket.lottery_title}
-                    width={64}
-                    height={64}
-                    style={{ width: '64px', height: '64px', borderRadius: '0.5rem', flexShrink: 0 }}
-                  />
+                  <div style={{ position: 'relative', width: '64px', height: '64px', flexShrink: 0, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                    <LazyImage
+                      src={ticket.lottery_image}
+                      alt={ticket.lottery_title}
+                      style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                    />
+                  </div>
                   <div className="flex-1 text-left">
                     <p className="font-medium text-gray-900">{ticket.lottery_title}</p>
                     <div className="flex items-center space-x-2 mt-1">

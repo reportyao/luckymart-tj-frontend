@@ -12,7 +12,6 @@ import {
   getTimeRemaining,
   cn,
   getLocalizedText,
-  getOptimizedImageUrl
 } from '../../lib/utils'
 
 interface LotteryCardProps {
@@ -77,12 +76,8 @@ export const LotteryCard: React.FC<LotteryCardProps> = ({
 	    navigate(`/lottery/${lottery.id}`);
 	  };
 
-  /**
-   * 根据图片在布局中的位置，返回优化后的 URL
-   * 大图使用 400px 宽度，小图使用 200px 宽度
-   */
-  const optimizeImg = (url: string, isLarge: boolean = false) =>
-    getOptimizedImageUrl(url, { width: isLarge ? 400 : 200, quality: 75 });
+  /** 直接使用原始图片 URL（移除了 getOptimizedImageUrl 以修复缩略图放大问题） */
+  const optimizeImg = (url: string, _isLarge: boolean = false) => url;
 	
 	  return (
 	    <motion.div
