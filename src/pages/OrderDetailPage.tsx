@@ -376,8 +376,8 @@ const OrderDetailPage: React.FC = () => {
                   {t('order.remainingDays', { days: remainingDays })}
                 </p>
               )}
-              {/* 已提货 - 运费补贴文案 */}
-              {order.logistics_status === 'PICKED_UP' && (
+              {/* 待提货/已提货 - 运费补贴文案 */}
+              {(order.logistics_status === 'READY_FOR_PICKUP' || order.logistics_status === 'PICKED_UP') && (
                 <p className="text-xs text-gray-500 mt-2">
                   {t('common.freeShippingPromo').split('0 TJS').map((part: string, i: number) => (
                     <span key={i}>
