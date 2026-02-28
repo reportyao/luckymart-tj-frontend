@@ -1,5 +1,5 @@
 {
   "version": "2.5.0",
-  "buildTime": "2026-02-28T10:34:25.696Z",
+  "buildTime": "2026-02-28T10:42:20.183Z",
   "description": "全面修复图片/缩略图显示异常：将所有img标签从Tailwind className改为内联style，彻底解决Tailwind v4 preflight与Telegram WebView的兼容性冲突"
 }

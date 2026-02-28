@@ -8,6 +8,11 @@ import HttpBackend from 'i18next-http-backend'
 // 其他语言（ru、zh）将通过 HTTP 按需加载
 import tgTranslation from './locales/tg.json'
 
+// 构建版本号，用于 i18n 文件的缓存破坏
+// 每次构建时 Vite 会注入 __APP_VERSION__，确保翻译文件不被旧缓存污染
+declare const __APP_VERSION__: string
+const I18N_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : Date.now().toString()
+
 // 自定义 Telegram 语言检测器
 // 注册为 i18next-browser-languagedetector 的自定义检测器插件
 // 通过 addDetector() 注册后，在 detection.order 中通过 name 引用
@@ -48,7 +53,9 @@ i18n
     // 对于非 tg 语言，通过 HTTP 后端加载
     partialBundledLanguages: true,
     backend: {
-      loadPath: '/locales/{{lng}}.json'
+      // 在 URL 中加入构建版本号，每次部署后强制浏览器重新加载翻译文件
+      // 避免 Telegram WebApp 缓存旧的翻译文件导致文案不更新
+      loadPath: `/locales/{{lng}}.json?v=${I18N_VERSION}`
     },
     fallbackLng: 'tg',
     lng: undefined, // 让检测器自动检测
