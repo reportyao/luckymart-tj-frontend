@@ -38,6 +38,7 @@ import {
   MegaphoneIcon,
   StarIcon,
   BoltIcon,
+  BanknotesIcon,
 } from '@heroicons/react/24/outline'
 import {
   StarIcon as StarIconSolid,
@@ -429,6 +430,7 @@ const PromoterCenterPage: React.FC = () => {
               onCheckIn={handleCheckIn}
               getTrend={getTrend}
               t={t}
+              onNavigateDeposit={() => navigate('/promoter-deposit')}
             />
           )}
           {activeTab === 'materials' && (
@@ -465,10 +467,11 @@ interface OverviewTabProps {
   onCheckIn: () => void
   getTrend: (current: number, previous: number) => number
   t: (key: string, options?: any) => string
+  onNavigateDeposit: () => void
 }
 
 const OverviewTab: React.FC<OverviewTabProps> = ({
-  stats, todayLog, timeRange, isChecking, onCheckIn, getTrend, t
+  stats, todayLog, timeRange, isChecking, onCheckIn, getTrend, t, onNavigateDeposit
 }) => {
   if (!stats) return null
 
@@ -561,6 +564,27 @@ const OverviewTab: React.FC<OverviewTabProps> = ({
           {t('promoter.conversionHint')}
         </p>
       </motion.div>
+
+      {/* ========== 代客充值入口 ========== */}
+      <motion.button
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.22 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onNavigateDeposit}
+        className="w-full bg-gradient-to-r from-orange-500 to-amber-500 rounded-2xl p-4 text-white shadow-lg shadow-orange-200 flex items-center justify-between"
+      >
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+            <BanknotesIcon className="w-6 h-6" />
+          </div>
+          <div className="text-left">
+            <p className="font-bold text-lg">{t('promoterDeposit.title')}</p>
+            <p className="text-sm text-white/80">{t('promoterDeposit.entryHint')}</p>
+          </div>
+        </div>
+        <div className="text-2xl">→</div>
+      </motion.button>
 
       {/* ========== 今日打卡模块 ========== */}
       <motion.div

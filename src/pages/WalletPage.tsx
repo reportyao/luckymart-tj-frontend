@@ -188,7 +188,9 @@ const WalletPage: React.FC = () => {
       'GROUP_BUY_REFUND_TO_POINTS': t('wallet.transactionType.groupBuyRefundToPoints'),
       'GROUP_BUY_REFUND_TO_BALANCE': t('wallet.transactionType.groupBuyRefundToBalance'),
       'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize'),
-      'SPIN_REWARD': t('wallet.transactionType.spinReward')
+      'SPIN_REWARD': t('wallet.transactionType.spinReward'),
+      'PROMOTER_DEPOSIT': t('wallet.transactionType.promoterDeposit'),
+      'FIRST_DEPOSIT_BONUS': t('wallet.transactionType.firstDepositBonus')
     }
     return typeMap[type] || type
   }
@@ -205,7 +207,10 @@ const WalletPage: React.FC = () => {
   const getTransactionIcon = (type: string, amount?: number) => {
     switch (type) {
       case 'DEPOSIT':
+      case 'PROMOTER_DEPOSIT':
         return <ArrowDownIcon className="w-5 h-5 text-green-600" />
+      case 'FIRST_DEPOSIT_BONUS':
+        return <SparklesIcon className="w-5 h-5 text-orange-500" />
       case 'WITHDRAWAL':
         return <ArrowUpIcon className="w-5 h-5 text-red-600" />
       case 'ONE_YUAN_PURCHASE':

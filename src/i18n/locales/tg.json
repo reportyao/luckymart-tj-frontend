@@ -52,7 +52,8 @@
     "justNow": "Ҳамин лаҳза",
     "confirmSubmit": "Тасдиқи ирсол",
     "freeShippingPromo": "Интиқол 0 TJS! TezBarakat ба шумо 15 TJS тӯҳфа мекунад.",
-    "freeShippingAmount": "0 TJS"
+    "freeShippingAmount": "0 TJS",
+    "close": "Пӯшидан"
   },
   "nav": {
     "home": "Асосӣ",
@@ -365,7 +366,9 @@
       "groupBuyRefundToBalance": "Баргардонидани маблағ барои харидории гурӯҳии номуваффақ (ба ҳисоб)",
       "groupBuyPrize": "Бурд дар хариди гурӯҳӣ",
       "spinReward": "Мукофоти дават - чархи ҷодуӣ",
-      "fullPurchase": "Хариди пурра"
+      "fullPurchase": "Хариди пурра",
+      "promoterDeposit": "Пуркунии офлайн",
+      "firstDepositBonus": "Бонуси пуркунии аввал"
     },
     "transactionStatus": {
       "completed": "Анҷом ёфт",
@@ -548,7 +551,9 @@
     "totalValue": "Арзиши умумӣ",
     "viewShowoffs": "Дидани намоишҳо",
     "viewOrders": "Дидани ҳамаи фармоишҳо",
-    "notifications": "Паёмҳои ман"
+    "notifications": "Паёмҳои ман",
+    "myQrCode": "QR-коди ман",
+    "qrCodeHint": "Ба промоутер нишон диҳед барои пуркунӣ"
   },
   "auth": {
     "welcome": "Хуш омадед ба TezBarakat",
@@ -1560,5 +1565,48 @@
     "won": "Ғолиб шуд",
     "winCount": "Шумораи ғалабаҳо",
     "lotteryNotFound": "Қуръакашӣ ёфт нашуд"
+  },
+  "promoterDeposit": {
+    "title": "Пуркунии муштарӣ",
+    "entryHint": "Баланси корбарро пур кунед",
+    "todayStats": "Омори имрӯза",
+    "timesRemaining": "маротиба боқӣ",
+    "depositCount": "Шумора",
+    "depositAmount": "Маблағ",
+    "remainingLimit": "Лимити боқӣ",
+    "findUser": "Корбарро ёбед",
+    "findUserHint": "ID, Telegram ID ё QR-кодро скан кунед",
+    "searchPlaceholder": "ID / Telegram ID / Ном",
+    "searchUser": "Ҷустуҷӯ",
+    "searching": "Ҷустуҷӯ...",
+    "scanQrHint": "QR-коди корбарро скан кунед",
+    "userNotFound": "Корбар ёфт нашуд",
+    "searchFailed": "Хатои ҷустуҷӯ",
+    "cannotDepositSelf": "Ба худ пур кардан мумкин нест",
+    "invalidQrCode": "QR-коди нодуруст",
+    "scanNotSupported": "Скан дастгирӣ намешавад",
+    "changeUser": "Иваз",
+    "selectAmount": "Маблағро интихоб кунед",
+    "customAmountPlaceholder": "Маблағи дигар",
+    "amountRange": "Доира: 10 - 500 TJS",
+    "notePlaceholder": "Эзоҳ (ихтиёрӣ)",
+    "nextStep": "Қадами оянда",
+    "confirmTitle": "Тасдиқи пуркунӣ",
+    "targetUser": "Корбар",
+    "userId": "ID-и корбар",
+    "depositAmountLabel": "Маблағи пуркунӣ",
+    "noteLabel": "Эзоҳ",
+    "confirmDeposit": "Тасдиқ кардан",
+    "processing": "Коркард...",
+    "depositSuccess": "Пуркунӣ бомуваффақият",
+    "depositFailed": "Хатои пуркунӣ",
+    "firstDepositBonus": "Бонуси пуркунии аввал",
+    "todayRemaining": "Имрӯз истифода шуд",
+    "times": "маротиба",
+    "continueDeposit": "Идома додан",
+    "depositHistory": "Таърихи пуркуниҳо",
+    "noHistory": "Сабтҳо нест",
+    "bonus": "бонус",
+    "notLoggedIn": "Лутфан ворид шавед"
   }
 }

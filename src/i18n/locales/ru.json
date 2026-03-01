@@ -52,7 +52,8 @@
     "justNow": "Только что",
     "confirmSubmit": "Подтвердить отправку",
     "freeShippingPromo": "0 TJS за доставку! TezBarakat дарит вам 15 TJS.",
-    "freeShippingAmount": "0 TJS"
+    "freeShippingAmount": "0 TJS",
+    "close": "Закрыть"
   },
   "nav": {
     "home": "Главная",
@@ -365,7 +366,9 @@
       "groupBuyRefundToBalance": "Возврат средств за неудачную групповую покупку (на баланс)",
       "groupBuyPrize": "Выигрыш в групповой покупке",
       "spinReward": "Приглашение награда-волшебные колеса",
-      "fullPurchase": "Полная покупка"
+      "fullPurchase": "Полная покупка",
+      "promoterDeposit": "Офлайн пополнение",
+      "firstDepositBonus": "Бонус за первое пополнение"
     },
     "transactionStatus": {
       "completed": "Завершено",
@@ -548,7 +551,9 @@
     "totalValue": "Общая стоимость",
     "viewShowoffs": "Просмотреть выборы",
     "viewOrders": "Просмотреть все заказы",
-    "notifications": "Мои сообщения"
+    "notifications": "Мои сообщения",
+    "myQrCode": "Мой QR-код",
+    "qrCodeHint": "Покажите промоутеру для пополнения"
   },
   "auth": {
     "welcome": "Добро пожаловать в TezBarakat",
@@ -1560,5 +1565,48 @@
     "won": "Выиграл",
     "winCount": "Количество выигрышей",
     "lotteryNotFound": "Розыгрыш не найден"
+  },
+  "promoterDeposit": {
+    "title": "Пополнение клиенту",
+    "entryHint": "Пополнить баланс пользователя",
+    "todayStats": "Статистика за сегодня",
+    "timesRemaining": "осталось раз",
+    "depositCount": "Количество",
+    "depositAmount": "Сумма",
+    "remainingLimit": "Остаток лимита",
+    "findUser": "Найти пользователя",
+    "findUserHint": "Введите ID, Telegram ID или отсканируйте QR-код",
+    "searchPlaceholder": "ID / Telegram ID / Имя",
+    "searchUser": "Поиск",
+    "searching": "Поиск...",
+    "scanQrHint": "Отсканируйте QR-код пользователя",
+    "userNotFound": "Пользователь не найден",
+    "searchFailed": "Ошибка поиска",
+    "cannotDepositSelf": "Нельзя пополнить себе",
+    "invalidQrCode": "Недействительный QR-код",
+    "scanNotSupported": "Сканирование не поддерживается",
+    "changeUser": "Сменить",
+    "selectAmount": "Выберите сумму",
+    "customAmountPlaceholder": "Своя сумма",
+    "amountRange": "Диапазон: 10 - 500 TJS",
+    "notePlaceholder": "Примечание (необязательно)",
+    "nextStep": "Далее",
+    "confirmTitle": "Подтвердите пополнение",
+    "targetUser": "Пользователь",
+    "userId": "ID пользователя",
+    "depositAmountLabel": "Сумма пополнения",
+    "noteLabel": "Примечание",
+    "confirmDeposit": "Подтвердить",
+    "processing": "Обработка...",
+    "depositSuccess": "Пополнение успешно",
+    "depositFailed": "Ошибка пополнения",
+    "firstDepositBonus": "Бонус за первое пополнение",
+    "todayRemaining": "Использовано сегодня",
+    "times": "раз",
+    "continueDeposit": "Продолжить",
+    "depositHistory": "История пополнений",
+    "noHistory": "Нет записей",
+    "bonus": "бонус",
+    "notLoggedIn": "Войдите в систему"
   }
 }
