@@ -27,7 +27,6 @@ const InvitePage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [commissionRates, setCommissionRates] = useState<Record<number, number>>({ 1: 0.03, 2: 0.01, 3: 0.005 });
 
-  const [isActivating, setIsActivating] = useState(false);
   const inviteCode = user?.referral_code || user?.invite_code || 'LOADING...'; // 优先使用 referral_code，兼容旧的 invite_code
   // 从环境变量读取 Telegram 分享链接前缀（BotFather Direct Links）
   const sharePrefix = import.meta.env.VITE_TELEGRAM_SHARE_LINK || 't.me/tezbarakatbot/shoppp';
@@ -109,34 +108,6 @@ const InvitePage: React.FC = () => {
     }
   }, [user, t]);
 
-  const handleShare = async () => {
-    try {
-      // 记录分享事件
-      await referralService.logShareEvent('activation', 'telegram_group', { /* share details */ });
-      toast.success(t('invite.shareSuccess'));
-      // 重新获取数据以更新分享计数
-      fetchInviteData();
-    } catch (error) {
-      toast.error(t('invite.shareFailed'));
-    }
-  };
-
-  const handleActivateBonus = async () => {
-    setIsActivating(true);
-    try {
-      const result = await referralService.activateFirstDepositBonus();
-      if (result.success) {
-        toast.success(t('invite.activationSuccess', { amount: result.bonus_amount }));
-        fetchInviteData(); // 重新获取数据以更新状态
-      } else {
-        toast.error(t('invite.activationFailed'));
-      }
-    } catch (error: any) {
-      toast.error(error.message || t('error.networkError'));
-    } finally {
-      setIsActivating(false);
-    }
-  };
 
   useEffect(() => {
     if (user) {
@@ -173,12 +144,10 @@ const InvitePage: React.FC = () => {
         text: text,
         url: inviteLink
       }).then(() => {
-        // 假设分享成功后，调用记录分享事件的函数
-        handleShare();
+        toast.success(t('invite.shareSuccess'));
       }).catch(err => console.log(t('common.error') + ':', err));
     } else {
       copyInviteLink();
-      handleShare(); // 如果不支持原生分享，复制链接后也记录一次
     }
   };
 

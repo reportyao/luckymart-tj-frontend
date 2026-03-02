@@ -364,7 +364,9 @@
       "groupBuyRefundToBalance": "拼团未成功退款（退回余额）",
       "groupBuyPrize": "拼团入选",
       "spinReward": "邀请奖励-转盘抽奖",
-      "fullPurchase": "全款购买"
+      "fullPurchase": "全款购买",
+      "promoterDeposit": "线下充值",
+      "bonus": "奖励"
     },
     "transactionStatus": {
       "completed": "已完成",

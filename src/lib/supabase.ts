@@ -82,11 +82,6 @@ export interface InviteStats {
   pending_commission: number;
   paid_commission: number;
   bonus_balance: number;
-  first_deposit_bonus_status?: string;
-  first_deposit_bonus_amount?: number;
-  first_deposit_bonus_expire_at?: string | null;
-  activation_share_count?: number;
-  activation_invite_count?: number;
 }
 export interface InvitedUser {
   id: string;
@@ -625,42 +620,6 @@ export const referralService = {
     return data.data as InvitedUser[];
   },
 
-  /**
-   * 记录分享事件
-   * @param shareType 分享类型
-   * @param shareTarget 分享目标
-   * @param shareData 分享数据
-   */
-  async logShareEvent(shareType: string, shareTarget: string, shareData: any): Promise<void> {
-    const user = await authService.getCurrentUser();
-    if (!user) throw new Error('用户未登录');
-
-    const { error } = await supabase.functions.invoke('log-share-event', {
-      body: { share_type: shareType, share_target: shareTarget, share_data: shareData }
-    });
-
-    if (error) {
-      console.error('Failed to log share event:', error);
-      throw new Error(await extractEdgeFunctionError(error));
-    }
-  },
-
-  /**
-   * 激活首充奖励
-   */
-  async activateFirstDepositBonus(): Promise<{ success: boolean; bonus_amount?: number }> {
-    const user = await authService.getCurrentUser();
-    if (!user) throw new Error('用户未登录');
-
-    const { data, error } = await supabase.functions.invoke('activate-first-deposit-bonus');
-
-    if (error) {
-      console.error('Failed to activate bonus:', error);
-      throw new Error(await extractEdgeFunctionError(error));
-    }
-    
-    return data as { success: boolean; bonus_amount?: number };
-  },
 };
 
 /**

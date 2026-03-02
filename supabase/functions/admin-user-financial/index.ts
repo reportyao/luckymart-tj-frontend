@@ -146,7 +146,7 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
 
   if (transactionsError) throw transactionsError
 
-  const periodDeposits = transactions.filter((t: any) => t.type === 'DEPOSIT').reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
+  const periodDeposits = transactions.filter((t: any) => ['DEPOSIT', 'PROMOTER_DEPOSIT'].includes(t.type)).reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
   const periodWithdrawals = transactions.filter((t: any) => t.type === 'WITHDRAWAL').reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
   const periodSpending = transactions.filter((t: any) => ['LOTTERY_PURCHASE', 'GROUP_BUY_PURCHASE', 'MARKET_PURCHASE'].includes(t.type)).reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
   const periodIncome = transactions.filter((t: any) => ['LOTTERY_PRIZE', 'GROUP_BUY_WIN', 'REFERRAL_BONUS', 'MARKET_SALE'].includes(t.type)).reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
@@ -364,7 +364,8 @@ function getTransactionTypeName(type: string): string {
     'REFERRAL_FIRST_DEPOSIT_COMMISSION': '邀请首充佣金',
     'REFERRAL_GROUP_BUY_COMMISSION': '邀请拼团佣金',
     'BONUS': '奖励',
-    'POINTS_EXCHANGE': '积分兑换'
+    'POINTS_EXCHANGE': '积分兑换',
+    'PROMOTER_DEPOSIT': '地推代充'
   }
   return typeNames[type] || type
 }
@@ -390,6 +391,7 @@ function isIncomeType(type: string): boolean {
     'FIRST_GROUP_BUY_REWARD',
     'REFERRAL_FIRST_DEPOSIT_COMMISSION',
     'REFERRAL_GROUP_BUY_COMMISSION',
-    'BONUS'
+    'BONUS',
+    'PROMOTER_DEPOSIT'
   ].includes(type)
 }

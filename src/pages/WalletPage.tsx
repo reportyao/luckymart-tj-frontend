@@ -188,7 +188,9 @@ const WalletPage: React.FC = () => {
       'GROUP_BUY_REFUND_TO_POINTS': t('wallet.transactionType.groupBuyRefundToPoints'),
       'GROUP_BUY_REFUND_TO_BALANCE': t('wallet.transactionType.groupBuyRefundToBalance'),
       'GROUP_BUY_PRIZE': t('wallet.transactionType.groupBuyPrize'),
-      'SPIN_REWARD': t('wallet.transactionType.spinReward')
+      'SPIN_REWARD': t('wallet.transactionType.spinReward'),
+      'PROMOTER_DEPOSIT': t('wallet.transactionType.promoterDeposit'),
+      'BONUS': t('wallet.transactionType.bonus')
     }
     return typeMap[type] || type
   }
@@ -205,6 +207,7 @@ const WalletPage: React.FC = () => {
   const getTransactionIcon = (type: string, amount?: number) => {
     switch (type) {
       case 'DEPOSIT':
+      case 'PROMOTER_DEPOSIT':
         return <ArrowDownIcon className="w-5 h-5 text-green-600" />
       case 'WITHDRAWAL':
         return <ArrowUpIcon className="w-5 h-5 text-red-600" />
@@ -234,6 +237,7 @@ const WalletPage: React.FC = () => {
       case 'SHOWOFF_REWARD':
       case 'SPIN_REWARD':
         return <ArrowDownIcon className="w-5 h-5 text-yellow-600" />
+      case 'BONUS':
       case 'REFERRAL_BONUS':
       case 'FRIEND_CASHBACK':
         return <ArrowDownIcon className="w-5 h-5 text-purple-600" />

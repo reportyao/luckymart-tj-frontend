@@ -365,7 +365,9 @@
       "groupBuyRefundToBalance": "Баргардонидани маблағ барои харидории гурӯҳии номуваффақ (ба ҳисоб)",
       "groupBuyPrize": "Бурд дар хариди гурӯҳӣ",
       "spinReward": "Мукофоти дават - чархи ҷодуӣ",
-      "fullPurchase": "Хариди пурра"
+      "fullPurchase": "Хариди пурра",
+      "promoterDeposit": "Пуркунии аз промоутер",
+      "bonus": "Бонус"
     },
     "transactionStatus": {
       "completed": "Анҷом ёфт",

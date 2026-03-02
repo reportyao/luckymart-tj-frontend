@@ -365,7 +365,9 @@
       "groupBuyRefundToBalance": "Возврат средств за неудачную групповую покупку (на баланс)",
       "groupBuyPrize": "Выигрыш в групповой покупке",
       "spinReward": "Приглашение награда-волшебные колеса",
-      "fullPurchase": "Полная покупка"
+      "fullPurchase": "Полная покупка",
+      "promoterDeposit": "Пополнение от промоутера",
+      "bonus": "Бонус"
     },
     "transactionStatus": {
       "completed": "Завершено",
