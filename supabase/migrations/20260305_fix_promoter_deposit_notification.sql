@@ -1,6 +1,6 @@
 -- ============================================================
--- 修复 Migration: 地推充值通知字段名不匹配
--- 版本: 1.1.1
+-- 修复 Migration: 地推充值系统全面修复
+-- 版本: 1.2.0
 -- 日期: 2026-03-05
 -- 
 -- 修复内容:
@@ -10,14 +10,21 @@
 --      - promoter_id → promoter_name (改为实际名称)
 --      - target_name → target_user_name
 --   2. BUG-010: 新增查询地推人员名称 (v_promoter_name)
---      以便在通知中显示操作人名称而非ID
+--   3. ISSUE-TZ-001: 时区修复 - CURRENT_DATE → Asia/Dushanbe 时区
+--      数据库使用UTC，但业务在塔吉克斯坦(UTC+5)
+--      在UTC 19:00-23:59期间（当地00:00-04:59），额度计算会跨日错误
+--   4. ISSUE-AMT-001: 增加整数金额验证 (FLOOR检查)
+--   5. ISSUE-SEARCH-001: search_user_for_deposit 增加 referral_code 搜索
 -- ============================================================
 
+-- ============================================================
+-- Part 1: 修复 perform_promoter_deposit 函数
+-- ============================================================
 CREATE OR REPLACE FUNCTION public.perform_promoter_deposit(
-  p_promoter_id text, 
-  p_target_user_id text, 
-  p_amount numeric, 
-  p_note text DEFAULT NULL::text
+  p_promoter_id text,
+  p_target_user_id text,
+  p_amount numeric,
+  p_note text DEFAULT NULL
 )
 RETURNS json
 LANGUAGE plpgsql
@@ -25,7 +32,7 @@ SECURITY DEFINER
 AS $function$
 DECLARE
   v_promoter        RECORD;
-  v_today           DATE := CURRENT_DATE;
+  v_today           DATE := (now() AT TIME ZONE 'Asia/Dushanbe')::date;
   v_today_total     NUMERIC;
   v_today_count     INTEGER;
   v_wallet          RECORD;
@@ -39,7 +46,7 @@ DECLARE
   v_tx_id           UUID;
   v_bonus_tx_id     UUID;
   v_target_name     TEXT;
-  v_promoter_name   TEXT;  -- [BUG-010 FIX] 新增: 地推人员名称
+  v_promoter_name   TEXT;
   v_settlement      RECORD;
 BEGIN
   -- ============================================================
@@ -66,14 +73,20 @@ BEGIN
   END IF;
 
   -- ============================================================
-  -- Step 3: 验证金额范围 (10 ~ 500 TJS)
+  -- Step 3: 验证金额范围 (10 ~ 500 TJS) 且必须为整数
+  -- [ISSUE-AMT-001 FIX] 增加整数验证
   -- ============================================================
   IF p_amount < 10 OR p_amount > 500 THEN
     RETURN json_build_object('success', false, 'error', 'INVALID_AMOUNT');
   END IF;
 
+  IF p_amount != FLOOR(p_amount) THEN
+    RETURN json_build_object('success', false, 'error', 'AMOUNT_MUST_BE_INTEGER');
+  END IF;
+
   -- ============================================================
-  -- Step 3.5 (PD-003 修复): 锁定或创建当日结算记录
+  -- Step 3.5: 锁定或创建当日结算记录
+  -- [ISSUE-TZ-001 FIX] 使用塔吉克斯坦时区的日期
   -- ============================================================
   INSERT INTO promoter_settlements (
     promoter_id, settlement_date,
@@ -94,6 +107,7 @@ BEGIN
 
   -- ============================================================
   -- Step 4: 检查今日充值次数和额度
+  -- [ISSUE-TZ-001 FIX] 使用塔吉克斯坦时区的日期范围
   -- ============================================================
   SELECT
     COALESCE(SUM(amount), 0),
@@ -101,7 +115,8 @@ BEGIN
   INTO v_today_total, v_today_count
   FROM promoter_deposits
   WHERE promoter_id = p_promoter_id
-    AND created_at::date = v_today;
+    AND created_at >= (v_today::timestamp AT TIME ZONE 'Asia/Dushanbe')
+    AND created_at < ((v_today + INTERVAL '1 day')::timestamp AT TIME ZONE 'Asia/Dushanbe');
 
   IF v_today_count >= 10 THEN
     RETURN json_build_object('success', false, 'error', 'DAILY_COUNT_EXCEEDED');
@@ -116,7 +131,7 @@ BEGIN
   END IF;
 
   -- ============================================================
-  -- Step 5: 锁定目标用户钱包
+  -- Step 5: 锁定目标用户钱包（FOR UPDATE 防止余额并发修改）
   -- ============================================================
   SELECT *
   INTO v_wallet
@@ -156,7 +171,7 @@ BEGIN
   END IF;
 
   -- ============================================================
-  -- Step 7: 更新钱包余额
+  -- Step 7: 更新钱包余额（原子操作）
   -- ============================================================
   v_new_balance := COALESCE(v_wallet.balance, 0) + p_amount + v_bonus_amount;
   v_new_total_deposits := COALESCE(v_wallet.total_deposits, 0) + p_amount;
@@ -245,7 +260,7 @@ BEGIN
   );
 
   -- ============================================================
-  -- Step 11: 获取目标用户名称和地推人员名称（用于通知消息）
+  -- Step 11: 获取用户名称（用于通知消息）
   -- [BUG-010 FIX] 新增查询地推人员名称
   -- ============================================================
   SELECT COALESCE(first_name, telegram_username, telegram_id, p_target_user_id)
@@ -259,17 +274,11 @@ BEGIN
   WHERE id = p_promoter_id;
 
   -- ============================================================
-  -- Step 12: 插入通知队列 - 通知被充值用户
-  -- [BUG-001 FIX] 修正 data 字段名与通知模板一致:
-  --   amount → transaction_amount
-  --   promoter_id → promoter_name
+  -- Step 12: 通知被充值用户
+  -- [BUG-001 FIX] 修正 data 字段名与通知模板一致
   -- ============================================================
   INSERT INTO notification_queue (
-    user_id,
-    notification_type,
-    title,
-    message,
-    data
+    user_id, notification_type, title, message, data
   ) VALUES (
     p_target_user_id,
     'promoter_deposit',
@@ -288,17 +297,11 @@ BEGIN
   );
 
   -- ============================================================
-  -- Step 13: 插入通知队列 - 通知地推人员本人
-  -- [BUG-001 FIX] 修正 data 字段名:
-  --   amount → transaction_amount
-  --   target_name → target_user_name
+  -- Step 13: 通知地推人员本人
+  -- [BUG-001 FIX] 修正 data 字段名
   -- ============================================================
   INSERT INTO notification_queue (
-    user_id,
-    notification_type,
-    title,
-    message,
-    data
+    user_id, notification_type, title, message, data
   ) VALUES (
     p_promoter_id,
     'promoter_deposit_confirm',
@@ -315,7 +318,7 @@ BEGIN
   );
 
   -- ============================================================
-  -- Step 14: 更新当日缴款结算记录
+  -- Step 14: 更新当日结算记录
   -- ============================================================
   UPDATE promoter_settlements
   SET
@@ -346,5 +349,131 @@ EXCEPTION
       'error', 'INTERNAL_ERROR',
       'detail', SQLERRM
     );
+END;
+$function$;
+
+-- ============================================================
+-- Part 2: 修复 search_user_for_deposit 函数
+-- [ISSUE-SEARCH-001 FIX] 增加 referral_code 搜索支持
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.search_user_for_deposit(p_query text)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+  v_user RECORD;
+BEGIN
+  -- 1. 完整 UUID 匹配
+  IF p_query ~ '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' THEN
+    SELECT id, telegram_id, telegram_username, first_name, last_name, avatar_url
+    INTO v_user
+    FROM users
+    WHERE id = p_query
+      AND (is_blocked IS NOT TRUE)
+      AND (deleted_at IS NULL);
+  END IF;
+
+  -- 2. 纯数字 -> Telegram ID 匹配
+  IF v_user IS NULL AND p_query ~ '^\d+$' THEN
+    SELECT id, telegram_id, telegram_username, first_name, last_name, avatar_url
+    INTO v_user
+    FROM users
+    WHERE telegram_id = p_query
+      AND (is_blocked IS NOT TRUE)
+      AND (deleted_at IS NULL);
+  END IF;
+
+  -- 3. Telegram 用户名匹配（去@后不区分大小写）
+  IF v_user IS NULL THEN
+    SELECT id, telegram_id, telegram_username, first_name, last_name, avatar_url
+    INTO v_user
+    FROM users
+    WHERE LOWER(telegram_username) = LOWER(REPLACE(p_query, '@', ''))
+      AND (is_blocked IS NOT TRUE)
+      AND (deleted_at IS NULL);
+  END IF;
+
+  -- 4. [ISSUE-SEARCH-001 FIX] referral_code 匹配（不区分大小写）
+  IF v_user IS NULL THEN
+    SELECT id, telegram_id, telegram_username, first_name, last_name, avatar_url
+    INTO v_user
+    FROM users
+    WHERE UPPER(referral_code) = UPPER(p_query)
+      AND (is_blocked IS NOT TRUE)
+      AND (deleted_at IS NULL);
+  END IF;
+
+  -- 5. UUID 前8位 hex 前缀匹配
+  IF v_user IS NULL AND LENGTH(p_query) = 8 AND p_query ~ '^[0-9a-f]+$' THEN
+    SELECT id, telegram_id, telegram_username, first_name, last_name, avatar_url
+    INTO v_user
+    FROM users
+    WHERE id LIKE p_query || '%'
+      AND (is_blocked IS NOT TRUE)
+      AND (deleted_at IS NULL)
+    LIMIT 1;
+  END IF;
+
+  -- 未找到
+  IF v_user IS NULL THEN
+    RETURN json_build_object('success', false, 'error', 'USER_NOT_FOUND');
+  END IF;
+
+  RETURN json_build_object(
+    'success', true,
+    'user', json_build_object(
+      'id', v_user.id,
+      'telegram_id', v_user.telegram_id,
+      'telegram_username', v_user.telegram_username,
+      'first_name', v_user.first_name,
+      'last_name', v_user.last_name,
+      'avatar_url', v_user.avatar_url
+    )
+  );
+END;
+$function$;
+
+-- ============================================================
+-- Part 3: 修复 get_promoter_deposit_stats 函数
+-- [ISSUE-TZ-001 FIX] 使用塔吉克斯坦时区
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.get_promoter_deposit_stats(
+  p_promoter_id text,
+  p_date date DEFAULT (now() AT TIME ZONE 'Asia/Dushanbe')::date
+)
+RETURNS json
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $function$
+DECLARE
+  v_promoter    RECORD;
+  v_today_stats RECORD;
+BEGIN
+  SELECT pp.daily_deposit_limit
+  INTO v_promoter
+  FROM promoter_profiles pp
+  WHERE pp.user_id = p_promoter_id;
+
+  SELECT
+    COALESCE(SUM(amount), 0)        AS total_amount,
+    COUNT(*)::INTEGER               AS total_count,
+    COALESCE(SUM(bonus_amount), 0)  AS total_bonus
+  INTO v_today_stats
+  FROM promoter_deposits
+  WHERE promoter_id = p_promoter_id
+    AND created_at >= (p_date::timestamp AT TIME ZONE 'Asia/Dushanbe')
+    AND created_at < ((p_date + INTERVAL '1 day')::timestamp AT TIME ZONE 'Asia/Dushanbe');
+
+  RETURN json_build_object(
+    'success', true,
+    'date', p_date,
+    'total_amount', v_today_stats.total_amount,
+    'total_count', v_today_stats.total_count,
+    'total_bonus', v_today_stats.total_bonus,
+    'daily_limit', COALESCE(v_promoter.daily_deposit_limit, 5000),
+    'remaining_limit', COALESCE(v_promoter.daily_deposit_limit, 5000) - v_today_stats.total_amount,
+    'remaining_count', 10 - v_today_stats.total_count
+  );
 END;
 $function$;
