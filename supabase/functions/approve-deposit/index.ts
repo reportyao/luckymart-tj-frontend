@@ -256,9 +256,23 @@ serve(async (req) => {
         user_id: depositRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '充值成功',
+        title_i18n: {
+          zh: '充值成功',
+          ru: 'Пополнение успешно',
+          tg: 'Пуркунӣ бомуваффақият',
+        },
         content: bonusAmount > 0 
           ? `您的充值申请已审核通过,金额${depositAmount} ${depositRequest.currency}已到账，首充奖励+${bonusAmount} ${depositRequest.currency}`
           : `您的充值申请已审核通过,金额${depositAmount} ${depositRequest.currency}已到账`,
+        message_i18n: bonusAmount > 0 ? {
+          zh: `您的充值申请已审核通过，金额 ${depositAmount} ${depositRequest.currency} 已到账，首充奖励 +${bonusAmount} ${depositRequest.currency}`,
+          ru: `Ваш запрос на пополнение одобрен. ${depositAmount} ${depositRequest.currency} зачислено, бонус за первое пополнение +${bonusAmount} ${depositRequest.currency}`,
+          tg: `Дархости пуркунии шумо тасдиқ шуд. ${depositAmount} ${depositRequest.currency} ворид шуд, мукофоти аввалин пуркунӣ +${bonusAmount} ${depositRequest.currency}`,
+        } : {
+          zh: `您的充值申请已审核通过，金额 ${depositAmount} ${depositRequest.currency} 已到账`,
+          ru: `Ваш запрос на пополнение одобрен. ${depositAmount} ${depositRequest.currency} зачислено`,
+          tg: `Дархости пуркунии шумо тасдиқ шуд. ${depositAmount} ${depositRequest.currency} ворид шуд`,
+        },
         related_id: requestId,
         related_type: 'DEPOSIT_REQUEST',
       })
@@ -330,7 +344,17 @@ serve(async (req) => {
         user_id: depositRequest.user_id,
         type: 'PAYMENT_FAILED',
         title: '充值失败',
+        title_i18n: {
+          zh: '充值失败',
+          ru: 'Ошибка пополнения',
+          tg: 'Хатои пуркунӣ',
+        },
         content: `您的充值申请已被拒绝${adminNote ? `,原因: ${adminNote}` : ''}`,
+        message_i18n: {
+          zh: `您的充值申请已被拒绝${adminNote ? `，原因：${adminNote}` : ''}`,
+          ru: `Ваш запрос на пополнение отклонён${adminNote ? `. Причина: ${adminNote}` : ''}`,
+          tg: `Дархости пуркунии шумо рад карда шуд${adminNote ? `. Сабаб: ${adminNote}` : ''}`,
+        },
         related_id: requestId,
         related_type: 'DEPOSIT_REQUEST',
       })

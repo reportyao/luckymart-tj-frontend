@@ -158,7 +158,17 @@ serve(async (req) => {
         user_id: showoff.user_id,
         type: 'SHOWOFF_APPROVED',
         title: '晒单审核通过',
+        title_i18n: {
+          zh: '晒单审核通过',
+          ru: 'Отзыв одобрен',
+          tg: 'Шарҳи тасдиқ шуд',
+        },
         content: `您的晒单已审核通过，获得 ${rewardCoins} 积分奖励！`,
+        message_i18n: {
+          zh: `您的晒单已审核通过，获得 ${rewardCoins} 积分奖励！`,
+          ru: `Ваш отзыв одобрен. Вы получили ${rewardCoins} баллов!`,
+          tg: `Шарҳи шумо тасдиқ шуд. Шумо ${rewardCoins} хол гирифтед!`,
+        },
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })
@@ -201,7 +211,17 @@ serve(async (req) => {
         user_id: showoff.user_id,
         type: 'SHOWOFF_APPROVED',
         title: '晒单审核通过',
+        title_i18n: {
+          zh: '晒单审核通过',
+          ru: 'Отзыв одобрен',
+          tg: 'Шарҳи тасдиқ шуд',
+        },
         content: '您的晒单已审核通过！',
+        message_i18n: {
+          zh: '您的晒单已审核通过！',
+          ru: 'Ваш отзыв одобрен!',
+          tg: 'Шарҳи шумо тасдиқ шуд!',
+        },
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })
@@ -244,7 +264,17 @@ serve(async (req) => {
         user_id: showoff.user_id,
         type: 'SHOWOFF_REJECTED',
         title: '晒单审核未通过',
+        title_i18n: {
+          zh: '晒单审核未通过',
+          ru: 'Отзыв отклонён',
+          tg: 'Шарҳ рад карда шуд',
+        },
         content: `您的晒单审核未通过${adminNote ? `，原因: ${adminNote}` : ''}`,
+        message_i18n: {
+          zh: `您的晒单审核未通过${adminNote ? `，原因：${adminNote}` : ''}`,
+          ru: `Ваш отзыв отклонён${adminNote ? `. Причина: ${adminNote}` : ''}`,
+          tg: `Шарҳи шумо рад карда шуд${adminNote ? `. Сабаб: ${adminNote}` : ''}`,
+        },
         related_id: showoffId,
         related_type: 'SHOWOFF',
       })

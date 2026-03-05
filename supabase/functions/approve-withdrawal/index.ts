@@ -211,7 +211,17 @@ serve(async (req) => {
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '提现审核通过',
+        title_i18n: {
+          zh: '提现审核通过',
+          ru: 'Заявка на вывод одобрена',
+          tg: 'Дархости баровардан тасдиқ шуд',
+        },
         content: `您的提现申请已审核通过，金额${withdrawalRequest.amount} ${withdrawalRequest.currency}已扣除，正在处理转账中`,
+        message_i18n: {
+          zh: `您的提现申请已审核通过，金额 ${withdrawalRequest.amount} ${withdrawalRequest.currency} 已扣除，正在处理转账中`,
+          ru: `Ваш запрос на вывод одобрен. ${withdrawalRequest.amount} ${withdrawalRequest.currency} списано, перевод обрабатывается`,
+          tg: `Дархости баровардании шумо тасдиқ шуд. ${withdrawalRequest.amount} ${withdrawalRequest.currency} кам шуд, антиқол коркард мешавад`,
+        },
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
@@ -289,7 +299,17 @@ serve(async (req) => {
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_FAILED',
         title: '提现失败',
+        title_i18n: {
+          zh: '提现失败',
+          ru: 'Ошибка вывода',
+          tg: 'Хатои баровардан',
+        },
         content: `您的提现申请已被拒绝${adminNote ? `,原因: ${adminNote}` : ''},金额已解冻`,
+        message_i18n: {
+          zh: `您的提现申请已被拒绝${adminNote ? `，原因：${adminNote}` : ''}，金额已解冻`,
+          ru: `Ваш запрос на вывод отклонён${adminNote ? `. Причина: ${adminNote}` : ''}. Средства разморожены`,
+          tg: `Дархости баровардании шумо рад карда шуд${adminNote ? `. Сабаб: ${adminNote}` : ''}. Маблағ аз карда шуд`,
+        },
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })
@@ -341,7 +361,17 @@ serve(async (req) => {
         user_id: withdrawalRequest.user_id,
         type: 'PAYMENT_SUCCESS',
         title: '提现成功',
+        title_i18n: {
+          zh: '提现成功',
+          ru: 'Вывод успешен',
+          tg: 'Баровардан бомуваффақият',
+        },
         content: `您的提现已完成，金额${withdrawalRequest.amount} ${withdrawalRequest.currency}已转账到账`,
+        message_i18n: {
+          zh: `您的提现已完成，金额 ${withdrawalRequest.amount} ${withdrawalRequest.currency} 已转账到账`,
+          ru: `Ваш вывод завершён. ${withdrawalRequest.amount} ${withdrawalRequest.currency} переведено`,
+          tg: `Баровардании шумо анҷом шуд. ${withdrawalRequest.amount} ${withdrawalRequest.currency} антиқол шуд`,
+        },
         related_id: requestId,
         related_type: 'WITHDRAWAL_REQUEST',
       })

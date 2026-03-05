@@ -208,7 +208,17 @@ serve(async (req) => {
         user_id: winningEntry.user_id,
         type: 'LOTTERY_RESULT',
         title: '🎉 恭喜中奖！',
-        content: `恭喜您在"${lottery.title}"积分商城中中奖！中奖码: ${winningNumber}`,
+        title_i18n: {
+          zh: '🎉 恭喜中奖！',
+          ru: '🎉 Поздравляем! Вы выиграли!',
+          tg: '🎉 Табрик! Шумо бурдед!',
+        },
+        content: `恭喜您在“${lottery.title}”积分商城中中奖！中奖码: ${winningNumber}`,
+        message_i18n: {
+          zh: `恭喜您在“${lottery.title}”积分商城中中奖！中奖码: ${winningNumber}`,
+          ru: `Поздравляем! Вы выиграли в «${lottery.title}»! Выигрышный номер: ${winningNumber}`,
+          tg: `Табрик! Шумо дар «${lottery.title}» дар бурдед! Рақами бурд: ${winningNumber}`,
+        },
         related_id: lottery_id,
         related_type: 'lottery',
         is_read: false,
