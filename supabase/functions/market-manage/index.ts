@@ -250,26 +250,34 @@ serve(async (req) => {
           .eq('id', listing_id)
 
         // 5. 创建交易记录
+        // 【修复 4.2】使用 wallet_id 而非 user_id，添加 balance_before/after
+        // wallet_transactions 表只有 wallet_id 列（外键指向 wallets.id），没有 user_id 和 currency 列
+        const sellerCurrentBalance = sellerWallet ? parseFloat(sellerWallet.balance) : 0
+        const sellerNewBalance = sellerCurrentBalance + listing.selling_price
         await supabaseClient
           .from('wallet_transactions')
           .insert([
             {
-              user_id: user_id,
+              wallet_id: buyerWallet.id,  // 【修复 4.2】使用 wallet_id 而非 user_id
               type: 'MARKET_PURCHASE',
               amount: -listing.selling_price,
-              currency: 'TJS',
+              balance_before: buyerCurrentBalance,  // 【修复 4.1】新增
+              balance_after: buyerNewBalance,        // 【修复 4.1】新增
               status: 'COMPLETED',
               description: '购买转售彩票',
-              metadata: { listing_id }
+              metadata: { listing_id },
+              processed_at: new Date().toISOString(),
             },
             {
-              user_id: listing.seller_id,
+              wallet_id: sellerWallet.id,  // 【修复 4.2】使用 wallet_id 而非 user_id
               type: 'MARKET_SALE',
               amount: listing.selling_price,
-              currency: 'TJS',
+              balance_before: sellerCurrentBalance,  // 【修复 4.1】新增
+              balance_after: sellerNewBalance,        // 【修复 4.1】新增
               status: 'COMPLETED',
               description: '转售彩票收入',
-              metadata: { listing_id }
+              metadata: { listing_id },
+              processed_at: new Date().toISOString(),
             }
           ])
 

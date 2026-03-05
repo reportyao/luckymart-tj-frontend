@@ -256,6 +256,7 @@ serve(async (req) => {
           wallet_id: wallet.id,
           type: 'WITHDRAWAL_FREEZE',
           amount: -withdrawAmount,
+          balance_before: currentBalance,  // 【修复 4.1】添加 balance_before 确保流水完整
           balance_after: currentBalance, // 余额不变，只是冻结
           status: 'PENDING',
           description: `提现申请已冻结 - 订单号: ${orderNumber}，等待审核`,

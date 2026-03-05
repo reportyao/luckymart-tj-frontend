@@ -201,12 +201,14 @@ Deno.serve(async (req) => {
           }
 
           // ✅ 【修复4】创建钱包交易记录，使用 reference_id 作为幂等键
+          // 【修复 4.1】使用 currentWallet（重试后最新状态）而非 wallet（初始读取）
+          // 确保 balance_before/after 反映实际更新时的钱包状态
           const { error: txError } = await supabase.from('wallet_transactions').insert({
-            wallet_id: wallet.id,
+            wallet_id: currentWallet.id,
             type: 'GROUP_BUY_REFUND_TO_BALANCE',
             amount: refundAmount,
-            balance_before: Number(wallet.balance),
-            balance_after: Number(wallet.balance) + refundAmount,
+            balance_before: Number(currentWallet.balance),
+            balance_after: Number(currentWallet.balance) + refundAmount,
             status: 'COMPLETED',
             description: `拼团未成功退款（退回余额）- ${session.session_code}`,
             reference_id: order.id,  // ✅ 幂等键

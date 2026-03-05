@@ -271,14 +271,17 @@ serve(async (req) => {
       }
 
       // 创建解冻交易记录
+      // 【修复 4.1】添加 balance_before 确保流水记录完整
       await supabaseClient.from('wallet_transactions').insert({
         wallet_id: wallet.id,
         type: 'WITHDRAWAL_UNFREEZE',
         amount: 0, // 解冻不改变余额
+        balance_before: currentBalance,  // 【修复 4.1】新增: 记录解冻前余额
         balance_after: currentBalance,
         status: 'COMPLETED',
         description: `提现申请被拒绝，已解冻 - 订单号: ${withdrawalRequest.order_number}`,
         related_id: requestId,
+        processed_at: new Date().toISOString(),
       })
 
       // 发送通知给用户
