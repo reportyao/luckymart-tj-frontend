@@ -301,7 +301,7 @@ Deno.serve(async (req) => {
         balance_before: Number(wallet.balance),
         balance_after: newBalance,
         status: 'COMPLETED',
-        description: `拼团参与 - ${productTitle?.zh || productTitle?.en || 'Group Buy'}`,
+        description: `Group Buy Join - ${productTitle?.en || productTitle?.zh || 'Group Buy'}`,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       });

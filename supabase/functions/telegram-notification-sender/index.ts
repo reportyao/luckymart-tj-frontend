@@ -81,7 +81,7 @@ const notificationTemplates = {
       `🎉 Табрик бо харидии гурӯҳии муваффақ!\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n⏰ Вақти муваффақият: ${data.won_at}\n\nЛутфан суроғаи расонидани молро пур кунед!`
   },
   
-  // 拼团退款通知（未拼中）
+  // 拼团退款通知（未拼中 - 退回余额）
   group_buy_refund: {
     zh: (data: NotificationData) => 
       `😔 很遗憾本次未拼中\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 退款金额: ${data.refund_amount} TJS\n💵 当前余额: ${data.balance}\n\n退款已退回您的余额钱包，欢迎继续参与！`,
@@ -89,6 +89,16 @@ const notificationTemplates = {
       `😔 К сожалению, в этот раз не повезло\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Возврат: ${data.refund_amount} TJS\n💵 Текущий баланс: ${data.balance}\n\nСредства возвращены на ваш баланс, продолжайте участвовать!`,
     tg: (data: NotificationData) => 
       `😔 Мутаассифона ин дафъа насиб нашуд\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n💰 Баргардонидан: ${data.refund_amount} TJS\n💵 Боқимондаи ҷорӣ: ${data.balance}\n\nМаблағ ба боқимондаи шумо баргардонида шуд, идома диҳед!`
+  },
+
+  // 拼团退款通知（未拼中 - 退回积分）
+  group_buy_points_refund: {
+    zh: (data: NotificationData) => 
+      `😔 很遗憾本次未拼中\n\n🎁 商品: ${data.product_name}\n🔢 拼团编号: ${data.session_code}\n💰 补偿积分: +${data.refund_amount} 积分\n💎 当前积分: ${data.points_balance}\n\n您的支付金额已转换为积分退还，可在积分商城继续购物。`,
+    ru: (data: NotificationData) => 
+      `😔 К сожалению, в этот раз не повезло\n\n🎁 Товар: ${data.product_name}\n🔢 Номер группы: ${data.session_code}\n💰 Компенсация: +${data.refund_amount} баллов\n💎 Текущие баллы: ${data.points_balance}\n\nВаша оплата конвертирована в баллы. Используйте их в магазине баллов.`,
+    tg: (data: NotificationData) => 
+      `😔 Мутаассифона ин дафъа насиб нашуд\n\n🎁 Мол: ${data.product_name}\n🔢 Рақами гурӯҳ: ${data.session_code}\n💰 Товони холҳо: +${data.refund_amount} хол\n💎 Холҳои ҷорӣ: ${data.points_balance}\n\nМаблағи шумо ба холҳо табдил шуд. Дар мағозаи холҳо истифода баред.`
   },
   
   // 拼团超时/取消通知
