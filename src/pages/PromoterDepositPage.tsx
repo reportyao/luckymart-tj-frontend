@@ -271,10 +271,10 @@ const PromoterDepositPage: React.FC = () => {
   }
 
   const handleCustomAmountChange = (value: string) => {
-    // 只允许数字和小数点
-    const filtered = value.replace(/[^\d.]/g, '')
+    // 只允许整数金额
+    const filtered = value.replace(/[^\d]/g, '')
     setCustomAmount(filtered)
-    const num = parseFloat(filtered)
+    const num = parseInt(filtered, 10)
     if (!isNaN(num) && num >= 10 && num <= 500) {
       setAmount(num)
     } else {
@@ -589,7 +589,7 @@ const PromoterDepositPage: React.FC = () => {
               <div className="relative mb-4">
                 <input
                   type="text"
-                  inputMode="decimal"
+                  inputMode="numeric"
                   value={customAmount}
                   onChange={(e) => handleCustomAmountChange(e.target.value)}
                   placeholder={t('promoterDeposit.customAmountPlaceholder')}
