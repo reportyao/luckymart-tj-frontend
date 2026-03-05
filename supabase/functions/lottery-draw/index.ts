@@ -271,30 +271,78 @@ Deno.serve(async (req) => {
                     const winnerWallet = winnerWallets[0];
                     const newBalance = winnerWallet.balance + update.prize_amount;
 
-                    // 【资金安全修复 v3】添加乐观锁: 通过 version 条件确保并发安全
-                    // 更新钱包余额
-                    await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${winnerWallet.id}&version=eq.${winnerWallet.version}`, {
-                        method: 'PATCH',
-                        headers: {
-                            'Authorization': `Bearer ${serviceRoleKey}`,
-                            'apikey': serviceRoleKey,
-                            'Content-Type': 'application/json',
-                            'Prefer': 'return=representation'
-                        },
-                        body: JSON.stringify({
-                            balance: newBalance,
-                            version: (winnerWallet.version || 1) + 1,
-                            updated_at: new Date().toISOString()
-                        })
-                    });
+                    // 【资金安全修复 v4】添加乐观锁: 通过 version 条件确保并发安全
+                    // 使用重试机制（最多3次）确保奖金发放成功
+                    let prizeUpdateSuccess = false;
+                    let prizeRetries = 3;
+                    let currentPrizeWallet = winnerWallet;
+                    let actualNewBalance = newBalance;
 
-                    // 创建奖金交易记录
+                    while (prizeRetries > 0 && !prizeUpdateSuccess) {
+                        const currentVersion = currentPrizeWallet.version || 1;
+                        actualNewBalance = parseFloat(currentPrizeWallet.balance) + update.prize_amount;
+
+                        const prizeUpdateResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${currentPrizeWallet.id}&version=eq.${currentVersion}`, {
+                            method: 'PATCH',
+                            headers: {
+                                'Authorization': `Bearer ${serviceRoleKey}`,
+                                'apikey': serviceRoleKey,
+                                'Content-Type': 'application/json',
+                                'Prefer': 'return=representation'
+                            },
+                            body: JSON.stringify({
+                                balance: actualNewBalance,
+                                version: currentVersion + 1,
+                                updated_at: new Date().toISOString()
+                            })
+                        });
+
+                        if (!prizeUpdateResponse.ok) {
+                            console.error(`Prize wallet update HTTP error (attempt ${4 - prizeRetries}/3):`, await prizeUpdateResponse.text());
+                            prizeRetries--;
+                            continue;
+                        }
+
+                        const updatedPrizeWallets = await prizeUpdateResponse.json();
+                        if (updatedPrizeWallets && updatedPrizeWallets.length > 0) {
+                            prizeUpdateSuccess = true;
+                            break;
+                        }
+
+                        // version 不匹配，重新获取钱包最新状态
+                        console.warn(`Prize wallet optimistic lock conflict (attempt ${4 - prizeRetries}/3), retrying...`);
+                        prizeRetries--;
+
+                        if (prizeRetries > 0) {
+                            const freshWalletResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${currentPrizeWallet.id}&select=*`, {
+                                headers: {
+                                    'Authorization': `Bearer ${serviceRoleKey}`,
+                                    'apikey': serviceRoleKey,
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+                            const freshWallets = await freshWalletResponse.json();
+                            if (freshWallets && freshWallets.length > 0) {
+                                currentPrizeWallet = freshWallets[0];
+                            } else {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!prizeUpdateSuccess) {
+                        console.error(`CRITICAL: Failed to update prize wallet for user ${winnerEntry.user_id} after 3 retries. Prize amount: ${update.prize_amount}`);
+                        // 不继续创建交易记录，避免数据不一致
+                        continue;
+                    }
+
+                    // 创建奖金交易记录（使用实际更新后的余额）
                     const prizeTransactionData = {
-                        wallet_id: winnerWallet.id,
+                        wallet_id: currentPrizeWallet.id,
                         type: 'LOTTERY_PRIZE',
                         amount: update.prize_amount,
-                        balance_before: winnerWallet.balance,
-                        balance_after: newBalance,
+                        balance_before: parseFloat(currentPrizeWallet.balance),
+                        balance_after: actualNewBalance,
                         status: 'COMPLETED',
                         description: `彩票中奖奖金 - ${update.prize_rank}等奖`,
                         related_lottery_id: lotteryId,

@@ -139,7 +139,7 @@ serve(async (req) => {
           })
 
         if (transactionError) {
-          // 回滚钱包余额（使用新的 version）
+          // 【资金安全修复 v4】回滚钱包余额（使用乐观锁检查 version）
           await supabaseClient
             .from('wallets')
             .update({ 
@@ -148,6 +148,7 @@ serve(async (req) => {
               updated_at: new Date().toISOString()
             })
             .eq('id', wallet.id)
+            .eq('version', currentVersion + 1)  // 乐观锁: 检查当前 version
 
           fail_count++
           errors.push({ commission_id, error: transactionError.message })

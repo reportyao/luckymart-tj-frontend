@@ -216,9 +216,9 @@ serve(async (req) => {
 
     if (!insertResponse.ok) {
       // 如果创建提现请求失败，需要回滚钱包冻结
-      // 【注意】回滚时使用新的 version+1，因为上面已经成功更新了 version
+      // 【资金安全修复 v4】回滚时使用乐观锁检查 version，防止覆盖并发操作
       await fetch(
-        `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}`,
+        `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}&version=eq.${currentVersion + 1}`,
         {
           method: 'PATCH',
           headers: {

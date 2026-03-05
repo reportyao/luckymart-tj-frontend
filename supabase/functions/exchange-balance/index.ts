@@ -180,19 +180,23 @@ serve(async (req) => {
       throw new Error('更新余额钱包失败，请重试（并发冲突）');
     }
 
-    // 更新目标钱包余额
-    const { error: updateTargetError } = await supabaseClient
+    // 【资金安全修复 v4】更新目标钱包余额（添加乐观锁检查）
+    const targetVersion = targetWallet.version || 1;
+    const { error: updateTargetError, data: updatedTarget } = await supabaseClient
       .from('wallets')
       .update({
         balance: targetBalanceBefore + amount,
-        version: (targetWallet.version || 1) + 1,
+        version: targetVersion + 1,
         updated_at: new Date().toISOString(),
       })
       .eq('id', targetWallet.id)
+      .eq('version', targetVersion)  // 乐观锁: 检查 version
+      .select()
+      .single()
 
-    if (updateTargetError) {
-      console.error('[Exchange] Update target wallet error:', updateTargetError);
-      // 回滚源钱包
+    if (updateTargetError || !updatedTarget) {
+      console.error('[Exchange] Update target wallet error (possible concurrent conflict):', updateTargetError);
+      // 【资金安全修复 v4】回滚源钱包（使用乐观锁检查 version）
       await supabaseClient
         .from('wallets')
         .update({
@@ -201,7 +205,8 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', sourceWallet.id)
-      throw new Error('更新积分钱包失败');
+        .eq('version', (sourceWallet.version || 1) + 1)  // 乐观锁: 检查当前 version
+      throw new Error('更新积分钱包失败，请重试（可能存在并发操作）');
     }
 
     // 创建兑换记录 - 使用数据库中存在的字段

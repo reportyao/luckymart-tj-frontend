@@ -312,11 +312,12 @@ BEGIN
 
   IF v_wallet IS NULL THEN
     -- 自动创建钱包（新用户可能还没有钱包）
+    -- 【资金安全修复 v4】创建钱包时显式设置 version = 1
     INSERT INTO wallets (
       user_id, type, currency, balance,
-      total_deposits, first_deposit_bonus_claimed, first_deposit_bonus_amount
+      total_deposits, first_deposit_bonus_claimed, first_deposit_bonus_amount, version
     )
-    VALUES (p_target_user_id, 'TJS', 'TJS', 0, 0, false, 0)
+    VALUES (p_target_user_id, 'TJS', 'TJS', 0, 0, false, 0, 1)
     RETURNING * INTO v_wallet;
   END IF;
 
@@ -349,10 +350,14 @@ BEGIN
   v_new_balance := COALESCE(v_wallet.balance, 0) + p_amount + v_bonus_amount;
   v_new_total_deposits := COALESCE(v_wallet.total_deposits, 0) + p_amount;
 
+  -- 【资金安全修复 v4】添加 version 递增，保持与 Edge Function 乐观锁模式的一致性
+  -- 虽然 SQL 函数使用 FOR UPDATE 行锁天然防并发，但必须递增 version
+  -- 否则 Edge Function 基于过时的 version 值可能导致余额覆盖
   UPDATE wallets
   SET
     balance = v_new_balance,
     total_deposits = v_new_total_deposits,
+    version = COALESCE(version, 1) + 1,
     first_deposit_bonus_claimed = CASE
       WHEN v_bonus_amount > 0 THEN true
       ELSE first_deposit_bonus_claimed

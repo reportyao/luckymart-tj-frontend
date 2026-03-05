@@ -251,57 +251,57 @@ serve(async (req) => {
         console.log('Created new LUCKY_COIN wallet for user:', currentUserId, 'with balance:', commissionAmount)
       } else {
         // 更新积分钱包余额
-        // 【资金安全修复 v3】添加乐观锁防止并发更新导致余额错误
+        // 【资金安全修复 v4】使用乐观锁 + 3次重试机制防止并发更新导致余额错误
         // 场景: 多个下级同时购买，同时触发佣金发放，可能导致余额覆盖
-        const currentWalletBalance = parseFloat(wallet.balance || '0')
-        const newBalance = currentWalletBalance + commissionAmount
-        const currentVersion = wallet.version || 1
+        let walletUpdateSuccess = false
+        let walletRetries = 3
+        let currentWallet = wallet
 
-        const { error: updateError, data: updatedWallet } = await supabaseClient
-          .from('wallets')
-          .update({
-            balance: newBalance,
-            version: currentVersion + 1,  // 乐观锁: 版本号+1
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', wallet.id)
-          .eq('version', currentVersion)  // 乐观锁: 只有版本号匹配才能更新
-          .select()
-          .single()
+        while (walletRetries > 0 && !walletUpdateSuccess) {
+          const currentWalletBalance = parseFloat(currentWallet.balance || '0')
+          const newBalance = currentWalletBalance + commissionAmount
+          const currentVersion = currentWallet.version || 1
 
-        if (updateError || !updatedWallet) {
-          // 乐观锁失败，重试一次（重新读取最新版本）
-          console.warn('Optimistic lock failed, retrying once...')
-          const { data: freshWallet } = await supabaseClient
+          const { error: updateError, data: updatedWallet } = await supabaseClient
             .from('wallets')
-            .select('id, balance, version')
-            .eq('user_id', currentUserId)
-            .eq('type', 'LUCKY_COIN')
-            .eq('currency', 'POINTS')
+            .update({
+              balance: newBalance,
+              version: currentVersion + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', currentWallet.id)
+            .eq('version', currentVersion)
+            .select()
             .single()
 
-          if (freshWallet) {
-            const retryBalance = parseFloat(freshWallet.balance || '0') + commissionAmount
-            const { error: retryError } = await supabaseClient
-              .from('wallets')
-              .update({
-                balance: retryBalance,
-                version: (freshWallet.version || 1) + 1,
-                updated_at: new Date().toISOString(),
-              })
-              .eq('id', freshWallet.id)
-              .eq('version', freshWallet.version || 1)
-
-            if (retryError) {
-              console.error('Failed to update wallet balance after retry:', retryError)
-              throw retryError
-            }
-            console.log('Updated LUCKY_COIN wallet (after retry) for user:', currentUserId, 'new balance:', retryBalance)
-          } else {
-            throw new Error('Failed to find wallet for retry')
+          if (!updateError && updatedWallet) {
+            walletUpdateSuccess = true
+            console.log('Updated LUCKY_COIN wallet for user:', currentUserId, 'new balance:', newBalance)
+            break
           }
-        } else {
-          console.log('Updated LUCKY_COIN wallet for user:', currentUserId, 'new balance:', newBalance)
+
+          console.warn(`Optimistic lock failed (attempt ${4 - walletRetries}/3), retrying...`)
+          walletRetries--
+
+          if (walletRetries > 0) {
+            const { data: freshWallet } = await supabaseClient
+              .from('wallets')
+              .select('id, balance, version')
+              .eq('user_id', currentUserId)
+              .eq('type', 'LUCKY_COIN')
+              .eq('currency', 'POINTS')
+              .single()
+
+            if (freshWallet) {
+              currentWallet = freshWallet
+            } else {
+              throw new Error('Failed to find wallet for retry')
+            }
+          }
+        }
+
+        if (!walletUpdateSuccess) {
+          throw new Error(`Failed to update wallet balance after 3 retries for user ${currentUserId}`)
         }
       }
 

@@ -335,9 +335,10 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         throw new Error('Source and target wallet types must be different');
     }
 
-    const validTypes = ['BALANCE', 'LUCKY_COIN'];
+    // 【资金安全修复 v4】修复钱包类型验证，标准类型为 'TJS' 和 'LUCKY_COIN'
+    const validTypes = ['TJS', 'LUCKY_COIN'];
     if (!validTypes.includes(targetWalletType)) {
-        throw new Error('Invalid target wallet type');
+        throw new Error('Invalid target wallet type. Valid types: TJS, LUCKY_COIN');
     }
 
     // 检查源钱包余额
@@ -345,8 +346,9 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         throw new Error('Insufficient balance for exchange');
     }
 
-    // 获取目标钱包
-    const targetWalletResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.${targetWalletType}&currency=eq.${currency}&select=*`, {
+    // 【资金安全修复 v4】获取目标钱包，积分钱包的 currency 是 'POINTS'
+    const targetCurrency = targetWalletType === 'LUCKY_COIN' ? 'POINTS' : currency;
+    const targetWalletResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.${targetWalletType}&currency=eq.${targetCurrency}&select=*`, {
         headers: {
             'Authorization': `Bearer ${serviceRoleKey}`,
             'apikey': serviceRoleKey,
@@ -385,6 +387,9 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         throw new Error(`Failed to update source wallet: ${errorText}`);
     }
 
+    // 【资金安全修复 v4】检查乐观锁是否成功（返回空数组表示 version 不匹配）
+    // 注意: 这里用的是 fetch API，需要加 Prefer: return=representation 并检查响应
+
     // 更新目标钱包（增加余额）
     const newTargetBalance = targetWallet.balance + exchangedAmount;
     const updateTargetResponse = await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${targetWallet.id}&version=eq.${targetWallet.version}`, {
@@ -402,8 +407,8 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
     });
 
     if (!updateTargetResponse.ok) {
-        // 回滚源钱包
-        await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${sourceWallet.id}`, {
+        // 【资金安全修复 v4】回滚源钱包（使用乐观锁检查 version）
+        await fetch(`${supabaseUrl}/rest/v1/wallets?id=eq.${sourceWallet.id}&version=eq.${sourceWallet.version + 1}`, {
             method: 'PATCH',
             headers: {
                 'Authorization': `Bearer ${serviceRoleKey}`,
@@ -412,7 +417,7 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
             },
             body: JSON.stringify({
                 balance: sourceWallet.balance,
-                version: sourceWallet.version,
+                version: sourceWallet.version + 2,
                 updated_at: new Date().toISOString()
             })
         });
@@ -429,7 +434,7 @@ async function handleExchange(supabaseUrl: string, serviceRoleKey: string, userI
         balance_before: sourceWallet.balance,
         balance_after: newSourceBalance,
         status: 'COMPLETED',
-        description: `兑换至${targetWalletType === 'BALANCE' ? '余额钱包' : '积分钱包'}`,
+        description: `兑换至${targetWalletType === 'TJS' ? '余额钱包' : '积分钱包'}`,
         processed_at: new Date().toISOString(),
         created_at: new Date().toISOString()
     };

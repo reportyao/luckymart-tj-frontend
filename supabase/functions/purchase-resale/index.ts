@@ -244,7 +244,7 @@ serve(async (req) => {
 
     if (addError || !updatedSellerWallet) {
       console.error('[PurchaseResale] Add seller balance error:', addError)
-      // 回滚买家余额（使用新的 version）
+      // 【资金安全修复 v4】回滚买家余额（使用乐观锁检查 version）
       await supabaseClient
         .from('wallets')
         .update({ 
@@ -253,6 +253,7 @@ serve(async (req) => {
           updated_at: new Date().toISOString()
         })
         .eq('id', buyerWallet.id)
+        .eq('version', buyerVersion + 1)  // 乐观锁: 检查当前 version
       throw new Error('增加卖家余额失败，请重试')
     }
 
@@ -268,17 +269,19 @@ serve(async (req) => {
 
     if (updateResaleError) {
       console.error('[PurchaseResale] Update resale status error:', updateResaleError)
-      // 尝试回滚（使用新的 version）
+      // 【资金安全修复 v4】回滚时使用乐观锁检查 version，防止覆盖并发操作
       await supabaseClient.from('wallets').update({ 
         balance: buyerBalanceBefore, 
         version: buyerVersion + 2,
         updated_at: new Date().toISOString()
       }).eq('id', buyerWallet.id)
+        .eq('version', buyerVersion + 1)  // 乐观锁: 检查当前 version
       await supabaseClient.from('wallets').update({ 
         balance: sellerBalanceBefore, 
         version: sellerVersion + 2,
         updated_at: new Date().toISOString()
       }).eq('id', sellerWallet.id)
+        .eq('version', sellerVersion + 1)  // 乐观锁: 检查当前 version
       throw new Error('更新转售商品状态失败: ' + updateResaleError.message)
     }
 

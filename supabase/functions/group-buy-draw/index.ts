@@ -260,15 +260,16 @@ Deno.serve(async (req) => {
 
             if (insertError) {
               console.error(`Failed to create transaction record for user ${userUUID}:`, insertError);
-              // 回滚钱包余额
+              // 【资金安全修复 v4】回滚钱包余额（使用乐观锁检查 version）
               await supabase
                 .from('wallets')
                 .update({ 
                   balance: Number(tjsWallet.balance),
                   updated_at: new Date().toISOString(),
-                  version: tjsWallet.version + 1
+                  version: tjsWallet.version + 2  // 回滚时版本号再+1
                 })
-                .eq('id', tjsWallet.id);
+                .eq('id', tjsWallet.id)
+                .eq('version', tjsWallet.version + 1);  // 乐观锁: 检查当前 version
               continue;
             }
 

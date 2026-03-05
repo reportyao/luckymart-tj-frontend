@@ -113,6 +113,7 @@ serve(async (req) => {
       // 如果钱包不存在，自动创建
       if (walletError || !wallet) {
         console.log('钱包不存在，自动创建...')
+        // 【资金安全修复 v4】创建钱包时显式设置 version = 1
         const { data: newWallet, error: createWalletError } = await supabaseClient
           .from('wallets')
           .insert({
@@ -120,6 +121,7 @@ serve(async (req) => {
             type: 'TJS',
             currency: depositRequest.currency,
             balance: 0,
+            version: 1,
             total_deposits: 0,
             first_deposit_bonus_claimed: false,
             first_deposit_bonus_amount: 0,

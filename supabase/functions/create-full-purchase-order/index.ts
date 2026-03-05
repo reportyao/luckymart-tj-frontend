@@ -321,24 +321,30 @@ serve(async (req) => {
     }
 
     // 13. 扣除用户积分
+    // 【资金安全修复 v4】添加完整的乐观锁保护
+    // 必须在 WHERE 条件中检查 version，防止并发购买导致余额覆盖
+    const currentVersion = wallet.version || 1;
     const newBalance = wallet.balance - fullPrice;
-    const { error: updateWalletError } = await supabase
+    const { error: updateWalletError, data: updatedWallet } = await supabase
       .from('wallets')
       .update({
         balance: newBalance,
-        version: wallet.version + 1,
+        version: currentVersion + 1,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', wallet.id);
+      .eq('id', wallet.id)
+      .eq('version', currentVersion)  // 乐观锁: 只有版本号匹配才能更新
+      .select()
+      .single();
 
-    if (updateWalletError) {
-      console.error('[CreateFullPurchaseOrder] Update wallet error:', updateWalletError);
+    if (updateWalletError || !updatedWallet) {
+      console.error('[CreateFullPurchaseOrder] Update wallet error (possible concurrent conflict):', updateWalletError);
       // 回滚订单
       await supabase
         .from('full_purchase_orders')
         .delete()
         .eq('id', order.id);
-      throw new Error('扣除积分失败');
+      throw new Error('扣除积分失败，请重试（可能存在并发操作）');
     }
 
     // 14. 创建钱包交易记录

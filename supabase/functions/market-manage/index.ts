@@ -180,7 +180,8 @@ serve(async (req) => {
           const sellerNewBalance = sellerCurrentBalance + listing.selling_price
           const sellerVersion = sellerWallet.version || 1
 
-          await supabaseClient
+          // 【资金安全修复 v4】卖家钱包更新必须检查结果，失败时回滚买家扣款
+          const { error: sellerUpdateError, data: updatedSellerWallet } = await supabaseClient
             .from('wallets')
             .update({
               balance: sellerNewBalance,
@@ -188,7 +189,45 @@ serve(async (req) => {
               updated_at: new Date().toISOString()
             })
             .eq('id', sellerWallet.id)       // 使用 wallet.id 精确定位
-            .eq('version', sellerVersion)    // 乐观锁
+            .eq('version', sellerVersion)    // 乐观锁: 只有版本号匹配才能更新
+            .select()
+            .single()
+
+          if (sellerUpdateError || !updatedSellerWallet) {
+            console.error('Failed to update seller wallet (possible concurrent conflict):', sellerUpdateError)
+            // 回滚买家扣款：使用更新后的 version
+            const buyerRollbackVersion = (buyerWallet.version || 1) + 1  // 买家已成功更新，当前 version 是 +1
+            await supabaseClient
+              .from('wallets')
+              .update({
+                balance: buyerCurrentBalance,  // 恢复原始余额
+                version: buyerRollbackVersion + 1,  // 回滚时版本号再+1
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', buyerWallet.id)
+              .eq('version', buyerRollbackVersion)
+            return new Response(
+              JSON.stringify({ error: 'Failed to credit seller, transaction rolled back. Please try again.' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            )
+          }
+        } else {
+          // 卖家钱包不存在，回滚买家扣款
+          console.error('Seller wallet not found, rolling back buyer deduction')
+          const buyerRollbackVersion = (buyerWallet.version || 1) + 1
+          await supabaseClient
+            .from('wallets')
+            .update({
+              balance: buyerCurrentBalance,
+              version: buyerRollbackVersion + 1,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', buyerWallet.id)
+            .eq('version', buyerRollbackVersion)
+          return new Response(
+            JSON.stringify({ error: 'Seller wallet not found, transaction rolled back' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          )
         }
 
         // 3. 转移彩票归属

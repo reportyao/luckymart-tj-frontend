@@ -190,16 +190,20 @@ serve(async (req) => {
         }
 
         // 3. 创建钱包交易记录
+        // 【资金安全修复 v4】添加 balance_before 和 balance_after，确保流水可审计
         await supabaseClient
           .from('wallet_transactions')
           .insert({
-            user_id: reward.referrer_id,
             wallet_id: wallet.id,
             type: 'REFERRAL_REWARD',
             amount: reward.amount,
+            balance_before: currentBalance,
+            balance_after: newBalance,
             currency: currency,
             status: 'COMPLETED',
             description: `L${reward.level}邀请奖励`,
+            processed_at: new Date().toISOString(),
+            created_at: new Date().toISOString(),
             metadata: {
               referee_id: user_id,
               level: reward.level,

@@ -337,19 +337,24 @@ async function handleCommission(event: QueuedEvent): Promise<void> {
         .single();
 
       if (updateError || !updatedWallet) {
-        // 乐观锁失败，重试一次（重新读取最新版本）
-        console.warn(`[Worker] Optimistic lock failed for wallet update, retrying once...`);
-        const { data: freshWallet } = await supabase
-          .from('wallets')
-          .select('id, balance, version')
-          .eq('user_id', currentUserId)
-          .eq('type', 'LUCKY_COIN')
-          .eq('currency', 'POINTS')
-          .single();
+        // 【资金安全修复 v4】乐观锁失败，使用 3 次重试机制
+        let retrySuccess = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          console.warn(`[Worker] Optimistic lock failed, retry attempt ${attempt}/3...`);
+          const { data: freshWallet } = await supabase
+            .from('wallets')
+            .select('id, balance, version')
+            .eq('user_id', currentUserId)
+            .eq('type', 'LUCKY_COIN')
+            .eq('currency', 'POINTS')
+            .single();
 
-        if (freshWallet) {
+          if (!freshWallet) {
+            throw new Error(`Failed to find wallet for retry`);
+          }
+
           const retryBalance = parseFloat(freshWallet.balance || '0') + commissionAmount;
-          const { error: retryError } = await supabase
+          const { error: retryError, data: retryData } = await supabase
             .from('wallets')
             .update({
               balance: retryBalance,
@@ -357,14 +362,18 @@ async function handleCommission(event: QueuedEvent): Promise<void> {
               updated_at: new Date().toISOString(),
             })
             .eq('id', freshWallet.id)
-            .eq('version', freshWallet.version || 1);
+            .eq('version', freshWallet.version || 1)
+            .select()
+            .single();
 
-          if (retryError) {
-            throw new Error(`Failed to update wallet balance after retry: ${retryError.message}`);
+          if (!retryError && retryData) {
+            retrySuccess = true;
+            console.log(`[Worker] Updated LUCKY_COIN wallet (after retry ${attempt}) for user ${currentUserId}, new balance: ${retryBalance}`);
+            break;
           }
-          console.log(`[Worker] Updated LUCKY_COIN wallet (after retry) for user ${currentUserId}, new balance: ${retryBalance}`);
-        } else {
-          throw new Error(`Failed to find wallet for retry`);
+        }
+        if (!retrySuccess) {
+          throw new Error(`Failed to update wallet balance after 3 retries for user ${currentUserId}`);
         }
       } else {
         console.log(`[Worker] Updated LUCKY_COIN wallet for user ${currentUserId}, new balance: ${newBalance}`);
