@@ -258,8 +258,10 @@ serve(async (req) => {
     }
 
     // 7. 检查余额是否足够
-    if (wallet.balance < fullPrice) {
-      throw new Error(`积分余额不足，需要 ${fullPrice} 积分，当前余额 ${wallet.balance} 积分`);
+    // 【修复】显式类型转换：Supabase 返回的 numeric 字段可能是字符串，必须转为数字再比较和运算
+    const currentBalanceNum = Number(wallet.balance) || 0;
+    if (currentBalanceNum < fullPrice) {
+      throw new Error(`积分余额不足，需要 ${fullPrice} 积分，当前余额 ${currentBalanceNum} 积分`);
     }
 
     // 8. 验证自提点
@@ -324,7 +326,7 @@ serve(async (req) => {
     // 【资金安全修复 v4】添加完整的乐观锁保护
     // 必须在 WHERE 条件中检查 version，防止并发购买导致余额覆盖
     const currentVersion = wallet.version || 1;
-    const newBalance = wallet.balance - fullPrice;
+    const newBalance = currentBalanceNum - fullPrice;
     const { error: updateWalletError, data: updatedWallet } = await supabase
       .from('wallets')
       .update({
@@ -354,7 +356,7 @@ serve(async (req) => {
         wallet_id: wallet.id,
         type: 'FULL_PURCHASE',
         amount: -fullPrice,
-        balance_before: wallet.balance,
+        balance_before: currentBalanceNum,
         balance_after: newBalance,
         status: 'COMPLETED',
         description: `全款购买 - 订单 ${orderNumber}`,

@@ -346,7 +346,9 @@ Deno.serve(async (req) => {
     const participationCodes = allocatedTickets.map((t: any) => t.participation_code);
 
     // 更新钱包余额（使用乐观锁）
-    const newBalance = wallet.balance - totalAmount;
+    // 【修复】显式类型转换：REST API 返回的 balance 是字符串，必须转为数字再运算
+    const currentBalanceNum = Number(wallet.balance) || 0;
+    const newBalance = currentBalanceNum - totalAmount;
     const updateWalletResponse = await fetch(
       `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}&version=eq.${wallet.version}`,
       {
@@ -413,7 +415,7 @@ Deno.serve(async (req) => {
       wallet_id: wallet.id,
       type: 'LOTTERY_PURCHASE',
       amount: -totalAmount,
-      balance_before: wallet.balance,
+      balance_before: currentBalanceNum,
       balance_after: newBalance,
       status: 'COMPLETED',
       description: `彩票购买 - 订单 ${orderNumber}`,
