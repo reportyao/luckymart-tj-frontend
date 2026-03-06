@@ -309,6 +309,22 @@ serve(async (req) => {
       }
     }
 
+    // 记录操作日志
+    await supabaseClient.rpc('log_edge_function_action', {
+      p_function_name: 'approve-showoff',
+      p_action: action === 'APPROVED' ? 'APPROVE_SHOWOFF' : 'REJECT_SHOWOFF',
+      p_user_id: adminUserId,
+      p_target_type: 'showoff',
+      p_target_id: showoffId,
+      p_details: {
+        admin_id: adminUserId,
+        user_id: showoff.user_id,
+        reward_coins: action === 'APPROVED' ? (rewardCoins || 0) : 0,
+        admin_note: adminNote || null,
+      },
+      p_status: 'success',
+      p_error_message: null,
+    }).catch((logErr: any) => console.error('Failed to write audit log:', logErr))
     return new Response(
       JSON.stringify({
         success: true,
@@ -321,6 +337,22 @@ serve(async (req) => {
     )
   } catch (error) {
     console.error('审核晒单错误:', error)
+    try {
+      const logClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+      )
+      await logClient.rpc('log_edge_function_action', {
+        p_function_name: 'approve-showoff',
+        p_action: 'SHOWOFF_REVIEW_ERROR',
+        p_user_id: req.headers.get('x-admin-id') || null,
+        p_target_type: 'showoff',
+        p_target_id: null,
+        p_details: {},
+        p_status: 'error',
+        p_error_message: error.message,
+      })
+    } catch (_) { /* 日志写入失败不影响响应 */ }
     return new Response(
       JSON.stringify({
         success: false,
