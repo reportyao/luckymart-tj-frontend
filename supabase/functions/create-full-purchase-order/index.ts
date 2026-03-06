@@ -236,6 +236,11 @@ serve(async (req) => {
       fullPrice = lottery.original_price || (lottery.ticket_price * lottery.total_tickets);
     }
 
+    // 【修复】验证价格必须大于 0
+    if (!fullPrice || fullPrice <= 0) {
+      throw new Error('商品价格配置异常，请联系客服');
+    }
+
     console.log('[CreateFullPurchaseOrder] Full price calculated:', { 
       fullPrice,
       full_purchase_price: lottery.full_purchase_price,

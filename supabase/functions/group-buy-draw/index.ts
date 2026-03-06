@@ -189,6 +189,12 @@ Deno.serve(async (req) => {
     // 只有拼团超时（未成功）时才退回 TJS 余额（由 group-buy-timeout-check 处理）
     for (const order of orders) {
       if (order.id !== winnerOrder.id) {
+        // 【幂等性保护】检查订单是否已经退款，防止重复退款
+        if (order.status === 'REFUNDED') {
+          console.log(`Order ${order.id} already refunded, skipping`);
+          continue;
+        }
+
         // 解析用户UUID
         const userUUID = await resolveUserIdToUUID(supabase, order.user_id);
         
@@ -228,50 +234,63 @@ Deno.serve(async (req) => {
           }
 
           if (lcWallet) {
-            // 更新积分钱包余额（使用乐观锁）
-            const newBalance = Number(lcWallet.balance) + refundAmount;
-            
-            const { error: updateWalletError } = await supabase
-              .from('wallets')
-              .update({ 
-                balance: newBalance,
-                updated_at: new Date().toISOString(),
-                version: lcWallet.version + 1
-              })
-              .eq('id', lcWallet.id)
-              .eq('version', lcWallet.version);
+            // 【修复】使用乐观锁 + 3次重试机制（与 group-buy-timeout-check 保持一致）
+            let updateSuccess = false;
+            let retries = 3;
+            let currentWallet = lcWallet;
 
-            if (updateWalletError) {
-              console.error(`Failed to update LUCKY_COIN wallet for user ${userUUID}:`, updateWalletError);
-              continue;
-            }
-
-            // 创建积分流水记录
-            const { error: insertError } = await supabase.from('wallet_transactions').insert({
-              wallet_id: lcWallet.id,
-              type: 'GROUP_BUY_REFUND',
-              amount: refundAmount,
-              balance_before: Number(lcWallet.balance),
-              balance_after: newBalance,
-              status: 'COMPLETED',
-              description: `拼团未中奖，退回积分 - ${session.session_code}`,
-              reference_id: order.id,
-              processed_at: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-            });
-
-            if (insertError) {
-              console.error(`Failed to create transaction record for user ${userUUID}:`, insertError);
-              // 【资金安全修复 v4】回滚钱包余额（使用乐观锁检查 version）
-              await supabase
+            while (retries > 0 && !updateSuccess) {
+              const newBalance = Number(currentWallet.balance) + refundAmount;
+              
+              const { data: updatedRows, error: updateWalletError } = await supabase
                 .from('wallets')
                 .update({ 
-                  balance: Number(lcWallet.balance),
+                  balance: newBalance,
                   updated_at: new Date().toISOString(),
-                  version: lcWallet.version + 2  // 回滚时版本号再+1
+                  version: currentWallet.version + 1
                 })
-                .eq('id', lcWallet.id)
-                .eq('version', lcWallet.version + 1);  // 乐观锁: 检查当前 version
+                .eq('id', currentWallet.id)
+                .eq('version', currentWallet.version)
+                .select();
+
+              if (!updateWalletError && updatedRows && updatedRows.length > 0) {
+                updateSuccess = true;
+                // 创建积分流水记录
+                await supabase.from('wallet_transactions').insert({
+                  wallet_id: currentWallet.id,
+                  type: 'GROUP_BUY_REFUND',
+                  amount: refundAmount,
+                  balance_before: Number(currentWallet.balance),
+                  balance_after: newBalance,
+                  status: 'COMPLETED',
+                  description: `拼团未中奖，退回积分 - ${session.session_code}`,
+                  reference_id: order.id,
+                  processed_at: new Date().toISOString(),
+                  created_at: new Date().toISOString(),
+                });
+                break;
+              }
+
+              console.warn(`[GroupBuyDraw] Optimistic lock failed for user ${userUUID} (attempt ${4 - retries}/3)`);
+              retries--;
+
+              if (retries > 0) {
+                // 重新获取钱包最新状态
+                const { data: freshWallet } = await supabase
+                  .from('wallets')
+                  .select('*')
+                  .eq('id', currentWallet.id)
+                  .single();
+                if (freshWallet) {
+                  currentWallet = freshWallet;
+                } else {
+                  break;
+                }
+              }
+            }
+
+            if (!updateSuccess) {
+              console.error(`[GroupBuyDraw] Failed to refund user ${userUUID} after 3 retries`);
               continue;
             }
 

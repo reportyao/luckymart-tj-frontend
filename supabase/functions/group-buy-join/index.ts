@@ -162,6 +162,11 @@ Deno.serve(async (req) => {
       return createResponse({ success: false, error: 'Product out of stock' }, 400);
     }
 
+    // 【修复】验证价格必须大于 0
+    if (!pricePerPerson || pricePerPerson <= 0) {
+      return createResponse({ success: false, error: 'Product price configuration error' }, 400);
+    }
+
     // --- 校验用户 ---
     const { data: user, error: userError } = userResult;
     if (userError || !user) {

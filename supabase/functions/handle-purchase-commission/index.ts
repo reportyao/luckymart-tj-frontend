@@ -248,6 +248,19 @@ serve(async (req) => {
           console.error('Failed to create wallet:', createError)
           throw createError
         }
+        // 【修复】创建新钱包时也要记录流水
+        await supabaseClient.from('wallet_transactions').insert({
+          wallet_id: newWallet.id,
+          type: 'COMMISSION',
+          amount: commissionAmount,
+          balance_before: 0,
+          balance_after: commissionAmount,
+          status: 'COMPLETED',
+          description: `L${level}佣金 - 来自下级购买`,
+          reference_id: order_id,
+          processed_at: new Date().toISOString(),
+          created_at: new Date().toISOString(),
+        })
         console.log('Created new LUCKY_COIN wallet for user:', currentUserId, 'with balance:', commissionAmount)
       } else {
         // 更新积分钱包余额
@@ -276,6 +289,19 @@ serve(async (req) => {
 
           if (!updateError && updatedWallet) {
             walletUpdateSuccess = true
+            // 【修复】佣金入账时创建 wallet_transactions 流水记录
+            await supabaseClient.from('wallet_transactions').insert({
+              wallet_id: currentWallet.id,
+              type: 'COMMISSION',
+              amount: commissionAmount,
+              balance_before: currentWalletBalance,
+              balance_after: newBalance,
+              status: 'COMPLETED',
+              description: `L${level}佣金 - 来自下级购买`,
+              reference_id: order_id,
+              processed_at: new Date().toISOString(),
+              created_at: new Date().toISOString(),
+            })
             console.log('Updated LUCKY_COIN wallet for user:', currentUserId, 'new balance:', newBalance)
             break
           }

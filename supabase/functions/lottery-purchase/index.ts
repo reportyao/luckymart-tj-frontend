@@ -242,6 +242,10 @@ Deno.serve(async (req) => {
 
     // 计算总金额
     const totalAmount = lottery.ticket_price * quantity;
+    // 【修复】验证总金额必须大于 0
+    if (!totalAmount || totalAmount <= 0) {
+      throw new Error('Invalid price configuration');
+    }
 
     /**
      * 获取用户钱包

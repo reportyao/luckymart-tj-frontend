@@ -23,8 +23,14 @@ serve(async (req) => {
       case 'create': {
         // 创建转售
         const { lottery_entry_id, selling_price } = data
-
-        // 验证彩票归属和状态
+        // 【修复】验证售价必须大于 0
+        if (!selling_price || selling_price <= 0) {
+          return new Response(
+            JSON.stringify({ error: 'Invalid selling price' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+          )
+        }
+        // 验证彩票归属和状态态
         const { data: entry, error: entryError } = await supabaseClient
           .from('lottery_entries')
           .select('*, lottery:lotteries(*)')
