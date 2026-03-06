@@ -327,14 +327,25 @@ Deno.serve(async (req) => {
 
     if (createOrderError) {
       console.error('Failed to create order:', createOrderError);
-      // 回滚钱包余额
-      await supabase
-        .from('wallets')
-        .update({ 
-          balance: Number(wallet.balance),
-          version: wallet.version + 2
-        })
-        .eq('id', wallet.id);
+      // 【P1 修复】使用 RPC 原子操作回滚钱包余额
+      // 旧代码使用 balance: Number(wallet.balance) 快照值回滚，存在并发覆盖风险
+      // 新代码使用 balance = balance + amount 原子操作，安全可靠
+      try {
+        const { data: revertResult, error: revertError } = await supabase.rpc('revert_wallet_deduction', {
+          p_wallet_id: wallet.id,
+          p_amount: pricePerPerson,
+          p_description: '拼团订单创建失败，退回扣款 - ' + (createOrderError.message || 'unknown error'),
+        });
+        if (revertError) {
+          console.error('[GroupBuyJoin] CRITICAL: Failed to revert wallet deduction via RPC:', revertError);
+        } else if (revertResult && !revertResult.success) {
+          console.error('[GroupBuyJoin] CRITICAL: Revert RPC returned failure:', revertResult.error);
+        } else {
+          console.log('[GroupBuyJoin] Wallet deduction reverted successfully via RPC');
+        }
+      } catch (revertEx) {
+        console.error('[GroupBuyJoin] CRITICAL: Exception during wallet revert:', revertEx);
+      }
       return createResponse({ success: false, error: 'Failed to create order: ' + createOrderError.message }, 500);
     }
 

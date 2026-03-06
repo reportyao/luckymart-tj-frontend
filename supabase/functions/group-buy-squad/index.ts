@@ -360,14 +360,25 @@ Deno.serve(async (req) => {
 
     if (createSessionError) {
       console.error('Failed to create session:', createSessionError);
-      // 回滚钱包余额
-      await supabase
-        .from('wallets')
-        .update({
-          balance: Number(tjsWallet.balance),
-          version: tjsWallet.version + 2,
-        })
-        .eq('id', tjsWallet.id);
+      // 【P1 修复】使用 RPC 原子操作回滚钱包余额
+      // 旧代码使用 balance: Number(tjsWallet.balance) 快照值回滚，存在并发覆盖风险
+      // 新代码使用 balance = balance + amount 原子操作，安全可靠
+      try {
+        const { data: revertResult, error: revertError } = await supabase.rpc('revert_wallet_deduction', {
+          p_wallet_id: tjsWallet.id,
+          p_amount: totalCost,
+          p_description: '一键包团会话创建失败，退回扣款 - ' + (createSessionError.message || 'unknown error'),
+        });
+        if (revertError) {
+          console.error('[SquadBuy] CRITICAL: Failed to revert wallet deduction via RPC:', revertError);
+        } else if (revertResult && !revertResult.success) {
+          console.error('[SquadBuy] CRITICAL: Revert RPC returned failure:', revertResult.error);
+        } else {
+          console.log('[SquadBuy] Wallet deduction reverted successfully via RPC');
+        }
+      } catch (revertEx) {
+        console.error('[SquadBuy] CRITICAL: Exception during wallet revert:', revertEx);
+      }
       return createResponse({ success: false, error: 'Failed to create session: ' + createSessionError.message }, 500);
     }
 
@@ -398,12 +409,27 @@ Deno.serve(async (req) => {
 
     if (userOrderError) {
       console.error('Failed to create user order:', userOrderError);
-      // 回滚：删除session，恢复钱包
+      // 回滚：删除 session
       await supabase.from('group_buy_sessions').delete().eq('id', newSession.id);
-      await supabase
-        .from('wallets')
-        .update({ balance: Number(tjsWallet.balance), version: tjsWallet.version + 2 })
-        .eq('id', tjsWallet.id);
+      // 【P1 修复】使用 RPC 原子操作回滚钱包余额
+      // 旧代码使用 balance: Number(tjsWallet.balance) 快照值回滚，存在并发覆盖风险
+      // 新代码使用 balance = balance + amount 原子操作，安全可靠
+      try {
+        const { data: revertResult, error: revertError } = await supabase.rpc('revert_wallet_deduction', {
+          p_wallet_id: tjsWallet.id,
+          p_amount: totalCost,
+          p_description: '一键包团订单创建失败，退回扣款 - ' + (userOrderError.message || 'unknown error'),
+        });
+        if (revertError) {
+          console.error('[SquadBuy] CRITICAL: Failed to revert wallet deduction via RPC:', revertError);
+        } else if (revertResult && !revertResult.success) {
+          console.error('[SquadBuy] CRITICAL: Revert RPC returned failure:', revertResult.error);
+        } else {
+          console.log('[SquadBuy] Wallet deduction reverted successfully via RPC');
+        }
+      } catch (revertEx) {
+        console.error('[SquadBuy] CRITICAL: Exception during wallet revert:', revertEx);
+      }
       return createResponse({ success: false, error: 'Failed to create order: ' + userOrderError.message }, 500);
     }
 
