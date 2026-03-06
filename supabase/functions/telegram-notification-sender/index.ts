@@ -163,6 +163,16 @@ const notificationTemplates = {
       `❌ Баровардан ноком\n\n💵 Маблағ: ${data.transaction_amount} TJS\n❌ Ҳолат: Ноком\n📝 Сабаб: ${data.failure_reason}\n💰 Боқимондаи ҷорӣ: ${data.current_balance} TJS\n\nМаблағ ба боқимондаи шумо баргардонида шуд, лутфан дархостро дубора пешниҳод кунед.`
   },
 
+  // 充值被拒绝通知（管理后台审核拒绝后触发）
+  wallet_deposit_rejected: {
+    zh: (data: NotificationData) => 
+      `❌ 充值申请被拒绝\n\n💵 金额: ${data.transaction_amount} TJS\n❌ 状态: 已拒绝\n📝 原因: ${data.failure_reason}\n\n请检查您的充值信息后重新提交申请。如有疑问请联系客服。`,
+    ru: (data: NotificationData) => 
+      `❌ Запрос на пополнение отклонён\n\n💵 Сумма: ${data.transaction_amount} TJS\n❌ Статус: Отклонено\n📝 Причина: ${data.failure_reason}\n\nПожалуйста, проверьте данные и подайте заявку снова. По вопросам обращайтесь в поддержку.`,
+    tg: (data: NotificationData) => 
+      `❌ Дархости пурсозӣ рад карда шуд\n\n💵 Маблағ: ${data.transaction_amount} TJS\n❌ Ҳолат: Рад карда шуд\n📝 Сабаб: ${data.failure_reason}\n\nЛутфан маълумоти пурсозиро тафтиш кунед ва дубора дархост диҳед. Барои саволҳо ба дастгирӣ муроҷиат кунед.`
+  },
+
   // ==================== 4. 订单物流通知 ====================
   // 只推送关键节点：到达塔国路段、到达自提点生成提货码
   

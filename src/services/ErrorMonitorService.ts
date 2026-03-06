@@ -279,25 +279,43 @@ class ErrorMonitorService {
 
     // 监听用户点击操作
     document.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement;
-      
-      // 安全获取className字符串（处理SVG元素的SVGAnimatedString类型）
-      let classNameStr = '';
-      if (target.className) {
-        if (typeof target.className === 'string') {
-          classNameStr = target.className;
-        } else if (typeof target.className === 'object' && 'baseVal' in target.className) {
-          // SVG元素的className是SVGAnimatedString对象
-          classNameStr = (target.className as any).baseVal || '';
+      try {
+        const target = event.target;
+        
+        // 防御性检查：event.target 可能是 Text 节点、Comment 节点或其他非 Element 类型
+        if (!target || !(target instanceof Element)) {
+          return;
         }
+        
+        // 安全获取 className 字符串
+        // - HTMLElement.className 返回 string
+        // - SVGElement.className 返回 SVGAnimatedString 对象（有 baseVal 属性）
+        // - 其他情况可能返回 undefined
+        let classNameStr = '';
+        try {
+          const cn = target.className;
+          if (typeof cn === 'string') {
+            classNameStr = cn;
+          } else if (cn && typeof cn === 'object' && 'baseVal' in cn) {
+            classNameStr = (cn as SVGAnimatedString).baseVal || '';
+          }
+        } catch {
+          // 某些浏览器环境下访问 className 可能抛出异常，安全忽略
+          classNameStr = '';
+        }
+        
+        const tagName = target.tagName || 'UNKNOWN';
+        const idStr = target.id ? `#${target.id}` : '';
+        const classStr = classNameStr ? `.${classNameStr.split(' ').filter(Boolean).join('.')}` : '';
+        
+        this.recordUserAction({
+          type: 'click',
+          target: `${tagName}${idStr}${classStr}`,
+          timestamp: Date.now(),
+        });
+      } catch {
+        // 错误监控本身不应抛出异常影响用户体验
       }
-      
-      this.recordUserAction({
-        type: 'click',
-        target: target.tagName + (target.id ? `#${target.id}` : '') + 
-                (classNameStr ? `.${classNameStr.split(' ').join('.')}` : ''),
-        timestamp: Date.now(),
-      });
     }, true);
 
     // 监听路由变化

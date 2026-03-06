@@ -359,24 +359,30 @@ serve(async (req) => {
         related_type: 'DEPOSIT_REQUEST',
       })
 
-      // 发送 Telegram 通知 - 充值被拒绝（使用提现失败模板）
+      // 发送 Telegram 通知 - 充值被拒绝（使用专用的充值拒绝模板，支持多语言）
       try {
+        // 拒绝原因多语言处理
+        const defaultReasonI18n = {
+          zh: '审核未通过',
+          ru: 'Не прошло проверку',
+          tg: 'Аз санҷиш нагузашт',
+        };
+        const failureReason = adminNote || defaultReasonI18n.tg;
+
         await supabaseClient.from('notification_queue').insert({
           user_id: depositRequest.user_id,
-          type: 'wallet_withdraw_failed',
+          type: 'wallet_deposit_rejected',
           payload: {
             transaction_amount: depositRequest.amount,
-            failure_reason: adminNote || '审核未通过',
-            current_balance: 0,
+            failure_reason: failureReason,
           },
           telegram_chat_id: null,
-          notification_type: 'wallet_withdraw_failed',
-          title: '充值失败',
+          notification_type: 'wallet_deposit_rejected',
+          title: '充值申请被拒绝',
           message: '',
           data: {
             transaction_amount: depositRequest.amount,
-            failure_reason: adminNote || '审核未通过',
-            current_balance: 0,
+            failure_reason: failureReason,
           },
           priority: 2,
           status: 'pending',
