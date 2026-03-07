@@ -52,7 +52,8 @@
     "justNow": "Только что",
     "confirmSubmit": "Подтвердить отправку",
     "freeShippingPromo": "0 TJS за доставку! TezBarakat дарит вам 15 TJS.",
-    "freeShippingAmount": "0 TJS"
+    "freeShippingAmount": "0 TJS",
+    "close": "Закрыть"
   },
   "nav": {
     "home": "Главная",
@@ -553,7 +554,9 @@
     "notifications": "Мои сообщения",
     "myIdCode": "Мой ID",
     "tapToCopy": "Нажмите для копирования",
-    "idCopied": "ID скопирован"
+    "idCopied": "ID скопирован",
+    "myQrCode": "Мой QR-код",
+    "qrCodeHint": "Покажите этот QR-код промоутеру для пополнения"
   },
   "auth": {
     "welcome": "Добро пожаловать в TezBarakat",

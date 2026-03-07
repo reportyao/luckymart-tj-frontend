@@ -52,7 +52,8 @@
     "justNow": "Ҳамин лаҳза",
     "confirmSubmit": "Тасдиқи ирсол",
     "freeShippingPromo": "Интиқол 0 TJS! TezBarakat ба шумо 15 TJS тӯҳфа мекунад.",
-    "freeShippingAmount": "0 TJS"
+    "freeShippingAmount": "0 TJS",
+    "close": "Пӯшидан"
   },
   "nav": {
     "home": "Асосӣ",
@@ -553,7 +554,9 @@
     "notifications": "Паёмҳои ман",
     "myIdCode": "ID-и ман",
     "tapToCopy": "Барои нусхабардорӣ пахш кунед",
-    "idCopied": "ID нусхабардорӣ шуд"
+    "idCopied": "ID нусхабардорӣ шуд",
+    "myQrCode": "QR-коди ман",
+    "qrCodeHint": "Ин QR-кодро ба мубаллиғ нишон диҳед барои пуркунӣ"
   },
   "auth": {
     "welcome": "Хуш омадед ба TezBarakat",

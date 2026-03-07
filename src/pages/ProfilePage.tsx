@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import React, { useState, useEffect, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useUser } from '../contexts/UserContext'
@@ -19,16 +19,42 @@ import {
   TrophyIcon,
   LanguageIcon,
   SparklesIcon,
-  MegaphoneIcon
+  MegaphoneIcon,
+  QrCodeIcon
 } from '@heroicons/react/24/outline'
 import { copyToClipboard } from '../lib/utils'
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../lib/supabase'
 import toast from 'react-hot-toast'
+import QRCode from 'qrcode'
 
 const ProfilePage: React.FC = () => {
   const { t } = useTranslation()
   const { user, logout } = useUser()
   const navigate = useNavigate()
+
+  // ========== 用户二维码（供地推人员扫码充值） ==========
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('')
+  const [showQrModal, setShowQrModal] = useState(false)
+
+  // 生成用户个人二维码
+  useEffect(() => {
+    if (!user?.id) return
+    const qrContent = `tezbarakat://user/${user.id}`
+    QRCode.toDataURL(qrContent, {
+      width: 200,
+      margin: 1,
+      color: { dark: '#1e293b', light: '#ffffff' },
+      errorCorrectionLevel: 'M',
+    })
+      .then((url: string) => setQrCodeUrl(url))
+      .catch((err: Error) => console.error('[ProfilePage] QR code generation failed:', err))
+  }, [user?.id])
+
+  // 获取用户 ID 的短格式显示（前8位）
+  const shortUserId = useMemo(() => {
+    if (!user?.id) return '------'
+    return user.id.substring(0, 8).toUpperCase()
+  }, [user?.id])
 
   // ========== 市场合伙人身份验证 ==========
   const [isPromoter, setIsPromoter] = useState(false)
@@ -170,14 +196,7 @@ const ProfilePage: React.FC = () => {
     }] : []),
   ]
 
-  const getKycLevelText = (level: string) => {
-    switch (level) {
-      case 'BASIC': return t('wallet.basicVerification')
-      case 'INTERMEDIATE': return t('wallet.authentication')
-      case 'ADVANCED': return t('wallet.authentication')
-      default: return t('wallet.notSet')
-    }
-  }
+
 
   return (
     <div className="pb-20 bg-gray-50 min-h-screen">
@@ -216,32 +235,29 @@ const ProfilePage: React.FC = () => {
             )}
           </div>
 
-          {/* 用户信息 */}
+          {/* 用户信息 - 显示用户ID */}
           <div className="flex-1">
             <h2 className="text-xl font-bold">
               {user?.first_name || user?.telegram_username || 'User'}
             </h2>
             <div className="flex items-center space-x-2 mt-2">
-              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20">
-                {user ? getKycLevelText('BASIC') : t('wallet.notSet')}
+              <span className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 font-mono">
+                ID: {shortUserId}
               </span>
-              {user?.id && (
-                <button
-                  onClick={async () => {
-                    const idShort = user.id.substring(0, 8)
-                    const success = await copyToClipboard(idShort)
-                    if (success) {
-                      toast.success(t('profile.idCopied'))
-                    }
-                  }}
-                  className="px-2 py-1 rounded-full text-xs font-medium bg-white/20 flex items-center space-x-1 active:bg-white/30 transition-colors"
-                >
-                  <span>{t('profile.myIdCode')}: {user.id.substring(0, 8)}</span>
-                  <ClipboardDocumentIcon className="w-3 h-3" />
-                </button>
-              )}
             </div>
           </div>
+
+          {/* 用户个人二维码（供地推人员扫码充值） */}
+          {qrCodeUrl && (
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setShowQrModal(true)}
+              className="w-14 h-14 bg-white rounded-lg p-1 shadow-sm flex-shrink-0"
+              title={t('profile.myQrCode')}
+            >
+              <img src={qrCodeUrl} alt="QR Code" className="w-full h-full rounded" />
+            </motion.button>
+          )}
         </div>
       </motion.div>
 
@@ -356,6 +372,53 @@ const ProfilePage: React.FC = () => {
           <span>{t('profile.logout')}</span>
         </motion.button>
       </div>
+
+      {/* 二维码放大弹窗 */}
+      <AnimatePresence>
+        {showQrModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+            onClick={() => setShowQrModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-2xl p-6 mx-8 max-w-sm w-full shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <h3 className="text-lg font-bold text-gray-900 mb-1">
+                  {t('profile.myQrCode')}
+                </h3>
+                <p className="text-sm text-gray-500 mb-4">
+                  {t('profile.qrCodeHint')}
+                </p>
+                {qrCodeUrl && (
+                  <img
+                    src={qrCodeUrl}
+                    alt="QR Code"
+                    className="w-56 h-56 mx-auto mb-4 rounded-lg"
+                  />
+                )}
+                <p className="text-sm font-mono text-gray-600 mb-4">
+                  ID: {user?.id || '------'}
+                </p>
+                <button
+                  onClick={() => setShowQrModal(false)}
+                  className="w-full py-3 bg-gray-100 text-gray-700 rounded-xl font-medium hover:bg-gray-200 transition-colors"
+                >
+                  {t('common.close')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

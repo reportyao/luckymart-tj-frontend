@@ -52,7 +52,8 @@
     "justNow": "刚刚",
     "confirmSubmit": "确认提交",
     "freeShippingPromo": "本单0运费，TezBarakat为您补贴，节省15TJS运费",
-    "freeShippingAmount": "0 TJS"
+    "freeShippingAmount": "0 TJS",
+    "close": "关闭"
   },
   "nav": {
     "home": "首页",
@@ -553,7 +554,9 @@
     "myProfile": "我的资料",
     "myIdCode": "我的ID",
     "tapToCopy": "点击复制",
-    "idCopied": "ID已复制"
+    "idCopied": "ID已复制",
+    "myQrCode": "我的二维码",
+    "qrCodeHint": "让地推人员扫描此二维码为您充值"
   },
   "auth": {
     "welcome": "欢迎来到 TezBarakat",
