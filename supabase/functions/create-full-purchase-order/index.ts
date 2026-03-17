@@ -116,7 +116,7 @@ async function generatePickupCode(supabase: any): Promise<string> {
 
 /**
  * 全款购买积分商城商品
- * 用户直接使用积分购买商品的全款价格，立即获得商品
+ * 【业务重构】支持混合支付：抵扣券 + TJS余额 + LUCKY_COIN积分
  * 
  * 重要逻辑修改（2026-01-08）：
  * - 全款购买从关联的库存商品(inventory_products)扣减库存
@@ -130,12 +130,14 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    const { lottery_id, pickup_point_id, user_id, session_token } = body;
+    // 【修改】接收 useCoupon 参数
+    const { lottery_id, pickup_point_id, user_id, session_token, useCoupon } = body;
 
     console.log('[CreateFullPurchaseOrder] Received request:', { 
       lottery_id,
       pickup_point_id,
       user_id,
+      useCoupon,
       session_token: session_token ? 'present' : 'missing'
     });
 
@@ -220,14 +222,12 @@ serve(async (req) => {
       }
     } else {
       // 如果没有关联库存商品，检查是否还有剩余份数可供全款购买
-      // 这是向后兼容的逻辑，对于未关联库存商品的旧数据
       if (lottery.sold_tickets >= lottery.total_tickets) {
         throw new Error('商品已售罄');
       }
     }
 
     // 5. 计算全款价格
-    // 优先使用 full_purchase_price，其次使用库存商品原价，最后使用 ticket_price * total_tickets
     let fullPrice = lottery.full_purchase_price;
     if (!fullPrice && inventoryProduct) {
       fullPrice = inventoryProduct.original_price;
@@ -248,28 +248,52 @@ serve(async (req) => {
       lottery_original_price: lottery.original_price
     });
 
-    // 6. 获取用户积分钱包
-    // 注意：LUCKY_COIN钱包的currency总是POINTS，不需要匹配lottery.currency
-    const { data: wallet, error: walletError } = await supabase
+    // ============================================================
+    // 【业务重构】混合支付预检查
+    // 获取 TJS + LUCKY_COIN + 抵扣券总可用资产
+    // ============================================================
+
+    // 获取 TJS 钱包余额
+    const { data: tjsWallet } = await supabase
+      .from('wallets')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('type', 'TJS')
+      .single();
+    const tjsBalance = tjsWallet ? (Number(tjsWallet.balance) || 0) : 0;
+
+    // 获取 LUCKY_COIN 钱包余额
+    const { data: lcWallet } = await supabase
       .from('wallets')
       .select('*')
       .eq('user_id', userId)
       .eq('type', 'LUCKY_COIN')
       .single();
+    const lcBalance = lcWallet ? (Number(lcWallet.balance) || 0) : 0;
 
-    if (walletError || !wallet) {
-      console.error('[CreateFullPurchaseOrder] Wallet not found:', walletError);
-      throw new Error('钱包不存在');
+    // 检查抵扣券（如果选择使用）
+    let couponValue = 0;
+    if (useCoupon) {
+      const { data: coupons } = await supabase
+        .from('coupons')
+        .select('amount')
+        .eq('user_id', userId)
+        .eq('status', 'VALID')
+        .gt('expires_at', new Date().toISOString())
+        .order('expires_at', { ascending: true })
+        .limit(1);
+      if (coupons && coupons.length > 0) {
+        couponValue = Number(coupons[0].amount) || 0;
+      }
     }
 
-    // 7. 检查余额是否足够
-    // 【修复】显式类型转换：Supabase 返回的 numeric 字段可能是字符串，必须转为数字再比较和运算
-    const currentBalanceNum = Number(wallet.balance) || 0;
-    if (currentBalanceNum < fullPrice) {
-      throw new Error(`积分余额不足，需要 ${fullPrice} 积分，当前余额 ${currentBalanceNum} 积分`);
+    // 总可用资产预检查
+    const totalAvailable = tjsBalance + lcBalance + couponValue;
+    if (totalAvailable < fullPrice) {
+      throw new Error(`总资产不足，需要 ${fullPrice}，当前可用 ${totalAvailable.toFixed(2)}（余额: ${tjsBalance.toFixed(2)}, 积分: ${lcBalance.toFixed(2)}, 抵扣券: ${couponValue.toFixed(2)}）`);
     }
 
-    // 8. 验证自提点
+    // 6. 验证自提点
     if (pickup_point_id) {
       const { data: pickupPoint, error: pointError } = await supabase
         .from('pickup_points')
@@ -286,17 +310,17 @@ serve(async (req) => {
       }
     }
 
-    // 9. 生成订单号
+    // 7. 生成订单号
     const orderNumber = `FP${Date.now()}${Math.random().toString(36).substr(2, 4).toUpperCase()}`;
 
-    // 10. 生成提货码
+    // 8. 生成提货码
     const pickupCode = await generatePickupCode(supabase);
 
-    // 11. 设置过期时间（30天后）
+    // 9. 设置过期时间（30天后）
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 30);
 
-    // 12. 创建全款购买订单
+    // 10. 创建全款购买订单
     const { data: order, error: orderError } = await supabase
       .from('full_purchase_orders')
       .insert({
@@ -327,54 +351,41 @@ serve(async (req) => {
       throw new Error('创建订单失败');
     }
 
-    // 13. 扣除用户积分
-    // 【资金安全修复 v4】添加完整的乐观锁保护
-    // 必须在 WHERE 条件中检查 version，防止并发购买导致余额覆盖
-    const currentVersion = wallet.version || 1;
-    const newBalance = currentBalanceNum - fullPrice;
-    const { error: updateWalletError, data: updatedWallet } = await supabase
-      .from('wallets')
-      .update({
-        balance: newBalance,
-        version: currentVersion + 1,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', wallet.id)
-      .eq('version', currentVersion)  // 乐观锁: 只有版本号匹配才能更新
-      .select()
-      .single();
+    // ============================================================
+    // 11. 【业务重构】调用 process_mixed_payment RPC 进行混合支付
+    // 替代原有的手动 wallet update + 乐观锁逻辑
+    // 支付优先级: 抵扣券 → TJS余额 → LUCKY_COIN积分
+    // ============================================================
+    const { data: paymentResult, error: paymentError } = await supabase.rpc(
+      'process_mixed_payment',
+      {
+        p_user_id: userId,
+        p_lottery_id: lottery_id,
+        p_order_id: order.id,
+        p_total_amount: fullPrice,
+        p_use_coupon: useCoupon || false,
+        p_order_type: 'FULL_PURCHASE'
+      }
+    );
 
-    if (updateWalletError || !updatedWallet) {
-      console.error('[CreateFullPurchaseOrder] Update wallet error (possible concurrent conflict):', updateWalletError);
+    if (paymentError) {
+      console.error('[CreateFullPurchaseOrder] process_mixed_payment RPC error:', paymentError);
       // 回滚订单
-      await supabase
-        .from('full_purchase_orders')
-        .delete()
-        .eq('id', order.id);
-      throw new Error('扣除积分失败，请重试（可能存在并发操作）');
+      await supabase.from('full_purchase_orders').delete().eq('id', order.id);
+      throw new Error(`支付失败: ${paymentError.message}`);
     }
 
-    // 14. 创建钱包交易记录
-    const { error: transactionError } = await supabase
-      .from('wallet_transactions')
-      .insert({
-        wallet_id: wallet.id,
-        type: 'FULL_PURCHASE',
-        amount: -fullPrice,
-        balance_before: currentBalanceNum,
-        balance_after: newBalance,
-        status: 'COMPLETED',
-        description: `全款购买 - 订单 ${orderNumber}`,
-        related_order_id: order.id,
-        related_lottery_id: lottery_id,
-      });
-
-    if (transactionError) {
-      console.error('[CreateFullPurchaseOrder] Transaction log error:', transactionError);
-      // 不影响主流程
+    if (!paymentResult || !paymentResult.success) {
+      const errorMsg = paymentResult?.error || 'UNKNOWN_PAYMENT_ERROR';
+      console.error('[CreateFullPurchaseOrder] process_mixed_payment business error:', errorMsg);
+      // 回滚订单
+      await supabase.from('full_purchase_orders').delete().eq('id', order.id);
+      throw new Error(`支付失败: ${errorMsg}`);
     }
 
-    // 15. 更新库存（关键修改：从库存商品扣减，不影响一元购物份数）
+    console.log('[CreateFullPurchaseOrder] Payment successful:', paymentResult);
+
+    // 12. 更新库存（关键修改：从库存商品扣减，不影响一元购物份数）
     if (inventoryProduct) {
       // 有关联库存商品：从库存商品扣减库存（使用乐观锁防止并发超卖）
       const newStock = inventoryProduct.stock - 1;
@@ -425,10 +436,6 @@ serve(async (req) => {
         stockAfter: newStock,
       });
     } else {
-      // 重要修改（2026-01-09）：
-      // 全款购买不应该影响 sold_tickets（份数），因为份数只用于一元购物抽奖
-      // 全款购买应该扣减库存，但如果没有关联库存商品，则只记录日志，不做任何库存变动
-      // 这样可以避免全款购买导致份数被消耗，进而触发不应该发生的开奖
       console.log('[CreateFullPurchaseOrder] No inventory product linked, full purchase completed without stock deduction:', {
         lotteryId: lottery_id,
         soldTickets: lottery.sold_tickets,
@@ -437,7 +444,7 @@ serve(async (req) => {
       });
     }
 
-    // 16. 记录操作日志
+    // 13. 记录操作日志
     await supabase
       .from('pickup_logs')
       .insert({
@@ -454,6 +461,7 @@ serve(async (req) => {
       pickupCode,
       totalAmount: fullPrice,
       inventoryProductId: inventoryProduct?.id || null,
+      paymentDetail: paymentResult,
     });
 
     return new Response(
@@ -465,7 +473,13 @@ serve(async (req) => {
           pickup_code: pickupCode,
           expires_at: expiresAt.toISOString(),
           total_amount: fullPrice,
-          new_balance: newBalance,
+          new_balance: tjsBalance - (paymentResult.tjs_deducted || 0),
+          new_lc_balance: lcBalance - (paymentResult.lc_deducted || 0),
+          payment_detail: {
+            coupon_deducted: paymentResult.coupon_deducted || 0,
+            tjs_deducted: paymentResult.tjs_deducted || 0,
+            lc_deducted: paymentResult.lc_deducted || 0,
+          },
         }
       }),
       {

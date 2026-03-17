@@ -53,8 +53,6 @@ async function rollbackAllocatedTickets(
 
 /**
  * 记录孤儿彩票（需要人工处理）
- * 使用 console.error 记录，Supabase 日志系统会捕获这些错误
- * 可以在 Supabase Dashboard -> Logs -> Edge Functions 中查看
  */
 function logOrphanedTickets(
   ticketIds: string[],
@@ -65,7 +63,6 @@ function logOrphanedTickets(
     orderId?: string;
   }
 ) {
-  // 使用结构化日志格式，便于在 Supabase 日志中搜索和过滤
   const logEntry = {
     level: 'ERROR',
     type: 'ORPHANED_TICKETS',
@@ -77,10 +74,8 @@ function logOrphanedTickets(
     action_required: 'Manual cleanup required - delete these tickets from lottery_entries table',
   };
 
-  // 使用特殊前缀，便于在日志中搜索
   console.error('[ORPHANED_TICKETS_ALERT]', JSON.stringify(logEntry));
   
-  // 同时输出可读格式
   console.error(`⚠️ ORPHANED TICKETS DETECTED:
   - Ticket IDs: ${ticketIds.join(', ')}
   - Error: ${error}
@@ -113,8 +108,8 @@ Deno.serve(async (req) => {
       throw new Error('Supabase configuration missing');
     }
 
-    // 解析请求数据
-    const { lotteryId, quantity, paymentMethod, session_token } = await req.json();
+    // 【修改】接收 useCoupon 参数，支持混合支付
+    const { lotteryId, quantity, paymentMethod, session_token, useCoupon } = await req.json();
 
     if (!lotteryId || !quantity || !paymentMethod) {
       throw new Error('Missing required parameters: lotteryId, quantity, paymentMethod');
@@ -247,13 +242,15 @@ Deno.serve(async (req) => {
       throw new Error('Invalid price configuration');
     }
 
-    /**
-     * 获取用户钱包
-     */
-    const walletType = paymentMethod === 'BALANCE_WALLET' ? 'TJS' : 'LUCKY_COIN';
-    const walletCurrency = paymentMethod === 'BALANCE_WALLET' ? lottery.currency : 'POINTS';
-    const walletResponse = await fetch(
-      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.${walletType}&currency=eq.${walletCurrency}&select=*`,
+    // ============================================================
+    // 【业务重构】混合支付预检查
+    // 获取用户 TJS 和 LUCKY_COIN 钱包余额 + 抵扣券数量，进行总资产预检查
+    // 实际扣款由 process_mixed_payment RPC 在数据库事务中完成
+    // ============================================================
+    
+    // 获取 TJS 钱包
+    const tjsWalletResponse = await fetch(
+      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.TJS&select=*`,
       {
         headers: {
           'Authorization': `Bearer ${serviceRoleKey}`,
@@ -262,21 +259,46 @@ Deno.serve(async (req) => {
         },
       }
     );
+    const tjsWallets = await tjsWalletResponse.json();
+    const tjsBalance = tjsWallets.length > 0 ? (parseFloat(tjsWallets[0].balance) || 0) : 0;
 
-    const wallets = await walletResponse.json();
-    if (wallets.length === 0) {
-      throw new Error('Wallet not found');
+    // 获取 LUCKY_COIN 钱包
+    const lcWalletResponse = await fetch(
+      `${supabaseUrl}/rest/v1/wallets?user_id=eq.${userId}&type=eq.LUCKY_COIN&select=*`,
+      {
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    const lcWallets = await lcWalletResponse.json();
+    const lcBalance = lcWallets.length > 0 ? (parseFloat(lcWallets[0].balance) || 0) : 0;
+
+    // 检查抵扣券（如果选择使用）
+    let couponValue = 0;
+    if (useCoupon) {
+      const couponResponse = await fetch(
+        `${supabaseUrl}/rest/v1/coupons?user_id=eq.${userId}&status=eq.VALID&expires_at=gt.${new Date().toISOString()}&select=amount&order=expires_at.asc&limit=1`,
+        {
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'apikey': serviceRoleKey,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+      const coupons = await couponResponse.json();
+      if (coupons.length > 0) {
+        couponValue = parseFloat(coupons[0].amount) || 0;
+      }
     }
 
-    const wallet = wallets[0];
-
-    // 检查可用余额
-    const currentBalance = parseFloat(wallet.balance) || 0;
-    const frozenBalance = parseFloat(wallet.frozen_balance) || 0;
-    const availableBalance = currentBalance - frozenBalance;
-    
-    if (availableBalance < totalAmount) {
-      throw new Error(`Insufficient available balance. Available: ${availableBalance.toFixed(2)}, Required: ${totalAmount.toFixed(2)}`);
+    // 总可用资产预检查
+    const totalAvailable = tjsBalance + lcBalance + couponValue;
+    if (totalAvailable < totalAmount) {
+      throw new Error(`Insufficient total balance. Available: ${totalAvailable.toFixed(2)} (TJS: ${tjsBalance.toFixed(2)}, Points: ${lcBalance.toFixed(2)}, Coupon: ${couponValue.toFixed(2)}), Required: ${totalAmount.toFixed(2)}`);
     }
 
     // 生成订单号
@@ -349,94 +371,73 @@ Deno.serve(async (req) => {
     const allocatedTickets = await allocateResponse.json();
     const participationCodes = allocatedTickets.map((t: any) => t.participation_code);
 
-    // 更新钱包余额（使用乐观锁）
-    // 【修复】显式类型转换：REST API 返回的 balance 是字符串，必须转为数字再运算
-    const currentBalanceNum = Number(wallet.balance) || 0;
-    const newBalance = currentBalanceNum - totalAmount;
-    const updateWalletResponse = await fetch(
-      `${supabaseUrl}/rest/v1/wallets?id=eq.${wallet.id}&version=eq.${wallet.version}`,
-      {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-          'Prefer': 'return=representation',
-        },
-        body: JSON.stringify({
-          balance: newBalance,
-          version: wallet.version + 1,
-          updated_at: new Date().toISOString(),
-        }),
-      }
-    );
-
-    if (!updateWalletResponse.ok) {
-      const errorText = await updateWalletResponse.text();
-      // 回滚已分配的彩票
-      console.error('Failed to update wallet, rolling back tickets...');
-      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
-        userId,
-        lotteryId,
-        orderId: order.id,
-      });
-      // 取消订单
-      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'CANCELLED' }),
-      });
-      throw new Error(`Failed to update wallet (concurrent modification detected): ${errorText}`);
-    }
-
-    // 检查是否更新成功（乐观锁冲突检查）
-    const updatedWallets = await updateWalletResponse.json();
-    if (!updatedWallets || updatedWallets.length === 0) {
-      console.error('Wallet update returned empty result, rolling back...');
-      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
-        userId,
-        lotteryId,
-        orderId: order.id,
-      });
-      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
-        method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${serviceRoleKey}`,
-          'apikey': serviceRoleKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'CANCELLED' }),
-      });
-      throw new Error('Failed to update wallet (concurrent modification detected). Please try again.');
-    }
-
-    // 创建钱包交易记录
-    const transactionData = {
-      wallet_id: wallet.id,
-      type: 'LOTTERY_PURCHASE',
-      amount: -totalAmount,
-      balance_before: currentBalanceNum,
-      balance_after: newBalance,
-      status: 'COMPLETED',
-      description: `彩票购买 - 订单 ${orderNumber}`,
-      related_order_id: order.id,
-      related_lottery_id: lotteryId,
-      created_at: new Date().toISOString(),
-    };
-
-    await fetch(`${supabaseUrl}/rest/v1/wallet_transactions`, {
+    // ============================================================
+    // 【业务重构】调用 process_mixed_payment RPC 进行混合支付
+    // 替代原有的手动 wallet PATCH 更新逻辑
+    // 支付优先级: 抵扣券 → TJS余额 → LUCKY_COIN积分
+    // ============================================================
+    const paymentRpcResponse = await fetch(`${supabaseUrl}/rest/v1/rpc/process_mixed_payment`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${serviceRoleKey}`,
         'apikey': serviceRoleKey,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(transactionData),
+      body: JSON.stringify({
+        p_user_id: userId,
+        p_lottery_id: lotteryId,
+        p_order_id: order.id,
+        p_total_amount: totalAmount,
+        p_use_coupon: useCoupon || false,
+        p_order_type: 'LOTTERY_PURCHASE'
+      }),
     });
+
+    if (!paymentRpcResponse.ok) {
+      const errorText = await paymentRpcResponse.text();
+      console.error('process_mixed_payment RPC HTTP error:', errorText);
+      // 回滚已分配的彩票和订单
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
+        userId,
+        lotteryId,
+        orderId: order.id,
+      });
+      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+      throw new Error(`Payment failed: ${errorText}`);
+    }
+
+    const paymentResult = await paymentRpcResponse.json();
+    console.log('process_mixed_payment result:', paymentResult);
+
+    // 检查 RPC 业务逻辑结果
+    if (!paymentResult || !paymentResult.success) {
+      const paymentError = paymentResult?.error || 'UNKNOWN_PAYMENT_ERROR';
+      console.error('process_mixed_payment business error:', paymentError);
+      // 回滚已分配的彩票和订单
+      await rollbackAllocatedTickets(supabaseUrl, serviceRoleKey, allocatedTickets, {
+        userId,
+        lotteryId,
+        orderId: order.id,
+      });
+      await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'CANCELLED' }),
+      });
+      throw new Error(`Payment failed: ${paymentError}`);
+    }
 
     // 更新订单状态
     await fetch(`${supabaseUrl}/rest/v1/orders?id=eq.${order.id}`, {
@@ -500,7 +501,6 @@ Deno.serve(async (req) => {
     }
 
     // 处理推荐佣金
-    // 修复: 同时检查 referred_by_id 和 referrer_id 以兼容旧数据
     const hasReferrer = user.referred_by_id || user.referrer_id;
     if (hasReferrer) {
       try {
@@ -525,6 +525,10 @@ Deno.serve(async (req) => {
       }
     }
 
+    // 【修改】计算支付后的剩余余额（从 RPC 返回值中获取）
+    const remainingTjsBalance = tjsBalance - (paymentResult.tjs_deducted || 0);
+    const remainingLcBalance = lcBalance - (paymentResult.lc_deducted || 0);
+
     // 返回购买结果
     const result = {
       success: true,
@@ -536,7 +540,13 @@ Deno.serve(async (req) => {
       },
       lottery_entries: allocatedTickets,
       participation_codes: participationCodes,
-      remaining_balance: newBalance,
+      remaining_balance: remainingTjsBalance,
+      remaining_lc_balance: remainingLcBalance,
+      payment_detail: {
+        coupon_deducted: paymentResult.coupon_deducted || 0,
+        tjs_deducted: paymentResult.tjs_deducted || 0,
+        lc_deducted: paymentResult.lc_deducted || 0,
+      },
       is_sold_out: isSoldOut,
     };
 

@@ -49,6 +49,10 @@ interface NotificationData {
   lottery_title?: string;
   lottery_id?: string;
 
+  // 抵扣券相关
+  count?: number;  // 抵扣券数量
+  expires_at?: string;  // 抵扣券过期时间
+
   // 地推充值相关
   promoter_name?: string;   // 地推人员名称
   target_user_name?: string; // 目标用户名称
@@ -288,11 +292,23 @@ const notificationTemplates = {
   // 地推充值确认通知（发送给地推人员自己）
   promoter_deposit_confirm: {
     zh: (data: NotificationData) => 
-      `✅ 代客充值成功\n\n👤 用户: ${data.target_user_name || '用户'}\n💵 金额: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 首充奖励: ${data.bonus_amount} TJS` : ''}\n🕒 时间: ${new Date().toLocaleString('zh-CN')}\n\n充值已成功到账！`,
+      `✅ 代客充值成功\n\n👤 用户: ${data.target_user_name || '用户'}\n💵 金额: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 充值赠送: ${data.bonus_amount} 积分` : ''}\n🕒 时间: ${new Date().toLocaleString('zh-CN')}\n\n充值已成功到账！`,
     ru: (data: NotificationData) => 
-      `✅ Пополнение выполнено\n\n👤 Пользователь: ${data.target_user_name || 'Пользователь'}\n💵 Сумма: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 Бонус: ${data.bonus_amount} TJS` : ''}\n🕒 Время: ${new Date().toLocaleString('ru-RU')}\n\nПополнение успешно зачислено!`,
+      `✅ Пополнение выполнено\n\n👤 Пользователь: ${data.target_user_name || 'Пользователь'}\n💵 Сумма: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 Бонус: ${data.bonus_amount} баллов` : ''}\n🕒 Время: ${new Date().toLocaleString('ru-RU')}\n\nПополнение успешно зачислено!`,
     tg: (data: NotificationData) => 
-      `✅ Пуркунӣ муваффақ\n\n👤 Корбар: ${data.target_user_name || 'Корбар'}\n💵 Маблағ: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 Ҷоиза: ${data.bonus_amount} TJS` : ''}\n🕒 Вақт: ${new Date().toLocaleString('tg-TJ')}\n\nПуркунӣ муваффақият гузошта шуд!`
+      `✅ Пуркунӣ муваффақ\n\n👤 Корбар: ${data.target_user_name || 'Корбар'}\n💵 Маблағ: ${data.transaction_amount} TJS${data.bonus_amount ? `\n🎁 Ҷоиза: ${data.bonus_amount} холҳо` : ''}\n🕒 Вақт: ${new Date().toLocaleString('tg-TJ')}\n\nПуркунӣ муваффақият гузошта шуд!`
+  },
+
+  // ==================== 9. 抵扣券通知 ====================
+
+  // 抵扣券到账通知（未中奖用户获得抵扣券返还）
+  coupon_issued: {
+    zh: (data: NotificationData) => 
+      `🎫 抵扣券到账通知\n\n很遗憾您在【${data.lottery_title || '活动'}】中未中奖。已为您返还 ${data.count || 0} 张 1 TJS 抵扣券！\n\n⏰ 有效期: 30天\n\n可在下次购买时直接抵扣现金使用。`,
+    ru: (data: NotificationData) => 
+      `🎫 Купон получен\n\nК сожалению, вы не выиграли в 【${data.lottery_title || 'акции'}】. Вам начислено ${data.count || 0} купонов по 1 TJS!\n\n⏰ Срок действия: 30 дней`,
+    tg: (data: NotificationData) => 
+      `🎫 Купон гирифта шуд\n\nМутаассифона, шумо дар 【${data.lottery_title || 'фаъолият'}】 бурд накардед. Ба шумо ${data.count || 0} купони 1 TJS дода шуд!\n\n⏰ Мӯҳлати эътибор: 30 рӯз`
   }
 };
 // 发送消息到 Telegram

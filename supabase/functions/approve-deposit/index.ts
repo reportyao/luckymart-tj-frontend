@@ -98,157 +98,77 @@ serve(async (req) => {
 
     // 如果审核通过,增加用户余额
     if (action === 'APPROVED') {
-      // 获取用户余额钱包
-      console.log('查询用户钱包...')
-      let { data: wallet, error: walletError } = await supabaseClient
-        .from('wallets')
-        .select('*')
-        .eq('user_id', depositRequest.user_id)
-        .eq('type', 'TJS')
-        .eq('currency', depositRequest.currency)
-        .single()
+      const depositAmount = Number(depositRequest.amount)
 
-      console.log('钱包查询结果:', { wallet, walletError })
-
-      // 如果钱包不存在，自动创建
-      if (walletError || !wallet) {
-        console.log('钱包不存在，自动创建...')
-        // 【资金安全修复 v4】创建钱包时显式设置 version = 1
-        const { data: newWallet, error: createWalletError } = await supabaseClient
-          .from('wallets')
-          .insert({
-            user_id: depositRequest.user_id,
-            type: 'TJS',
-            currency: depositRequest.currency,
-            balance: 0,
-            version: 1,
-            total_deposits: 0,
-            first_deposit_bonus_claimed: false,
-            first_deposit_bonus_amount: 0,
-          })
-          .select()
-          .single()
-
-        if (createWalletError || !newWallet) {
-          console.error('创建钱包失败:', createWalletError)
-          throw new Error(`创建钱包失败: ${createWalletError?.message}`)
-        }
-
-        wallet = newWallet
-        console.log('钱包创建成功:', wallet)
-      }
-
-      // 检查是否为首充（total_deposits 为 0 或 null）
-      const isFirstDeposit = !wallet.total_deposits || Number(wallet.total_deposits) === 0
+      // ============================================================
+      // 【业务重构】每次充值赠送（移除首充限制）
+      // 只要满足 min_deposit_amount 即可获得赠送
+      // ============================================================
       let bonusAmount = 0
       let bonusPercent = 0
 
-      if (isFirstDeposit && !wallet.first_deposit_bonus_claimed) {
-        // 获取首充奖励配置
-        console.log('检查首充奖励配置...')
-        const { data: configData } = await supabaseClient
-          .from('system_config')
-          .select('value')
-          .eq('key', 'first_deposit_bonus')
-          .single()
+      // 获取充值赠送配置（数据库 key 保持 first_deposit_bonus 不变，避免破坏现有数据）
+      console.log('检查充值赠送配置...')
+      const { data: configData } = await supabaseClient
+        .from('system_config')
+        .select('value')
+        .eq('key', 'first_deposit_bonus')
+        .single()
 
-        if (configData?.value) {
-          const config = configData.value as {
-            enabled: boolean;
-            bonus_percent: number;
-            max_bonus_amount: number;
-            min_deposit_amount: number;
-          }
+      if (configData?.value) {
+        const config = configData.value as {
+          enabled: boolean;
+          bonus_percent: number;
+          max_bonus_amount: number;
+          min_deposit_amount: number;
+        }
 
-          console.log('首充奖励配置:', config)
+        console.log('充值赠送配置:', config)
 
-          if (config.enabled && Number(depositRequest.amount) >= config.min_deposit_amount) {
-            // 计算奖励金额
-            bonusPercent = config.bonus_percent
-            bonusAmount = Math.min(
-              Number(depositRequest.amount) * (config.bonus_percent / 100),
-              config.max_bonus_amount
-            )
-            console.log('首充奖励金额:', bonusAmount)
-          }
+        // 【修改】移除首充限制：不再检查 isFirstDeposit 和 first_deposit_bonus_claimed
+        // 只要 enabled 且金额达标即可获得赠送
+        if (config.enabled && depositAmount >= config.min_deposit_amount) {
+          bonusPercent = config.bonus_percent
+          bonusAmount = Math.min(
+            depositAmount * (config.bonus_percent / 100),
+            config.max_bonus_amount
+          )
+          console.log('充值赠送金额:', bonusAmount)
         }
       }
 
-      // 更新钱包余额（包含首充奖励）
-      // 【资金安全修复 v3】添加乐观锁防止并发更新导致余额错误
-      console.log('更新钱包余额...')
-      const depositAmount = Number(depositRequest.amount)
-      const totalCredited = depositAmount + bonusAmount
-      const currentBalance = Number(wallet.balance)
-      const newBalance = currentBalance + totalCredited
-      const newTotalDeposits = Number(wallet.total_deposits || 0) + depositAmount
-      
-      const walletUpdateData: any = {
-        balance: newBalance,
-        total_deposits: newTotalDeposits,
-        version: (wallet.version || 1) + 1,  // 乐观锁: 版本号+1
-        updated_at: new Date().toISOString(),
+      // ============================================================
+      // 【业务重构】调用 process_deposit_with_bonus RPC 函数
+      // 核心修复: 本金入 TJS 钱包，赠送入 LUCKY_COIN 钱包
+      // 替代原有的手动更新 wallets 表逻辑
+      // ============================================================
+      console.log('调用 process_deposit_with_bonus RPC...')
+      const { data: rpcResult, error: rpcError } = await supabaseClient.rpc(
+        'process_deposit_with_bonus',
+        {
+          p_request_id: requestId,
+          p_user_id: depositRequest.user_id,
+          p_deposit_amount: depositAmount,
+          p_bonus_amount: bonusAmount,
+          p_order_number: depositRequest.order_number,
+        }
+      )
+
+      console.log('RPC 结果:', { rpcResult, rpcError })
+
+      if (rpcError) {
+        console.error('process_deposit_with_bonus RPC 调用失败:', rpcError)
+        throw new Error(`充值处理失败: ${rpcError.message}`)
       }
 
-      // 如果有首充奖励，标记为已领取
-      if (bonusAmount > 0) {
-        walletUpdateData.first_deposit_bonus_claimed = true
-        walletUpdateData.first_deposit_bonus_amount = bonusAmount
+      if (!rpcResult || !rpcResult.success) {
+        const errorMsg = rpcResult?.error || '未知错误'
+        console.error('process_deposit_with_bonus 业务错误:', errorMsg)
+        throw new Error(`充值处理失败: ${errorMsg}`)
       }
 
-      // 【乐观锁】通过 version 字段确保并发安全
-      // 如果在查询钱包和更新钱包之间有其他操作修改了余额，
-      // version 不匹配会导致更新失败，从而防止资金错误
-      const { error: updateWalletError, data: updatedWallet } = await supabaseClient
-        .from('wallets')
-        .update(walletUpdateData)
-        .eq('id', wallet.id)
-        .eq('version', wallet.version || 1)  // 乐观锁: 只有版本号匹配才能更新
-        .select()
-        .single()
-
-      console.log('更新钱包结果:', { updateWalletError, updatedWallet: updatedWallet ? 'ok' : 'null' })
-
-      if (updateWalletError || !updatedWallet) {
-        console.error('更新钱包余额失败(可能是并发冲突):', updateWalletError)
-        throw new Error(`更新余额失败，请重试（可能存在并发操作）`)
-      }
-
-      // 创建充值交易记录
-      // 【修复 v3】balance_after 使用正确的值（充值后的余额，不包含奖励）
-      // 原来的 balance_after = wallet.balance + depositAmount 没有包含奖励金额，
-      // 但实际上充值流水的 balance_after 应该是充值后、奖励前的余额
-      const balanceAfterDeposit = currentBalance + depositAmount
-      console.log('创建交易记录...')
-      const { error: txError } = await supabaseClient.from('wallet_transactions').insert({
-        wallet_id: wallet.id,
-        type: 'DEPOSIT',
-        amount: depositAmount,
-        balance_before: currentBalance,  // 新增: 记录充值前余额
-        balance_after: balanceAfterDeposit,  // 修复: 使用充值后的准确余额
-        status: 'COMPLETED',
-        description: `充值审核通过 - 订单号: ${depositRequest.order_number}`,
-        related_id: requestId,
-        processed_at: new Date().toISOString(),
-      })
-      console.log('交易记录结果:', { txError })
-
-      // 如果有首充奖励，创建奖励交易记录
-      if (bonusAmount > 0) {
-        console.log('创建首充奖励交易记录...')
-        const { error: bonusTxError } = await supabaseClient.from('wallet_transactions').insert({
-          wallet_id: wallet.id,
-          type: 'BONUS',
-          amount: bonusAmount,
-          balance_before: balanceAfterDeposit,  // 奖励前余额 = 充值后余额
-          balance_after: newBalance,  // 奖励后余额 = 充值 + 奖励
-          status: 'COMPLETED',
-          description: `首充奖励 (${bonusPercent}%) - 订单号: ${depositRequest.order_number}`,
-          related_id: requestId,
-          processed_at: new Date().toISOString(),
-        })
-        console.log('首充奖励交易记录结果:', { bonusTxError })
-      }
+      const newTjsBalance = rpcResult.tjs_new_balance
+      const newLcBalance = rpcResult.lc_new_balance
 
       // 发送通知给用户
       console.log('发送通知...')
@@ -262,12 +182,12 @@ serve(async (req) => {
           tg: 'Пуркунӣ бомуваффақият',
         },
         content: bonusAmount > 0 
-          ? `您的充值申请已审核通过,金额${depositAmount} ${depositRequest.currency}已到账，首充奖励+${bonusAmount} ${depositRequest.currency}`
+          ? `您的充值申请已审核通过,金额${depositAmount} ${depositRequest.currency}已到账，赠送+${bonusAmount} 积分`
           : `您的充值申请已审核通过,金额${depositAmount} ${depositRequest.currency}已到账`,
         message_i18n: bonusAmount > 0 ? {
-          zh: `您的充值申请已审核通过，金额 ${depositAmount} ${depositRequest.currency} 已到账，首充奖励 +${bonusAmount} ${depositRequest.currency}`,
-          ru: `Ваш запрос на пополнение одобрен. ${depositAmount} ${depositRequest.currency} зачислено, бонус за первое пополнение +${bonusAmount} ${depositRequest.currency}`,
-          tg: `Дархости пуркунии шумо тасдиқ шуд. ${depositAmount} ${depositRequest.currency} ворид шуд, мукофоти аввалин пуркунӣ +${bonusAmount} ${depositRequest.currency}`,
+          zh: `您的充值申请已审核通过，金额 ${depositAmount} ${depositRequest.currency} 已到账，赠送 +${bonusAmount} 积分`,
+          ru: `Ваш запрос на пополнение одобрен. ${depositAmount} ${depositRequest.currency} зачислено, бонус +${bonusAmount} баллов`,
+          tg: `Дархости пуркунии шумо тасдиқ шуд. ${depositAmount} ${depositRequest.currency} ворид шуд, мукофот +${bonusAmount} хол`,
         } : {
           zh: `您的充值申请已审核通过，金额 ${depositAmount} ${depositRequest.currency} 已到账`,
           ru: `Ваш запрос на пополнение одобрен. ${depositAmount} ${depositRequest.currency} зачислено`,
@@ -304,7 +224,9 @@ serve(async (req) => {
         });
         console.log('充值通知已加入队列');
 
-        // 如果有首充奖励，发送首充奖励通知
+        // 如果有赠送，发送赠送通知
+        // 【修改】通知类型从 first_deposit_bonus 改为 deposit_bonus（语义更准确）
+        // 但保持 notification_type 为 first_deposit_bonus 以兼容现有 Telegram 模板
         if (bonusAmount > 0) {
           await supabaseClient.from('notification_queue').insert({
             user_id: depositRequest.user_id,
@@ -313,17 +235,17 @@ serve(async (req) => {
               deposit_amount: depositAmount,
               bonus_amount: bonusAmount,
               bonus_percent: bonusPercent,
-              total_amount: totalCredited,
+              total_amount: depositAmount + bonusAmount,
             },
             telegram_chat_id: null,
             notification_type: 'first_deposit_bonus',
-            title: '首充奖励到账',
+            title: '充值赠送到账',
             message: '',
             data: {
               deposit_amount: depositAmount,
               bonus_amount: bonusAmount,
               bonus_percent: bonusPercent,
-              total_amount: totalCredited,
+              total_amount: depositAmount + bonusAmount,
             },
             priority: 1,
             status: 'pending',
@@ -333,7 +255,7 @@ serve(async (req) => {
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
           });
-          console.log('首充奖励通知已加入队列');
+          console.log('充值赠送通知已加入队列');
         }
       } catch (error) {
         console.error('Failed to queue Telegram notification:', error);

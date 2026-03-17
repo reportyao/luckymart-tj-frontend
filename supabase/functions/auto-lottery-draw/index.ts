@@ -362,9 +362,9 @@ serve(async (req) => {
             ru: 'Объявление результатов розыгрыша',
             tg: 'Еълони қуръа еълон шуд',
           },
-          content: `“${lottery.title}”已开奖，中奖码: ${winningCode}`,
+          content: `"${lottery.title}"已开奖，中奖码: ${winningCode}`,
           message_i18n: {
-            zh: `“${lottery.title}”已开奖，中奖码: ${winningCode}`,
+            zh: `"${lottery.title}"已开奖，中奖码: ${winningCode}`,
             ru: `«${lottery.title}» разыгран. Выигрышный номер: ${winningCode}`,
             tg: `«${lottery.title}» қуръа кашида шуд. Рақами бурд: ${winningCode}`,
           },
@@ -381,6 +381,54 @@ serve(async (req) => {
     } catch (notifError) {
       console.error('[AutoLotteryDraw] Failed to send participant notifications:', notifError);
       // 通知失败不影响开奖结果
+    }
+
+    // ============================================================
+    // 14. 【业务重构】统计未中奖用户的参与份数，异步调用 issue-refund-coupons
+    // 每个未中奖用户按其购买的份数获得等量的 1 TJS 抵扣券
+    // ============================================================
+    try {
+      // 统计每个未中奖用户的参与份数
+      const loserCouponMap: Record<string, number> = {};
+      for (const entry of entries) {
+        if (entry.user_id !== winningEntry.user_id) {
+          loserCouponMap[entry.user_id] = (loserCouponMap[entry.user_id] || 0) + 1;
+        }
+      }
+
+      const losers = Object.entries(loserCouponMap).map(([user_id, coupon_count]) => ({
+        user_id,
+        coupon_count,
+      }));
+
+      if (losers.length > 0) {
+        console.log(`[AutoLotteryDraw] Issuing refund coupons to ${losers.length} non-winning users`);
+
+        const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+        const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
+
+        // 异步调用 issue-refund-coupons（fire-and-forget）
+        fetch(`${supabaseUrl}/functions/v1/issue-refund-coupons`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${serviceRoleKey}`,
+          },
+          body: JSON.stringify({
+            lottery_id: lotteryId,
+            lottery_title: lottery.title,
+            lottery_title_i18n: lottery.title_i18n || null,
+            losers: losers,
+          }),
+        }).catch((err) => {
+          console.error('[AutoLotteryDraw] Failed to trigger issue-refund-coupons:', err);
+        });
+      } else {
+        console.log('[AutoLotteryDraw] No non-winning users to issue coupons to');
+      }
+    } catch (couponError) {
+      console.error('[AutoLotteryDraw] Failed to prepare coupon data:', couponError);
+      // 抵扣券发放失败不影响开奖结果
     }
 
     console.log(`[AutoLotteryDraw] Draw completed successfully for lottery ${lotteryId}`);
