@@ -1,5 +1,5 @@
 import { Suspense, useEffect } from "react"
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom"
 import { Toaster } from "react-hot-toast"
 import { BotFollowModal, useBotFollowModal } from "./components/BotFollowModal"
 import { Layout } from "./components/layout/Layout"
@@ -21,14 +21,10 @@ const HomePage = lazyWithRetry(() => import("./pages/HomePage"))
 const LotteryPage = lazyWithRetry(() => import("./pages/LotteryPage"))
 const WalletPage = lazyWithRetry(() => import("./pages/WalletPage"))
 const ProfilePage = lazyWithRetry(() => import("./pages/ProfilePage"))
-const GroupBuyListPage = lazyWithRetry(() => import("./pages/groupbuy/GroupBuyListPage"))
 
 // 高频访问页面（用户常用功能）
 const LotteryDetailPage = lazyWithRetry(() => import("./pages/LotteryDetailPage"))
 const LotteryResultPage = lazyWithRetry(() => import("./pages/LotteryResultPage"))
-const GroupBuyDetailPage = lazyWithRetry(() => import("./pages/groupbuy/GroupBuyDetailPage"))
-const GroupBuyResultPage = lazyWithRetry(() => import("./pages/groupbuy/GroupBuyResultPage"))
-const MyGroupBuysPage = lazyWithRetry(() => import("./pages/groupbuy/MyGroupBuysPage"))
 const OrderManagementPage = lazyWithRetry(() => import("./pages/OrderManagementPage"))
 const OrderDetailPage = lazyWithRetry(() => import("./pages/OrderDetailPage"))
 const NotificationPage = lazyWithRetry(() => import("./pages/NotificationPage"))
@@ -55,6 +51,7 @@ const PendingPickupPage = lazyWithRetry(() => import("./pages/PendingPickupPage"
 const SubsidyPlanPage = lazyWithRetry(() => import("./pages/SubsidyPlanPage"))
 const PromoterCenterPage = lazyWithRetry(() => import("./pages/PromoterCenterPage"))
 const PromoterDepositPage = lazyWithRetry(() => import("./pages/PromoterDepositPage"))
+const CouponListPage = lazyWithRetry(() => import("./pages/CouponListPage"))
 
 // 设置与个人资料编辑
 const ProfileEditPage = lazyWithRetry(() => import("./pages/ProfileEditPage"))
@@ -73,16 +70,13 @@ function App() {
 
   // 应用成功挂载后：清除 chunk reload 标记 + 静默预加载核心页面
   useEffect(() => {
-    // 清除之前可能残留的 chunk reload 标记
     clearChunkReloadFlag()
 
     // 首屏渲染完成后 2 秒，按优先级静默预加载核心页面
-    // 这些是底部导航栏直达的页面，用户大概率会访问
     prefetchCorePages([
-      LotteryPage,        // 抽奖列表（底部导航第2个）
-      GroupBuyListPage,    // 拼团列表（底部导航第3个）
-      WalletPage,          // 钱包（底部导航第4个）
-      ProfilePage,         // 个人中心（底部导航第5个）
+      LotteryPage,         // 商城列表（底部导航第2个）
+      WalletPage,          // 钱包（底部导航第3个）
+      ProfilePage,         // 个人中心（底部导航第4个）
     ])
   }, [])
 
@@ -98,10 +92,14 @@ function App() {
               <Route path="/lottery/:id" element={<LotteryDetailPage />} />
               <Route path="/lottery/:id/result" element={<LotteryResultPage />} />
               <Route path="/full-purchase-confirm/:lotteryId" element={<FullPurchaseConfirmPage />} />
-              <Route path="/group-buy" element={<GroupBuyListPage />} />
-              <Route path="/group-buy/:productId" element={<GroupBuyDetailPage />} />
-              <Route path="/group-buy/result/:sessionId" element={<GroupBuyResultPage />} />
-              <Route path="/my-group-buys" element={<MyGroupBuysPage />} />
+              
+              {/* 拼团路由 - 重定向到首页，避免死链 */}
+              <Route path="/group-buy" element={<Navigate to="/" replace />} />
+              <Route path="/group-buy/:productId" element={<Navigate to="/" replace />} />
+              <Route path="/group-buy/result/:sessionId" element={<Navigate to="/" replace />} />
+              <Route path="/my-group-buys" element={<Navigate to="/orders" replace />} />
+              <Route path="/groupbuy/:productId" element={<Navigate to="/" replace />} />
+              
               <Route path="/wallet" element={<WalletPage />} />
               <Route path="/deposit" element={<DepositPage />} />
               <Route path="/wallet/deposit" element={<DepositPage />} />
@@ -129,12 +127,12 @@ function App() {
               <Route path="/promoter-center" element={<PromoterCenterPage />} />
               <Route path="/promoter-deposit" element={<PromoterDepositPage />} />
               <Route path="/market/my-resales" element={<MarketPage />} />
+              <Route path="/coupons" element={<CouponListPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/debug" element={<DebugPage />} />
               <Route path="/profile/edit" element={<ProfileEditPage />} />
               <Route path="/pending-pickup" element={<PendingPickupPage />} />
               <Route path="/orders/:id" element={<OrderDetailPage />} />
-              <Route path="/groupbuy/:productId" element={<GroupBuyDetailPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>

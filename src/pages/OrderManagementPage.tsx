@@ -133,16 +133,18 @@ const OrderManagementPage: React.FC = () => {
 
   // 根据当前 Tab 筛选订单
   const filteredOrders = useMemo(() => {
-    if (activeTab === 'all') return allOrders;
+    // 过滤掉拼团订单（拼团功能已隐藏）
+    const nonGroupBuyOrders = allOrders.filter(order => order.order_type !== 'group_buy');
+    if (activeTab === 'all') return nonGroupBuyOrders;
     if (activeTab === 'lottery') {
-      // 积分商城 Tab 包含 lottery、exchange、full_purchase 类型
-      return allOrders.filter(order => 
+      // 商城 Tab 包含 lottery、exchange、full_purchase 类型
+      return nonGroupBuyOrders.filter(order => 
         order.order_type === 'lottery' || 
         order.order_type === 'exchange' || 
         order.order_type === 'full_purchase'
       );
     }
-    return allOrders.filter(order => order.order_type === activeTab);
+    return nonGroupBuyOrders.filter(order => order.order_type === activeTab);
   }, [allOrders, activeTab]);
 
   // 获取本地化文本
@@ -249,8 +251,7 @@ const OrderManagementPage: React.FC = () => {
   };
 
   const tabs = [
-    { key: 'all', label: t('orders.tabAll'), count: summary.group_buy_count + summary.lottery_count + summary.full_purchase_count },
-    { key: 'group_buy', label: t('orders.tabGroupBuy'), count: summary.group_buy_count },
+    { key: 'all', label: t('orders.tabAll'), count: summary.lottery_count + summary.full_purchase_count },
     { key: 'lottery', label: t('orders.tabLottery'), count: summary.lottery_count + summary.full_purchase_count },
   ];
 
@@ -269,8 +270,8 @@ const OrderManagementPage: React.FC = () => {
           
           <div className="grid grid-cols-2 gap-4">
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
-              <p className="text-3xl font-black">{summary.group_buy_count}</p>
-              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.groupBuyCount')}</p>
+              <p className="text-3xl font-black">{summary.lottery_count + summary.full_purchase_count}</p>
+              <p className="text-xs mt-1 font-medium opacity-80 uppercase tracking-wider">{t('orders.tabAll')}</p>
             </motion.div>
             <motion.div whileHover={{ scale: 1.02 }} className="bg-white/20 backdrop-blur-md rounded-2xl p-4 border border-white/10">
               <p className="text-3xl font-black">{summary.lottery_count + summary.full_purchase_count}</p>

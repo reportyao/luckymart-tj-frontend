@@ -7,12 +7,11 @@ import { Lottery } from '../lib/supabase';
 import { PurchaseModal } from '../components/lottery/PurchaseModal';
 import { useSupabase } from '../contexts/SupabaseContext';
 import { SafeMotion } from '../components/SafeMotion';
-import { ModulePreview } from '../components/home/ModulePreview';
 import { ProductList } from '../components/home/ProductList';
-import { StarIcon, TrophyIcon, UserGroupIcon } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/outline';
 import BannerCarousel from '../components/BannerCarousel';
 import toast from 'react-hot-toast';
-import { useLotteries, useGroupBuyProducts } from '../hooks/useHomeData';
+import { useLotteries } from '../hooks/useHomeData';
 
 
 const HomePage: React.FC = () => {
@@ -27,11 +26,6 @@ const HomePage: React.FC = () => {
     isLoading: isLoadingLotteries,
     refetch: refetchLotteries,
   } = useLotteries();
-
-  const {
-    data: groupBuyProducts = [],
-    isLoading: isLoadingGroupBuy,
-  } = useGroupBuyProducts();
 
   const nav = useNavigate();
 
@@ -51,19 +45,19 @@ const HomePage: React.FC = () => {
       if (startParam) {
         console.log('[HomePage] Found start_param:', startParam);
         
-        // 1. 拼团详情: gb_{productId}
+        // 1. 拼团详情: gb_{productId} - 保留路由兼容，避免死链
         if (startParam.startsWith('gb_')) {
           const productId = startParam.replace('gb_', '');
-          console.log('[HomePage] Redirecting to group buy product:', productId);
-          nav(`/group-buy/${productId}`, { replace: true });
+          console.log('[HomePage] Group buy link received, redirecting to home');
+          // 拼团已隐藏，重定向到首页
         }
-        // 2. 拼团结果/加入: gbs_{sessionId}
+        // 2. 拼团结果/加入: gbs_{sessionId} - 保留路由兼容
         else if (startParam.startsWith('gbs_')) {
           const sessionId = startParam.replace('gbs_', '');
-          console.log('[HomePage] Redirecting to group buy session:', sessionId);
-          nav(`/group-buy/result/${sessionId}`, { replace: true });
+          console.log('[HomePage] Group buy session link received, redirecting to home');
+          // 拼团已隐藏，重定向到首页
         }
-        // 3. 积分商城详情: lt_{lotteryId}
+        // 3. 商城详情: lt_{lotteryId}
         else if (startParam.startsWith('lt_')) {
           const lotteryId = startParam.replace('lt_', '');
           console.log('[HomePage] Redirecting to lottery detail:', lotteryId);
@@ -73,13 +67,12 @@ const HomePage: React.FC = () => {
         else if (startParam.startsWith('so_')) {
           const showoffId = startParam.replace('so_', '');
           console.log('[HomePage] Redirecting to showoff detail:', showoffId);
-          nav(`/showoff`, { replace: true }); // 目前晒单详情在列表中，先跳到列表
+          nav(`/showoff`, { replace: true });
         }
         // 5. 邀请码: 直接是邀请码字符串（如 LMBDYIHI）
         else {
           console.log('[HomePage] Found referral code:', startParam);
           // 邀请码已在 UserContext 中处理，这里不需要额外操作
-          // 用户会看到首页，邀请关系会在后台建立
         }
       } else {
         console.log('[HomePage] No start_param found');
@@ -90,7 +83,6 @@ const HomePage: React.FC = () => {
     
     // 立即尝试检查
     if (!checkStartParam()) {
-      // 如果 SDK 还没加载，等待一段时间后重试
       const timer = setTimeout(() => {
         checkStartParam();
       }, 500);
@@ -111,7 +103,6 @@ const HomePage: React.FC = () => {
     try {
       await lotteryService.purchaseTickets(lotteryId, quantity);
       toast.success(t('lottery.purchaseSuccess'));
-      // 购买成功后刷新列表和钱包
       await refetchLotteries();
       await refreshWallets();
     } catch (error: any) {
@@ -127,37 +118,7 @@ const HomePage: React.FC = () => {
     toast.success(t('wallet.balanceUpdated'));
   };
 
-  // 转换拼团商品数据格式用于预览
-  const groupBuyPreviewProducts = groupBuyProducts.slice(0, 4).map(p => ({
-    id: p.id,
-    image_url: p.image_url,
-    price: p.price_per_person,
-    title_i18n: p.title,
-  }));
-
-  // 转换积分商城数据格式用于预览
-  const lotteryPreviewProducts = lotteries.slice(0, 4).map(l => ({
-    id: l.id,
-    image_url: l.image_url,
-    price: l.ticket_price,
-    title_i18n: l.title_i18n as Record<string, string> | null,
-    name_i18n: l.name_i18n as Record<string, string> | null,
-  }));
-
-  // 转换拼团商品数据格式用于列表
-  const groupBuyListProducts = groupBuyProducts.map(p => ({
-    id: p.id,
-    type: 'groupbuy' as const,
-    image_url: p.image_url,
-    price: p.price_per_person,
-    original_price: p.original_price,
-    title_i18n: p.title,
-    group_size: p.group_size,
-    active_sessions_count: p.active_sessions_count,
-    created_at: p.created_at || new Date().toISOString(),
-  }));
-
-  // 转换积分商城数据格式用于列表
+  // 转换商城数据格式用于列表
   const lotteryListProducts = lotteries.map(l => ({
     id: l.id,
     type: 'lottery' as const,
@@ -208,49 +169,7 @@ const HomePage: React.FC = () => {
         <BannerCarousel />
       </div>
 
-      {/* 模块预览区域 */}
-      <div className="px-4 mt-6 space-y-4">
-        {/* 拼团模块预览 */}
-        <ModulePreview
-          title={t('home.groupBuy')}
-          description={t('home.groupBuyDesc')}
-          linkTo="/group-buy"
-          linkText={t('home.viewAll')}
-          products={groupBuyPreviewProducts}
-          isLoading={isLoadingGroupBuy}
-          gradientFrom="from-pink-500"
-          gradientTo="to-purple-600"
-          iconBgFrom="from-pink-400"
-          iconBgTo="to-purple-500"
-          icon={<UserGroupIcon className="w-5 h-5 text-white" />}
-        />
-
-        {/* 积分商城模块预览 */}
-        <ModulePreview
-          title={t('home.lottery')}
-          description={t('home.lotteryDesc')}
-          linkTo="/lottery"
-          linkText={t('home.viewAll')}
-          products={lotteryPreviewProducts}
-          isLoading={isLoadingLotteries}
-          gradientFrom="from-purple-600"
-          gradientTo="to-blue-600"
-          iconBgFrom="from-purple-500"
-          iconBgTo="to-blue-500"
-          icon={<TrophyIcon className="w-5 h-5 text-white" />}
-        />
-      </div>
-
-      {/* 拼团商品完整列表 */}
-      <ProductList
-        title={t('home.groupBuyProducts')}
-        products={groupBuyListProducts}
-        isLoading={isLoadingGroupBuy}
-        emptyText={t('groupBuy.noProducts')}
-        linkPrefix="/group-buy"
-      />
-
-      {/* 积分商城商品完整列表 */}
+      {/* 商城商品完整列表 - 移除拼团模块，直接展示商城商品 */}
       <ProductList
         title={t('home.lotteryProducts')}
         products={lotteryListProducts}
