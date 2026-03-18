@@ -176,7 +176,7 @@ serve(async (req) => {
         throw new Error('扣除余额失败，请重试（可能存在并发操作）')
       }
 
-      const { error: updateError } = await supabaseClient
+      const { data: updatedRequest, error: updateError } = await supabaseClient
         .from('withdrawal_requests')
         .update({
           status: 'APPROVED',
@@ -186,10 +186,17 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', requestId)
+        .eq('status', 'PENDING') // 关键：只更新状态为 PENDING 的记录，防止并发审批
+        .select()
+        .maybeSingle()
 
       if (updateError) {
         console.error('更新申请状态失败:', updateError)
         throw new Error('审核失败')
+      }
+
+      if (!updatedRequest) {
+        throw new Error('该申请已被其他管理员处理或状态已变更')
       }
 
       // 创建钱包交易记录 - 审核通过时就扣款
@@ -264,7 +271,7 @@ serve(async (req) => {
         throw new Error('解冻余额失败，请重试（可能存在并发操作）')
       }
 
-      const { error: updateError } = await supabaseClient
+      const { data: updatedRequest, error: updateError } = await supabaseClient
         .from('withdrawal_requests')
         .update({
           status: 'REJECTED',
@@ -274,10 +281,17 @@ serve(async (req) => {
           updated_at: new Date().toISOString(),
         })
         .eq('id', requestId)
+        .eq('status', 'PENDING') // 关键：只更新状态为 PENDING 的记录，防止并发审批
+        .select()
+        .maybeSingle()
 
       if (updateError) {
         console.error('更新申请状态失败:', updateError)
         throw new Error('审核失败')
+      }
+
+      if (!updatedRequest) {
+        throw new Error('该申请已被其他管理员处理或状态已变更')
       }
 
       // 创建解冻交易记录
@@ -340,20 +354,27 @@ serve(async (req) => {
        * 2. COMPLETED 只是标记转账已完成，不再扣款
        */
       
-      const { error: updateError } = await supabaseClient
+      const { data: updatedRequest, error: updateError } = await supabaseClient
         .from('withdrawal_requests')
         .update({
           status: 'COMPLETED',
-          transfer_proof_images: transferProofImages || null,
-          transfer_reference: transferReference || null,
-          completed_at: new Date().toISOString(),
+          admin_id: adminUserId,
+          admin_note: adminNote || null,
+          processed_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
         .eq('id', requestId)
+        .eq('status', 'APPROVED') // 关键：只更新状态为 APPROVED 的记录，防止并发确认
+        .select()
+        .maybeSingle()
 
       if (updateError) {
         console.error('更新申请状态失败:', updateError)
-        throw new Error('更新失败')
+        throw new Error('确认打款失败')
+      }
+
+      if (!updatedRequest) {
+        throw new Error('该申请已被其他管理员处理或状态已变更')
       }
 
       // 发送通知给用户

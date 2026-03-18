@@ -207,10 +207,34 @@ serve(async (req) => {
       // action: deposit - 执行充值
       // ============================================================
       case 'deposit': {
-        const { target_user_id, amount, note } = body
+        const { target_user_id, amount, note, idempotency_key } = body
 
         if (!target_user_id) {
           throw new Error('目标用户ID不能为空')
+        }
+
+        // 幂等性保护：如果有提供 idempotency_key，检查是否已经处理过
+        if (idempotency_key) {
+          const { data: existingLog } = await supabaseClient
+            .from('audit_logs')
+            .select('id, details')
+            .eq('action', 'PROMOTER_DEPOSIT')
+            .eq('user_id', userId)
+            .eq('status', 'success')
+            .contains('details', { idempotency_key })
+            .maybeSingle()
+
+          if (existingLog) {
+            console.log(`[promoter-deposit] Idempotency hit for key: ${idempotency_key}`)
+            return new Response(
+              JSON.stringify({
+                success: true,
+                message: '充值已成功处理（重复请求）',
+                deposit_id: existingLog.details?.deposit_id
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            )
+          }
         }
 
         if (!amount || amount < 10 || amount > 500) {
@@ -274,6 +298,7 @@ serve(async (req) => {
             amount,
             note: note || null,
             deposit_id: result.deposit_id || null,
+            idempotency_key: idempotency_key || null,
           },
           p_status: 'success',
           p_error_message: null,

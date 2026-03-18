@@ -373,13 +373,17 @@ export const lotteryService: any = {
       throw new Error('用户未登录');
     }
 
+    // 生成幂等性 key 防止重复提交
+    const idempotencyKey = `lottery_purchase_${lotteryId}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
     // 调用 lottery-purchase Edge Function
     const { data, error } = await supabase.functions.invoke('lottery-purchase', {
       body: {
         lotteryId,
         quantity: ticketCount,
         paymentMethod: 'LUCKY_COIN_WALLET', // 默认使用积分支付
-        session_token: sessionToken
+        session_token: sessionToken,
+        idempotency_key: idempotencyKey
       }
     });
 

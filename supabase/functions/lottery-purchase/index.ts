@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     }
 
     // 【修改】接收 useCoupon 参数，支持混合支付
-    const { lotteryId, quantity, paymentMethod, session_token, useCoupon } = await req.json();
+    const { lotteryId, quantity, paymentMethod, session_token, useCoupon, idempotency_key } = await req.json();
 
     if (!lotteryId || !quantity || !paymentMethod) {
       throw new Error('Missing required parameters: lotteryId, quantity, paymentMethod');
@@ -549,6 +549,36 @@ Deno.serve(async (req) => {
       },
       is_sold_out: isSoldOut,
     };
+
+    // 记录操作日志（包含 idempotency_key）
+    if (idempotency_key) {
+      await fetch(`${supabaseUrl}/rest/v1/rpc/log_edge_function_action`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${serviceRoleKey}`,
+          'apikey': serviceRoleKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          p_function_name: 'lottery-purchase',
+          p_action: 'LOTTERY_PURCHASE',
+          p_user_id: userId,
+          p_target_type: 'lottery',
+          p_target_id: lotteryId,
+          p_details: {
+            quantity,
+            payment_method: paymentMethod,
+            total_amount: totalAmount,
+            order_id: order.id,
+            use_coupon: useCoupon || false,
+            idempotency_key: idempotency_key,
+            result_data: result,
+          },
+          p_status: 'success',
+          p_error_message: null,
+        }),
+      }).catch(err => console.error('Failed to write audit log:', err));
+    }
 
     return new Response(JSON.stringify({ data: result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

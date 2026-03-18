@@ -104,6 +104,9 @@ const FullPurchaseConfirmPage: React.FC = () => {
         throw new Error(t('common.pleaseLogin'));
       }
 
+      // 生成幂等性 key 防止重复提交
+      const idempotencyKey = `full_purchase_${lotteryId}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
       // 调用后端API创建全款购买订单
       const { data, error } = await supabase.functions.invoke('create-full-purchase-order', {
         body: {
@@ -111,6 +114,7 @@ const FullPurchaseConfirmPage: React.FC = () => {
           pickup_point_id: selectedPointId,
           user_id: user.id,
           session_token: sessionToken,
+          idempotency_key: idempotencyKey,
         },
       });
 

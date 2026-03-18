@@ -90,14 +90,21 @@ serve(async (req) => {
       updateData.reward_coins = rewardCoins || 0
     }
 
-    const { error: updateError } = await supabaseClient
+    const { data: updatedShowoff, error: updateError } = await supabaseClient
       .from('showoffs')
       .update(updateData)
       .eq('id', showoffId)
+      .eq('status', 'PENDING') // 关键：只更新状态为 PENDING 的记录，防止并发审批
+      .select()
+      .maybeSingle()
 
     if (updateError) {
       console.error('更新晒单状态失败:', updateError)
       throw new Error('审核失败')
+    }
+
+    if (!updatedShowoff) {
+      throw new Error('该晒单已被其他管理员处理或状态已变更')
     }
 
     // 如果批准且有奖励，给用户增加积分

@@ -294,11 +294,15 @@ const PromoterDepositPage: React.FC = () => {
 
     setIsSubmitting(true)
     try {
+      // 生成幂等性 key 防止重复提交
+      const idempotencyKey = `promoter_deposit_${targetUser.id}_${amount}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
       const result = await callPromoterDeposit({
         action: 'deposit',
         target_user_id: targetUser.id,
         amount: amount,
         note: note || undefined,
+        idempotency_key: idempotencyKey,
       })
 
       if (result?.success) {

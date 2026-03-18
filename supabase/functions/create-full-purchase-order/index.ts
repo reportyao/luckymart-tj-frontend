@@ -131,7 +131,7 @@ serve(async (req) => {
   try {
     const body = await req.json();
     // 【修改】接收 useCoupon 参数
-    const { lottery_id, pickup_point_id, user_id, session_token, useCoupon } = body;
+    const { lottery_id, pickup_point_id, user_id, session_token, useCoupon, idempotency_key } = body;
 
     console.log('[CreateFullPurchaseOrder] Received request:', { 
       lottery_id,
@@ -172,6 +172,30 @@ serve(async (req) => {
         persistSession: false,
       },
     });
+
+    // 0. 幂等性保护：如果有提供 idempotency_key，检查是否已经处理过
+    if (idempotency_key) {
+      const { data: existingLog } = await supabase
+        .from('audit_logs')
+        .select('id, details')
+        .eq('action', 'FULL_PURCHASE')
+        .eq('user_id', userId)
+        .eq('status', 'success')
+        .contains('details', { idempotency_key })
+        .maybeSingle()
+
+      if (existingLog) {
+        console.log(`[CreateFullPurchaseOrder] Idempotency hit for key: ${idempotency_key}`)
+        return new Response(
+          JSON.stringify({
+            success: true,
+            message: '全款购买已成功处理（重复请求）',
+            data: existingLog.details?.result_data
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        )
+      }
+    }
 
     // 1. 获取商品信息（包含关联的库存商品ID）
     const { data: lottery, error: lotteryError } = await supabase
@@ -470,7 +494,7 @@ serve(async (req) => {
       });
     }
 
-    // 13. 记录操作日志
+       // 13. 记录操作日志
     await supabase
       .from('pickup_logs')
       .insert({
@@ -480,6 +504,34 @@ serve(async (req) => {
         operation_type: 'FULL_PURCHASE',
         notes: `用户全款购买商品，生成提货码`,
       });
+
+    const resultData = {
+      order_id: order.id,
+      order_number: orderNumber,
+      pickup_code: pickupCode,
+      expires_at: expiresAt.toISOString(),
+      payment_detail: paymentResult,
+    };
+
+    // 记录审计日志（包含 idempotency_key）
+    if (idempotency_key) {
+      await supabase.rpc('log_edge_function_action', {
+        p_function_name: 'create-full-purchase-order',
+        p_action: 'FULL_PURCHASE',
+        p_user_id: userId,
+        p_target_type: 'lottery',
+        p_target_id: lottery_id,
+        p_details: {
+          order_id: order.id,
+          total_amount: fullPrice,
+          use_coupon: useCoupon || false,
+          idempotency_key: idempotency_key,
+          result_data: resultData,
+        },
+        p_status: 'success',
+        p_error_message: null,
+      }).then(({ error: logErr }) => { if (logErr) console.error('Failed to write audit log:', logErr); });
+    }
 
     console.log('[CreateFullPurchaseOrder] Success:', { 
       orderId: order.id, 
@@ -493,20 +545,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        data: {
-          order_id: order.id,
-          order_number: orderNumber,
-          pickup_code: pickupCode,
-          expires_at: expiresAt.toISOString(),
-          total_amount: fullPrice,
-          new_balance: tjsBalance - (paymentResult.tjs_deducted || 0),
-          new_lc_balance: lcBalance - (paymentResult.lc_deducted || 0),
-          payment_detail: {
-            coupon_deducted: paymentResult.coupon_deducted || 0,
-            tjs_deducted: paymentResult.tjs_deducted || 0,
-            lc_deducted: paymentResult.lc_deducted || 0,
-          },
-        }
+        data: resultData,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

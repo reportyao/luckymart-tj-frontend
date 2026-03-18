@@ -76,9 +76,9 @@ serve(async (req) => {
       throw new Error('该申请已被处理')
     }
 
-    // 更新申请状态
+    // 更新申请状态 (使用原子性更新防止并发 TOCTOU 漏洞)
     console.log('准备更新状态...')
-    const { error: updateError } = await supabaseClient
+    const { data: updatedRequest, error: updateError } = await supabaseClient
       .from('deposit_requests')
       .update({
         status: action,
@@ -88,12 +88,19 @@ serve(async (req) => {
         updated_at: new Date().toISOString(),
       })
       .eq('id', requestId)
+      .eq('status', 'PENDING') // 关键：只更新状态为 PENDING 的记录，防止并发审批
+      .select()
+      .maybeSingle()
 
-    console.log('更新状态结果:', { updateError })
+    console.log('更新状态结果:', { updatedRequest, updateError })
 
     if (updateError) {
       console.error('更新申请状态失败:', updateError)
       throw new Error(`审核失败: ${updateError.message}`)
+    }
+
+    if (!updatedRequest) {
+      throw new Error('该申请已被其他管理员处理或状态已变更')
     }
 
     // 如果审核通过,增加用户余额
