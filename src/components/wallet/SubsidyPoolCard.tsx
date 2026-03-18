@@ -75,7 +75,7 @@ export const SubsidyPoolCard: React.FC = () => {
             <h3 className="text-white font-bold text-sm">{t('subsidyPool.title')}</h3>
           </div>
           <span className="text-xs text-white/70 bg-white/15 px-2 py-0.5 rounded-full">
-            50% {t('subsidyPool.hint').split('，')[0].split('50%')[1]}
+            {t('subsidyPool.badgeText', '50% 补贴')}
           </span>
         </div>
 

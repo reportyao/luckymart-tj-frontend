@@ -14,27 +14,27 @@ import {
   XCircleIcon 
 } from '@heroicons/react/24/outline';
 
+// 数据库实际字段：id, user_id, amount, status(VALID/USED/EXPIRED), source, related_lottery_id, expires_at, used_at, created_at, updated_at
 interface Coupon {
   id: string;
   user_id: string;
-  face_value: number;
-  status: 'active' | 'used' | 'expired';
-  source_type: string;
-  source_name: string | null;
-  source_lottery_id: string | null;
-  used_at: string | null;
-  used_in_order_id: string | null;
+  amount: number;
+  status: 'VALID' | 'USED' | 'EXPIRED';
+  source: string;
+  related_lottery_id: string | null;
   expires_at: string;
+  used_at: string | null;
   created_at: string;
+  updated_at: string;
 }
 
-type TabType = 'active' | 'used' | 'expired';
+type TabType = 'valid' | 'used' | 'expired';
 
 const CouponListPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useUser();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [activeTab, setActiveTab] = useState<TabType>('valid');
 
   // 获取用户抵扣券列表
   const { data: coupons = [], isLoading } = useQuery({
@@ -54,23 +54,23 @@ const CouponListPage: React.FC = () => {
     staleTime: 30000,
   });
 
-  // 按状态分组
+  // 按状态分组 - 使用数据库实际状态值 VALID/USED/EXPIRED
   const groupedCoupons = useMemo(() => {
     const now = new Date();
     return {
-      active: coupons.filter(c => c.status === 'active' && new Date(c.expires_at) > now),
-      used: coupons.filter(c => c.status === 'used'),
-      expired: coupons.filter(c => c.status === 'expired' || (c.status === 'active' && new Date(c.expires_at) <= now)),
+      valid: coupons.filter(c => c.status === 'VALID' && new Date(c.expires_at) > now),
+      used: coupons.filter(c => c.status === 'USED'),
+      expired: coupons.filter(c => c.status === 'EXPIRED' || (c.status === 'VALID' && new Date(c.expires_at) <= now)),
     };
   }, [coupons]);
 
   const currentCoupons = groupedCoupons[activeTab];
 
   // 统计数据
-  const validCount = groupedCoupons.active.length;
+  const validCount = groupedCoupons.valid.length;
   const totalSaved = coupons
-    .filter(c => c.status === 'used')
-    .reduce((sum, c) => sum + c.face_value, 0);
+    .filter(c => c.status === 'USED')
+    .reduce((sum, c) => sum + c.amount, 0);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -81,11 +81,27 @@ const CouponListPage: React.FC = () => {
     });
   };
 
+  // 来源类型翻译
+  const getSourceLabel = (source: string): string => {
+    switch (source) {
+      case 'LOTTERY_REFUND': return t('coupon.sourceLotteryRefund', '未中奖返还');
+      case 'DEPOSIT_BONUS': return t('coupon.sourceDepositBonus', '充值赠送');
+      case 'ADMIN_GRANT': return t('coupon.sourceAdminGrant', '系统发放');
+      case 'PROMOTION': return t('coupon.sourcePromotion', '活动奖励');
+      default: return source;
+    }
+  };
+
   const tabs: { key: TabType; label: string; count: number }[] = [
-    { key: 'active', label: t('coupon.tabValid'), count: groupedCoupons.active.length },
+    { key: 'valid', label: t('coupon.tabValid'), count: groupedCoupons.valid.length },
     { key: 'used', label: t('coupon.tabUsed'), count: groupedCoupons.used.length },
     { key: 'expired', label: t('coupon.tabExpired'), count: groupedCoupons.expired.length },
   ];
+
+  // 判断抵扣券是否可用
+  const isCouponActive = (coupon: Coupon): boolean => {
+    return coupon.status === 'VALID' && new Date(coupon.expires_at) > new Date();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-yellow-50 pb-20">
@@ -179,7 +195,7 @@ const CouponListPage: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
               className={`relative overflow-hidden rounded-2xl shadow-sm ${
-                coupon.status === 'active' && new Date(coupon.expires_at) > new Date()
+                isCouponActive(coupon)
                   ? 'bg-white border border-orange-100'
                   : 'bg-gray-50 border border-gray-200 opacity-70'
               }`}
@@ -187,11 +203,11 @@ const CouponListPage: React.FC = () => {
               <div className="flex">
                 {/* 左侧金额区域 */}
                 <div className={`flex-shrink-0 w-24 flex flex-col items-center justify-center py-4 ${
-                  coupon.status === 'active' && new Date(coupon.expires_at) > new Date()
+                  isCouponActive(coupon)
                     ? 'bg-gradient-to-b from-orange-500 to-amber-500 text-white'
                     : 'bg-gray-300 text-white'
                 }`}>
-                  <span className="text-3xl font-black">{coupon.face_value}</span>
+                  <span className="text-3xl font-black">{coupon.amount}</span>
                   <span className="text-xs mt-0.5 opacity-90">TJS</span>
                 </div>
                 
@@ -200,19 +216,17 @@ const CouponListPage: React.FC = () => {
                   <div className="flex items-start justify-between">
                     <div>
                       <p className="font-semibold text-gray-900 text-sm">{t('coupon.noThreshold')}</p>
-                      {coupon.source_name && (
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          {t('coupon.fromActivity', { name: coupon.source_name })}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {getSourceLabel(coupon.source)}
+                      </p>
                     </div>
                     {/* 状态标签 */}
-                    {coupon.status === 'used' ? (
+                    {coupon.status === 'USED' ? (
                       <span className="flex items-center text-xs text-gray-400">
                         <CheckCircleIcon className="w-4 h-4 mr-0.5" />
                         {t('coupon.used')}
                       </span>
-                    ) : coupon.status === 'expired' || new Date(coupon.expires_at) <= new Date() ? (
+                    ) : (coupon.status === 'EXPIRED' || new Date(coupon.expires_at) <= new Date()) ? (
                       <span className="flex items-center text-xs text-gray-400">
                         <XCircleIcon className="w-4 h-4 mr-0.5" />
                         {t('coupon.expired')}
@@ -225,9 +239,9 @@ const CouponListPage: React.FC = () => {
                       <ClockIcon className="w-3.5 h-3.5 mr-1" />
                       {t('coupon.validUntil')} {formatDate(coupon.expires_at)}
                     </div>
-                    {coupon.status === 'active' && new Date(coupon.expires_at) > new Date() && (
+                    {isCouponActive(coupon) && (
                       <button
-                        onClick={() => navigate('/lottery')}
+                        onClick={() => navigate('/')}
                         className="text-xs font-medium text-orange-600 hover:text-orange-700 transition-colors"
                       >
                         {t('coupon.useNow')} →
@@ -243,7 +257,7 @@ const CouponListPage: React.FC = () => {
                   <div 
                     key={i} 
                     className={`w-2 h-2 rounded-full -ml-1 ${
-                      coupon.status === 'active' && new Date(coupon.expires_at) > new Date()
+                      isCouponActive(coupon)
                         ? 'bg-orange-50'
                         : 'bg-gray-50'
                     }`}

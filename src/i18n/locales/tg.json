@@ -1638,7 +1638,11 @@
     "deduction": "Тахфифи купон",
     "switchLabel": "Истифодаи купон",
     "refundNotice": "Дар ҳолати ғолиб нашудан — баргардонидани пурра бо купонҳо",
-    "fromActivity": "Манбаъ: {{name}}"
+    "fromActivity": "Манбаъ: {{name}}",
+    "sourceLotteryRefund": "Баргардонидани бурд",
+    "sourceDepositBonus": "Бонуси пуркунӣ",
+    "sourceAdminGrant": "Додани система",
+    "sourcePromotion": "Бонуси акция"
   },
   "subsidyPool": {
     "title": "Фонди субсидияҳо 10 млн сомонӣ",
@@ -1652,7 +1656,8 @@
     "paymentSubsidy": "Шумо барномаи субсидияҳоро истифода мебаред",
     "shippingFee": "Интиқол",
     "platformSubsidy": "Субсидияи платформа",
-    "subsidyPrice": "Субсидия"
+    "subsidyPrice": "Субсидия",
+    "badgeText": "50% бонус"
   },
   "payment": {
     "detail": "Тафсилоти пардохт",

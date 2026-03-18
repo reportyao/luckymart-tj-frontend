@@ -1638,7 +1638,11 @@
     "deduction": "Скидка по купону",
     "switchLabel": "Использовать купон",
     "refundNotice": "При неудаче — полный возврат купонами на 1 TJS",
-    "fromActivity": "Источник: {{name}}"
+    "fromActivity": "Источник: {{name}}",
+    "sourceLotteryRefund": "Возврат за проигрыш",
+    "sourceDepositBonus": "Бонус за пополнение",
+    "sourceAdminGrant": "Системная выдача",
+    "sourcePromotion": "Акционный бонус"
   },
   "subsidyPool": {
     "title": "Фонд субсидий 10 млн сомони",
@@ -1652,7 +1656,8 @@
     "paymentSubsidy": "Вы используете программу субсидий 10 млн сомони",
     "shippingFee": "Доставка",
     "platformSubsidy": "Субсидия платформы",
-    "subsidyPrice": "Субсидия"
+    "subsidyPrice": "Субсидия",
+    "badgeText": "50% бонус"
   },
   "payment": {
     "detail": "Детали оплаты",

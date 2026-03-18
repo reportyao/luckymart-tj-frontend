@@ -28,6 +28,7 @@ const FullPurchaseConfirmPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [useCoupon, setUseCoupon] = useState<boolean>(true);
   const [validCouponCount, setValidCouponCount] = useState<number>(0);
+  const [couponTotalAmount, setCouponTotalAmount] = useState<number>(0);
 
   const fetchLottery = useCallback(async () => {
     if (!lotteryId) return;
@@ -88,14 +89,16 @@ const FullPurchaseConfirmPage: React.FC = () => {
   const fetchCouponCount = useCallback(async () => {
     if (!user) return;
     try {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('coupons')
-        .select('*', { count: 'exact', head: true })
+        .select('amount')
         .eq('user_id', user.id)
-        .eq('status', 'VALID');
-      if (!error && count !== null) {
-        setValidCouponCount(count);
-        setUseCoupon(count > 0);
+        .eq('status', 'VALID')
+        .gt('expires_at', new Date().toISOString());
+      if (!error && data) {
+        setValidCouponCount(data.length);
+        setCouponTotalAmount(data.reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0));
+        setUseCoupon(data.length > 0);
       }
     } catch (e) {
       console.error('Failed to fetch coupon count:', e);
@@ -361,19 +364,27 @@ const FullPurchaseConfirmPage: React.FC = () => {
                 </button>
               </div>
             )}
-            {useCoupon && validCouponCount > 0 && (
-              <div className="flex justify-between text-green-600">
-                <span>{t('payment.couponDeduction')}</span>
-                <span className="font-medium">-{formatCurrency(lottery.currency, 1)}</span>
-              </div>
-            )}
-            {/* 支付明细 */}
-            <div className="flex justify-between text-gray-600">
-              <span>🍀 {t('payment.pointsPayment')}</span>
-              <span className="font-medium">
-                {formatCurrency(lottery.currency, Math.max(0, fullPurchasePrice - (useCoupon && validCouponCount > 0 ? 1 : 0)))}
-              </span>
-            </div>
+            {(() => {
+              const couponDeduct = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, fullPurchasePrice) : 0;
+              const pointsPay = Math.max(0, fullPurchasePrice - couponDeduct);
+              return (
+                <>
+                  {couponDeduct > 0 && (
+                    <div className="flex justify-between text-green-600">
+                      <span>{t('payment.couponDeduction')}</span>
+                      <span className="font-medium">-{formatCurrency(lottery.currency, couponDeduct)}</span>
+                    </div>
+                  )}
+                  {/* 支付明细 */}
+                  <div className="flex justify-between text-gray-600">
+                    <span>🍀 {t('payment.pointsPayment')}</span>
+                    <span className="font-medium">
+                      {formatCurrency(lottery.currency, pointsPay)}
+                    </span>
+                  </div>
+                </>
+              );
+            })()}
             <div className="border-t pt-2 flex justify-between">
               <span className="text-gray-900 font-semibold">{t('lottery.totalAmount')}</span>
               <span className="text-lg font-bold text-red-500">

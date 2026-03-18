@@ -68,19 +68,22 @@ const LotteryDetailPage: React.FC = () => {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState<boolean>(false);
   const [useCoupon, setUseCoupon] = useState<boolean>(true);
   const [validCouponCount, setValidCouponCount] = useState<number>(0);
+  const [couponTotalAmount, setCouponTotalAmount] = useState<number>(0);
 
-  // 获取用户有效抵扣券数量
+  // 获取用户有效抵扣券数量和总面额
   const fetchCouponCount = useCallback(async () => {
     if (!user) return;
     try {
-      const { count, error } = await supabase
+      const { data, error } = await supabase
         .from('coupons')
-        .select('*', { count: 'exact', head: true })
+        .select('amount')
         .eq('user_id', user.id)
-        .eq('status', 'VALID');
-      if (!error && count !== null) {
-        setValidCouponCount(count);
-        setUseCoupon(count > 0);
+        .eq('status', 'VALID')
+        .gt('expires_at', new Date().toISOString());
+      if (!error && data) {
+        setValidCouponCount(data.length);
+        setCouponTotalAmount(data.reduce((sum: number, c: any) => sum + (Number(c.amount) || 0), 0));
+        setUseCoupon(data.length > 0);
       }
     } catch (e) {
       console.error('Failed to fetch coupon count:', e);
@@ -296,11 +299,15 @@ const LotteryDetailPage: React.FC = () => {
     // 计算需要的积分数量
     const totalCost = lottery.ticket_price * quantity;
     
-    // 检查积分余额
+    // 计算抵扣券可抵扣金额（最多抵扣一张，不超过总价）
+    const couponDeduction = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, totalCost) : 0;
+    const actualPointsNeeded = totalCost - couponDeduction;
+    
+    // 检查积分余额（考虑抵扣券抵扣后）
     const luckyCoinsWallet = wallets.find(w => w.type === 'LUCKY_COIN');
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
     
-    if (luckyCoinsBalance < totalCost) {
+    if (luckyCoinsBalance < actualPointsNeeded) {
       toast.error(t('wallet.insufficientLuckyCoins'));
       return;
     }
@@ -396,13 +403,15 @@ const LotteryDetailPage: React.FC = () => {
       return;
     }
 
-    // 检查积分余额
+    // 检查积分余额（考虑抵扣券抵扣后）
+    const couponDeduction = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, fullPurchasePrice) : 0;
+    const actualNeeded = fullPurchasePrice - couponDeduction;
     const luckyCoinsWallet = wallets.find(w => w.type === 'LUCKY_COIN');
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
     
-    if (luckyCoinsBalance < fullPurchasePrice) {
+    if (luckyCoinsBalance < actualNeeded) {
       toast.error(t('lottery.fullPurchaseInsufficientBalance', { 
-        required: fullPurchasePrice, 
+        required: actualNeeded, 
         current: luckyCoinsBalance 
       }));
       return;
@@ -904,29 +913,34 @@ const LotteryDetailPage: React.FC = () => {
                   )}
 
                   {/* 支付明细计算 - 一元购模式 */}
-                  <div className="space-y-1.5 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                      <span>{t('payment.totalAmount')}</span>
-                      <span className="font-medium">{formatCurrency('TJS', lottery.ticket_price * quantity)}</span>
-                    </div>
-                    {useCoupon && validCouponCount > 0 && (
-                      <div className="flex justify-between text-green-600">
-                        <span>{t('payment.couponDeduction')}</span>
-                        <span className="font-medium">-{formatCurrency('TJS', 1)}</span>
+                  {(() => {
+                    const totalPrice = lottery.ticket_price * quantity;
+                    const couponDeduct = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, totalPrice) : 0;
+                    const pointsPay = Math.max(0, totalPrice - couponDeduct);
+                    return (
+                      <div className="space-y-1.5 text-sm">
+                        <div className="flex justify-between text-gray-600">
+                          <span>{t('payment.totalAmount')}</span>
+                          <span className="font-medium">{formatCurrency('TJS', totalPrice)}</span>
+                        </div>
+                        {couponDeduct > 0 && (
+                          <div className="flex justify-between text-green-600">
+                            <span>{t('payment.couponDeduction')}</span>
+                            <span className="font-medium">-{formatCurrency('TJS', couponDeduct)}</span>
+                          </div>
+                        )}
+                        <div className="flex justify-between text-gray-600">
+                          <span>🍀 {t('payment.pointsPayment')}</span>
+                          <span className="font-medium">{formatCurrency('TJS', pointsPay)}</span>
+                        </div>
+                        <div className="border-t border-gray-200 pt-1.5 flex justify-between font-semibold text-gray-900">
+                          <span>{t('payment.totalAmount')}</span>
+                          <span>{formatCurrency('TJS', totalPrice)}</span>
+                        </div>
+                        <p className="text-xs text-blue-500">🍀 {t('payment.pointsAsValue')}</p>
                       </div>
-                    )}
-                    <div className="flex justify-between text-gray-600">
-                      <span>🍀 {t('payment.pointsPayment')}</span>
-                      <span className="font-medium">
-                        {formatCurrency('TJS', Math.max(0, lottery.ticket_price * quantity - (useCoupon && validCouponCount > 0 ? 1 : 0)))}
-                      </span>
-                    </div>
-                    <div className="border-t border-gray-200 pt-1.5 flex justify-between font-semibold text-gray-900">
-                      <span>{t('payment.totalAmount')}</span>
-                      <span>{formatCurrency('TJS', lottery.ticket_price * quantity)}</span>
-                    </div>
-                    <p className="text-xs text-blue-500">🍀 {t('payment.pointsAsValue')}</p>
-                  </div>
+                    );
+                  })()}
                 </div>
               )}
 

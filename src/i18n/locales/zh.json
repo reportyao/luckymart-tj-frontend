@@ -51,7 +51,7 @@
     "noProducts": "暂无商品",
     "justNow": "刚刚",
     "confirmSubmit": "确认提交",
-    "freeShippingPromo": "本单0运费，TezBarakat为您补贴，节省15TJS运费",
+    "freeShippingPromo": "本单运费 0 TJS，TezBarakat为您补贴，节省15 TJS运费",
     "freeShippingAmount": "0 TJS",
     "close": "关闭"
   },
@@ -1638,7 +1638,11 @@
     "deduction": "抵扣券抵扣",
     "switchLabel": "使用抵扣券",
     "refundNotice": "未中奖全额返无门槛1元抵扣券",
-    "fromActivity": "来源：{{name}}"
+    "fromActivity": "来源：{{name}}",
+    "sourceLotteryRefund": "未中奖返还",
+    "sourceDepositBonus": "充值赠送",
+    "sourceAdminGrant": "系统发放",
+    "sourcePromotion": "活动奖励"
   },
   "subsidyPool": {
     "title": "千万索莫尼补贴资金池",
@@ -1652,7 +1656,8 @@
     "paymentSubsidy": "您正在使用千万索莫尼补贴计划，享受极致低价",
     "shippingFee": "运费",
     "platformSubsidy": "平台补贴",
-    "subsidyPrice": "补贴价"
+    "subsidyPrice": "补贴价",
+    "badgeText": "50% 补贴"
   },
   "payment": {
     "detail": "支付明细",
