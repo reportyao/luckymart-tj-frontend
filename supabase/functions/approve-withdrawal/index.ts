@@ -190,13 +190,26 @@ serve(async (req) => {
         .select()
         .maybeSingle()
 
-      if (updateError) {
-        console.error('更新申请状态失败:', updateError)
-        throw new Error('审核失败')
-      }
-
-      if (!updatedRequest) {
-        throw new Error('该申请已被其他管理员处理或状态已变更')
+      if (updateError || !updatedRequest) {
+        // 【资金安全修复】状态更新失败，回滚钱包余额
+        console.error('更新提现申请状态失败，正在回滚钱包余额:', updateError)
+        try {
+          const rollbackVersion = (wallet.version || 1) + 1; // 扣款时已经 +1
+          await supabaseClient
+            .from('wallets')
+            .update({
+              balance: currentBalance,
+              frozen_balance: currentFrozenBalance,
+              total_withdrawals: currentTotalWithdrawals,
+              version: rollbackVersion + 1,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('id', wallet.id)
+            .eq('version', rollbackVersion)
+        } catch (rollbackError) {
+          console.error('回滚钱包余额失败，需要人工介入:', rollbackError)
+        }
+        throw new Error(updateError ? '审核失败，余额已回滚' : '该申请已被其他管理员处理，余额已回滚')
       }
 
       // 创建钱包交易记录 - 审核通过时就扣款

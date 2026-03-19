@@ -517,12 +517,8 @@ export const walletService = {
   async exchangeRealToBonus(amount: number): Promise<{ success: boolean; new_balance?: number }> {
     // 从 localStorage 获取 session token
     const sessionToken = localStorage.getItem('custom_session_token');
-    console.log('[Debug] exchangeRealToBonus called');
-    console.log('[Debug] Session token:', sessionToken ? `${sessionToken.substring(0, 8)}...` : 'null');
-    console.log('[Debug] Amount:', amount);
     
     if (!sessionToken) {
-      console.error('[Debug] No session token found in localStorage');
       throw new Error('用户未登录');
     }
 
@@ -530,14 +526,11 @@ export const walletService = {
       session_token: sessionToken,
       amount 
     };
-    console.log('[Debug] Request body:', requestBody);
 
     const { data, error } = await supabase.functions.invoke('exchange-balance', {
       body: requestBody
     });
     
-    console.log('[Debug] Response data:', data);
-    console.log('[Debug] Response error:', error);
 
     if (error) {
       console.error('Failed to exchange balance:', error);

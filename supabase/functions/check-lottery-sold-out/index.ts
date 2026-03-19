@@ -98,12 +98,13 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error: any) {
-    console.error('Check lottery sold-out error:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("Check lottery sold-out error:", errMsg);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errMsg,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

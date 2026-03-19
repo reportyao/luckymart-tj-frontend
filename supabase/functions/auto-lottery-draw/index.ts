@@ -457,12 +457,13 @@ serve(async (req) => {
         status: 200,
       }
     );
-  } catch (error: any) {
-    console.error('[AutoLotteryDraw] Error:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("[AutoLotteryDraw] Error:", errMsg);
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: errMsg,
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

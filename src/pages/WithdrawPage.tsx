@@ -62,28 +62,29 @@ export default function WithdrawPage() {
     try {
       setSubmitting(true)
 
-      console.log('[Debug] Withdraw - Session token:', sessionToken ? `${sessionToken.substring(0, 8)}...` : 'null');
-      console.log('[Debug] Withdraw - Amount:', amountNum);
-      console.log('[Debug] Withdraw - Method:', withdrawalMethod);
-
-      const requestBody = {
+      const requestBody: Record<string, any> = {
         session_token: sessionToken,
-          amount: amountNum,
-          currency: 'TJS',
-          withdrawalMethod: withdrawalMethod,
-          mobileWalletNumber: mobileWalletNumber,
-          mobileWalletName: mobileWalletName,
-        };
-      
-      console.log('[Debug] Withdraw - Request body:', requestBody);
+        amount: amountNum,
+        currency: 'TJS',
+        withdrawalMethod: withdrawalMethod,
+        mobileWalletNumber: mobileWalletNumber,
+        mobileWalletName: mobileWalletName,
+        phoneNumber: phoneNumber || undefined,
+      };
 
-      // 假设 withdraw-request 是一个 Edge Function
+      // 根据提现方式添加银行相关字段
+      if (withdrawalMethod === 'DC_BANK') {
+        requestBody.bankName = bankName;
+        requestBody.bankAccountNumber = bankAccountNumber;
+        requestBody.bankAccountName = bankAccountName;
+        requestBody.bankBranch = bankBranch || undefined;
+        requestBody.idCardNumber = idCardNumber || undefined;
+        requestBody.idCardName = idCardName || undefined;
+      }
+
       const { data, error } = await supabase.functions.invoke('withdraw-request', {
         body: requestBody
       });
-
-      console.log('[Debug] Withdraw - Response data:', data);
-      console.log('[Debug] Withdraw - Response error:', error);
 
       if (error) throw new Error(await extractEdgeFunctionError(error))
 

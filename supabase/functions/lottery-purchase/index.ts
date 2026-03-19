@@ -583,13 +583,14 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ data: result }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
-  } catch (error: any) {
-    console.error('Lottery purchase error:', error);
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error('Lottery purchase error:', errMsg);
 
     const errorResponse = {
       error: {
         code: 'PURCHASE_FAILED',
-        message: error.message,
+        message: errMsg,
       },
     };
 

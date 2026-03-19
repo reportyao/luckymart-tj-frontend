@@ -376,13 +376,14 @@ serve(async (req) => {
       default:
         throw new Error('未知操作: ' + action)
     }
-  } catch (error: any) {
-    console.error('[promoter-deposit] Error:', error.message)
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    console.error("[promoter-deposit] Error:", errMsg)
 
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message || '服务器内部错误',
+        error: errMsg || '服务器内部错误',
       }),
       {
         status: 400,

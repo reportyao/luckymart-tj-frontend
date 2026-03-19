@@ -409,6 +409,35 @@ serve(async (req) => {
 
     console.log('[CreateFullPurchaseOrder] Payment successful:', paymentResult);
 
+    // 【佣金修复】支付成功后处理推荐佣金
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL');
+      const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+      if (supabaseUrl && serviceRoleKey) {
+        const commissionResponse = await fetch(`${supabaseUrl}/functions/v1/handle-purchase-commission`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceRoleKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            order_id: order.id,
+            user_id: userId,
+            order_amount: fullPrice
+          }),
+        });
+        
+        if (!commissionResponse.ok) {
+          console.error('[CreateFullPurchaseOrder] Failed to process commission:', await commissionResponse.text());
+        } else {
+          console.log('[CreateFullPurchaseOrder] Commission processed successfully');
+        }
+      }
+    } catch (commissionError: unknown) {
+      console.error('[CreateFullPurchaseOrder] Commission processing error:', commissionError);
+      // 佣金处理失败不影响主流程
+    }
+
     // 【P17修复】支付成功后更新订单状态为 COMPLETED
     await supabase.from('full_purchase_orders').update({
       status: 'COMPLETED',
