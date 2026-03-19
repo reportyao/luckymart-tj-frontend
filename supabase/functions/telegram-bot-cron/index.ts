@@ -24,7 +24,7 @@ async function callNotificationSender(supabaseUrl: string, serviceKey: string): 
 
     return await response.json();
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error calling notification sender:', error);
     throw error;
   }
@@ -44,7 +44,7 @@ async function cleanupExpiredSessions(supabase: any): Promise<number> {
 
     return data?.length || 0;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error cleaning up expired sessions:', error);
     return 0;
   }
@@ -66,7 +66,7 @@ async function cleanupOldMessages(supabase: any): Promise<number> {
 
     return data?.length || 0;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error cleaning up old messages:', error);
     return 0;
   }
@@ -89,7 +89,7 @@ async function cleanupFailedNotifications(supabase: any): Promise<number> {
 
     return data?.length || 0;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error cleaning up failed notifications:', error);
     return 0;
   }
@@ -170,7 +170,7 @@ async function checkLotteryDrawReminders(supabase: any): Promise<number> {
 
     return notificationsCreated;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error checking lottery draw reminders:', error);
     return 0;
   }
@@ -244,7 +244,7 @@ async function generateDailySummary(supabase: any): Promise<number> {
 
     return summariesCreated;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error generating daily summary:', error);
     return 0;
   }
@@ -283,7 +283,7 @@ serve(async (req) => {
       results.tasks.notifications = notificationResult;
       console.log('Notification processing result:', notificationResult);
     } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
       console.error('Failed to process notifications:', error);
       results.tasks.notifications = { error: errMsg };
     }
@@ -295,7 +295,7 @@ serve(async (req) => {
       results.tasks.lotteryReminders = { created: remindersCreated };
       console.log(`Created ${remindersCreated} lottery draw reminders`);
     } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
       console.error('Failed to check lottery reminders:', error);
       results.tasks.lotteryReminders = { error: errMsg };
     }
@@ -329,7 +329,7 @@ serve(async (req) => {
         
         console.log(`Cleanup completed: ${expiredSessions} sessions, ${oldMessages} messages, ${failedNotifications} notifications`);
       } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
         console.error('Failed to run cleanup tasks:', error);
         results.tasks.cleanup = { error: errMsg };
       }
@@ -343,7 +343,7 @@ serve(async (req) => {
         results.tasks.dailySummary = { created: summariesCreated };
         console.log(`Created ${summariesCreated} daily summaries`);
       } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
         console.error('Failed to generate daily summaries:', error);
         results.tasks.dailySummary = { error: errMsg };
       }
@@ -360,7 +360,7 @@ serve(async (req) => {
     });
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Cron job error:', error);
     
     return new Response(JSON.stringify({ 

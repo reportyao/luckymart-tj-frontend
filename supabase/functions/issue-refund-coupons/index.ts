@@ -119,19 +119,35 @@ serve(async (req) => {
         }
 
         // 为该用户生成一条通知（合并为一条，告知总张数）
+        // 【修复 H2】补充 notification_queue 必填字段
+        // 【修复 M4】添加多语言通知消息
+        const lotteryTitleDisplay = lottery_title || 'Unknown';
         notificationRecords.push({
           user_id: user_id,
+          type: 'coupon_issued',
+          payload: {
+            lottery_id: lottery_id,
+            lottery_title: lotteryTitleDisplay,
+            count: coupon_count,
+            expires_at: expiresAtStr,
+          },
           notification_type: 'coupon_issued',
           title: '抵扣券到账',
-          message: `很遗憾您在"${lottery_title}"中未中奖。已为您返还 ${coupon_count} 张 1 TJS 抵扣券，有效期 30 天。`,
+          message: `很遗憾您在"${lotteryTitleDisplay}"中未中奖。已为您返还 ${coupon_count} 张 1 TJS 抵扣券，有效期 30 天。`,
           data: {
             lottery_id: lottery_id,
-            lottery_title: lottery_title,
+            lottery_title: lotteryTitleDisplay,
             lottery_title_i18n: lottery_title_i18n || null,
             count: coupon_count,
             expires_at: expiresAtStr,
           },
+          priority: 2,
+          status: 'pending',
+          scheduled_at: now,
+          retry_count: 0,
+          max_retries: 3,
           created_at: now,
+          updated_at: now,
         });
 
         totalCouponsIssued += coupon_count;

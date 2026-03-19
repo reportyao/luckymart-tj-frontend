@@ -81,7 +81,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error in admin-user-financial:', error)
     return new Response(
       JSON.stringify({ error: errMsg }),
@@ -183,6 +183,7 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
   const pointsSpending = pointsTransactions
     .filter((t: any) => ['LOTTERY_PURCHASE', 'FULL_PURCHASE', 'SPIN_COST', 'MARKET_PURCHASE', 'RESALE_PURCHASE'].includes(t.type))
     .reduce((sum: number, t: any) => sum + Math.abs(parseFloat(t.amount)), 0)
+  // 【修复 C6】添加 BONUS 和 DEPOSIT_BONUS 类型，确保充值赠送积分被计入积分收入统计
   const pointsIncome = pointsTransactions
     .filter((t: any) => [
       'SPIN_REWARD', 'NEW_USER_GIFT', 'SHOWOFF_REWARD',
@@ -190,7 +191,8 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
       'LOTTERY_PRIZE', 'LOTTERY_REFUND',
       'COIN_EXCHANGE', 'COMMISSION', 'COMMISSION_PAYOUT',
       'REFERRAL_REWARD', 'FIRST_GROUP_BUY_REWARD',
-      'MARKET_SALE', 'RESALE_INCOME'
+      'MARKET_SALE', 'RESALE_INCOME',
+      'BONUS', 'DEPOSIT_BONUS', 'FIRST_DEPOSIT_BONUS'
     ].includes(t.type))
     .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
 
@@ -210,13 +212,15 @@ async function getFinancialSummary(supabaseClient: any, userId: string, period: 
     'REFERRAL_GROUP_BUY_COMMISSION', 'COIN_EXCHANGE', 'WITHDRAWAL_UNFREEZE'
   ].includes(t.type)).reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
   const periodPointsSpending = periodPointsTx.filter((t: any) => ['LOTTERY_PURCHASE', 'FULL_PURCHASE', 'SPIN_COST', 'MARKET_PURCHASE', 'RESALE_PURCHASE'].includes(t.type)).reduce((sum: number, t: any) => sum + Math.abs(parseFloat(t.amount)), 0)
+  // 【修复 C6】同步修复时间段积分收入统计
   const periodPointsIncome = periodPointsTx.filter((t: any) => [
     'SPIN_REWARD', 'NEW_USER_GIFT', 'SHOWOFF_REWARD',
     'GROUP_BUY_REFUND', 'GROUP_BUY_REFUND_TO_POINTS',
     'LOTTERY_PRIZE', 'LOTTERY_REFUND',
     'COIN_EXCHANGE', 'COMMISSION', 'COMMISSION_PAYOUT',
     'REFERRAL_REWARD', 'FIRST_GROUP_BUY_REWARD',
-    'MARKET_SALE', 'RESALE_INCOME'
+    'MARKET_SALE', 'RESALE_INCOME',
+    'BONUS', 'DEPOSIT_BONUS', 'FIRST_DEPOSIT_BONUS'
   ].includes(t.type)).reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0)
 
   // 6. 构建响应 - 分离两种钱包的数据

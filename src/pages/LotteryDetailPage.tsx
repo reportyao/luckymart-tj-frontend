@@ -296,19 +296,23 @@ const LotteryDetailPage: React.FC = () => {
       return;
     }
 
-    // 计算需要的积分数量
+    // 计算需要的总金额
     const totalCost = lottery.ticket_price * quantity;
     
     // 计算抵扣券可抵扣金额（最多抵扣一张，不超过总价）
     const couponDeduction = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, totalCost) : 0;
     const actualPointsNeeded = totalCost - couponDeduction;
     
-    // 检查积分余额（考虑抵扣券抵扣后）
+    // 【修复 M3】检查总可用资产（TJS + LUCKY_COIN + 抵扣券）
+    // 后端 process_mixed_payment 支持三级混合支付：抵扣券 → TJS → LUCKY_COIN
+    const tjsWallet = wallets.find(w => w.type === 'TJS');
+    const tjsBalance = tjsWallet?.balance || 0;
     const luckyCoinsWallet = wallets.find(w => w.type === 'LUCKY_COIN');
     const luckyCoinsBalance = luckyCoinsWallet?.balance || 0;
+    const totalAvailable = tjsBalance + luckyCoinsBalance;
     
-    if (luckyCoinsBalance < actualPointsNeeded) {
-      toast.error(t('wallet.insufficientLuckyCoins'));
+    if (totalAvailable < actualPointsNeeded) {
+      toast.error(t('wallet.insufficientBalance'));
       return;
     }
 
@@ -934,8 +938,8 @@ const LotteryDetailPage: React.FC = () => {
                           <span className="font-medium">{formatCurrency('TJS', pointsPay)}</span>
                         </div>
                         <div className="border-t border-gray-200 pt-1.5 flex justify-between font-semibold text-gray-900">
-                          <span>{t('payment.totalAmount')}</span>
-                          <span>{formatCurrency('TJS', totalPrice)}</span>
+                          <span>{t('payment.actualPayment')}</span>
+                          <span>{formatCurrency('TJS', pointsPay)}</span>
                         </div>
                         <p className="text-xs text-blue-500">🍀 {t('payment.pointsAsValue')}</p>
                       </div>

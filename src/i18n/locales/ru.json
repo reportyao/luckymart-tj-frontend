@@ -1665,6 +1665,7 @@
     "couponDeduction": "Купон",
     "balancePayment": "Оплата балансом",
     "pointsPayment": "Оплата баллами",
-    "pointsAsValue": "Баллы = деньги"
+    "pointsAsValue": "Баллы = деньги",
+    "actualPayment": "Итого к оплате"
   }
 }

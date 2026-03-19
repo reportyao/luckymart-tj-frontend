@@ -1665,6 +1665,7 @@
     "couponDeduction": "抵扣券",
     "balancePayment": "余额支付",
     "pointsPayment": "积分支付",
-    "pointsAsValue": "积分可当钱花"
+    "pointsAsValue": "积分可当钱花",
+    "actualPayment": "实付金额"
   }
 }

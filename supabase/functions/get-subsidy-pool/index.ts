@@ -7,7 +7,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
  * 统计已发放的总赠送积分（充值赠送 + 首充奖励等），
  * 前端用 10,000,000 TJS 减去已发放总额，得到剩余资金池。
  * 
- * 数据来源：wallet_transactions 表中 type 为 DEPOSIT_BONUS / FIRST_DEPOSIT_BONUS 的记录
+ * 数据来源：wallet_transactions 表中 type 为 BONUS / DEPOSIT_BONUS / FIRST_DEPOSIT_BONUS 的记录
+ * 
+ * 【修复 C4】移除不存在的 wallet_type 列过滤
+ * 【修复 C5】添加 BONUS 类型（process_deposit_with_bonus 实际写入的类型）
+ * 改为通过 JOIN wallets 表过滤 LUCKY_COIN 钱包的交易记录
  */
 
 const corsHeaders = {
@@ -27,27 +31,48 @@ serve(async (req: Request) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // 统计所有充值赠送类型的积分总额
-    // DEPOSIT_BONUS: 充值赠送（50%）
-    // FIRST_DEPOSIT_BONUS: 首充奖励（已废弃，但历史数据需要统计）
-    const { data, error } = await supabase
-      .from("wallet_transactions")
-      .select("amount")
-      .in("type", ["DEPOSIT_BONUS", "FIRST_DEPOSIT_BONUS"])
-      .eq("wallet_type", "points");
+    // 【修复】先获取所有 LUCKY_COIN 钱包 ID
+    const { data: lcWallets, error: walletError } = await supabase
+      .from("wallets")
+      .select("id")
+      .eq("type", "LUCKY_COIN");
 
-    if (error) {
-      console.error("Error querying subsidy data:", error);
+    if (walletError) {
+      console.error("Error querying LUCKY_COIN wallets:", walletError);
       return new Response(
-        JSON.stringify({ error: "Failed to query subsidy data" }),
+        JSON.stringify({ error: "Failed to query wallet data" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 计算已发放总额
-    const totalIssued = (data || []).reduce((sum: number, row: { amount: number }) => {
-      return sum + Math.abs(row.amount);
-    }, 0);
+    const lcWalletIds = (lcWallets || []).map((w: { id: string }) => w.id);
+
+    let totalIssued = 0;
+
+    if (lcWalletIds.length > 0) {
+      // 统计 LUCKY_COIN 钱包中所有赠送类型的交易总额
+      // BONUS: 充值赠送（process_deposit_with_bonus 写入的类型）
+      // DEPOSIT_BONUS: 充值赠送（历史兼容）
+      // FIRST_DEPOSIT_BONUS: 首充奖励（已废弃，但历史数据需要统计）
+      const { data, error } = await supabase
+        .from("wallet_transactions")
+        .select("amount")
+        .in("type", ["BONUS", "DEPOSIT_BONUS", "FIRST_DEPOSIT_BONUS"])
+        .in("wallet_id", lcWalletIds);
+
+      if (error) {
+        console.error("Error querying subsidy data:", error);
+        return new Response(
+          JSON.stringify({ error: "Failed to query subsidy data" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      // 计算已发放总额
+      totalIssued = (data || []).reduce((sum: number, row: { amount: number }) => {
+        return sum + Math.abs(row.amount);
+      }, 0);
+    }
 
     // 资金池总额 10,000,000 TJS
     const TOTAL_POOL = 10_000_000;

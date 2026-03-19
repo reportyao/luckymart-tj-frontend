@@ -1665,6 +1665,7 @@
     "couponDeduction": "Купон",
     "balancePayment": "Пардохт аз баланс",
     "pointsPayment": "Пардохт бо холҳо",
-    "pointsAsValue": "Холҳо = пул"
+    "pointsAsValue": "Холҳо = пул",
+    "actualPayment": "Маблағи пардохт"
   }
 }

@@ -211,7 +211,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     const duration = Date.now() - startTime
     console.error('[admin-queue-processor] 错误:', errMsg)
 

@@ -194,7 +194,7 @@ serve(async (req) => {
         success_count++
 
       } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
         fail_count++
         errors.push({ commission_id, error: errMsg })
       }
@@ -210,7 +210,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     return new Response(
       JSON.stringify({ error: errMsg }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

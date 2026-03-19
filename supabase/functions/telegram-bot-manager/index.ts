@@ -42,7 +42,7 @@ async function callTelegramAPI(method: string, params: any, botToken: string) {
 
     return result;
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error(`Error calling Telegram API ${method}:`, error);
     throw error;
   }
@@ -132,7 +132,7 @@ async function createNotification(
 
     return { success: true };
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error creating notification:', error);
     return { success: false, error: errMsg };
   }
@@ -181,7 +181,7 @@ async function getBotStats(supabase: any) {
       topCommands: topCommands || []
     };
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Error getting bot stats:', error);
     return null;
   }
@@ -247,7 +247,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
              });
         } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
           return new Response(JSON.stringify({
             success: false,
             error: errMsg
@@ -269,7 +269,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
           return new Response(JSON.stringify({
             success: false,
             error: errMsg
@@ -292,7 +292,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
           return new Response(JSON.stringify({
             success: false,
             error: errMsg
@@ -327,7 +327,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
           return new Response(JSON.stringify({
             success: false,
             error: errMsg
@@ -410,7 +410,7 @@ serve(async (req) => {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
         } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
           return new Response(JSON.stringify({
             success: false,
             error: errMsg
@@ -442,7 +442,7 @@ serve(async (req) => {
     }
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('Bot manager error:', error);
     return new Response(JSON.stringify({ 
       error: 'Internal server error',

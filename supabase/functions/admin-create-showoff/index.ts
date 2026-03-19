@@ -222,7 +222,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('创建运营晒单错误:', error)
     return new Response(
       JSON.stringify({

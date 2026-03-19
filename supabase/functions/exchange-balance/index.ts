@@ -155,7 +155,7 @@ serve(async (req) => {
     )
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[Exchange] Error:', error)
     const errorMessage = errMsg || '兑换失败，请稍后重试';
     return new Response(

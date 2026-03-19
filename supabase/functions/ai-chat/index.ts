@@ -222,7 +222,7 @@ async function saveChatHistory(userId: string, userMessage: string, aiResponse: 
       }
     );
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[AI-Chat] Failed to save history:', error);
   }
 }
@@ -349,7 +349,7 @@ serve(async (req) => {
     try {
       aiResponse = await callQwenAI(trimmedMessage);
     } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
       console.error('[AI-Chat] AI call failed:', error);
       return new Response(
         JSON.stringify({ 
@@ -392,7 +392,7 @@ serve(async (req) => {
     );
 
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[AI-Chat] Error:', error);
     return new Response(
       JSON.stringify({ success: false, error: errMsg }),

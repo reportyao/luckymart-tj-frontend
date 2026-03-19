@@ -385,12 +385,18 @@ const FullPurchaseConfirmPage: React.FC = () => {
                 </>
               );
             })()}
-            <div className="border-t pt-2 flex justify-between">
-              <span className="text-gray-900 font-semibold">{t('lottery.totalAmount')}</span>
-              <span className="text-lg font-bold text-red-500">
-                {formatCurrency(lottery.currency, fullPurchasePrice)}
-              </span>
-            </div>
+            {(() => {
+              const finalCouponDeduct = (useCoupon && validCouponCount > 0) ? Math.min(couponTotalAmount, fullPurchasePrice) : 0;
+              const finalPayAmount = Math.max(0, fullPurchasePrice - finalCouponDeduct);
+              return (
+                <div className="border-t pt-2 flex justify-between">
+                  <span className="text-gray-900 font-semibold">{t('payment.actualPayment')}</span>
+                  <span className="text-lg font-bold text-red-500">
+                    {formatCurrency(lottery.currency, finalPayAmount)}
+                  </span>
+                </div>
+              );
+            })()}
             <p className="text-xs text-blue-500">🍀 {t('payment.pointsAsValue')}</p>
           </div>
         </div>

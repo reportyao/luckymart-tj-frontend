@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
         });
 
     } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
         console.error('Wallet transaction error:', error);
 
         const errorResponse = {
@@ -529,7 +529,7 @@ async function createBotNotification(
             });
         }
     } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
         console.error('Error creating bot notification:', error);
         // 不抛出错误，避免影响主业务流程
     }

@@ -253,7 +253,7 @@ serve(async (req) => {
       }
     )
   } catch (error: unknown) {
-    const errMsg = error instanceof Error ? errMsg : String(error);
+    const errMsg = error instanceof Error ? error.message : String(error);
     console.error('[GetMyPrizes] Error:', error);
     return new Response(
       JSON.stringify({
