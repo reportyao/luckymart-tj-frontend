@@ -8,6 +8,15 @@ export default function NotFoundPage() {
   
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 p-4">
+      <picture>
+        <source srcSet="/brand/empty_cart.webp" type="image/webp" />
+        <img 
+          src="/brand/empty_cart.png" 
+          alt="Not Found"
+          style={{ width: '160px', height: '160px', objectFit: 'contain', maxWidth: 'none' }}
+          className="mb-4 opacity-80"
+        />
+      </picture>
       <h1 className="text-6xl font-bold text-gray-800">404</h1>
       <h2 className="text-2xl font-semibold mt-4 mb-2 text-gray-600">{t('error.pageNotFound')}</h2>
       <p className="text-gray-500 mb-6 text-center">
@@ -15,7 +24,7 @@ export default function NotFoundPage() {
       </p>
       <button 
         onClick={() => navigate('/')}
-        className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors"
+        className="px-4 py-2 bg-amber-500 text-white rounded-lg shadow hover:bg-amber-600 transition-colors"
       >
         {t('common.backToHome')}
       </button>

@@ -243,7 +243,7 @@ const PromoterCenterPage: React.FC = () => {
       window.Telegram.WebApp.openTelegramLink(shareUrl)
     } else if (navigator.share) {
       navigator.share({
-        title: 'TezBarakat',
+        title: 'DODO',
         text: shareText,
         url: inviteLink,
       }).catch(console.error)
